@@ -8,6 +8,85 @@ import (
 )
 
 // --------------------------------------
+// Cases
+// --------------------------------------
+func ListCaseR(c *gin.Context) {
+	list, err := ListCase(c)
+	if err != nil {
+		c.String(http.StatusBadRequest, "list: %s", err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, list)
+}
+
+func GetCaseR(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	obj, err := GetCase(c, id)
+	if err != nil {
+		c.String(http.StatusBadRequest, "get: %s", err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, obj)
+}
+
+func AddCaseR(c *gin.Context) {
+	obj := Case{}
+	err := c.BindJSON(&obj)
+	if err != nil {
+		c.String(http.StatusBadRequest, "bind: %s", err.Error())
+		return
+	}
+
+	if _, err := SaveCase(c, obj); err != nil {
+		c.String(http.StatusBadRequest, "save: %s", err.Error())
+		return
+	}
+
+	c.JSON(http.StatusCreated, obj)
+}
+
+func EditCaseR(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	obj, err := GetCase(c, id)
+	if err != nil {
+		c.String(http.StatusBadRequest, "get: %s", err.Error())
+		return
+	}
+
+	body := Case{}
+	err = c.BindJSON(&body)
+	if err != nil {
+		c.String(http.StatusBadRequest, "bind: %s", err.Error())
+		return
+	}
+
+	// Only copy over fields we wan't to be editable
+	obj.Name = body.Name
+	obj.Classification = body.Classification
+	obj.Summary = body.Summary
+
+	if _, err := SaveCase(c, obj); err != nil {
+		c.String(http.StatusBadRequest, "save: %s", err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, obj)
+}
+
+func DeleteCaseR(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	err := DeleteCase(c, id)
+	if err != nil {
+		c.String(http.StatusBadRequest, "delete: %s", err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, nil)
+}
+
+// --------------------------------------
 // Events
 // --------------------------------------
 func ListEventR(c *gin.Context) {

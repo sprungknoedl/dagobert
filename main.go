@@ -82,6 +82,13 @@ func main() {
 	r.StaticFile("/", "dist/index.html")
 	r.StaticFile("/favicon.ico", "dist/favicon.svg")
 
+	// cases
+	r.GET("/api/case", ListCaseR)
+	r.GET("/api/case/:id", GetCaseR)
+	r.POST("/api/case", AddCaseR)
+	r.PUT("/api/case/:id", EditCaseR)
+	r.DELETE("/api/case/:id", DeleteCaseR)
+
 	// --------------------------------------
 	// Investigation
 	// --------------------------------------
@@ -159,6 +166,8 @@ func initDatabase() {
 	}
 
 	// Migrate the schema
+	db.AutoMigrate(&Case{})
+
 	db.AutoMigrate(&Event{})
 	db.AutoMigrate(&Asset{})
 	db.AutoMigrate(&Malware{})

@@ -4,6 +4,13 @@ import (
 	"time"
 )
 
+type Case struct {
+	ID             uint   `json:"id" gorm:"primarykey"`
+	Name           string `json:"name" binding:"required"`
+	Classification string `json:"classification"`
+	Summary        string `json:"summary"`
+}
+
 type Evidence struct {
 	ID          uint   `json:"id" gorm:"primarykey"`
 	Type        string `json:"type" binding:"required"`

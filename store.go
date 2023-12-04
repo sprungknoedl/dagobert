@@ -5,6 +5,31 @@ import (
 )
 
 // --------------------------------------
+// Cases
+// --------------------------------------
+func ListCase(c *gin.Context) ([]Case, error) {
+	var list []Case
+	result := db.Order("name asc").Find(&list)
+	return list, result.Error
+}
+
+func GetCase(c *gin.Context, id int) (Case, error) {
+	x := Case{}
+	result := db.First(&x, id)
+	return x, result.Error
+}
+
+func SaveCase(c *gin.Context, x Case) (Case, error) {
+	result := db.Save(&x)
+	return x, result.Error
+}
+
+func DeleteCase(c *gin.Context, id int) error {
+	x := Event{}
+	return db.Delete(&x, id).Error
+}
+
+// --------------------------------------
 // Events
 // --------------------------------------
 func ListEvent(c *gin.Context) ([]Event, error) {
