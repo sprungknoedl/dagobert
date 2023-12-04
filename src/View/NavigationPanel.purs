@@ -14,8 +14,9 @@ import Routing.Duplex (print)
 
 navigationPanel :: String -> Nut
 navigationPanel current =
-  D.aside [css "h-screen w-64 p-4"]
-    [ D.div [css "w-12 h-12 mt-4 mb-8 mx-auto bg-pink-500 text-slate-800 rounded-lg p-3"] [ dagobert $ css "" ]
+  D.aside [css "h-screen p-4"]
+    [ D.div [css "w-64 -p-4" ] [] -- width spacer element
+    , D.div [css "w-12 h-12 mt-4 mb-8 mx-auto bg-pink-500 text-slate-800 rounded-lg p-3"] [ dagobert $ css "" ]
 
     , link ViewCaseInfo   identification
 
