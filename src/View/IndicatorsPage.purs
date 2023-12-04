@@ -30,6 +30,12 @@ indicatorsPage = Deku.do
     renderType "Service" = fixed [ commandLine (css "inline-block w-6 h-6 mr-2"), D.text_ "Service" ]
     renderType t         = fixed [ questionMarkCircle (css "inline-block w-6 h-6 mr-2"), D.text_ t ]
 
+    renderTlp :: String -> Nut
+    renderTlp t@"TLP:RED"   = D.span [ css "text-red-500" ] [ D.text_ t ]
+    renderTlp t@"TLP:AMBER" = D.span [ css "text-amber-500" ] [ D.text_ t ]
+    renderTlp t@"TLP:GREEN" = D.span [ css "text-green-500" ] [ D.text_ t ]
+    renderTlp t             = D.span [] [ D.text_ t ]
+
   entityPage
     { title: ViewIndicators
     , ctor: newIndicator
@@ -44,7 +50,7 @@ indicatorsPage = Deku.do
                , { title: "Type",        width: "10rem", renderString: _.type,             renderNut: _.type >>> renderType  }
                , { title: "Value",       width: "auto",  renderString: _.value,            renderNut: _.value >>> D.text_ }
                , { title: "Description", width: "auto",  renderString: _.description,      renderNut: _.description >>> D.text_ }
-               , { title: "TLP",         width: "8rem",  renderString: _.tlp,              renderNut: _.tlp >>> D.text_ }
+               , { title: "TLP",         width: "8rem",  renderString: _.tlp,              renderNut: _.tlp >>> renderTlp }
                , { title: "Source",     width: "auto",   renderString: _.source,           renderNut: _.source >>> D.text_ }
                ]
 
