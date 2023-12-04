@@ -12,7 +12,7 @@ import Data.Foldable (for_)
 import Data.Maybe (Maybe)
 import Data.Tuple.Nested (type (/\), (/\))
 import Deku.Core (Nut)
-import Deku.DOM (Attribute, text_)
+import Deku.DOM (Attribute)
 import Deku.DOM as D
 import Deku.DOM.Attributes as DA
 import Deku.DOM.Listeners as DL
@@ -27,7 +27,7 @@ form ∷ String -> Nut -> Poll (Effect Unit) -> Poll (Effect Unit) -> Nut
 form title controls onSubmit onReset =
   D.form_
     [ D.header [ css "p-6 px-8 border-b border-b-slate-700 flex justify-between" ]
-      [ D.h4  [ css "font-bold text-slate-200" ] [ text_ title ]
+      [ D.h4  [ css "font-bold text-slate-200" ] [ D.text_ title ]
       , D.div_
           [ D.button [ DA.xtype_ "button", DL.runOn DL.click onReset ]
           [ xMark $ css "w-6 h-6" ] 
@@ -37,8 +37,8 @@ form title controls onSubmit onReset =
     , D.section [ css "p-8 flex flex-col gap-6" ] [ controls ]
 
     , D.footer [ css "p-6 px-8 border-t border-t-slate-700 flex gap-4" ] 
-      [ primaryButton [ DA.xtype_ "submit", DL.runOn DL.click onSubmit ] [ text_ "Save" ]
-      , secondaryButton [ DA.xtype_ "button", DL.runOn DL.click onReset ] [ text_ "Cancel" ]
+      [ primaryButton [ DA.xtype_ "submit", DL.runOn DL.click onSubmit ] [ D.text_ "Save" ]
+      , secondaryButton [ DA.xtype_ "button", DL.runOn DL.click onReset ] [ D.text_ "Cancel" ]
       ]
     ] 
 
@@ -94,6 +94,24 @@ dummyField :: forall a. (a -> Effect Unit) /\ (Poll a) -> Form a
 dummyField (_ /\ value) = Form
   { ui: mempty
   , poll: value
+  }
+
+headingField :: String -> Form Unit
+headingField title = Form
+  { ui: D.h4 [ css "font-bold text-lg border-b border-b-slate-600 my-4" ] [ D.text_ title ]
+  , poll: pure unit
+  }
+
+subtitle :: forall a. String -> Form a -> Form a
+subtitle desc (Form f) = Form
+  { ui: f.ui <> D.p [ css "-mt-8 mb-4" ] [ D.text_ desc ]
+  , poll: f.poll
+  }
+
+help :: forall a. String -> Form a -> Form a
+help desc (Form f) = Form
+  { ui: f.ui <> D.p [ css "text-slate-400 mt-2" ] [ D.text_ desc ]
+  , poll: f.poll
   }
 
 textField :: (String -> Effect Unit) /\ (Poll String) -> Form String
@@ -163,18 +181,18 @@ selectField options (pusher /\ value) = Form
     renderDefaultOption = D.option
         [ DA.disabled_ "true"
         , DA.selected $ filter (eq "") value $> "true"
-        ] [ text_ "Select an option" ]
+        ] [ D.text_ "Select an option" ]
 
     renderOption :: String -> Nut
     renderOption opt = D.option
         [ DA.value_ opt
         , DA.selected $ filter (eq opt) value $> "true"
-        ] [ text_ opt ]
+        ] [ D.text_ opt ]
 
 label :: forall a. String -> Form a -> Form a
 label str (Form f) = Form
   { ui: D.div [ css "flex flex-row" ]
-    [ D.div [ css "grow-0 w-56" ] [ D.label_ [ text_ str ] ]
+    [ D.div [ css "grow-0 w-56 pt-2" ] [ D.label_ [ D.text_ str ] ]
     , D.div [ css "grow" ] [ f.ui ]
     ]
   , poll: f.poll
@@ -182,11 +200,9 @@ label str (Form f) = Form
 
 validate :: forall a. Validator a -> Form a -> Form (Maybe a)
 validate validator (Form f) = Form 
-  { ui: ui'
-  , poll: hush <<< validator <$> f.poll
-  }
-  where
-    ui' = f.ui <> ( f.poll <#~> \x -> case validator x of
+  { ui: f.ui <> ( f.poll <#~> \x -> case validator x of
       Left err -> D.p [ css "text-pink-500 mt-2" ] [ D.text_ err]
       Right _   -> mempty
       )
+  , poll: hush <<< validator <$> f.poll
+  }

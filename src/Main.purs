@@ -4,11 +4,12 @@ import Prelude
 
 import Control.Alt ((<|>))
 import Control.Monad.ST.Class (liftST)
-import Dagobert.Route (Route(..), routes, routeToTitle)
+import Dagobert.Route (Route(..), routeToTitle, routes)
 import Dagobert.Utils.HTML (loading)
 import Dagobert.Utils.Hooks ((<~))
 import Dagobert.Utils.XHR as XHR
 import Dagobert.View.AssetsPage (assetsPage)
+import Dagobert.View.CasePage (casePage)
 import Dagobert.View.EntityPage (PageState(..))
 import Dagobert.View.EventsPage (eventsPage)
 import Dagobert.View.EvidencesPage (evidencesPage)
@@ -33,6 +34,7 @@ import Yoga.JSON (class ReadForeign)
 main :: Effect Unit
 main = do
   route <- liftST create
+  cases <- liftST create
   
   -- Investigation states
   events     <- liftST create
@@ -67,12 +69,17 @@ main = do
       ViewMalware    -> malwarePage malware
       ViewIndicators -> indicatorsPage indicators
 
+      ViewVisualTimeline  -> loading
+      ViewLateralMovement -> loading
+      ViewActivity        -> loading
+
       ViewUsers      -> usersPage users
       ViewEvidences  -> evidencesPage evidences
       ViewTasks      -> tasksPage tasks
       ViewNotes      -> notesPage notes
 
-      _              -> loading
+      ViewCaseInfo   -> casePage cases
+      FourOhFour     -> loading
     ]
   
   -- parse hash route & fetch initial data
@@ -81,17 +88,22 @@ main = do
     (\old new -> when (old /= Just new) $ launchAff_ do
       route <~ new
       case new of
-        ViewTimeline   -> fetchData events "/api/event"
-        ViewAssets     -> fetchData assets "/api/asset"
-        ViewMalware    -> fetchData malware "/api/malware"
-        ViewIndicators -> fetchData indicators "/api/indicator"
+        ViewTimeline        -> fetchData events "/api/event"
+        ViewAssets          -> fetchData assets "/api/asset"
+        ViewMalware         -> fetchData malware "/api/malware"
+        ViewIndicators      -> fetchData indicators "/api/indicator"
 
-        ViewUsers      -> fetchData users "/api/user"
-        ViewEvidences  -> fetchData evidences "/api/evidence"
-        ViewTasks      -> fetchData tasks "/api/task"
-        ViewNotes      -> fetchData notes "/api/note"
+        ViewVisualTimeline  -> pure unit
+        ViewLateralMovement -> pure unit
+        ViewActivity        -> pure unit
 
-        _ -> pure unit
+        ViewUsers           -> fetchData users "/api/user"
+        ViewEvidences       -> fetchData evidences "/api/evidence"
+        ViewTasks           -> fetchData tasks "/api/task"
+        ViewNotes           -> fetchData notes "/api/note"
+
+        ViewCaseInfo        -> fetchData cases "/api/case"
+        FourOhFour          -> pure unit
       )
   
   pure unit
