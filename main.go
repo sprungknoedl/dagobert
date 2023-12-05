@@ -68,7 +68,7 @@ func main() {
 		ClientSecret: cfg.ClientSecret,
 		Issuer:       *issuer,
 		ClientUrl:    *clientUrl,
-		Scopes:       []string{"openid"},
+		Scopes:       []string{"openid", "profile", "email"},
 		ErrorHandler: func(c *gin.Context) {
 			message := c.Errors.Last().Error()
 			c.String(http.StatusExpectationFailed, "oidc: %s", message)

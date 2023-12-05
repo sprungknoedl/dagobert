@@ -1,11 +1,30 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
+
+func GetUsername(c *gin.Context) string {
+	session := sessions.Default(c)
+	claims := session.Get("oidcClaims").(string)
+
+	obj := map[string]interface{}{}
+	err := json.Unmarshal([]byte(claims), &obj)
+	if err != nil {
+		return "unknown"
+	}
+
+	if email, ok := obj["email"].(string); ok {
+		return email
+	}
+	return "unknown"
+}
 
 // --------------------------------------
 // Cases
@@ -39,6 +58,11 @@ func AddCaseR(c *gin.Context) {
 		return
 	}
 
+	username := GetUsername(c)
+	obj.DateAdded = time.Now()
+	obj.UserAdded = username
+	obj.DateModified = time.Now()
+	obj.UserModified = username
 	if _, err := SaveCase(c, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
@@ -66,6 +90,8 @@ func EditCaseR(c *gin.Context) {
 	obj.Name = body.Name
 	obj.Classification = body.Classification
 	obj.Summary = body.Summary
+	obj.DateModified = time.Now()
+	obj.UserModified = GetUsername(c)
 
 	if _, err := SaveCase(c, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
@@ -118,6 +144,11 @@ func AddEventR(c *gin.Context) {
 		return
 	}
 
+	username := GetUsername(c)
+	obj.DateAdded = time.Now()
+	obj.UserAdded = username
+	obj.DateModified = time.Now()
+	obj.UserModified = username
 	if _, err := SaveEvent(c, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
@@ -149,6 +180,8 @@ func EditEventR(c *gin.Context) {
 	obj.Direction = body.Direction
 	obj.Event = body.Event
 	obj.Raw = body.Raw
+	obj.DateModified = time.Now()
+	obj.UserModified = GetUsername(c)
 
 	if _, err := SaveEvent(c, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
@@ -201,6 +234,11 @@ func AddAssetR(c *gin.Context) {
 		return
 	}
 
+	username := GetUsername(c)
+	obj.DateAdded = time.Now()
+	obj.UserAdded = username
+	obj.DateModified = time.Now()
+	obj.UserModified = username
 	if _, err := SaveAsset(c, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
@@ -231,6 +269,8 @@ func EditAssetR(c *gin.Context) {
 	obj.Description = body.Description
 	obj.Compromised = body.Compromised
 	obj.Analysed = body.Analysed
+	obj.DateModified = time.Now()
+	obj.UserModified = GetUsername(c)
 
 	if _, err := SaveAsset(c, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
@@ -283,6 +323,11 @@ func AddMalwareR(c *gin.Context) {
 		return
 	}
 
+	username := GetUsername(c)
+	obj.DateAdded = time.Now()
+	obj.UserAdded = username
+	obj.DateModified = time.Now()
+	obj.UserModified = username
 	if _, err := SaveMalware(c, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
@@ -314,6 +359,8 @@ func EditMalwareR(c *gin.Context) {
 	obj.System = body.System
 	obj.Hash = body.Hash
 	obj.Notes = body.Notes
+	obj.DateModified = time.Now()
+	obj.UserModified = GetUsername(c)
 
 	if _, err := SaveMalware(c, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
@@ -366,6 +413,11 @@ func AddIndicatorR(c *gin.Context) {
 		return
 	}
 
+	username := GetUsername(c)
+	obj.DateAdded = time.Now()
+	obj.UserAdded = username
+	obj.DateModified = time.Now()
+	obj.UserModified = username
 	if _, err := SaveIndicator(c, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
@@ -395,6 +447,8 @@ func EditIndicatorR(c *gin.Context) {
 	obj.TLP = body.TLP
 	obj.Description = body.Description
 	obj.Source = body.Source
+	obj.DateModified = time.Now()
+	obj.UserModified = GetUsername(c)
 
 	if _, err := SaveIndicator(c, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
@@ -447,6 +501,11 @@ func AddUserR(c *gin.Context) {
 		return
 	}
 
+	username := GetUsername(c)
+	obj.DateAdded = time.Now()
+	obj.UserAdded = username
+	obj.DateModified = time.Now()
+	obj.UserModified = username
 	obj, err = SaveUser(c, obj)
 	if err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
@@ -479,6 +538,8 @@ func EditUserR(c *gin.Context) {
 	obj.Email = body.Email
 	obj.Phone = body.Phone
 	obj.Notes = body.Notes
+	obj.DateModified = time.Now()
+	obj.UserModified = GetUsername(c)
 
 	if _, err := SaveUser(c, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
@@ -530,6 +591,11 @@ func AddEvidenceR(c *gin.Context) {
 		return
 	}
 
+	username := GetUsername(c)
+	obj.DateAdded = time.Now()
+	obj.UserAdded = username
+	obj.DateModified = time.Now()
+	obj.UserModified = username
 	obj, err = SaveEvidence(c, obj)
 	if err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
@@ -561,6 +627,8 @@ func EditEvidenceR(c *gin.Context) {
 	obj.Size = body.Size
 	obj.Hash = body.Hash
 	obj.Location = body.Location
+	obj.DateModified = time.Now()
+	obj.UserModified = GetUsername(c)
 
 	if _, err := SaveEvidence(c, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
@@ -612,6 +680,11 @@ func AddTaskR(c *gin.Context) {
 		return
 	}
 
+	username := GetUsername(c)
+	obj.DateAdded = time.Now()
+	obj.UserAdded = username
+	obj.DateModified = time.Now()
+	obj.UserModified = username
 	obj, err = SaveTask(c, obj)
 	if err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
@@ -643,6 +716,8 @@ func EditTaskR(c *gin.Context) {
 	obj.Owner = body.Owner
 	obj.DateAdded = body.DateAdded
 	obj.DateDue = body.DateDue
+	obj.DateModified = time.Now()
+	obj.UserModified = GetUsername(c)
 
 	if _, err := SaveTask(c, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
@@ -694,8 +769,12 @@ func AddNoteR(c *gin.Context) {
 		return
 	}
 
-	obj, err = SaveNote(c, obj)
-	if err != nil {
+	username := GetUsername(c)
+	obj.DateAdded = time.Now()
+	obj.UserAdded = username
+	obj.DateModified = time.Now()
+	obj.UserModified = username
+	if _, err := SaveNote(c, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -722,6 +801,8 @@ func EditNoteR(c *gin.Context) {
 	obj.Title = body.Title
 	obj.Category = body.Category
 	obj.Description = body.Description
+	obj.DateModified = time.Now()
+	obj.UserModified = GetUsername(c)
 
 	if _, err := SaveNote(c, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())

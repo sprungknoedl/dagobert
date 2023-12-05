@@ -9,6 +9,11 @@ type Case struct {
 	Name           string `json:"name" binding:"required"`
 	Classification string `json:"classification"`
 	Summary        string `json:"summary"`
+
+	DateAdded    time.Time `json:"dateAdded"`
+	DateModified time.Time `json:"dateModified"`
+	UserAdded    string    `json:"userAdded"`
+	UserModified string    `json:"userModified"`
 }
 
 type Evidence struct {
@@ -19,6 +24,11 @@ type Evidence struct {
 	Size        int    `json:"size"`
 	Hash        string `json:"hash"`
 	Location    string `json:"location"`
+
+	DateAdded    time.Time `json:"dateAdded"`
+	DateModified time.Time `json:"dateModified"`
+	UserAdded    string    `json:"userAdded"`
+	UserModified string    `json:"userModified"`
 }
 
 type Asset struct {
@@ -29,6 +39,11 @@ type Asset struct {
 	Description string `json:"description"`
 	Compromised string `json:"compromised"`
 	Analysed    bool   `json:"analysed"`
+
+	DateAdded    time.Time `json:"dateAdded"`
+	DateModified time.Time `json:"dateModified"`
+	UserAdded    string    `json:"userAdded"`
+	UserModified string    `json:"userModified"`
 }
 
 type Indicator struct {
@@ -38,6 +53,11 @@ type Indicator struct {
 	TLP         string `json:"tlp" binding:"required"`
 	Description string `json:"description"`
 	Source      string `json:"source"`
+
+	DateAdded    time.Time `json:"dateAdded"`
+	DateModified time.Time `json:"dateModified"`
+	UserAdded    string    `json:"userAdded"`
+	UserModified string    `json:"userModified"`
 }
 
 type Event struct {
@@ -49,6 +69,11 @@ type Event struct {
 	Direction string    `json:"direction"`
 	Event     string    `json:"event" binding:"required"`
 	Raw       string    `json:"raw"`
+
+	DateAdded    time.Time `json:"dateAdded"`
+	DateModified time.Time `json:"dateModified"`
+	UserAdded    string    `json:"userAdded"`
+	UserModified string    `json:"userModified"`
 }
 
 type Malware struct {
@@ -60,6 +85,11 @@ type Malware struct {
 	System   string    `json:"system"`
 	Hash     string    `json:"hash"`
 	Notes    string    `json:"notes"`
+
+	DateAdded    time.Time `json:"dateAdded"`
+	DateModified time.Time `json:"dateModified"`
+	UserAdded    string    `json:"userAdded"`
+	UserModified string    `json:"userModified"`
 }
 
 type Note struct {
@@ -67,16 +97,25 @@ type Note struct {
 	Title       string `json:"title" binding:"required"`
 	Category    string `json:"category" binding:"required"`
 	Description string `json:"description" binding:"required"`
+
+	DateAdded    time.Time `json:"dateAdded"`
+	DateModified time.Time `json:"dateModified"`
+	UserAdded    string    `json:"userAdded"`
+	UserModified string    `json:"userModified"`
 }
 
 type Task struct {
-	ID        uint      `json:"id" gorm:"primarykey"`
-	Type      string    `json:"type" binding:"required"`
-	Task      string    `json:"task" binding:"required"`
-	Done      bool      `json:"done"`
-	Owner     string    `json:"owner"`
-	DateAdded time.Time `json:"dateAdded,omitempty"`
-	DateDue   time.Time `json:"dateDue,omitempty"`
+	ID      uint      `json:"id" gorm:"primarykey"`
+	Type    string    `json:"type" binding:"required"`
+	Task    string    `json:"task" binding:"required"`
+	Done    bool      `json:"done"`
+	Owner   string    `json:"owner"`
+	DateDue time.Time `json:"dateDue,omitempty"`
+
+	DateAdded    time.Time `json:"dateAdded,omitempty"`
+	DateModified time.Time `json:"dateModified"`
+	UserAdded    string    `json:"userAdded"`
+	UserModified string    `json:"userModified"`
 }
 
 type User struct {
@@ -88,4 +127,9 @@ type User struct {
 	Email     string `json:"email"`
 	Phone     string `json:"phone"`
 	Notes     string `json:"notes"`
+
+	DateAdded    time.Time `json:"dateAdded"`
+	DateModified time.Time `json:"dateModified"`
+	UserAdded    string    `json:"userAdded"`
+	UserModified string    `json:"userModified"`
 }
