@@ -22,7 +22,7 @@ data Route
     | ViewTasks
     | ViewNotes
 
-    | ViewCaseInfo
+    | ViewCases
 
     | FourOhFour
     
@@ -46,7 +46,7 @@ routeToTitle ViewEvidences = "Evidence"
 routeToTitle ViewTasks     = "Tasks"
 routeToTitle ViewNotes     = "Notes"
 
-routeToTitle ViewCaseInfo = "Case Information"
+routeToTitle ViewCases    = "Cases"
 routeToTitle FourOhFour   = "404"
 
 routes :: RouteDuplex' Route
@@ -65,6 +65,6 @@ routes = root $ sum
   , "ViewTasks"     : "tasks" / noArgs
   , "ViewNotes"     : "notes" / noArgs
 
-  , "ViewCaseInfo"  : noArgs
+  , "ViewCases"     : noArgs
   , "FourOhFour"    : "404" / noArgs
   }

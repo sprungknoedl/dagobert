@@ -19,7 +19,7 @@ import Effect (Effect)
 import FRP.Poll (Poll)
 
 assetsPage :: { poll ∷ Poll (PageState Asset) , push ∷ (PageState Asset) -> Effect Unit } -> Nut
-assetsPage state = Deku.do
+assetsPage = Deku.do
   let
     renderType :: String -> Nut
     renderType "Account" = fixed [ user (css "inline-block w-6 h-6 mr-2"), D.text_ "Account" ]
@@ -58,7 +58,7 @@ assetsPage state = Deku.do
                ]
 
     , modal: assetModal
-    } state
+    }
 
 assetModal :: DialogControls Asset -> Asset -> Unit -> Nut
 assetModal { save, cancel } input _ = Deku.do

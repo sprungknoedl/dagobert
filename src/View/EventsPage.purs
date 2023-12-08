@@ -31,7 +31,7 @@ detailsHtml = ( Proxy :: Proxy """
 """)
 
 eventsPage :: { poll ∷ Poll (PageState Event), push ∷ PageState Event -> Effect Unit } -> Nut
-eventsPage state = Deku.do
+eventsPage = Deku.do
   entityPage
     { title: ViewTimeline
     , ctor: newEvent
@@ -50,7 +50,7 @@ eventsPage state = Deku.do
                ]
 
     , modal: eventModal
-    } state
+    }
 
 eventModal :: DialogControls Event -> Event -> Array Asset -> Nut
 eventModal { save, cancel } input assets = Deku.do
