@@ -34,7 +34,7 @@ detailsHtml = ( Proxy :: Proxy """
 eventsPage :: { poll ∷ Poll (PageState Event), push ∷ PageState Event -> Effect Unit } -> Env -> Nut
 eventsPage state { kase } = Deku.do
   kase <#~> maybe mempty (\c -> entityPage
-    { title: ViewTimeline
+    { title: ViewTimeline 0
     , ctor: newEvent
     , id: _.id
     , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/event")

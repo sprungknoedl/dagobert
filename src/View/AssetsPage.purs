@@ -40,7 +40,7 @@ assetsPage state { kase } = Deku.do
     renderAnalysed false = xCircle $ css "w-6 h-6 text-red-500"
 
   kase <#~> maybe mempty (\c -> entityPage
-    { title: ViewAssets
+    { title: ViewAssets 0
     , ctor: newAsset
     , id: _.id
     , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/asset")

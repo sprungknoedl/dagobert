@@ -57,22 +57,22 @@ main = do
   runInBody $ fixed
     [ navigationPanel env
     , route <#~> case _ of
-      ViewTimeline   -> eventsPage events env
-      ViewAssets     -> assetsPage assets env
-      ViewMalware    -> malwarePage malware env
-      ViewIndicators -> indicatorsPage indicators env
+      ViewTimeline _        -> eventsPage events env
+      ViewAssets _          -> assetsPage assets env
+      ViewMalware _         -> malwarePage malware env
+      ViewIndicators _      -> indicatorsPage indicators env
 
-      ViewVisualTimeline  -> loading
-      ViewLateralMovement -> loading
-      ViewActivity        -> loading
+      ViewVisualTimeline _  -> loading
+      ViewLateralMovement _ -> loading
+      ViewActivity _        -> loading
 
-      ViewUsers      -> usersPage users env
-      ViewEvidences  -> evidencesPage evidences env
-      ViewTasks      -> tasksPage tasks env
-      ViewNotes      -> notesPage notes env
+      ViewUsers _           -> usersPage users env
+      ViewEvidences _       -> evidencesPage evidences env
+      ViewTasks _           -> tasksPage tasks env
+      ViewNotes _           -> notesPage notes env
 
-      ViewCases      -> casePage cases env
-      FourOhFour     -> loading
+      ViewCases             -> casePage cases env
+      FourOhFour            -> loading
     ]
 
   -- parse hash route & fetch initial data
@@ -81,22 +81,22 @@ main = do
     (\old new -> when (old /= Just new) $ launchAff_ do
       liftEffect $ setRoute new
       case new of
-        ViewTimeline        -> fetchData events     "/api/event"
-        ViewAssets          -> fetchData assets     "/api/asset"
-        ViewMalware         -> fetchData malware    "/api/malware"
-        ViewIndicators      -> fetchData indicators "/api/indicator"
+        ViewTimeline cid        -> fetchData events     ("/api/case/" <> show cid <> "/event")
+        ViewAssets cid          -> fetchData assets     ("/api/case/" <> show cid <> "/asset")
+        ViewMalware cid         -> fetchData malware    ("/api/case/" <> show cid <> "/malware")
+        ViewIndicators cid      -> fetchData indicators ("/api/case/" <> show cid <> "/indicator")
 
-        ViewVisualTimeline  -> pure unit
-        ViewLateralMovement -> pure unit
-        ViewActivity        -> pure unit
+        ViewVisualTimeline _    -> pure unit
+        ViewLateralMovement _   -> pure unit
+        ViewActivity _          -> pure unit
 
-        ViewUsers           -> fetchData users     "/api/user"
-        ViewEvidences       -> fetchData evidences "/api/evidence"
-        ViewTasks           -> fetchData tasks     "/api/task"
-        ViewNotes           -> fetchData notes     "/api/note"
+        ViewUsers cid           -> fetchData users     ("/api/case/" <> show cid <> "/user")
+        ViewEvidences cid       -> fetchData evidences ("/api/case/" <> show cid <> "/evidence")
+        ViewTasks cid           -> fetchData tasks     ("/api/case/" <> show cid <> "/task")
+        ViewNotes cid           -> fetchData notes     ("/api/case/" <> show cid <> "/note")
 
-        ViewCases           -> fetchData cases "/api/case"
-        FourOhFour          -> pure unit
+        ViewCases               -> fetchData cases     ("/api/case")
+        FourOhFour              -> pure unit
     )
 
   pure unit

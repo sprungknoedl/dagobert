@@ -21,7 +21,7 @@ import FRP.Poll (Poll)
 notesPage :: { poll ∷ Poll (PageState Note), push ∷ PageState Note -> Effect Unit } -> Env -> Nut
 notesPage state { kase } = Deku.do
   kase <#~> maybe mempty (\c -> entityPage
-    { title: ViewNotes
+    { title: ViewNotes 0
     , ctor: newNote
     , id: _.id
     , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/note")

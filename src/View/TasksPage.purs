@@ -36,7 +36,7 @@ tasksPage state { kase } = Deku.do
     renderDone false = xCircle $ css "w-6 h-6 text-red-500"
 
   kase <#~> maybe mempty (\c -> entityPage
-    { title: ViewTasks
+    { title: ViewTasks 0
     , ctor: newTask
     , id: _.id
     , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/task")

@@ -6,12 +6,12 @@ import Dagobert.Route (Route(..), routeToTitle, routes)
 import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.HTML (css)
 import Dagobert.Utils.Icons (bug, chatBubble, clipboardCheck, clock, cube, dagobert, desktop, fire, globeEurope, identification, users)
-import Data.Maybe (Maybe(..), isJust)
+import Data.Maybe (Maybe(..), maybe)
 import Deku.Attribute (Attribute)
 import Deku.Core (Nut, fixed)
 import Deku.DOM as D
 import Deku.DOM.Attributes as DA
-import Deku.Hooks (guard, (<#~>))
+import Deku.Hooks ((<#~>))
 import FRP.Poll (Poll)
 import Routing.Duplex (print)
 
@@ -34,24 +34,24 @@ navigationPanel { route, kase } =
         Nothing     -> D.span [ DA.klass_ "font-bold text-red-500 block" ] [ D.text_ "No case selected" ]
       ]
 
-    , guard (kase <#> isJust) $ fixed
+    , kase <#~> maybe mempty (\c -> fixed
       [ D.h3 [ DA.klass_ "mt-4 mb-1 font-bold" ] [ D.text_ "Investigation" ]
-      , link ViewTimeline   clock
-      , link ViewAssets     desktop
-      , link ViewMalware    bug
-      , link ViewIndicators globeEurope
+      , link (ViewTimeline c.id)   clock
+      , link (ViewAssets c.id)     desktop
+      , link (ViewMalware c.id)    bug
+      , link (ViewIndicators c.id) globeEurope
 
       -- , D.h3 [ DA.klass_ "mt-4 mb-1 font-bold" ] [ D.text_ "Reporting" ]
-      -- , link ViewVisualTimeline  mempty
-      -- , link ViewLateralMovement mempty
-      -- , link ViewActivity        mempty
+      -- , link (ViewVisualTimeline)  mempty
+      -- , link (ViewLateralMovement) mempty
+      -- , link (ViewActivity)        mempty
 
       , D.h3 [ DA.klass_ "mt-4 mb-1 font-bold" ] [ D.text_ "Case Management" ]
-      , link ViewUsers     users
-      , link ViewEvidences cube
-      , link ViewTasks     clipboardCheck
-      , link ViewNotes     chatBubble
-      ]
+      , link (ViewUsers c.id)     users
+      , link (ViewEvidences c.id) cube
+      , link (ViewTasks c.id)     clipboardCheck
+      , link (ViewNotes c.id)     chatBubble
+      ])
     ]
   where
   link :: forall r. Route -> (Poll (Attribute (klass :: String | r)) -> Nut) -> Nut
