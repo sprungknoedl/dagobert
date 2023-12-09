@@ -6,7 +6,7 @@ import Dagobert.Data.Indicator (Indicator, IndicatorStub, indicatorTypes, newInd
 import Dagobert.Route (Route(..))
 import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, selectField, textField, textareaField, validate)
-import Dagobert.Utils.HTML (css, modal)
+import Dagobert.Utils.HTML (css, modal, printDate, renderDateAdded)
 import Dagobert.Utils.Icons (commandLine, fingerprint, folderOpen, globeEurope, link, mapPin, questionMarkCircle)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
@@ -47,12 +47,12 @@ indicatorsPage state { kase } = Deku.do
     , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/indicator/" <> show obj.id)
     , hydrate:        pure $ pure unit
 
-    , columns: [ { title: "Date added",  width: "7rem",  renderString: const "1970-01-01", renderNut: const "1970-01-01" >>> D.text_  }
-               , { title: "Type",        width: "10rem", renderString: _.type,             renderNut: _.type >>> renderType  }
-               , { title: "Value",       width: "auto",  renderString: _.value,            renderNut: _.value >>> D.text_ }
-               , { title: "Description", width: "auto",  renderString: _.description,      renderNut: _.description >>> D.text_ }
-               , { title: "TLP",         width: "8rem",  renderString: _.tlp,              renderNut: _.tlp >>> renderTlp }
-               , { title: "Source",     width: "auto",   renderString: _.source,           renderNut: _.source >>> D.text_ }
+    , columns: [ { title: "Date added",  width: "7rem",  renderString: _.dateAdded >>> printDate, renderNut: renderDateAdded }
+               , { title: "Type",        width: "10rem", renderString: _.type,                    renderNut: _.type >>> renderType  }
+               , { title: "Value",       width: "auto",  renderString: _.value,                   renderNut: _.value >>> D.text_ }
+               , { title: "Description", width: "auto",  renderString: _.description,             renderNut: _.description >>> D.text_ }
+               , { title: "TLP",         width: "8rem",  renderString: _.tlp,                     renderNut: _.tlp >>> renderTlp }
+               , { title: "Source",      width: "auto",  renderString: _.source,                  renderNut: _.source >>> D.text_ }
                ]
 
     , modal: indicatorModal

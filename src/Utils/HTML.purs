@@ -56,6 +56,19 @@ tableHead columns widths = D.thead_
     column :: Int -> (String /\ String) -> Nut
     column _ (c /\ w) = D.th [ DA.style_ $ "width: " <> w ] [ D.text_ c ]
 
+renderDateAdded :: forall r. 
+  { dateAdded      :: String
+  , dateModified   :: String
+  , userAdded      :: String
+  , userModified   :: String 
+  | r } -> Nut
+renderDateAdded obj = D.span [ DA.title_ $
+      "Added on: " <> (printDate obj.dateAdded) <> "\r\n" <>
+      "Added by: " <> (obj.userAdded) <> "\r\n\r\n" <>
+      "Modified on: " <> (printDate obj.dateModified) <> "\r\n" <>
+      "Modified by: " <> (obj.userModified)   
+      ] [ D.text_ $ printDate obj.dateAdded ]
+
 sortedTableHead :: forall a b
   . ((a -> b) -> Effect Unit)
   -> Array String 

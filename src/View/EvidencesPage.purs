@@ -6,7 +6,7 @@ import Dagobert.Data.Evidence (Evidence, EvidenceStub, evidenceTypes, newEvidenc
 import Dagobert.Route (Route(..))
 import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, selectField, textField, textareaField, validate)
-import Dagobert.Utils.HTML (css, modal)
+import Dagobert.Utils.HTML (css, modal, printDate, renderDateAdded)
 import Dagobert.Utils.Icons (archivBox, cpuChip, documentText, folderOpen, questionMarkCircle, server)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
@@ -40,12 +40,12 @@ evidencesPage state { kase } = Deku.do
     , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/evidence/" <> show obj.id)
     , hydrate:        pure $ pure unit
 
-    , columns: [ { title: "Date added",  width: "7rem",  renderString: const "1970-01-01", renderNut: const "1970-01-01" >>> D.text_  }
-               , { title: "Type",        width: "15rem", renderString: _.type,             renderNut: _.type >>> renderType }
-               , { title: "Name",        width: "auto", renderString: _.name,             renderNut: _.name >>> D.text_ }
-               , { title: "Description", width: "auto",  renderString: _.description,      renderNut: _.description >>> D.text_ }
-               , { title: "Hash",        width: "auto",  renderString: _.hash,             renderNut: _.hash >>> D.text_ }
-               , { title: "Location",    width: "auto",  renderString: _.location,         renderNut: _.location >>> D.text_ }
+    , columns: [ { title: "Date added",  width: "7rem",  renderString: _.dateAdded >>> printDate, renderNut: renderDateAdded }
+               , { title: "Type",        width: "15rem", renderString: _.type,                    renderNut: _.type >>> renderType }
+               , { title: "Name",        width: "auto",  renderString: _.name,                    renderNut: _.name >>> D.text_ }
+               , { title: "Description", width: "auto",  renderString: _.description,             renderNut: _.description >>> D.text_ }
+               , { title: "Hash",        width: "auto",  renderString: _.hash,                    renderNut: _.hash >>> D.text_ }
+               , { title: "Location",    width: "auto",  renderString: _.location,                renderNut: _.location >>> D.text_ }
                ]
 
     , modal: evidenceModal

@@ -7,7 +7,7 @@ import Dagobert.Data.User (User)
 import Dagobert.Route (Route(..))
 import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, checkboxField, dummyField, form, label, poll, render, selectField, textField, textareaField, validate)
-import Dagobert.Utils.HTML (css, modal, printDate)
+import Dagobert.Utils.HTML (css, modal, printDate, renderDateAdded)
 import Dagobert.Utils.Icons (checkCircle, clipboardCheck, documentText, magnifyingGlass, questionMarkCircle, xCircle)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
@@ -45,7 +45,7 @@ tasksPage state { kase } = Deku.do
     , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/task/" <> show obj.id)
     , hydrate:        XHR.get    ("/api/case/" <> show c.id <> "/user")
 
-    , columns: [ { title: "Date added", width: "7rem",  renderString: _.dateAdded >>> printDate, renderNut: _.dateAdded >>> printDate >>> D.text_  }
+    , columns: [ { title: "Date added", width: "7rem",  renderString: _.dateAdded >>> printDate, renderNut: renderDateAdded  }
                , { title: "Date due",   width: "7rem",  renderString: _.dateDue >>> printDate,   renderNut: _.dateDue >>> printDate >>> D.text_  }
                , { title: "Type",       width: "15rem", renderString: _.type,                    renderNut: _.type >>> renderType }
                , { title: "Task",       width: "auto",  renderString: _.task,                    renderNut: _.task >>> D.text_ }
