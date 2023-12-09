@@ -45,21 +45,21 @@ type Column a =
   , renderString :: a -> String
   }
 
-type PageArgs a b = 
+type PageArgs a a' b = 
   { title      :: Route
   , ctor       :: a
-  , id         :: a -> Int
+  , id         :: a' -> Int
   , fetch      :: Aff (Either String (Array a))
-  , create     :: a -> Aff (Either String a)
-  , update     :: a -> Aff (Either String a)
+  , create     :: a' -> Aff (Either String a')
+  , update     :: a' -> Aff (Either String a')
   , delete     :: a -> Aff (Either String Unit)
   , hydrate    :: Aff (Either String b)
 
-  , modal      :: DialogControls a -> a -> b -> Nut
+  , modal      :: DialogControls a' -> a -> b -> Nut
   , columns    :: Array (Column a)
   }
 
-entityPage :: forall a b. Show b => PageArgs a b -> { poll ∷ Poll (PageState a), push ∷ PageState a -> Effect Unit } -> Nut
+entityPage :: forall a a' b. PageArgs a a' b -> { poll ∷ Poll (PageState a), push ∷ PageState a -> Effect Unit } -> Nut
 entityPage args pageState = Deku.do
   setModalVisible   /\ modalVisible   <- useState false
   setConfirmVisible /\ confirmVisible <- useState false
@@ -71,7 +71,7 @@ entityPage args pageState = Deku.do
   setSortCol        /\ sortCol        <- useState (-1)
 
   let
-    save :: a -> Effect Unit
+    save :: a' -> Effect Unit
     save obj = launchAff_ do
       pageState <~Loading
 

@@ -2,7 +2,7 @@ module Dagobert.View.NotesPage where
 
 import Prelude
 
-import Dagobert.Data.Note (Note, newNote)
+import Dagobert.Data.Note (Note, NoteStub, newNote)
 import Dagobert.Route (Route(..))
 import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, textField, textareaField, validate)
@@ -38,7 +38,7 @@ notesPage state { kase } = Deku.do
     , modal: notesModal
     } state)
 
-notesModal :: DialogControls Note -> Note -> Unit -> Nut
+notesModal :: DialogControls NoteStub -> Note -> Unit -> Nut
 notesModal { save, cancel } input _ = Deku.do
   id          <- useHot input.id
   category    <- useHot input.category
@@ -46,7 +46,7 @@ notesModal { save, cancel } input _ = Deku.do
   description <- useHot input.description
 
   let
-    formBuilder :: Form (Maybe Note)
+    formBuilder :: Form (Maybe NoteStub)
     formBuilder = ado
       id' <- dummyField id
         # validate V.id

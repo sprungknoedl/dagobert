@@ -3,7 +3,8 @@ module Dagobert.Route where
 import Prelude hiding ((/))
 
 import Data.Generic.Rep (class Generic)
-import Routing.Duplex (RouteDuplex', int, root, segment)
+import Data.Show.Generic (genericShow)
+import Routing.Duplex (RouteDuplex', int, segment)
 import Routing.Duplex.Generic (noArgs, sum)
 import Routing.Duplex.Generic.Syntax ((/))
 
@@ -30,6 +31,9 @@ derive instance genericRoute :: Generic Route _
 derive instance eqRoute :: Eq Route
 derive instance ordRoute :: Ord Route
 
+instance showRoute :: Show Route where
+  show = genericShow
+
 routeToTitle :: Route -> String
 routeToTitle (ViewTimeline _)        = "Timeline"
 routeToTitle (ViewAssets _)          = "Assets"
@@ -49,7 +53,7 @@ routeToTitle ViewCases               = "Cases"
 routeToTitle FourOhFour              = "404"
 
 routes :: RouteDuplex' Route
-routes = root $ sum
+routes = sum
   { "ViewTimeline"        : "case" / int segment / "timeline"
   , "ViewAssets"          : "case" / int segment / "assets"
   , "ViewMalware"         : "case" / int segment / "malware"

@@ -4,6 +4,7 @@ import Prelude
 
 import Control.Alt ((<|>))
 import Control.Monad.ST.Class (liftST)
+import Dagobert.Data.Case (Case)
 import Dagobert.Route (Route(..), routes)
 import Dagobert.Utils.HTML (loading)
 import Dagobert.Utils.Hooks ((<~))
@@ -79,27 +80,50 @@ main = do
   _ <- matchesWith
     (map (\e -> e <|> pure FourOhFour) (parse routes))
     (\old new -> when (old /= Just new) $ launchAff_ do
-      liftEffect $ setRoute new
-      case new of
-        ViewTimeline cid        -> fetchData events     ("/api/case/" <> show cid <> "/event")
-        ViewAssets cid          -> fetchData assets     ("/api/case/" <> show cid <> "/asset")
-        ViewMalware cid         -> fetchData malware    ("/api/case/" <> show cid <> "/malware")
-        ViewIndicators cid      -> fetchData indicators ("/api/case/" <> show cid <> "/indicator")
+        liftEffect $ setRoute new
+        case new of
+          ViewTimeline cid        -> do
+            fetchCase setKase cid
+            fetchData events     ("/api/case/" <> show cid <> "/event")
+          ViewAssets cid          -> do
+            fetchCase setKase cid
+            fetchData assets     ("/api/case/" <> show cid <> "/asset")
+          ViewMalware cid         -> do
+            fetchCase setKase cid
+            fetchData malware    ("/api/case/" <> show cid <> "/malware")
+          ViewIndicators cid      -> do
+            fetchCase setKase cid
+            fetchData indicators ("/api/case/" <> show cid <> "/indicator")
 
-        ViewVisualTimeline _    -> pure unit
-        ViewLateralMovement _   -> pure unit
-        ViewActivity _          -> pure unit
+          ViewVisualTimeline _    -> pure unit
+          ViewLateralMovement _   -> pure unit
+          ViewActivity _          -> pure unit
 
-        ViewUsers cid           -> fetchData users     ("/api/case/" <> show cid <> "/user")
-        ViewEvidences cid       -> fetchData evidences ("/api/case/" <> show cid <> "/evidence")
-        ViewTasks cid           -> fetchData tasks     ("/api/case/" <> show cid <> "/task")
-        ViewNotes cid           -> fetchData notes     ("/api/case/" <> show cid <> "/note")
+          ViewUsers cid           -> do
+              fetchCase setKase cid
+              fetchData users     ("/api/case/" <> show cid <> "/user")
+          ViewEvidences cid       -> do
+              fetchCase setKase cid
+              fetchData evidences ("/api/case/" <> show cid <> "/evidence")
+          ViewTasks cid           -> do
+              fetchCase setKase cid
+              fetchData tasks     ("/api/case/" <> show cid <> "/task")
+          ViewNotes cid           -> do
+              fetchCase setKase cid
+              fetchData notes     ("/api/case/" <> show cid <> "/note")
 
-        ViewCases               -> fetchData cases     ("/api/case")
-        FourOhFour              -> pure unit
+          ViewCases               -> fetchData cases     ("/api/case")
+          FourOhFour              -> pure unit
     )
 
   pure unit
+
+fetchCase :: (Maybe Case -> Effect Unit) -> Int -> Aff Unit
+fetchCase set cid = do
+  eitherCase <- XHR.get $ "/api/case/" <> show cid
+  case eitherCase of
+    Right k -> liftEffect $ set (Just k)
+    Left _  -> pure unit
 
 fetchData :: forall a r
   . ReadForeign a 

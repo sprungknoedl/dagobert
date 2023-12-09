@@ -2,7 +2,7 @@ module Dagobert.View.EvidencesPage where
 
 import Prelude
 
-import Dagobert.Data.Evidence (Evidence, evidenceTypes, newEvidence)
+import Dagobert.Data.Evidence (Evidence, EvidenceStub, evidenceTypes, newEvidence)
 import Dagobert.Route (Route(..))
 import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, selectField, textField, textareaField, validate)
@@ -51,7 +51,7 @@ evidencesPage state { kase } = Deku.do
     , modal: evidenceModal
     } state)
 
-evidenceModal :: DialogControls Evidence -> Evidence -> Unit -> Nut
+evidenceModal :: DialogControls EvidenceStub -> Evidence -> Unit -> Nut
 evidenceModal { save, cancel } input _ = Deku.do
   id          <- useHot input.id
   type_       <- useHot input.type
@@ -61,7 +61,7 @@ evidenceModal { save, cancel } input _ = Deku.do
   location    <- useHot input.location
 
   let
-    formBuilder :: Form (Maybe Evidence)
+    formBuilder :: Form (Maybe EvidenceStub)
     formBuilder = ado
       id' <- dummyField id
         # validate V.id

@@ -3,7 +3,7 @@ module Dagobert.View.EventsPage where
 import Prelude
 
 import Dagobert.Data.Asset (Asset)
-import Dagobert.Data.Event (Event, directionValues, eventTypes, newEvent)
+import Dagobert.Data.Event (Event, EventStub, directionValues, eventTypes, newEvent)
 import Dagobert.Route (Route(..))
 import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, selectField, textField, textareaField, validate)
@@ -41,7 +41,7 @@ eventsPage state { kase } = Deku.do
     , create: \obj -> XHR.post   ("/api/case/" <> show c.id <> "/event") obj
     , update: \obj -> XHR.put    ("/api/case/" <> show c.id <> "/event/" <> show obj.id) obj
     , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/event/" <> show obj.id)
-    , hydrate:        XHR.get    ("/api/case/" <> show c.id <> "/assets")
+    , hydrate:        XHR.get    ("/api/case/" <> show c.id <> "/asset")
 
     , columns: [ { title: "Date/Time",     width: "12rem", renderString: _.time >>> printDateTime, renderNut: _.time >>> printDateTime >>> D.text_  }
               , { title: "Type",          width: "10rem", renderString: _.type,                   renderNut: _.type >>> D.text_  }
@@ -53,7 +53,7 @@ eventsPage state { kase } = Deku.do
     , modal: eventModal
     } state)
 
-eventModal :: DialogControls Event -> Event -> Array Asset -> Nut
+eventModal :: DialogControls EventStub -> Event -> Array Asset -> Nut
 eventModal { save, cancel } input assets = Deku.do
   id        <- useHot input.id
   time      <- useHot input.time
@@ -65,7 +65,7 @@ eventModal { save, cancel } input assets = Deku.do
   raw       <- useHot input.raw
 
   let
-    formBuilder :: Form (Maybe Event)
+    formBuilder :: Form (Maybe EventStub)
     formBuilder = ado
       id' <- dummyField id
         # validate V.id

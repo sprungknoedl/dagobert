@@ -2,7 +2,7 @@ module Dagobert.View.UsersPage where
 
 import Prelude
 
-import Dagobert.Data.User (User, newUser)
+import Dagobert.Data.User (User, UserStub, newUser)
 import Dagobert.Route (Route(..))
 import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, textField, textareaField, validate)
@@ -42,7 +42,7 @@ usersPage state { kase } = Deku.do
     , modal: userModal
     } state)
 
-userModal :: DialogControls User -> User -> Unit -> Nut
+userModal :: DialogControls UserStub -> User -> Unit -> Nut
 userModal { save, cancel } input _ = Deku.do
   id        <- useHot input.id
   shortName <- useHot input.shortName
@@ -54,7 +54,7 @@ userModal { save, cancel } input _ = Deku.do
   notes     <- useHot input.notes
 
   let
-    formBuilder :: Form (Maybe User)
+    formBuilder :: Form (Maybe UserStub)
     formBuilder = ado
       id' <- dummyField id
         # validate V.id

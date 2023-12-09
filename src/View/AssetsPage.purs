@@ -2,11 +2,11 @@ module Dagobert.View.AssetsPage where
 
 import Prelude
 
-import Dagobert.Data.Asset (Asset, assetTypes, compromiseStates, newAsset)
+import Dagobert.Data.Asset (Asset, AssetStub, assetTypes, compromiseStates, newAsset)
 import Dagobert.Route (Route(..))
 import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, checkboxField, dummyField, form, label, poll, render, selectField, textField, textareaField, validate)
-import Dagobert.Utils.HTML (css, modal)
+import Dagobert.Utils.HTML (css, modal, printDate)
 import Dagobert.Utils.Icons (bug, checkCircle, desktop, questionMarkCircle, server, user, xCircle)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
@@ -14,6 +14,7 @@ import Dagobert.View.EntityPage (DialogControls, PageState, entityPage)
 import Data.Maybe (Maybe(..), maybe)
 import Deku.Core (Nut, fixed)
 import Deku.DOM as D
+import Deku.DOM.Attributes as DA
 import Deku.Do as Deku
 import Deku.Hooks (useHot, (<#~>))
 import Effect (Effect)
@@ -22,6 +23,13 @@ import FRP.Poll (Poll)
 assetsPage :: { poll ∷ Poll (PageState Asset) , push ∷ (PageState Asset) -> Effect Unit } -> Env -> Nut
 assetsPage state { kase } = Deku.do
   let
+    renderDateAdded obj = D.span [ DA.title_ $
+      "Added on: " <> (printDate obj.dateAdded) <> "\r\n" <>
+      "Added by: " <> (obj.userAdded) <> "\r\n\r\n" <>
+      "Modified on: " <> (printDate obj.dateModified) <> "\r\n" <>
+      "Modified by: " <> (obj.userModified)   
+      ] [ D.text_ $ printDate obj.dateAdded ]
+
     renderType :: String -> Nut
     renderType "Account" = fixed [ user (css "inline-block w-6 h-6 mr-2"), D.text_ "Account" ]
     renderType "Desktop" = fixed [ desktop (css "inline-block w-6 h-6 mr-2"), D.text_ "Desktop" ]
@@ -49,19 +57,19 @@ assetsPage state { kase } = Deku.do
     , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/asset/" <> show obj.id)
     , hydrate:        pure $ pure unit
 
-    , columns: [ { title: "Date added",  width: "7rem",  renderString: const "1970-01-01",  renderNut: const "1970-01-01" >>> D.text_  }
-              , { title: "Type",        width: "10rem",  renderString: _.type,              renderNut: _.type >>> renderType  }
-              , { title: "Name",        width: "auto",  renderString: _.name,              renderNut: _.name >>> D.text_ }
-              , { title: "IP",          width: "10rem", renderString: _.ip,                renderNut: _.ip >>> D.text_ }
-              , { title: "Description", width: "auto",  renderString: _.description,       renderNut: _.description >>> D.text_ }
-              , { title: "Compromised", width: "8rem",  renderString: _.compromised,       renderNut: _.compromised >>> renderCompromised }
-              , { title: "Analysed",    width: "7rem",  renderString: _.analysed >>> show, renderNut: _.analysed >>> renderAnalysed }
+    , columns: [ { title: "Date added", width: "7rem",  renderString: _.dateAdded >>> printDate,  renderNut: renderDateAdded }
+              , { title: "Type",        width: "10rem", renderString: _.type,                     renderNut: _.type >>> renderType  }
+              , { title: "Name",        width: "auto",  renderString: _.name,                     renderNut: _.name >>> D.text_ }
+              , { title: "IP",          width: "10rem", renderString: _.ip,                       renderNut: _.ip >>> D.text_ }
+              , { title: "Description", width: "auto",  renderString: _.description,              renderNut: _.description >>> D.text_ }
+              , { title: "Compromised", width: "8rem",  renderString: _.compromised,              renderNut: _.compromised >>> renderCompromised }
+              , { title: "Analysed",    width: "7rem",  renderString: _.analysed >>> show,        renderNut: _.analysed >>> renderAnalysed }
               ]
 
     , modal: assetModal
     } state)
 
-assetModal :: DialogControls Asset -> Asset -> Unit -> Nut
+assetModal :: DialogControls AssetStub -> Asset -> Unit -> Nut
 assetModal { save, cancel } input _ = Deku.do
   id          <- useHot input.id
   type_       <- useHot input.type
@@ -72,7 +80,7 @@ assetModal { save, cancel } input _ = Deku.do
   analysed    <- useHot input.analysed
 
   let
-    formBuilder :: Form (Maybe Asset)
+    formBuilder :: Form (Maybe AssetStub)
     formBuilder = ado
       id' <- dummyField id
         # validate V.id

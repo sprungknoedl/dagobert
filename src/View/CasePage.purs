@@ -2,7 +2,7 @@ module Dagobert.View.CasePage where
 
 import Prelude
 
-import Dagobert.Data.Case (Case, newCase)
+import Dagobert.Data.Case (Case, CaseStub, newCase)
 import Dagobert.Route (Route(..))
 import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, textField, textareaField, validate)
@@ -26,7 +26,7 @@ casePage state { kase, setKase } = Deku.do
     renderSelect :: Case -> Nut
     renderSelect obj = kase <#~> \cur -> case eq obj <$> cur of
         Just true -> D.span [ DA.klass_ "text-green-500" ] [ D.text_ "▶ Selected" ]
-        _         -> D.a [ DA.klass_ "cursor-pointer text-slate-400 hover:text-slate-200 hover:underline", DL.runOn_ DL.click $ setKase (Just obj) ] [ D.text_ "Select" ]
+        _         -> D.a [ DA.klass_ "cursor-pointer text-slate-400 hover:text-slate-200 hover:underline", DL.runOn_ DL.click $ setKase (Just obj) ] [ D.text_ "Switch" ]
 
   entityPage
     { title: ViewCases
@@ -48,7 +48,7 @@ casePage state { kase, setKase } = Deku.do
     , modal: caseModal
     } state
 
-caseModal :: DialogControls Case -> Case -> Unit -> Nut
+caseModal :: DialogControls CaseStub -> Case -> Unit -> Nut
 caseModal { save, cancel } input _ = Deku.do
   id             <- useHot input.id
   name           <- useHot input.name
@@ -56,7 +56,7 @@ caseModal { save, cancel } input _ = Deku.do
   summary        <- useHot input.summary
 
   let
-    formBuilder :: Form (Maybe Case)
+    formBuilder :: Form (Maybe CaseStub)
     formBuilder = ado
       id' <- dummyField id
         # validate V.id

@@ -2,7 +2,7 @@ module Dagobert.View.IndicatorsPage where
 
 import Prelude
 
-import Dagobert.Data.Indicator (Indicator, indicatorTypes, newIndicator, tlpValues)
+import Dagobert.Data.Indicator (Indicator, IndicatorStub, indicatorTypes, newIndicator, tlpValues)
 import Dagobert.Route (Route(..))
 import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, selectField, textField, textareaField, validate)
@@ -58,7 +58,7 @@ indicatorsPage state { kase } = Deku.do
     , modal: indicatorModal
     } state)
 
-indicatorModal :: DialogControls Indicator -> Indicator -> Unit -> Nut
+indicatorModal :: DialogControls IndicatorStub -> Indicator -> Unit -> Nut
 indicatorModal { save, cancel } input _ = Deku.do
   id          <- useHot input.id
   type_       <- useHot input.type
@@ -68,7 +68,7 @@ indicatorModal { save, cancel } input _ = Deku.do
   source      <- useHot input.source
 
   let
-    formBuilder :: Form (Maybe Indicator)
+    formBuilder :: Form (Maybe IndicatorStub)
     formBuilder = ado
       id' <- dummyField id
         # validate V.id

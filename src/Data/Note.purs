@@ -1,6 +1,17 @@
 module Dagobert.Data.Note where
 
+import Dagobert.Data.Common (Common, common)
+import Record (merge)
+
 type Note =
+  { id          :: Int
+  , title       :: String
+  , category    :: String
+  , description :: String
+  | Common
+  }
+
+type NoteStub =
   { id          :: Int
   , title       :: String
   , category    :: String
@@ -8,4 +19,4 @@ type Note =
   }
 
 newNote :: Note
-newNote = { id: 0, title: "", category: "", description: "" }
+newNote = merge common { id: 0, title: "", category: "", description: "" }

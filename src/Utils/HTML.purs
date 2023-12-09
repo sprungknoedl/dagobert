@@ -82,7 +82,7 @@ sortedTableHead cb columns widths fns = Deku.do
   D.thead_ [ D.tr_ (mapWithIndex column (zip columns widths)) ]
 
 loading :: Nut
-loading = mempty
+loading = D.text_ "Loading ..."
 
 error :: Poll (Effect Unit) -> String -> Nut
 error _ _ = mempty

@@ -84,72 +84,72 @@ func main() {
 
 	// cases
 	r.GET("/api/case", ListCaseR)
-	r.GET("/api/case/:id", GetCaseR)
+	r.GET("/api/case/:cid", GetCaseR)
 	r.POST("/api/case", AddCaseR)
-	r.PUT("/api/case/:id", EditCaseR)
-	r.DELETE("/api/case/:id", DeleteCaseR)
+	r.PUT("/api/case/:cid", EditCaseR)
+	r.DELETE("/api/case/:cid", DeleteCaseR)
 
 	// --------------------------------------
 	// Investigation
 	// --------------------------------------
 	// events
-	r.GET("/api/event", ListEventR)
-	r.GET("/api/event/:id", GetEventR)
-	r.POST("/api/event", AddEventR)
-	r.PUT("/api/event/:id", EditEventR)
-	r.DELETE("/api/event/:id", DeleteEventR)
+	r.GET("/api/case/:cid/event", ListEventR)
+	r.GET("/api/case/:cid/event/:id", GetEventR)
+	r.POST("/api/case/:cid/event", AddEventR)
+	r.PUT("/api/case/:cid/event/:id", EditEventR)
+	r.DELETE("/api/case/:cid/event/:id", DeleteEventR)
 
 	// assets
-	r.GET("/api/asset", ListAssetR)
-	r.GET("/api/asset/:id", GetAssetR)
-	r.POST("/api/asset", AddAssetR)
-	r.PUT("/api/asset/:id", EditAssetR)
-	r.DELETE("/api/asset/:id", DeleteAssetR)
+	r.GET("/api/case/:cid/asset", ListAssetR)
+	r.GET("/api/case/:cid/asset/:id", GetAssetR)
+	r.POST("/api/case/:cid/asset", AddAssetR)
+	r.PUT("/api/case/:cid/asset/:id", EditAssetR)
+	r.DELETE("/api/case/:cid/asset/:id", DeleteAssetR)
 
 	// malware
-	r.GET("/api/malware", ListMalwareR)
-	r.GET("/api/malware/:id", GetMalwareR)
-	r.POST("/api/malware", AddMalwareR)
-	r.PUT("/api/malware/:id", EditMalwareR)
-	r.DELETE("/api/malware/:id", DeleteMalwareR)
+	r.GET("/api/case/:cid/malware", ListMalwareR)
+	r.GET("/api/case/:cid/malware/:id", GetMalwareR)
+	r.POST("/api/case/:cid/malware", AddMalwareR)
+	r.PUT("/api/case/:cid/malware/:id", EditMalwareR)
+	r.DELETE("/api/case/:cid/malware/:id", DeleteMalwareR)
 
 	// indicators
-	r.GET("/api/indicator", ListIndicatorR)
-	r.GET("/api/indicator/:id", GetIndicatorR)
-	r.POST("/api/indicator", AddIndicatorR)
-	r.PUT("/api/indicator/:id", EditIndicatorR)
-	r.DELETE("/api/indicator/:id", DeleteIndicatorR)
+	r.GET("/api/case/:cid/indicator", ListIndicatorR)
+	r.GET("/api/case/:cid/indicator/:id", GetIndicatorR)
+	r.POST("/api/case/:cid/indicator", AddIndicatorR)
+	r.PUT("/api/case/:cid/indicator/:id", EditIndicatorR)
+	r.DELETE("/api/case/:cid/indicator/:id", DeleteIndicatorR)
 
 	// --------------------------------------
 	// Case Management
 	// --------------------------------------
 	// users
-	r.GET("/api/user", ListUserR)
-	r.GET("/api/user/:id", GetUserR)
-	r.POST("/api/user", AddUserR)
-	r.PUT("/api/user/:id", EditUserR)
-	r.DELETE("/api/user/:id", DeleteUserR)
+	r.GET("/api/case/:cid/user", ListUserR)
+	r.GET("/api/case/:cid/user/:id", GetUserR)
+	r.POST("/api/case/:cid/user", AddUserR)
+	r.PUT("/api/case/:cid/user/:id", EditUserR)
+	r.DELETE("/api/case/:cid/user/:id", DeleteUserR)
 
 	// evidence
-	r.GET("/api/evidence", ListEvidenceR)
-	r.GET("/api/evidence/:id", GetEvidenceR)
-	r.POST("/api/evidence", AddEvidenceR)
-	r.PUT("/api/evidence/:id", EditEvidenceR)
-	r.DELETE("/api/evidence/:id", DeleteEvidenceR)
+	r.GET("/api/case/:cid/evidence", ListEvidenceR)
+	r.GET("/api/case/:cid/evidence/:id", GetEvidenceR)
+	r.POST("/api/case/:cid/evidence", AddEvidenceR)
+	r.PUT("/api/case/:cid/evidence/:id", EditEvidenceR)
+	r.DELETE("/api/case/:cid/evidence/:id", DeleteEvidenceR)
 
 	// tasks
-	r.GET("/api/task", ListTaskR)
-	r.GET("/api/task/:id", GetTaskR)
-	r.POST("/api/task", AddTaskR)
-	r.PUT("/api/task/:id", EditTaskR)
-	r.DELETE("/api/task/:id", DeleteTaskR)
+	r.GET("/api/case/:cid/task", ListTaskR)
+	r.GET("/api/case/:cid/task/:id", GetTaskR)
+	r.POST("/api/case/:cid/task", AddTaskR)
+	r.PUT("/api/case/:cid/task/:id", EditTaskR)
+	r.DELETE("/api/case/:cid/task/:id", DeleteTaskR)
 
 	// notes
-	r.GET("/api/note", ListNoteR)
-	r.GET("/api/note/:id", GetNoteR)
-	r.POST("/api/note", AddNoteR)
-	r.PUT("/api/note/:id", EditNoteR)
-	r.DELETE("/api/note/:id", DeleteNoteR)
+	r.GET("/api/case/:cid/note", ListNoteR)
+	r.GET("/api/case/:cid/note/:id", GetNoteR)
+	r.POST("/api/case/:cid/note", AddNoteR)
+	r.PUT("/api/case/:cid/note/:id", EditNoteR)
+	r.DELETE("/api/case/:cid/note/:id", DeleteNoteR)
 
 	// --------------------------------------
 	// Assets

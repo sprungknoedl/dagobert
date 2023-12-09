@@ -25,6 +25,9 @@ type Evidence struct {
 	Hash        string `json:"hash"`
 	Location    string `json:"location"`
 
+	CaseID int  `json:"caseId"`
+	Case   Case `json:"-" binding:"-"`
+
 	DateAdded    time.Time `json:"dateAdded"`
 	DateModified time.Time `json:"dateModified"`
 	UserAdded    string    `json:"userAdded"`
@@ -40,6 +43,9 @@ type Asset struct {
 	Compromised string `json:"compromised"`
 	Analysed    bool   `json:"analysed"`
 
+	CaseID int  `json:"caseId"`
+	Case   Case `json:"-" binding:"-"`
+
 	DateAdded    time.Time `json:"dateAdded"`
 	DateModified time.Time `json:"dateModified"`
 	UserAdded    string    `json:"userAdded"`
@@ -53,6 +59,9 @@ type Indicator struct {
 	TLP         string `json:"tlp" binding:"required"`
 	Description string `json:"description"`
 	Source      string `json:"source"`
+
+	CaseID int  `json:"caseId"`
+	Case   Case `json:"-" binding:"-"`
 
 	DateAdded    time.Time `json:"dateAdded"`
 	DateModified time.Time `json:"dateModified"`
@@ -70,6 +79,9 @@ type Event struct {
 	Event     string    `json:"event" binding:"required"`
 	Raw       string    `json:"raw"`
 
+	CaseID int  `json:"caseId"`
+	Case   Case `json:"-" binding:"-"`
+
 	DateAdded    time.Time `json:"dateAdded"`
 	DateModified time.Time `json:"dateModified"`
 	UserAdded    string    `json:"userAdded"`
@@ -86,6 +98,9 @@ type Malware struct {
 	Hash     string    `json:"hash"`
 	Notes    string    `json:"notes"`
 
+	CaseID int  `json:"caseId"`
+	Case   Case `json:"-" binding:"-"`
+
 	DateAdded    time.Time `json:"dateAdded"`
 	DateModified time.Time `json:"dateModified"`
 	UserAdded    string    `json:"userAdded"`
@@ -97,6 +112,9 @@ type Note struct {
 	Title       string `json:"title" binding:"required"`
 	Category    string `json:"category" binding:"required"`
 	Description string `json:"description" binding:"required"`
+
+	CaseID int  `json:"caseId"`
+	Case   Case `json:"-" binding:"-"`
 
 	DateAdded    time.Time `json:"dateAdded"`
 	DateModified time.Time `json:"dateModified"`
@@ -111,6 +129,9 @@ type Task struct {
 	Done    bool      `json:"done"`
 	Owner   string    `json:"owner"`
 	DateDue time.Time `json:"dateDue,omitempty"`
+
+	CaseID int  `json:"caseId"`
+	Case   Case `json:"-" binding:"-"`
 
 	DateAdded    time.Time `json:"dateAdded,omitempty"`
 	DateModified time.Time `json:"dateModified"`
@@ -127,6 +148,9 @@ type User struct {
 	Email     string `json:"email"`
 	Phone     string `json:"phone"`
 	Notes     string `json:"notes"`
+
+	CaseID int  `json:"caseId"`
+	Case   Case `json:"-" binding:"-"`
 
 	DateAdded    time.Time `json:"dateAdded"`
 	DateModified time.Time `json:"dateModified"`

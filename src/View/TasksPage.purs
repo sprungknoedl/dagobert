@@ -2,7 +2,7 @@ module Dagobert.View.TasksPage where
 
 import Prelude
 
-import Dagobert.Data.Task (Task, newTask, taskTypes)
+import Dagobert.Data.Task (Task, TaskStub, newTask, taskTypes)
 import Dagobert.Data.User (User)
 import Dagobert.Route (Route(..))
 import Dagobert.Utils.Env (Env)
@@ -56,10 +56,9 @@ tasksPage state { kase } = Deku.do
     , modal: taskModal
     } state)
 
-taskModal :: DialogControls Task -> Task -> Array User -> Nut
+taskModal :: DialogControls TaskStub -> Task -> Array User -> Nut
 taskModal { save, cancel } input users = Deku.do
   id        <- useHot input.id
-  dateAdded <- useHot input.dateAdded
   dateDue   <- useHot input.dateDue
   type_     <- useHot input.type
   task      <- useHot input.task
@@ -67,7 +66,7 @@ taskModal { save, cancel } input users = Deku.do
   owner     <- useHot input.owner
 
   let
-    formBuilder :: Form (Maybe Task)
+    formBuilder :: Form (Maybe TaskStub)
     formBuilder = ado
       id' <- dummyField id
         # validate V.id
@@ -84,9 +83,6 @@ taskModal { save, cancel } input users = Deku.do
         # validate V.optional
         # label "Owner"
 
-      dateAdded' <- dummyField dateAdded
-        # validate (V.optional >=> V.defaultsTo "1970-01-01T00:00:00Z" >=> V.datetime)
-
       dateDue' <- textField dateDue
         # validate (V.optional >=> V.defaultsTo "1970-01-01T00:00:00Z" >=> V.datetime)
         # label "Date Due"
@@ -95,8 +91,8 @@ taskModal { save, cancel } input users = Deku.do
         # validate V.optional
         # label "Done"
 
-      in { id: _,  dateAdded: _,  dateDue: _,  type: _,  done: _,  owner: _,  task: _ }
-       <$> id' <*> dateAdded' <*> dateDue' <*> type' <*> done' <*> owner' <*> task'
+      in { id: _,  dateDue: _,  type: _,  done: _,  owner: _,  task: _ }
+       <$> id' <*> dateDue' <*> type' <*> done' <*> owner' <*> task'
 
     onSubmit :: Poll (Effect Unit)
     onSubmit = do

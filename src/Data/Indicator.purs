@@ -1,6 +1,19 @@
 module Dagobert.Data.Indicator where
 
+import Dagobert.Data.Common (Common, common)
+import Record (merge)
+
 type Indicator =
+  { id          :: Int
+  , type        :: String
+  , value       :: String
+  , tlp         :: String
+  , description :: String
+  , source      :: String
+  | Common
+  }
+
+type IndicatorStub =
   { id          :: Int
   , type        :: String
   , value       :: String
@@ -10,10 +23,7 @@ type Indicator =
   }
 
 newIndicator :: Indicator
-newIndicator = { id: 0, type: "", value: "", tlp: "", description: "", source: ""}
-
-mkIndicator :: Int -> String -> String -> String -> String -> String -> Indicator
-mkIndicator = { id: _, type: _, value: _, tlp: _, description: _, source: _}
+newIndicator = merge common { id: 0, type: "", value: "", tlp: "", description: "", source: "" }
 
 indicatorTypes :: Array String
 indicatorTypes = ["IP", "Domain", "URL", "Path", "Hash", "Service", "Other"]

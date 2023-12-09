@@ -40,8 +40,8 @@ func ListCaseR(c *gin.Context) {
 }
 
 func GetCaseR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetCase(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetCase(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -72,8 +72,8 @@ func AddCaseR(c *gin.Context) {
 }
 
 func EditCaseR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetCase(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetCase(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -102,8 +102,8 @@ func EditCaseR(c *gin.Context) {
 }
 
 func DeleteCaseR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	err := DeleteCase(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	err := DeleteCase(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())
 		return
@@ -116,7 +116,8 @@ func DeleteCaseR(c *gin.Context) {
 // Events
 // --------------------------------------
 func ListEventR(c *gin.Context) {
-	list, err := ListEvent(c)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	list, err := ListEvent(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -127,7 +128,8 @@ func ListEventR(c *gin.Context) {
 
 func GetEventR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetEvent(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetEvent(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -137,6 +139,8 @@ func GetEventR(c *gin.Context) {
 }
 
 func AddEventR(c *gin.Context) {
+	cid, _ := strconv.Atoi(c.Param("cid"))
+
 	obj := Event{}
 	err := c.BindJSON(&obj)
 	if err != nil {
@@ -145,11 +149,12 @@ func AddEventR(c *gin.Context) {
 	}
 
 	username := GetUsername(c)
+	obj.CaseID = cid
 	obj.DateAdded = time.Now()
 	obj.UserAdded = username
 	obj.DateModified = time.Now()
 	obj.UserModified = username
-	if _, err := SaveEvent(c, obj); err != nil {
+	if _, err := SaveEvent(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -159,7 +164,8 @@ func AddEventR(c *gin.Context) {
 
 func EditEventR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetEvent(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetEvent(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -183,7 +189,7 @@ func EditEventR(c *gin.Context) {
 	obj.DateModified = time.Now()
 	obj.UserModified = GetUsername(c)
 
-	if _, err := SaveEvent(c, obj); err != nil {
+	if _, err := SaveEvent(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -193,7 +199,8 @@ func EditEventR(c *gin.Context) {
 
 func DeleteEventR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	err := DeleteEvent(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	err := DeleteEvent(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())
 		return
@@ -206,7 +213,8 @@ func DeleteEventR(c *gin.Context) {
 // Assets
 // --------------------------------------
 func ListAssetR(c *gin.Context) {
-	list, err := ListAsset(c)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	list, err := ListAsset(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -217,7 +225,8 @@ func ListAssetR(c *gin.Context) {
 
 func GetAssetR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetAsset(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetAsset(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -227,6 +236,8 @@ func GetAssetR(c *gin.Context) {
 }
 
 func AddAssetR(c *gin.Context) {
+	cid, _ := strconv.Atoi(c.Param("cid"))
+
 	obj := Asset{}
 	err := c.BindJSON(&obj)
 	if err != nil {
@@ -235,11 +246,12 @@ func AddAssetR(c *gin.Context) {
 	}
 
 	username := GetUsername(c)
+	obj.CaseID = cid
 	obj.DateAdded = time.Now()
 	obj.UserAdded = username
 	obj.DateModified = time.Now()
 	obj.UserModified = username
-	if _, err := SaveAsset(c, obj); err != nil {
+	if _, err := SaveAsset(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -249,7 +261,8 @@ func AddAssetR(c *gin.Context) {
 
 func EditAssetR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetAsset(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetAsset(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -272,7 +285,7 @@ func EditAssetR(c *gin.Context) {
 	obj.DateModified = time.Now()
 	obj.UserModified = GetUsername(c)
 
-	if _, err := SaveAsset(c, obj); err != nil {
+	if _, err := SaveAsset(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -282,7 +295,8 @@ func EditAssetR(c *gin.Context) {
 
 func DeleteAssetR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	err := DeleteAsset(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	err := DeleteAsset(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())
 		return
@@ -295,7 +309,8 @@ func DeleteAssetR(c *gin.Context) {
 // Malware
 // --------------------------------------
 func ListMalwareR(c *gin.Context) {
-	list, err := ListMalware(c)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	list, err := ListMalware(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -306,7 +321,8 @@ func ListMalwareR(c *gin.Context) {
 
 func GetMalwareR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetMalware(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetMalware(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -316,6 +332,8 @@ func GetMalwareR(c *gin.Context) {
 }
 
 func AddMalwareR(c *gin.Context) {
+	cid, _ := strconv.Atoi(c.Param("cid"))
+
 	obj := Malware{}
 	err := c.BindJSON(&obj)
 	if err != nil {
@@ -324,11 +342,12 @@ func AddMalwareR(c *gin.Context) {
 	}
 
 	username := GetUsername(c)
+	obj.CaseID = cid
 	obj.DateAdded = time.Now()
 	obj.UserAdded = username
 	obj.DateModified = time.Now()
 	obj.UserModified = username
-	if _, err := SaveMalware(c, obj); err != nil {
+	if _, err := SaveMalware(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -338,7 +357,8 @@ func AddMalwareR(c *gin.Context) {
 
 func EditMalwareR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetMalware(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetMalware(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -362,7 +382,7 @@ func EditMalwareR(c *gin.Context) {
 	obj.DateModified = time.Now()
 	obj.UserModified = GetUsername(c)
 
-	if _, err := SaveMalware(c, obj); err != nil {
+	if _, err := SaveMalware(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -372,7 +392,8 @@ func EditMalwareR(c *gin.Context) {
 
 func DeleteMalwareR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	err := DeleteMalware(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	err := DeleteMalware(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())
 		return
@@ -385,7 +406,8 @@ func DeleteMalwareR(c *gin.Context) {
 // Indicators
 // --------------------------------------
 func ListIndicatorR(c *gin.Context) {
-	list, err := ListIndicator(c)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	list, err := ListIndicator(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -396,7 +418,8 @@ func ListIndicatorR(c *gin.Context) {
 
 func GetIndicatorR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetIndicator(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetIndicator(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -406,6 +429,8 @@ func GetIndicatorR(c *gin.Context) {
 }
 
 func AddIndicatorR(c *gin.Context) {
+	cid, _ := strconv.Atoi(c.Param("cid"))
+
 	obj := Indicator{}
 	err := c.BindJSON(&obj)
 	if err != nil {
@@ -414,11 +439,12 @@ func AddIndicatorR(c *gin.Context) {
 	}
 
 	username := GetUsername(c)
+	obj.CaseID = cid
 	obj.DateAdded = time.Now()
 	obj.UserAdded = username
 	obj.DateModified = time.Now()
 	obj.UserModified = username
-	if _, err := SaveIndicator(c, obj); err != nil {
+	if _, err := SaveIndicator(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -428,7 +454,8 @@ func AddIndicatorR(c *gin.Context) {
 
 func EditIndicatorR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetIndicator(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetIndicator(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -450,7 +477,7 @@ func EditIndicatorR(c *gin.Context) {
 	obj.DateModified = time.Now()
 	obj.UserModified = GetUsername(c)
 
-	if _, err := SaveIndicator(c, obj); err != nil {
+	if _, err := SaveIndicator(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -460,7 +487,8 @@ func EditIndicatorR(c *gin.Context) {
 
 func DeleteIndicatorR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	err := DeleteIndicator(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	err := DeleteIndicator(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())
 		return
@@ -473,7 +501,8 @@ func DeleteIndicatorR(c *gin.Context) {
 // Users
 // --------------------------------------
 func ListUserR(c *gin.Context) {
-	list, err := ListUser(c)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	list, err := ListUser(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -484,7 +513,8 @@ func ListUserR(c *gin.Context) {
 
 func GetUserR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetUser(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetUser(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -494,6 +524,8 @@ func GetUserR(c *gin.Context) {
 }
 
 func AddUserR(c *gin.Context) {
+	cid, _ := strconv.Atoi(c.Param("cid"))
+
 	obj := User{}
 	err := c.BindJSON(&obj)
 	if err != nil {
@@ -502,11 +534,12 @@ func AddUserR(c *gin.Context) {
 	}
 
 	username := GetUsername(c)
+	obj.CaseID = cid
 	obj.DateAdded = time.Now()
 	obj.UserAdded = username
 	obj.DateModified = time.Now()
 	obj.UserModified = username
-	obj, err = SaveUser(c, obj)
+	obj, err = SaveUser(c, cid, obj)
 	if err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
@@ -517,7 +550,8 @@ func AddUserR(c *gin.Context) {
 
 func EditUserR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetUser(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetUser(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -541,7 +575,7 @@ func EditUserR(c *gin.Context) {
 	obj.DateModified = time.Now()
 	obj.UserModified = GetUsername(c)
 
-	if _, err := SaveUser(c, obj); err != nil {
+	if _, err := SaveUser(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -550,7 +584,8 @@ func EditUserR(c *gin.Context) {
 
 func DeleteUserR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	err := DeleteUser(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	err := DeleteUser(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())
 		return
@@ -563,7 +598,8 @@ func DeleteUserR(c *gin.Context) {
 // Evidences
 // --------------------------------------
 func ListEvidenceR(c *gin.Context) {
-	list, err := ListEvidence(c)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	list, err := ListEvidence(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -574,7 +610,8 @@ func ListEvidenceR(c *gin.Context) {
 
 func GetEvidenceR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetEvidence(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetEvidence(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -584,6 +621,8 @@ func GetEvidenceR(c *gin.Context) {
 }
 
 func AddEvidenceR(c *gin.Context) {
+	cid, _ := strconv.Atoi(c.Param("cid"))
+
 	obj := Evidence{}
 	err := c.BindJSON(&obj)
 	if err != nil {
@@ -592,11 +631,12 @@ func AddEvidenceR(c *gin.Context) {
 	}
 
 	username := GetUsername(c)
+	obj.CaseID = cid
 	obj.DateAdded = time.Now()
 	obj.UserAdded = username
 	obj.DateModified = time.Now()
 	obj.UserModified = username
-	obj, err = SaveEvidence(c, obj)
+	obj, err = SaveEvidence(c, cid, obj)
 	if err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
@@ -607,7 +647,8 @@ func AddEvidenceR(c *gin.Context) {
 
 func EditEvidenceR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetEvidence(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetEvidence(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -630,7 +671,7 @@ func EditEvidenceR(c *gin.Context) {
 	obj.DateModified = time.Now()
 	obj.UserModified = GetUsername(c)
 
-	if _, err := SaveEvidence(c, obj); err != nil {
+	if _, err := SaveEvidence(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -639,7 +680,8 @@ func EditEvidenceR(c *gin.Context) {
 
 func DeleteEvidenceR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	err := DeleteEvidence(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	err := DeleteEvidence(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())
 		return
@@ -652,7 +694,8 @@ func DeleteEvidenceR(c *gin.Context) {
 // Tasks
 // --------------------------------------
 func ListTaskR(c *gin.Context) {
-	list, err := ListTask(c)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	list, err := ListTask(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -663,7 +706,8 @@ func ListTaskR(c *gin.Context) {
 
 func GetTaskR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetTask(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetTask(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -673,6 +717,8 @@ func GetTaskR(c *gin.Context) {
 }
 
 func AddTaskR(c *gin.Context) {
+	cid, _ := strconv.Atoi(c.Param("cid"))
+
 	obj := Task{}
 	err := c.BindJSON(&obj)
 	if err != nil {
@@ -681,11 +727,12 @@ func AddTaskR(c *gin.Context) {
 	}
 
 	username := GetUsername(c)
+	obj.CaseID = cid
 	obj.DateAdded = time.Now()
 	obj.UserAdded = username
 	obj.DateModified = time.Now()
 	obj.UserModified = username
-	obj, err = SaveTask(c, obj)
+	obj, err = SaveTask(c, cid, obj)
 	if err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
@@ -696,7 +743,8 @@ func AddTaskR(c *gin.Context) {
 
 func EditTaskR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetTask(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetTask(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -719,7 +767,7 @@ func EditTaskR(c *gin.Context) {
 	obj.DateModified = time.Now()
 	obj.UserModified = GetUsername(c)
 
-	if _, err := SaveTask(c, obj); err != nil {
+	if _, err := SaveTask(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -728,7 +776,8 @@ func EditTaskR(c *gin.Context) {
 
 func DeleteTaskR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	err := DeleteTask(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	err := DeleteTask(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())
 		return
@@ -741,7 +790,8 @@ func DeleteTaskR(c *gin.Context) {
 // Notes
 // --------------------------------------
 func ListNoteR(c *gin.Context) {
-	list, err := ListNote(c)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	list, err := ListNote(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -752,7 +802,8 @@ func ListNoteR(c *gin.Context) {
 
 func GetNoteR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetNote(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetNote(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -762,6 +813,8 @@ func GetNoteR(c *gin.Context) {
 }
 
 func AddNoteR(c *gin.Context) {
+	cid, _ := strconv.Atoi(c.Param("cid"))
+
 	obj := Note{}
 	err := c.BindJSON(&obj)
 	if err != nil {
@@ -770,11 +823,12 @@ func AddNoteR(c *gin.Context) {
 	}
 
 	username := GetUsername(c)
+	obj.CaseID = cid
 	obj.DateAdded = time.Now()
 	obj.UserAdded = username
 	obj.DateModified = time.Now()
 	obj.UserModified = username
-	if _, err := SaveNote(c, obj); err != nil {
+	if _, err := SaveNote(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -784,7 +838,8 @@ func AddNoteR(c *gin.Context) {
 
 func EditNoteR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	obj, err := GetNote(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	obj, err := GetNote(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -804,7 +859,7 @@ func EditNoteR(c *gin.Context) {
 	obj.DateModified = time.Now()
 	obj.UserModified = GetUsername(c)
 
-	if _, err := SaveNote(c, obj); err != nil {
+	if _, err := SaveNote(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -813,7 +868,8 @@ func EditNoteR(c *gin.Context) {
 
 func DeleteNoteR(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
-	err := DeleteNote(c, id)
+	cid, _ := strconv.Atoi(c.Param("cid"))
+	err := DeleteNote(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())
 		return
