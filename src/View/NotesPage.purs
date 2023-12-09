@@ -4,29 +4,30 @@ import Prelude
 
 import Dagobert.Data.Note (Note, newNote)
 import Dagobert.Route (Route(..))
+import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, textField, textareaField, validate)
 import Dagobert.Utils.HTML (modal)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
 import Dagobert.View.EntityPage (PageState, DialogControls, entityPage)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Deku.Core (Nut)
 import Deku.DOM as D
 import Deku.Do as Deku
-import Deku.Hooks (useHot)
+import Deku.Hooks (useHot, (<#~>))
 import Effect (Effect)
 import FRP.Poll (Poll)
 
-notesPage :: { poll ∷ Poll (PageState Note), push ∷ PageState Note -> Effect Unit } -> Nut
-notesPage = Deku.do
-  entityPage
+notesPage :: { poll ∷ Poll (PageState Note), push ∷ PageState Note -> Effect Unit } -> Env -> Nut
+notesPage state { kase } = Deku.do
+  kase <#~> maybe mempty (\c -> entityPage
     { title: ViewNotes
     , ctor: newNote
     , id: _.id
-    , fetch:          XHR.get "/api/note"
-    , create: \obj -> XHR.post "/api/note" obj
-    , update: \obj -> XHR.put ("/api/note/" <> show obj.id) obj
-    , delete: \obj -> XHR.delete ("/api/note/" <> show obj.id)
+    , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/note")
+    , create: \obj -> XHR.post   ("/api/case/" <> show c.id <> "/note") obj
+    , update: \obj -> XHR.put    ("/api/case/" <> show c.id <> "/note/" <> show obj.id) obj
+    , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/note/" <> show obj.id)
     , hydrate:        pure $ pure unit
 
     , columns: [ { title: "Category",    width: "15rem", renderString: _.category,    renderNut: _.category >>> D.text_  }
@@ -35,7 +36,7 @@ notesPage = Deku.do
                ]
 
     , modal: notesModal
-    }
+    } state)
 
 notesModal :: DialogControls Note -> Note -> Unit -> Nut
 notesModal { save, cancel } input _ = Deku.do

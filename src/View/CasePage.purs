@@ -32,9 +32,9 @@ casePage state { kase, setKase } = Deku.do
     { title: ViewCases
     , ctor: newCase
     , id: _.id
-    , fetch:          XHR.get "/api/case"
-    , create: \obj -> XHR.post "/api/case" obj
-    , update: \obj -> XHR.put ("/api/case/" <> show obj.id) obj
+    , fetch:          XHR.get    ("/api/case")
+    , create: \obj -> XHR.post   ("/api/case") obj
+    , update: \obj -> XHR.put    ("/api/case/" <> show obj.id) obj
     , delete: \obj -> XHR.delete ("/api/case/" <> show obj.id)
     , hydrate:        pure $ pure unit
 

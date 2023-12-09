@@ -4,29 +4,30 @@ import Prelude
 
 import Dagobert.Data.User (User, newUser)
 import Dagobert.Route (Route(..))
+import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, textField, textareaField, validate)
 import Dagobert.Utils.HTML (modal)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
 import Dagobert.View.EntityPage (PageState, DialogControls, entityPage)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Deku.Core (Nut)
 import Deku.DOM as D
 import Deku.Do as Deku
-import Deku.Hooks (useHot)
+import Deku.Hooks (useHot, (<#~>))
 import Effect (Effect)
 import FRP.Poll (Poll)
 
-usersPage :: { poll ∷ Poll (PageState User), push ∷ PageState User -> Effect Unit } -> Nut
-usersPage = Deku.do
-  entityPage
+usersPage :: { poll ∷ Poll (PageState User), push ∷ PageState User -> Effect Unit } -> Env -> Nut
+usersPage state { kase } = Deku.do
+  kase <#~> maybe mempty (\c -> entityPage
     { title: ViewUsers
     , ctor: newUser
     , id: _.id
-    , fetch:          XHR.get "/api/user"
-    , create: \obj -> XHR.post "/api/user" obj
-    , update: \obj -> XHR.put ("/api/user/" <> show obj.id) obj
-    , delete: \obj -> XHR.delete ("/api/user/" <> show obj.id)
+    , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/user")
+    , create: \obj -> XHR.post   ("/api/case/" <> show c.id <> "/user") obj
+    , update: \obj -> XHR.put    ("/api/case/" <> show c.id <> "/user/" <> show obj.id) obj
+    , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/user/" <> show obj.id)
     , hydrate:        pure $ pure unit
 
     , columns: [ { title: "Short Name", width: "auto", renderString: _.shortName, renderNut: _.shortName >>> D.text_ }
@@ -39,7 +40,7 @@ usersPage = Deku.do
                ]
 
     , modal: userModal
-    }
+    } state)
 
 userModal :: DialogControls User -> User -> Unit -> Nut
 userModal { save, cancel } input _ = Deku.do

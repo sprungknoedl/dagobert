@@ -4,22 +4,23 @@ import Prelude
 
 import Dagobert.Data.Indicator (Indicator, indicatorTypes, newIndicator, tlpValues)
 import Dagobert.Route (Route(..))
+import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, selectField, textField, textareaField, validate)
 import Dagobert.Utils.HTML (css, modal)
 import Dagobert.Utils.Icons (commandLine, fingerprint, folderOpen, globeEurope, link, mapPin, questionMarkCircle)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
 import Dagobert.View.EntityPage (PageState, DialogControls, entityPage)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Deku.Core (Nut, fixed)
 import Deku.DOM as D
 import Deku.Do as Deku
-import Deku.Hooks (useHot)
+import Deku.Hooks (useHot, (<#~>))
 import Effect (Effect)
 import FRP.Poll (Poll)
 
-indicatorsPage :: { poll ∷ Poll (PageState Indicator), push ∷ PageState Indicator -> Effect Unit } -> Nut
-indicatorsPage = Deku.do
+indicatorsPage :: { poll ∷ Poll (PageState Indicator), push ∷ PageState Indicator -> Effect Unit } -> Env -> Nut
+indicatorsPage state { kase } = Deku.do
   let
     renderType :: String -> Nut
     renderType "IP"      = fixed [ mapPin (css "inline-block w-6 h-6 mr-2"), D.text_ "IP" ]
@@ -36,14 +37,14 @@ indicatorsPage = Deku.do
     renderTlp t@"TLP:GREEN" = D.span [ css "text-green-500" ] [ D.text_ t ]
     renderTlp t             = D.span [] [ D.text_ t ]
 
-  entityPage
+  kase <#~> maybe mempty (\c -> entityPage
     { title: ViewIndicators
     , ctor: newIndicator
     , id: _.id
-    , fetch:          XHR.get "/api/indicator"
-    , create: \obj -> XHR.post "/api/indicator" obj
-    , update: \obj -> XHR.put ("/api/indicator/" <> show obj.id) obj
-    , delete: \obj -> XHR.delete ("/api/indicator/" <> show obj.id)
+    , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/indicator")
+    , create: \obj -> XHR.post   ("/api/case/" <> show c.id <> "/indicator") obj
+    , update: \obj -> XHR.put    ("/api/case/" <> show c.id <> "/indicator/" <> show obj.id) obj
+    , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/indicator/" <> show obj.id)
     , hydrate:        pure $ pure unit
 
     , columns: [ { title: "Date added",  width: "7rem",  renderString: const "1970-01-01", renderNut: const "1970-01-01" >>> D.text_  }
@@ -55,7 +56,7 @@ indicatorsPage = Deku.do
                ]
 
     , modal: indicatorModal
-    }
+    } state)
 
 indicatorModal :: DialogControls Indicator -> Indicator -> Unit -> Nut
 indicatorModal { save, cancel } input _ = Deku.do

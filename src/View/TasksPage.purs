@@ -5,6 +5,7 @@ import Prelude
 import Dagobert.Data.Task (Task, newTask, taskTypes)
 import Dagobert.Data.User (User)
 import Dagobert.Route (Route(..))
+import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, checkboxField, dummyField, form, label, poll, render, selectField, textField, textareaField, validate)
 import Dagobert.Utils.HTML (css, modal, printDate)
 import Dagobert.Utils.Icons (checkCircle, clipboardCheck, documentText, magnifyingGlass, questionMarkCircle, xCircle)
@@ -12,16 +13,16 @@ import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
 import Dagobert.View.EntityPage (DialogControls, PageState, entityPage)
 import Data.Array ((:))
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Deku.Core (Nut, fixed)
 import Deku.DOM as D
 import Deku.Do as Deku
-import Deku.Hooks (useHot)
+import Deku.Hooks (useHot, (<#~>))
 import Effect (Effect)
 import FRP.Poll (Poll)
 
-tasksPage :: { poll ∷ Poll (PageState Task), push ∷ PageState Task -> Effect Unit } -> Nut
-tasksPage = Deku.do
+tasksPage :: { poll ∷ Poll (PageState Task), push ∷ PageState Task -> Effect Unit } -> Env -> Nut
+tasksPage state { kase } = Deku.do
   let
     renderType :: String -> Nut
     renderType "Information request" = fixed [ questionMarkCircle (css "inline-block w-6 h-6 mr-2"), D.text_ "Information request" ]
@@ -34,15 +35,15 @@ tasksPage = Deku.do
     renderDone true = checkCircle $ css "w-6 h-6 text-green-500"
     renderDone false = xCircle $ css "w-6 h-6 text-red-500"
 
-  entityPage
+  kase <#~> maybe mempty (\c -> entityPage
     { title: ViewTasks
     , ctor: newTask
     , id: _.id
-    , fetch:          XHR.get "/api/task"
-    , create: \obj -> XHR.post "/api/task" obj
-    , update: \obj -> XHR.put ("/api/task/" <> show obj.id) obj
-    , delete: \obj -> XHR.delete ("/api/task/" <> show obj.id)
-    , hydrate:        XHR.get "/api/user"
+    , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/task")
+    , create: \obj -> XHR.post   ("/api/case/" <> show c.id <> "/task") obj
+    , update: \obj -> XHR.put    ("/api/case/" <> show c.id <> "/task/" <> show obj.id) obj
+    , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/task/" <> show obj.id)
+    , hydrate:        XHR.get    ("/api/case/" <> show c.id <> "/user")
 
     , columns: [ { title: "Date added", width: "7rem",  renderString: _.dateAdded >>> printDate, renderNut: _.dateAdded >>> printDate >>> D.text_  }
                , { title: "Date due",   width: "7rem",  renderString: _.dateDue >>> printDate,   renderNut: _.dateDue >>> printDate >>> D.text_  }
@@ -53,7 +54,7 @@ tasksPage = Deku.do
                ]
 
     , modal: taskModal
-    }
+    } state)
 
 taskModal :: DialogControls Task -> Task -> Array User -> Nut
 taskModal { save, cancel } input users = Deku.do

@@ -5,7 +5,6 @@ import Prelude
 import Control.Alt ((<|>))
 import Control.Monad.ST.Class (liftST)
 import Dagobert.Route (Route(..), routes)
-import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.HTML (loading)
 import Dagobert.Utils.Hooks ((<~))
 import Dagobert.Utils.XHR as XHR
@@ -39,11 +38,9 @@ main :: Effect Unit
 main = do
   _ /\ setRoute /\ route <- liftST $ useHot FourOhFour
   _ /\ setKase /\ kase   <- liftST $ useHot Nothing
-  let
-    env :: Env
-    env = { kase, setKase, route, setRoute }
+  let env = { kase, setKase, route, setRoute }
 
-  cases        <- liftST create
+  cases      <- liftST create
 
   -- Investigation states
   events     <- liftST create
@@ -60,19 +57,19 @@ main = do
   runInBody $ fixed
     [ navigationPanel env
     , route <#~> case _ of
-      ViewTimeline   -> eventsPage events
-      ViewAssets     -> assetsPage assets
-      ViewMalware    -> malwarePage malware
-      ViewIndicators -> indicatorsPage indicators
+      ViewTimeline   -> eventsPage events env
+      ViewAssets     -> assetsPage assets env
+      ViewMalware    -> malwarePage malware env
+      ViewIndicators -> indicatorsPage indicators env
 
       ViewVisualTimeline  -> loading
       ViewLateralMovement -> loading
       ViewActivity        -> loading
 
-      ViewUsers      -> usersPage users
-      ViewEvidences  -> evidencesPage evidences
-      ViewTasks      -> tasksPage tasks
-      ViewNotes      -> notesPage notes
+      ViewUsers      -> usersPage users env
+      ViewEvidences  -> evidencesPage evidences env
+      ViewTasks      -> tasksPage tasks env
+      ViewNotes      -> notesPage notes env
 
       ViewCases      -> casePage cases env
       FourOhFour     -> loading
@@ -84,19 +81,19 @@ main = do
     (\old new -> when (old /= Just new) $ launchAff_ do
       liftEffect $ setRoute new
       case new of
-        ViewTimeline        -> fetchData events "/api/event"
-        ViewAssets          -> fetchData assets "/api/asset"
-        ViewMalware         -> fetchData malware "/api/malware"
+        ViewTimeline        -> fetchData events     "/api/event"
+        ViewAssets          -> fetchData assets     "/api/asset"
+        ViewMalware         -> fetchData malware    "/api/malware"
         ViewIndicators      -> fetchData indicators "/api/indicator"
 
         ViewVisualTimeline  -> pure unit
         ViewLateralMovement -> pure unit
         ViewActivity        -> pure unit
 
-        ViewUsers           -> fetchData users "/api/user"
+        ViewUsers           -> fetchData users     "/api/user"
         ViewEvidences       -> fetchData evidences "/api/evidence"
-        ViewTasks           -> fetchData tasks "/api/task"
-        ViewNotes           -> fetchData notes "/api/note"
+        ViewTasks           -> fetchData tasks     "/api/task"
+        ViewNotes           -> fetchData notes     "/api/note"
 
         ViewCases           -> fetchData cases "/api/case"
         FourOhFour          -> pure unit

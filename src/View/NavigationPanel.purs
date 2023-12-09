@@ -23,23 +23,16 @@ navigationPanel { route, kase } =
 
     , D.h3 [ DA.klass_ "mt-4 mb-1 font-bold" ] [ D.text_ "Overview" ]
     , link ViewCases identification
-    , kase <#~> case _ of
-      Just active -> D.a
-        [ DA.klass_ "block p-2 pl-4 border-l-2 border-slate-600 text-slate-400 hover:text-white hover:border-slate-100" 
-        , DA.href_ $ "#" <> (print routes ViewCases)
-        ]
-        [ fire $ css "inline-block mr-2 w-5 h-5"
-        , D.span [] [ D.text_ "Active Case:" ]
-        , D.span [ DA.klass_ "font-bold text-green-500 block" ] [ D.text_ $ "#" <> (show active.id) <> " - " <> active.name ]
-        ]
-      Nothing -> D.a
-        [ DA.klass_ "block p-2 pl-4 border-l-2 border-slate-600 text-slate-400 hover:text-white hover:border-slate-100"
-        , DA.href_ $ "#" <> (print routes ViewCases)
-        ]
-        [ fire $ css "inline-block mr-2 w-5 h-5"
-        , D.span [] [ D.text_ "Active Case:" ]
-        , D.span [ DA.klass_ "font-bold text-red-500 block" ] [ D.text_ "No case selected" ]
-        ]
+    , D.a
+      [ DA.klass_ "block p-2 pl-4 border-l-2 border-slate-600 text-slate-400 hover:text-white hover:border-slate-100" 
+      , DA.href_ $ "#" <> (print routes ViewCases)
+      ]
+      [ fire $ css "inline-block mr-2 w-5 h-5"
+      , D.span [] [ D.text_ "Active Case:" ]
+      , kase <#~> case _ of
+        Just active -> D.span [ DA.klass_ "font-bold text-green-500 block" ] [ D.text_ $ "#" <> (show active.id) <> " - " <> active.name ]
+        Nothing     -> D.span [ DA.klass_ "font-bold text-red-500 block" ] [ D.text_ "No case selected" ]
+      ]
 
     , guard (kase <#> isJust) $ fixed
       [ D.h3 [ DA.klass_ "mt-4 mb-1 font-bold" ] [ D.text_ "Investigation" ]

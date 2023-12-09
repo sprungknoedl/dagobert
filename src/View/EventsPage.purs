@@ -5,17 +5,18 @@ import Prelude
 import Dagobert.Data.Asset (Asset)
 import Dagobert.Data.Event (Event, directionValues, eventTypes, newEvent)
 import Dagobert.Route (Route(..))
+import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, selectField, textField, textareaField, validate)
 import Dagobert.Utils.HTML (modal, printDateTime)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
 import Dagobert.View.EntityPage (PageState, DialogControls, entityPage)
 import Data.Array ((:))
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Deku.Core (Nut)
 import Deku.DOM as D
 import Deku.Do as Deku
-import Deku.Hooks (useHot)
+import Deku.Hooks (useHot, (<#~>))
 import Effect (Effect)
 import FRP.Poll (Poll)
 import Type.Proxy (Proxy(..))
@@ -30,27 +31,27 @@ detailsHtml = ( Proxy :: Proxy """
   </div>
 """)
 
-eventsPage :: { poll ∷ Poll (PageState Event), push ∷ PageState Event -> Effect Unit } -> Nut
-eventsPage = Deku.do
-  entityPage
+eventsPage :: { poll ∷ Poll (PageState Event), push ∷ PageState Event -> Effect Unit } -> Env -> Nut
+eventsPage state { kase } = Deku.do
+  kase <#~> maybe mempty (\c -> entityPage
     { title: ViewTimeline
     , ctor: newEvent
     , id: _.id
-    , fetch:          XHR.get "/api/event"
-    , create: \obj -> XHR.post "/api/event" obj
-    , update: \obj -> XHR.put ("/api/event/" <> show obj.id) obj
-    , delete: \obj -> XHR.delete ("/api/event/" <> show obj.id)
-    , hydrate:        XHR.get "/api/asset"
+    , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/event")
+    , create: \obj -> XHR.post   ("/api/case/" <> show c.id <> "/event") obj
+    , update: \obj -> XHR.put    ("/api/case/" <> show c.id <> "/event/" <> show obj.id) obj
+    , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/event/" <> show obj.id)
+    , hydrate:        XHR.get    ("/api/case/" <> show c.id <> "/assets")
 
     , columns: [ { title: "Date/Time",     width: "12rem", renderString: _.time >>> printDateTime, renderNut: _.time >>> printDateTime >>> D.text_  }
-               , { title: "Type",          width: "10rem", renderString: _.type,                   renderNut: _.type >>> D.text_  }
-               , { title: "Event System",  width: "12rem", renderString: _.assetA,                 renderNut: _.assetA >>> D.text_ }
-               , { title: "Remote System", width: "12rem", renderString: _.assetB,                 renderNut: \elem -> D.text_ $ elem.direction <> " " <> elem.assetB }
-               , { title: "Event",         width: "auto",  renderString: _.event,                  renderNut: _.event >>> D.text_ }
-               ]
+              , { title: "Type",          width: "10rem", renderString: _.type,                   renderNut: _.type >>> D.text_  }
+              , { title: "Event System",  width: "12rem", renderString: _.assetA,                 renderNut: _.assetA >>> D.text_ }
+              , { title: "Remote System", width: "12rem", renderString: _.assetB,                 renderNut: \elem -> D.text_ $ elem.direction <> " " <> elem.assetB }
+              , { title: "Event",         width: "auto",  renderString: _.event,                  renderNut: _.event >>> D.text_ }
+              ]
 
     , modal: eventModal
-    }
+    } state)
 
 eventModal :: DialogControls Event -> Event -> Array Asset -> Nut
 eventModal { save, cancel } input assets = Deku.do

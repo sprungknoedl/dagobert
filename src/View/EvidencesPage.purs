@@ -4,22 +4,23 @@ import Prelude
 
 import Dagobert.Data.Evidence (Evidence, evidenceTypes, newEvidence)
 import Dagobert.Route (Route(..))
+import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, selectField, textField, textareaField, validate)
 import Dagobert.Utils.HTML (css, modal)
 import Dagobert.Utils.Icons (archivBox, cpuChip, documentText, folderOpen, questionMarkCircle, server)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
 import Dagobert.View.EntityPage (PageState, DialogControls, entityPage)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Deku.Core (Nut, fixed)
 import Deku.DOM as D
 import Deku.Do as Deku
-import Deku.Hooks (useHot)
+import Deku.Hooks (useHot, (<#~>))
 import Effect (Effect)
 import FRP.Poll (Poll)
 
-evidencesPage :: { poll ∷ Poll (PageState Evidence), push ∷ PageState Evidence -> Effect Unit } -> Nut
-evidencesPage = Deku.do
+evidencesPage :: { poll ∷ Poll (PageState Evidence), push ∷ PageState Evidence -> Effect Unit } -> Env -> Nut
+evidencesPage state { kase } = Deku.do
   let
     renderType :: String -> Nut
     renderType "File"                 = fixed [ folderOpen (css "inline-block w-6 h-6 mr-2"), D.text_ "File" ]
@@ -29,14 +30,14 @@ evidencesPage = Deku.do
     renderType "Memory Dump"          = fixed [ cpuChip (css "inline-block w-6 h-6 mr-2"), D.text_ "Memory Dump" ]
     renderType t                      = fixed [ questionMarkCircle (css "inline-block w-6 h-6 mr-2"), D.text_ t ]
 
-  entityPage
+  kase <#~> maybe mempty (\c -> entityPage
     { title: ViewEvidences
     , ctor: newEvidence
     , id: _.id
-    , fetch:          XHR.get "/api/evidence"
-    , create: \obj -> XHR.post "/api/evidence" obj
-    , update: \obj -> XHR.put ("/api/evidence/" <> show obj.id) obj
-    , delete: \obj -> XHR.delete ("/api/evidence/" <> show obj.id)
+    , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/evidence")
+    , create: \obj -> XHR.post   ("/api/case/" <> show c.id <> "/evidence") obj
+    , update: \obj -> XHR.put    ("/api/case/" <> show c.id <> "/evidence/" <> show obj.id) obj
+    , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/evidence/" <> show obj.id)
     , hydrate:        pure $ pure unit
 
     , columns: [ { title: "Date added",  width: "7rem",  renderString: const "1970-01-01", renderNut: const "1970-01-01" >>> D.text_  }
@@ -48,7 +49,7 @@ evidencesPage = Deku.do
                ]
 
     , modal: evidenceModal
-    }
+    } state)
 
 evidenceModal :: DialogControls Evidence -> Evidence -> Unit -> Nut
 evidenceModal { save, cancel } input _ = Deku.do
