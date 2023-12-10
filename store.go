@@ -170,7 +170,7 @@ func ListUser(c *gin.Context, cid int64) ([]User, error) {
 	var list []User
 	result := db.
 		Where("case_id = ?", cid).
-		Order("short_name asc").
+		Order("name asc").
 		Find(&list)
 	return list, result.Error
 }

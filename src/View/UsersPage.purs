@@ -31,13 +31,12 @@ usersPage state { kase } = Deku.do
     , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/user/" <> show obj.id)
     , hydrate:        pure $ pure unit
 
-    , columns: [ { title: "Short Name", width: "auto", renderString: _.shortName, renderNut: _.shortName >>> D.text_ }
-               , { title: "Full Name",  width: "auto", renderString: _.fullName,  renderNut: _.fullName >>> D.text_ }
-               , { title: "Company",    width: "auto", renderString: _.company,   renderNut: _.company >>> D.text_ }
-               , { title: "Role",       width: "auto", renderString: _.role,      renderNut: _.role >>> D.text_ }
-               , { title: "Email",      width: "auto", renderString: _.email,     renderNut: _.email >>> D.text_ }
-               , { title: "Phone",      width: "auto", renderString: _.phone,     renderNut: _.phone >>> D.text_ }
-               , { title: "Notes",      width: "auto", renderString: _.notes,     renderNut: _.notes >>> D.text_ }
+    , columns: [ { title: "Name",    width: "auto", renderString: _.name,    renderNut: _.name >>> D.text_ }
+               , { title: "Company", width: "auto", renderString: _.company, renderNut: _.company >>> D.text_ }
+               , { title: "Role",    width: "auto", renderString: _.role,    renderNut: _.role >>> D.text_ }
+               , { title: "Email",   width: "auto", renderString: _.email,   renderNut: _.email >>> D.text_ }
+               , { title: "Phone",   width: "auto", renderString: _.phone,   renderNut: _.phone >>> D.text_ }
+               , { title: "Notes",   width: "auto", renderString: _.notes,   renderNut: _.notes >>> D.text_ }
                ]
 
     , modal: userModal
@@ -45,14 +44,13 @@ usersPage state { kase } = Deku.do
 
 userModal :: DialogControls UserStub -> User -> Unit -> Nut
 userModal { save, cancel } input _ = Deku.do
-  id        <- useHot input.id
-  shortName <- useHot input.shortName
-  fullName  <- useHot input.fullName
-  company   <- useHot input.company
-  role      <- useHot input.role
-  email     <- useHot input.email
-  phone     <- useHot input.phone
-  notes     <- useHot input.notes
+  id      <- useHot input.id
+  name    <- useHot input.name
+  company <- useHot input.company
+  role    <- useHot input.role
+  email   <- useHot input.email
+  phone   <- useHot input.phone
+  notes   <- useHot input.notes
 
   let
     formBuilder :: Form (Maybe UserStub)
@@ -60,13 +58,9 @@ userModal { save, cancel } input _ = Deku.do
       id' <- dummyField id
         # validate V.id
 
-      shortName' <- textField shortName
+      name' <- textField name
         # validate V.required
-        # label "Short Name"
-
-      fullName' <- textField fullName
-        # validate V.required
-        # label "Full Name"
+        # label "Name"
 
       company' <- textField company
         # validate V.optional
@@ -88,8 +82,8 @@ userModal { save, cancel } input _ = Deku.do
         # validate V.optional
         # label "Notes"
 
-      in { id: _,  shortName: _,  fullName: _,  company: _,  role: _,  email: _,  phone: _,  notes: _ }
-       <$> id' <*> shortName' <*> fullName' <*> company' <*> role' <*> email' <*> phone' <*> notes'
+      in { id: _,  name: _,  company: _,  role: _,  email: _,  phone: _,  notes: _ }
+       <$> id' <*> name' <*> company' <*> role' <*> email' <*> phone' <*> notes'
 
     onSubmit :: Poll (Effect Unit)
     onSubmit = do

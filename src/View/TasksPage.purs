@@ -80,7 +80,7 @@ taskModal { save, cancel } input users = Deku.do
         # validate V.required
         # label "Task"
 
-      owner' <- selectField ("" : map _.fullName users) owner
+      owner' <- selectField ("" : map _.name users) owner
         # validate V.optional
         # label "Owner"
 

@@ -34,7 +34,7 @@ func ExportUserCsvR(c *gin.Context) {
 	w := csv.NewWriter(c.Writer)
 	w.Write([]string{"Name", "Company", "Role", "Email", "Phone", "Notes"})
 	for _, e := range list {
-		w.Write([]string{e.FullName, e.Company, e.Role, e.Email, e.Phone, e.Notes})
+		w.Write([]string{e.Name, e.Company, e.Role, e.Email, e.Phone, e.Notes})
 	}
 	w.Flush()
 }
@@ -93,8 +93,7 @@ func EditUserR(c *gin.Context) {
 	}
 
 	// Only copy over fields we wan't to be editable
-	obj.ShortName = body.ShortName
-	obj.FullName = body.FullName
+	obj.Name = body.Name
 	obj.Company = body.Company
 	obj.Role = body.Role
 	obj.Email = body.Email

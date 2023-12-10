@@ -140,14 +140,13 @@ type Task struct {
 }
 
 type User struct {
-	ID        int64  `json:"id" gorm:"primarykey"`
-	ShortName string `json:"shortName"`
-	FullName  string `json:"fullName"`
-	Company   string `json:"company"`
-	Role      string `json:"role"`
-	Email     string `json:"email"`
-	Phone     string `json:"phone"`
-	Notes     string `json:"notes"`
+	ID      int64  `json:"id" gorm:"primarykey"`
+	Name    string `json:"name"`
+	Company string `json:"company"`
+	Role    string `json:"role"`
+	Email   string `json:"email"`
+	Phone   string `json:"phone"`
+	Notes   string `json:"notes"`
 
 	CaseID int64 `json:"caseId"`
 	Case   Case  `json:"-" binding:"-"`
