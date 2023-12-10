@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"net/http"
 	"strconv"
 	"time"
@@ -9,7 +10,7 @@ import (
 )
 
 func ListEventR(c *gin.Context) {
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	list, err := ListEvent(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
@@ -19,9 +20,28 @@ func ListEventR(c *gin.Context) {
 	c.JSON(http.StatusOK, list)
 }
 
+func ExportEventCsvR(c *gin.Context) {
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
+	list, err := ListEvent(c, cid)
+	if err != nil {
+		c.String(http.StatusBadRequest, "list: %s", err.Error())
+		return
+	}
+
+	c.Status(http.StatusOK)
+	c.Header("Content-Disposition", "attachment; filename=\"events.csv\"")
+
+	w := csv.NewWriter(c.Writer)
+	w.Write([]string{"Time", "Type", "Event System", "Direction", "Remote System", "Event", "Raw"})
+	for _, e := range list {
+		w.Write([]string{e.Time.Format(time.RFC3339), e.Type, e.AssetA, e.Direction, e.AssetB, e.Event, e.Raw})
+	}
+	w.Flush()
+}
+
 func GetEventR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	obj, err := GetEvent(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
@@ -32,7 +52,7 @@ func GetEventR(c *gin.Context) {
 }
 
 func AddEventR(c *gin.Context) {
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 
 	obj := Event{}
 	err := c.BindJSON(&obj)
@@ -56,8 +76,8 @@ func AddEventR(c *gin.Context) {
 }
 
 func EditEventR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	obj, err := GetEvent(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
@@ -91,8 +111,8 @@ func EditEventR(c *gin.Context) {
 }
 
 func DeleteEventR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	err := DeleteEvent(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())

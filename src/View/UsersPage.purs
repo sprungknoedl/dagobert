@@ -21,9 +21,10 @@ import FRP.Poll (Poll)
 usersPage :: { poll ∷ Poll (PageState User), push ∷ PageState User -> Effect Unit } -> Env -> Nut
 usersPage state { kase } = Deku.do
   kase <#~> maybe mempty (\c -> entityPage
-    { title: ViewUsers 0
+    { title: ViewUsers c.id
     , ctor: newUser
     , id: _.id
+    , csv: "/api/case/" <> show c.id <> "/user.csv"
     , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/user")
     , create: \obj -> XHR.post   ("/api/case/" <> show c.id <> "/user") obj
     , update: \obj -> XHR.put    ("/api/case/" <> show c.id <> "/user/" <> show obj.id) obj

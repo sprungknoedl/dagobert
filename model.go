@@ -5,7 +5,7 @@ import (
 )
 
 type Case struct {
-	ID             uint   `json:"id" gorm:"primarykey"`
+	ID             int64  `json:"id" gorm:"primarykey"`
 	Name           string `json:"name" binding:"required"`
 	Classification string `json:"classification"`
 	Summary        string `json:"summary"`
@@ -17,16 +17,16 @@ type Case struct {
 }
 
 type Evidence struct {
-	ID          uint   `json:"id" gorm:"primarykey"`
+	ID          int64  `json:"id" gorm:"primarykey"`
 	Type        string `json:"type" binding:"required"`
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
-	Size        int    `json:"size"`
+	Size        int64  `json:"size"`
 	Hash        string `json:"hash"`
 	Location    string `json:"location"`
 
-	CaseID int  `json:"caseId"`
-	Case   Case `json:"-" binding:"-"`
+	CaseID int64 `json:"caseId"`
+	Case   Case  `json:"-" binding:"-"`
 
 	DateAdded    time.Time `json:"dateAdded"`
 	DateModified time.Time `json:"dateModified"`
@@ -35,7 +35,7 @@ type Evidence struct {
 }
 
 type Asset struct {
-	ID          uint   `json:"id" gorm:"primarykey"`
+	ID          int64  `json:"id" gorm:"primarykey"`
 	Type        string `json:"type" binding:"required"`
 	Name        string `json:"name" binding:"required"`
 	IP          string `json:"ip"`
@@ -43,8 +43,8 @@ type Asset struct {
 	Compromised string `json:"compromised"`
 	Analysed    bool   `json:"analysed"`
 
-	CaseID int  `json:"caseId"`
-	Case   Case `json:"-" binding:"-"`
+	CaseID int64 `json:"caseId"`
+	Case   Case  `json:"-" binding:"-"`
 
 	DateAdded    time.Time `json:"dateAdded"`
 	DateModified time.Time `json:"dateModified"`
@@ -53,15 +53,15 @@ type Asset struct {
 }
 
 type Indicator struct {
-	ID          uint   `json:"id" gorm:"primarykey"`
+	ID          int64  `json:"id" gorm:"primarykey"`
 	Type        string `json:"type" binding:"required"`
 	Value       string `json:"value" binding:"required"`
 	TLP         string `json:"tlp" binding:"required"`
 	Description string `json:"description"`
 	Source      string `json:"source"`
 
-	CaseID int  `json:"caseId"`
-	Case   Case `json:"-" binding:"-"`
+	CaseID int64 `json:"caseId"`
+	Case   Case  `json:"-" binding:"-"`
 
 	DateAdded    time.Time `json:"dateAdded"`
 	DateModified time.Time `json:"dateModified"`
@@ -70,7 +70,7 @@ type Indicator struct {
 }
 
 type Event struct {
-	ID        uint      `json:"id" gorm:"primarykey"`
+	ID        int64     `json:"id" gorm:"primarykey"`
 	Time      time.Time `json:"time" binding:"required"`
 	Type      string    `json:"type" binding:"required"`
 	AssetA    string    `json:"assetA" binding:"required"`
@@ -79,8 +79,8 @@ type Event struct {
 	Event     string    `json:"event" binding:"required"`
 	Raw       string    `json:"raw"`
 
-	CaseID int  `json:"caseId"`
-	Case   Case `json:"-" binding:"-"`
+	CaseID int64 `json:"caseId"`
+	Case   Case  `json:"-" binding:"-"`
 
 	DateAdded    time.Time `json:"dateAdded"`
 	DateModified time.Time `json:"dateModified"`
@@ -89,7 +89,7 @@ type Event struct {
 }
 
 type Malware struct {
-	ID       uint      `json:"id" gorm:"primarykey"`
+	ID       int64     `json:"id" gorm:"primarykey"`
 	Filename string    `json:"filename" binding:"required"`
 	Filepath string    `json:"filepath"`
 	CDate    time.Time `json:"cDate"`
@@ -98,8 +98,8 @@ type Malware struct {
 	Hash     string    `json:"hash"`
 	Notes    string    `json:"notes"`
 
-	CaseID int  `json:"caseId"`
-	Case   Case `json:"-" binding:"-"`
+	CaseID int64 `json:"caseId"`
+	Case   Case  `json:"-" binding:"-"`
 
 	DateAdded    time.Time `json:"dateAdded"`
 	DateModified time.Time `json:"dateModified"`
@@ -108,13 +108,13 @@ type Malware struct {
 }
 
 type Note struct {
-	ID          uint   `json:"id" gorm:"primarykey"`
+	ID          int64  `json:"id" gorm:"primarykey"`
 	Title       string `json:"title" binding:"required"`
 	Category    string `json:"category" binding:"required"`
 	Description string `json:"description" binding:"required"`
 
-	CaseID int  `json:"caseId"`
-	Case   Case `json:"-" binding:"-"`
+	CaseID int64 `json:"caseId"`
+	Case   Case  `json:"-" binding:"-"`
 
 	DateAdded    time.Time `json:"dateAdded"`
 	DateModified time.Time `json:"dateModified"`
@@ -123,15 +123,15 @@ type Note struct {
 }
 
 type Task struct {
-	ID      uint      `json:"id" gorm:"primarykey"`
+	ID      int64     `json:"id" gorm:"primarykey"`
 	Type    string    `json:"type" binding:"required"`
 	Task    string    `json:"task" binding:"required"`
 	Done    bool      `json:"done"`
 	Owner   string    `json:"owner"`
 	DateDue time.Time `json:"dateDue,omitempty"`
 
-	CaseID int  `json:"caseId"`
-	Case   Case `json:"-" binding:"-"`
+	CaseID int64 `json:"caseId"`
+	Case   Case  `json:"-" binding:"-"`
 
 	DateAdded    time.Time `json:"dateAdded,omitempty"`
 	DateModified time.Time `json:"dateModified"`
@@ -140,7 +140,7 @@ type Task struct {
 }
 
 type User struct {
-	ID        uint   `json:"id" gorm:"primarykey"`
+	ID        int64  `json:"id" gorm:"primarykey"`
 	ShortName string `json:"shortName"`
 	FullName  string `json:"fullName"`
 	Company   string `json:"company"`
@@ -149,8 +149,8 @@ type User struct {
 	Phone     string `json:"phone"`
 	Notes     string `json:"notes"`
 
-	CaseID int  `json:"caseId"`
-	Case   Case `json:"-" binding:"-"`
+	CaseID int64 `json:"caseId"`
+	Case   Case  `json:"-" binding:"-"`
 
 	DateAdded    time.Time `json:"dateAdded"`
 	DateModified time.Time `json:"dateModified"`

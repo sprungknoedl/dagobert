@@ -84,6 +84,7 @@ func main() {
 
 	// cases
 	r.GET("/api/case", ListCaseR)
+	r.GET("/api/case.csv", ExportCaseCsvR)
 	r.GET("/api/case/:cid", GetCaseR)
 	r.POST("/api/case", AddCaseR)
 	r.PUT("/api/case/:cid", EditCaseR)
@@ -94,6 +95,7 @@ func main() {
 	// --------------------------------------
 	// events
 	r.GET("/api/case/:cid/event", ListEventR)
+	r.GET("/api/case/:cid/event.csv", ExportEventCsvR)
 	r.GET("/api/case/:cid/event/:id", GetEventR)
 	r.POST("/api/case/:cid/event", AddEventR)
 	r.PUT("/api/case/:cid/event/:id", EditEventR)
@@ -101,6 +103,7 @@ func main() {
 
 	// assets
 	r.GET("/api/case/:cid/asset", ListAssetR)
+	r.GET("/api/case/:cid/asset.csv", ExportAssetCsvR)
 	r.GET("/api/case/:cid/asset/:id", GetAssetR)
 	r.POST("/api/case/:cid/asset", AddAssetR)
 	r.PUT("/api/case/:cid/asset/:id", EditAssetR)
@@ -108,6 +111,7 @@ func main() {
 
 	// malware
 	r.GET("/api/case/:cid/malware", ListMalwareR)
+	r.GET("/api/case/:cid/malware.csv", ExportMalwareCsvR)
 	r.GET("/api/case/:cid/malware/:id", GetMalwareR)
 	r.POST("/api/case/:cid/malware", AddMalwareR)
 	r.PUT("/api/case/:cid/malware/:id", EditMalwareR)
@@ -115,6 +119,7 @@ func main() {
 
 	// indicators
 	r.GET("/api/case/:cid/indicator", ListIndicatorR)
+	r.GET("/api/case/:cid/indicator.csv", ExportIndicatorCsvR)
 	r.GET("/api/case/:cid/indicator/:id", GetIndicatorR)
 	r.POST("/api/case/:cid/indicator", AddIndicatorR)
 	r.PUT("/api/case/:cid/indicator/:id", EditIndicatorR)
@@ -125,6 +130,7 @@ func main() {
 	// --------------------------------------
 	// users
 	r.GET("/api/case/:cid/user", ListUserR)
+	r.GET("/api/case/:cid/user.csv", ExportUserCsvR)
 	r.GET("/api/case/:cid/user/:id", GetUserR)
 	r.POST("/api/case/:cid/user", AddUserR)
 	r.PUT("/api/case/:cid/user/:id", EditUserR)
@@ -132,6 +138,7 @@ func main() {
 
 	// evidence
 	r.GET("/api/case/:cid/evidence", ListEvidenceR)
+	r.GET("/api/case/:cid/evidence.csv", ExportEvidenceCsvR)
 	r.GET("/api/case/:cid/evidence/:id", GetEvidenceR)
 	r.POST("/api/case/:cid/evidence", AddEvidenceR)
 	r.PUT("/api/case/:cid/evidence/:id", EditEvidenceR)
@@ -139,6 +146,7 @@ func main() {
 
 	// tasks
 	r.GET("/api/case/:cid/task", ListTaskR)
+	r.GET("/api/case/:cid/task.csv", ExportTaskCsvR)
 	r.GET("/api/case/:cid/task/:id", GetTaskR)
 	r.POST("/api/case/:cid/task", AddTaskR)
 	r.PUT("/api/case/:cid/task/:id", EditTaskR)
@@ -146,6 +154,7 @@ func main() {
 
 	// notes
 	r.GET("/api/case/:cid/note", ListNoteR)
+	r.GET("/api/case/:cid/note.csv", ExportNoteCsvR)
 	r.GET("/api/case/:cid/note/:id", GetNoteR)
 	r.POST("/api/case/:cid/note", AddNoteR)
 	r.PUT("/api/case/:cid/note/:id", EditNoteR)

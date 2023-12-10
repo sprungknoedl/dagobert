@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"net/http"
 	"strconv"
 	"time"
@@ -9,7 +10,7 @@ import (
 )
 
 func ListNoteR(c *gin.Context) {
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	list, err := ListNote(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
@@ -19,9 +20,28 @@ func ListNoteR(c *gin.Context) {
 	c.JSON(http.StatusOK, list)
 }
 
+func ExportNoteCsvR(c *gin.Context) {
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
+	list, err := ListNote(c, cid)
+	if err != nil {
+		c.String(http.StatusBadRequest, "list: %s", err.Error())
+		return
+	}
+
+	c.Status(http.StatusOK)
+	c.Header("Content-Disposition", "attachment; filename=\"notes.csv\"")
+
+	w := csv.NewWriter(c.Writer)
+	w.Write([]string{"Title", "Category", "Description"})
+	for _, e := range list {
+		w.Write([]string{e.Title, e.Category, e.Description})
+	}
+	w.Flush()
+}
+
 func GetNoteR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	obj, err := GetNote(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
@@ -32,7 +52,7 @@ func GetNoteR(c *gin.Context) {
 }
 
 func AddNoteR(c *gin.Context) {
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 
 	obj := Note{}
 	err := c.BindJSON(&obj)
@@ -56,8 +76,8 @@ func AddNoteR(c *gin.Context) {
 }
 
 func EditNoteR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	obj, err := GetNote(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
@@ -86,8 +106,8 @@ func EditNoteR(c *gin.Context) {
 }
 
 func DeleteNoteR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	err := DeleteNote(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())

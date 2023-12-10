@@ -3,9 +3,9 @@ module Dagobert.View.EntityPage where
 import Prelude
 
 import Dagobert.Route (Route, routeToTitle)
-import Dagobert.Utils.HTML (css, inlineButton, primaryButton, searchInput, secondaryButton)
+import Dagobert.Utils.HTML (css, inlineButton, primaryButton, searchInput, secondaryButton, secondaryLink)
 import Dagobert.Utils.Hooks ((<~))
-import Dagobert.Utils.Icons (arrowPath, chevronDown, faceFrown, magnifyingGlass, pencil, plus, trash)
+import Dagobert.Utils.Icons (arrowDownTray, arrowPath, chevronDown, faceFrown, magnifyingGlass, pencil, plus, trash)
 import Dagobert.View.ConfirmDialog (confirmDialog)
 import Data.Array (any, filter, index, mapWithIndex, null, sortWith)
 import Data.Either (Either(..))
@@ -49,6 +49,7 @@ type PageArgs a a' b =
   { title      :: Route
   , ctor       :: a
   , id         :: a' -> Int
+  , csv        :: String
   , fetch      :: Aff (Either String (Array a))
   , create     :: a' -> Aff (Either String a')
   , update     :: a' -> Aff (Either String a')
@@ -130,6 +131,10 @@ entityPage args pageState = Deku.do
           , D.div [css "flex gap-5 items-center"]
             [ magnifyingGlass (css "w-6 h-6")
             , searchInput [DA.style_ "width: 32rem", DA.placeholder_ "Search", DL.valueOn_ DL.input $ setSearchTerm] []
+            , secondaryLink [ DA.href_ args.csv ]
+              [ arrowDownTray (css "inline-block mr-1 w-5 h-5")
+              , D.text_ "Export CSV"
+              ]
             , secondaryButton [DL.runOn_ DL.click $ launchAff_ reload] 
               [ arrowPath (css "inline-block mr-1 w-5 h-5")
               , D.text_ "Refresh"

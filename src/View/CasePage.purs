@@ -32,6 +32,7 @@ casePage state { kase, setKase } = Deku.do
     { title: ViewCases
     , ctor: newCase
     , id: _.id
+    , csv: "/api/case.csv"
     , fetch:          XHR.get    ("/api/case")
     , create: \obj -> XHR.post   ("/api/case") obj
     , update: \obj -> XHR.put    ("/api/case/" <> show obj.id) obj

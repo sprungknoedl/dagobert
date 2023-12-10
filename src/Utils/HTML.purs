@@ -7,7 +7,7 @@ import Data.Maybe (Maybe(..))
 import Data.String (Pattern(..), Replacement(..), codePointFromChar, replace, takeWhile)
 import Data.Tuple.Nested ((/\), type (/\))
 import Deku.Core (Nut)
-import Deku.DOM (Attribute, HTMLInputElement, HTMLButtonElement)
+import Deku.DOM (Attribute, HTMLButtonElement, HTMLInputElement, HTMLAnchorElement)
 import Deku.DOM as D
 import Deku.DOM.Attributes as DA
 import Deku.DOM.Listeners as DL
@@ -18,6 +18,14 @@ import FRP.Poll (Poll)
 
 css :: ∀ r. String → Poll (Attribute ( klass ∷ String | r ) )
 css = DA.klass_
+
+primaryLink :: Array (Poll (Attribute (HTMLAnchorElement ()))) -> Array Nut -> Nut
+primaryLink attr = D.a $
+  [ css "flex items-center px-4 h-10 border border-slate-300 border-transparent rounded-md shadow-sm outline outline-2 outline-offset-2 outline-pink-500 bg-slate-700 hover:bg-pink-500 text-slate-200 text-sm cursor-pointer" ] <> attr
+
+secondaryLink :: Array (Poll (Attribute (HTMLAnchorElement ()))) -> Array Nut -> Nut
+secondaryLink attr = D.a $
+  [ css "flex items-center px-4 h-10 rounded-md shadow-sm  outline outline-2 outline-offset-2 outline-slate-600  bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm cursor-pointer" ] <> attr
 
 primaryButton :: Array (Poll (Attribute (HTMLButtonElement ()))) -> Array Nut -> Nut
 primaryButton attr = D.button $

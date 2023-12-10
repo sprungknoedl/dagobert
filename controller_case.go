@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"net/http"
 	"strconv"
 	"time"
@@ -18,8 +19,26 @@ func ListCaseR(c *gin.Context) {
 	c.JSON(http.StatusOK, list)
 }
 
+func ExportCaseCsvR(c *gin.Context) {
+	list, err := ListCase(c)
+	if err != nil {
+		c.String(http.StatusBadRequest, "list: %s", err.Error())
+		return
+	}
+
+	c.Status(http.StatusOK)
+	c.Header("Content-Disposition", "attachment; filename=\"cases.csv\"")
+
+	w := csv.NewWriter(c.Writer)
+	w.Write([]string{"ID", "Name", "Classification", "Summary"})
+	for _, e := range list {
+		w.Write([]string{strconv.FormatInt(e.ID, 10), e.Name, e.Classification, e.Summary})
+	}
+	w.Flush()
+}
+
 func GetCaseR(c *gin.Context) {
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	obj, err := GetCase(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
@@ -51,7 +70,7 @@ func AddCaseR(c *gin.Context) {
 }
 
 func EditCaseR(c *gin.Context) {
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	obj, err := GetCase(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
@@ -81,7 +100,7 @@ func EditCaseR(c *gin.Context) {
 }
 
 func DeleteCaseR(c *gin.Context) {
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	err := DeleteCase(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())

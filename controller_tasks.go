@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"net/http"
 	"strconv"
 	"time"
@@ -9,7 +10,7 @@ import (
 )
 
 func ListTaskR(c *gin.Context) {
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	list, err := ListTask(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
@@ -19,9 +20,28 @@ func ListTaskR(c *gin.Context) {
 	c.JSON(http.StatusOK, list)
 }
 
+func ExportTaskCsvR(c *gin.Context) {
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
+	list, err := ListTask(c, cid)
+	if err != nil {
+		c.String(http.StatusBadRequest, "list: %s", err.Error())
+		return
+	}
+
+	c.Status(http.StatusOK)
+	c.Header("Content-Disposition", "attachment; filename=\"tasks.csv\"")
+
+	w := csv.NewWriter(c.Writer)
+	w.Write([]string{"Type", "Task", "Done", "Owner", "Due Date"})
+	for _, e := range list {
+		w.Write([]string{e.Type, e.Task, strconv.FormatBool(e.Done), e.Owner, e.DateDue.Format(time.RFC3339)})
+	}
+	w.Flush()
+}
+
 func GetTaskR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	obj, err := GetTask(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
@@ -32,7 +52,7 @@ func GetTaskR(c *gin.Context) {
 }
 
 func AddTaskR(c *gin.Context) {
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 
 	obj := Task{}
 	err := c.BindJSON(&obj)
@@ -57,8 +77,8 @@ func AddTaskR(c *gin.Context) {
 }
 
 func EditTaskR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	obj, err := GetTask(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
@@ -90,8 +110,8 @@ func EditTaskR(c *gin.Context) {
 }
 
 func DeleteTaskR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	err := DeleteTask(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())

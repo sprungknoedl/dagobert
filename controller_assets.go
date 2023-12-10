@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"net/http"
 	"strconv"
 	"time"
@@ -9,7 +10,7 @@ import (
 )
 
 func ListAssetR(c *gin.Context) {
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	list, err := ListAsset(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
@@ -19,9 +20,28 @@ func ListAssetR(c *gin.Context) {
 	c.JSON(http.StatusOK, list)
 }
 
+func ExportAssetCsvR(c *gin.Context) {
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
+	list, err := ListAsset(c, cid)
+	if err != nil {
+		c.String(http.StatusBadRequest, "list: %s", err.Error())
+		return
+	}
+
+	c.Status(http.StatusOK)
+	c.Header("Content-Disposition", "attachment; filename=\"assets.csv\"")
+
+	w := csv.NewWriter(c.Writer)
+	w.Write([]string{"Type", "Name", "IP", "Description", "Compromised", "Analysed"})
+	for _, e := range list {
+		w.Write([]string{e.Type, e.Name, e.IP, e.Description, e.Compromised, strconv.FormatBool(e.Analysed)})
+	}
+	w.Flush()
+}
+
 func GetAssetR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	obj, err := GetAsset(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
@@ -32,7 +52,7 @@ func GetAssetR(c *gin.Context) {
 }
 
 func AddAssetR(c *gin.Context) {
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 
 	obj := Asset{}
 	err := c.BindJSON(&obj)
@@ -56,8 +76,8 @@ func AddAssetR(c *gin.Context) {
 }
 
 func EditAssetR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	obj, err := GetAsset(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
@@ -90,8 +110,8 @@ func EditAssetR(c *gin.Context) {
 }
 
 func DeleteAssetR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	err := DeleteAsset(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())

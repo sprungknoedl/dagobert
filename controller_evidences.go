@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/csv"
 	"net/http"
 	"strconv"
 	"time"
@@ -9,7 +10,7 @@ import (
 )
 
 func ListEvidenceR(c *gin.Context) {
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	list, err := ListEvidence(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
@@ -19,9 +20,28 @@ func ListEvidenceR(c *gin.Context) {
 	c.JSON(http.StatusOK, list)
 }
 
+func ExportEvidenceCsvR(c *gin.Context) {
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
+	list, err := ListEvidence(c, cid)
+	if err != nil {
+		c.String(http.StatusBadRequest, "list: %s", err.Error())
+		return
+	}
+
+	c.Status(http.StatusOK)
+	c.Header("Content-Disposition", "attachment; filename=\"evidences.csv\"")
+
+	w := csv.NewWriter(c.Writer)
+	w.Write([]string{"Type", "Name", "Description", "Size", "Hash", "Location"})
+	for _, e := range list {
+		w.Write([]string{e.Type, e.Name, e.Description, strconv.FormatInt(e.Size, 10), e.Hash, e.Location})
+	}
+	w.Flush()
+}
+
 func GetEvidenceR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	obj, err := GetEvidence(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
@@ -32,7 +52,7 @@ func GetEvidenceR(c *gin.Context) {
 }
 
 func AddEvidenceR(c *gin.Context) {
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 
 	obj := Evidence{}
 	err := c.BindJSON(&obj)
@@ -57,8 +77,8 @@ func AddEvidenceR(c *gin.Context) {
 }
 
 func EditEvidenceR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	obj, err := GetEvidence(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
@@ -90,8 +110,8 @@ func EditEvidenceR(c *gin.Context) {
 }
 
 func DeleteEvidenceR(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	cid, _ := strconv.Atoi(c.Param("cid"))
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 	err := DeleteEvidence(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())

@@ -31,9 +31,10 @@ evidencesPage state { kase } = Deku.do
     renderType t                      = fixed [ questionMarkCircle (css "inline-block w-6 h-6 mr-2"), D.text_ t ]
 
   kase <#~> maybe mempty (\c -> entityPage
-    { title: ViewEvidences 0
+    { title: ViewEvidences c.id
     , ctor: newEvidence
     , id: _.id
+    , csv: "/api/case/" <> show c.id <> "/evidence.csv"
     , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/evidence")
     , create: \obj -> XHR.post   ("/api/case/" <> show c.id <> "/evidence") obj
     , update: \obj -> XHR.put    ("/api/case/" <> show c.id <> "/evidence/" <> show obj.id) obj

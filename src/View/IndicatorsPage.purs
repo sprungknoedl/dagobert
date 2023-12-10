@@ -38,9 +38,10 @@ indicatorsPage state { kase } = Deku.do
     renderTlp t             = D.span [] [ D.text_ t ]
 
   kase <#~> maybe mempty (\c -> entityPage
-    { title: ViewIndicators 0
+    { title: ViewIndicators c.id
     , ctor: newIndicator
     , id: _.id
+    , csv: "/api/case/" <> show c.id <> "/indicator.csv"
     , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/indicator")
     , create: \obj -> XHR.post   ("/api/case/" <> show c.id <> "/indicator") obj
     , update: \obj -> XHR.put    ("/api/case/" <> show c.id <> "/indicator/" <> show obj.id) obj
