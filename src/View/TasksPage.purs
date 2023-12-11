@@ -11,7 +11,7 @@ import Dagobert.Utils.HTML (css, modal, printDate, renderDateAdded)
 import Dagobert.Utils.Icons (checkCircle, clipboardCheck, documentText, magnifyingGlass, questionMarkCircle, xCircle)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
-import Dagobert.View.EntityPage (DialogControls, PageState, entityPage)
+import Dagobert.View.EntityPage (DialogControls, PageState, defaultActions, entityPage)
 import Data.Array ((:))
 import Data.Maybe (Maybe(..), maybe)
 import Deku.Core (Nut, fixed)
@@ -55,7 +55,7 @@ tasksPage state { kase } = Deku.do
                ]
 
     , modal: taskModal
-    } state)
+    } defaultActions state)
 
 taskModal :: DialogControls TaskStub -> Task -> Array User -> Nut
 taskModal { save, cancel } input users = Deku.do

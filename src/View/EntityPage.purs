@@ -4,21 +4,21 @@ import Prelude
 
 import Dagobert.Route (Route, routeToTitle)
 import Dagobert.Utils.HTML (css, inlineButton, primaryButton, searchInput, secondaryButton, secondaryLink)
-import Dagobert.Utils.Hooks ((<~))
+import Dagobert.Utils.Hooks (PollIO, (<~))
 import Dagobert.Utils.Icons (arrowDownTray, arrowPath, chevronDown, faceFrown, magnifyingGlass, pencil, plus, trash)
 import Dagobert.View.ConfirmDialog (confirmDialog)
 import Data.Array (any, filter, index, mapWithIndex, null, sortWith)
-import Data.Either (Either(..))
+import Data.Either (Either(..), either)
 import Data.Maybe (Maybe(..))
 import Data.String (Pattern(..), contains)
-import Data.Tuple (Tuple(..), uncurry)
+import Data.Tuple (Tuple(..))
 import Data.Tuple.Nested ((/\), type (/\))
 import Deku.Core (Nut, fixed)
 import Deku.DOM as D
 import Deku.DOM.Attributes as DA
 import Deku.DOM.Listeners as DL
 import Deku.Do as Deku
-import Deku.Hooks (guard, useHot, useState, useState', (<#~>))
+import Deku.Hooks (useState, useState', (<#~>))
 import Effect (Effect)
 import Effect.Aff (Aff, launchAff_)
 import Effect.Class (liftEffect)
@@ -38,12 +38,20 @@ type DialogControls a =
   , cancel ∷ Effect Unit
   }
 
+type Ctx a =
+  { setDialog :: Nut -> Effect Unit
+  , setState  :: PageState a -> Effect Unit
+  , reload    :: Aff Unit
+  }
+
 type Column a =
   { title        :: String
   , width        :: String
   , renderNut    :: a -> Nut
   , renderString :: a -> String
   }
+
+type Action a a' b = PageArgs a a' b -> Ctx a -> Nut
 
 type PageArgs a a' b = 
   { title      :: Route
@@ -60,68 +68,89 @@ type PageArgs a a' b =
   , columns    :: Array (Column a)
   }
 
-entityPage :: forall a a' b. PageArgs a a' b -> { poll ∷ Poll (PageState a), push ∷ PageState a -> Effect Unit } -> Nut
-entityPage args pageState = Deku.do
-  setModalVisible   /\ modalVisible   <- useState false
-  setConfirmVisible /\ confirmVisible <- useState false
+defaultActions :: forall a a' b. Array (Action a a' b)
+defaultActions =
+  [ exportCsvAction
+  , reloadAction
+  , addAction
+  ]
 
-  setHydration      /\ hydration      <- useState'
-
-  setSelected       /\ selected       <- useHot args.ctor
-  setSearchTerm     /\ searchTerm     <- useState ""
-  setSortCol        /\ sortCol        <- useState (-1)
+addAction :: forall a a' b. PageArgs a a' b -> Ctx a -> Nut
+addAction args ctx = Deku.do
+  setHydration /\ hydration <- useState'
 
   let
     save :: a' -> Effect Unit
-    save obj = launchAff_ do
-      pageState <~Loading
+    save obj = do
+      ctx.setState $ Loading
+      launchAff_   $ args.create obj >>= either 
+        (\err -> liftEffect $ ctx.setState (Error err))
+        (const ctx.reload)
 
-      resp1 <- if (eq 0 <<< args.id) obj
-        then args.create obj
-        else args.update obj
-      case resp1 of
-        Right _ -> reload
-        Left err -> pageState <~(Error err)
+    addDialog :: Effect Unit
+    addDialog = do
+      ctx.setDialog $ hydration <#~> args.modal { save: save, cancel: ctx.setDialog mempty } args.ctor
+      launchAff_    $ args.hydrate >>= either (const $ pure unit) (liftEffect <<< setHydration)
+
+  primaryButton [DL.runOn_ DL.click $ addDialog] 
+    [ plus (css "inline-block mr-1 w-5 h-5")
+    , D.text_ "Add"
+    ]
+
+reloadAction :: forall a a' b. PageArgs a a' b -> Ctx a -> Nut
+reloadAction _ ctx = Deku.do
+  secondaryButton [DL.runOn_ DL.click $ launchAff_ ctx.reload] 
+    [ arrowPath (css "inline-block mr-1 w-5 h-5")
+    , D.text_ "Refresh"
+    ]
+
+exportCsvAction :: forall a a' b. PageArgs a a' b -> Ctx a -> Nut
+exportCsvAction args _ =
+  secondaryLink [ DA.href_ args.csv ]
+    [ arrowDownTray (css "inline-block mr-1 w-5 h-5")
+    , D.text_ "Export CSV"
+    ]
+
+entityPage :: forall a a' b. PageArgs a a' b -> Array (Action a a' b) -> PollIO (PageState a) -> Nut
+entityPage args actions state = Deku.do
+  setDialog     /\ dialog     <- useState'
+  setHydration  /\ hydration  <- useState'
+  setSearchTerm /\ searchTerm <- useState ""
+  setSortCol    /\ sortCol    <- useState (-1)
+
+  let
+    save :: a' -> Effect Unit
+    save obj = do
+      state.push $ Loading
+      launchAff_ $ args.update obj >>= either 
+        (\err -> liftEffect $ state.push (Error err))
+        (const reload)
 
     delete :: a -> Effect Unit
-    delete obj = launchAff_ do
-      pageState <~Loading
-
-      resp1 <- args.delete obj
-      case resp1 of
-        Right _ -> reload
-        Left err -> pageState <~(Error err)
+    delete obj = do
+      state.push $ Loading
+      launchAff_ $ args.delete obj >>= either 
+        (\err -> liftEffect $ state.push (Error err))
+        (const reload)
 
     reload :: Aff Unit
     reload = do
-      pageState <~Loading
+      state <~ Loading
       resp <- args.fetch
       case resp of 
-        Right list -> pageState <~ (Loaded list)
-        Left err ->  pageState <~ (Error err)
+        Right list -> state <~ (Loaded list)
+        Left err ->  state <~ (Error err)
 
-      liftEffect $ hide
-
-    hide :: Effect Unit
-    hide = do
-      setModalVisible false
-      setConfirmVisible false
+      liftEffect $ setDialog mempty
 
     editDialog :: a -> Effect Unit
     editDialog obj = do
-      setSelected obj
-      setModalVisible true
-
-      launchAff_ do
-        d <- args.hydrate
-        case d of 
-          Right x -> liftEffect $ setHydration x
-          Left _  -> pure unit
+      setDialog  $ hydration <#~> args.modal { save: save, cancel: setDialog mempty } obj
+      launchAff_ $ args.hydrate >>= either (const $ pure unit) (liftEffect <<< setHydration)
 
     deleteDialog :: a -> Effect Unit
     deleteDialog obj = do
-      setSelected obj
-      setConfirmVisible true
+      setDialog $ confirmDialog { accept: delete, reject: setDialog mempty } obj
 
     entityListPanel :: Array Nut -> Nut
     entityListPanel content =
@@ -129,23 +158,12 @@ entityPage args pageState = Deku.do
         [ D.nav [css "flex items-center justify-between mb-4"]
           [ D.h3 [css "font-bold text-2xl ml-2"] [ D.text_ (routeToTitle args.title) ]
           , D.div [css "flex gap-5 items-center"]
-            [ magnifyingGlass (css "w-6 h-6")
+            ([ magnifyingGlass (css "w-6 h-6")
             , searchInput [DA.style_ "width: 32rem", DA.placeholder_ "Search", DL.valueOn_ DL.input $ setSearchTerm] []
-            , secondaryLink [ DA.href_ args.csv ]
-              [ arrowDownTray (css "inline-block mr-1 w-5 h-5")
-              , D.text_ "Export CSV"
-              ]
-            , secondaryButton [DL.runOn_ DL.click $ launchAff_ reload] 
-              [ arrowPath (css "inline-block mr-1 w-5 h-5")
-              , D.text_ "Refresh"
-              ]
-            , primaryButton [DL.runOn_ DL.click $ editDialog args.ctor] 
-              [ plus (css "inline-block mr-1 w-5 h-5")
-              , D.text_ "Add"
-              ]
-            ]
+            ] <> map (\a -> a args ctx) actions)
           ]
         ] <> content
+      where ctx = { setDialog: setDialog, setState: state.push, reload: reload }
 
     sortedTableHead :: Nut
     sortedTableHead = Deku.do
@@ -188,7 +206,7 @@ entityPage args pageState = Deku.do
            , inlineButton [ DL.runOn_ DL.click $ deleteDialog elem ] [ trash $ css "w-4 h-4"]
            ]]
 
-  pageState.poll <#~> case _ of
+  state.poll <#~> case _ of
     -- ----------------------------------------------------
     Loading -> fixed
     -- ----------------------------------------------------
@@ -204,7 +222,7 @@ entityPage args pageState = Deku.do
             ]            
           ]
         ]
-      , guard modalVisible   $ (Tuple <$> selected <*> hydration) <#~> (uncurry $ args.modal { save: save, cancel: hide })
+      , dialog <#~> identity
       ]
 
     -- ----------------------------------------------------
@@ -229,8 +247,7 @@ entityPage args pageState = Deku.do
             else mempty
           ]
         ]
-      , guard modalVisible   $ (Tuple <$> selected <*> hydration) <#~> (uncurry $ args.modal { save: save, cancel: hide })
-      , guard confirmVisible $ selected                           <#~> confirmDialog { accept: delete, reject: hide }
+      , dialog <#~> identity
       ]
 
     -- ----------------------------------------------------
@@ -253,6 +270,5 @@ entityPage args pageState = Deku.do
             ] 
           ]
         ]
-      , guard modalVisible   $ (Tuple <$> selected <*> hydration) <#~> (uncurry $ args.modal { save: save, cancel: hide })
-      , guard confirmVisible $ selected                           <#~> confirmDialog { accept: delete, reject: hide }
+      , dialog <#~> identity
       ]

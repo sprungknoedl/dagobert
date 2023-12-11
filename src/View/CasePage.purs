@@ -9,7 +9,7 @@ import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, textFi
 import Dagobert.Utils.HTML (modal)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
-import Dagobert.View.EntityPage (DialogControls, PageState, entityPage)
+import Dagobert.View.EntityPage (DialogControls, PageState, defaultActions, entityPage)
 import Data.Maybe (Maybe(..))
 import Deku.Core (Nut)
 import Deku.DOM as D
@@ -47,7 +47,7 @@ casePage state { kase, setKase } = Deku.do
                ]
 
     , modal: caseModal
-    } state
+    } defaultActions state
 
 caseModal :: DialogControls CaseStub -> Case -> Unit -> Nut
 caseModal { save, cancel } input _ = Deku.do
@@ -55,7 +55,7 @@ caseModal { save, cancel } input _ = Deku.do
   name           <- useHot input.name
   classification <- useHot input.classification
   summary        <- useHot input.summary
-
+  
   let
     formBuilder :: Form (Maybe CaseStub)
     formBuilder = ado

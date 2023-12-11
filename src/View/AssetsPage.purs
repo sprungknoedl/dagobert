@@ -10,7 +10,7 @@ import Dagobert.Utils.HTML (css, modal, printDate, renderDateAdded)
 import Dagobert.Utils.Icons (bug, checkCircle, desktop, questionMarkCircle, server, user, xCircle)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
-import Dagobert.View.EntityPage (DialogControls, PageState, entityPage)
+import Dagobert.View.EntityPage (DialogControls, PageState, defaultActions, entityPage)
 import Data.Maybe (Maybe(..), maybe)
 import Deku.Core (Nut, fixed)
 import Deku.DOM as D
@@ -60,7 +60,7 @@ assetsPage state { kase } = Deku.do
               ]
 
     , modal: assetModal
-    } state)
+    } defaultActions state)
 
 assetModal :: DialogControls AssetStub -> Asset -> Unit -> Nut
 assetModal { save, cancel } input _ = Deku.do

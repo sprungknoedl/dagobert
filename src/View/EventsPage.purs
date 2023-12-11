@@ -10,7 +10,7 @@ import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, select
 import Dagobert.Utils.HTML (modal, printDateTime)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
-import Dagobert.View.EntityPage (PageState, DialogControls, entityPage)
+import Dagobert.View.EntityPage (DialogControls, PageState, defaultActions, entityPage)
 import Data.Array ((:))
 import Data.Maybe (Maybe(..), maybe)
 import Deku.Core (Nut)
@@ -52,7 +52,7 @@ eventsPage state { kase } = Deku.do
               ]
 
     , modal: eventModal
-    } state)
+    } defaultActions state)
 
 eventModal :: DialogControls EventStub -> Event -> Array Asset -> Nut
 eventModal { save, cancel } input assets = Deku.do

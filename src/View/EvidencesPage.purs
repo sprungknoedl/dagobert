@@ -10,7 +10,7 @@ import Dagobert.Utils.HTML (css, modal, printDate, renderDateAdded)
 import Dagobert.Utils.Icons (archivBox, cpuChip, documentText, folderOpen, questionMarkCircle, server)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
-import Dagobert.View.EntityPage (PageState, DialogControls, entityPage)
+import Dagobert.View.EntityPage (DialogControls, PageState, defaultActions, entityPage)
 import Data.Maybe (Maybe(..), maybe)
 import Deku.Core (Nut, fixed)
 import Deku.DOM as D
@@ -50,7 +50,7 @@ evidencesPage state { kase } = Deku.do
                ]
 
     , modal: evidenceModal
-    } state)
+    } defaultActions state)
 
 evidenceModal :: DialogControls EvidenceStub -> Evidence -> Unit -> Nut
 evidenceModal { save, cancel } input _ = Deku.do

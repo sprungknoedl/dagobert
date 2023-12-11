@@ -10,7 +10,7 @@ import Dagobert.Utils.HTML (css, modal, printDate, renderDateAdded)
 import Dagobert.Utils.Icons (commandLine, fingerprint, folderOpen, globeEurope, link, mapPin, questionMarkCircle)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
-import Dagobert.View.EntityPage (PageState, DialogControls, entityPage)
+import Dagobert.View.EntityPage (DialogControls, PageState, defaultActions, entityPage)
 import Data.Maybe (Maybe(..), maybe)
 import Deku.Core (Nut, fixed)
 import Deku.DOM as D
@@ -57,7 +57,7 @@ indicatorsPage state { kase } = Deku.do
                ]
 
     , modal: indicatorModal
-    } state)
+    } defaultActions state)
 
 indicatorModal :: DialogControls IndicatorStub -> Indicator -> Unit -> Nut
 indicatorModal { save, cancel } input _ = Deku.do

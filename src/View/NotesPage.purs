@@ -9,7 +9,7 @@ import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, textFi
 import Dagobert.Utils.HTML (modal)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
-import Dagobert.View.EntityPage (PageState, DialogControls, entityPage)
+import Dagobert.View.EntityPage (DialogControls, PageState, defaultActions, entityPage)
 import Data.Maybe (Maybe(..), maybe)
 import Deku.Core (Nut)
 import Deku.DOM as D
@@ -37,7 +37,7 @@ notesPage state { kase } = Deku.do
                ]
 
     , modal: notesModal
-    } state)
+    } defaultActions state)
 
 notesModal :: DialogControls NoteStub -> Note -> Unit -> Nut
 notesModal { save, cancel } input _ = Deku.do
