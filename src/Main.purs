@@ -7,7 +7,6 @@ import Control.Monad.ST.Class (liftST)
 import Dagobert.Data.Case (Case)
 import Dagobert.Route (Route(..), routes)
 import Dagobert.Utils.HTML (loading)
-import Dagobert.Utils.Hooks ((<~))
 import Dagobert.Utils.XHR as XHR
 import Dagobert.View.AssetsPage (assetsPage)
 import Dagobert.View.CasePage (casePage)
@@ -131,8 +130,8 @@ fetchData :: forall a r
   -> String 
   -> Aff Unit
 fetchData state url = do
-  state <~ Loading
+  liftEffect $ state.push Loading
   resp  <- XHR.get url
   case resp of
-    Right list -> state <~ Loaded list
-    Left error -> state <~ Error error
+    Right list -> liftEffect $ state.push (Loaded list)
+    Left error -> liftEffect $ state.push (Error error)

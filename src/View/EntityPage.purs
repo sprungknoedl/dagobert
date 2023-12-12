@@ -4,7 +4,6 @@ import Prelude
 
 import Dagobert.Route (Route, routeToTitle)
 import Dagobert.Utils.HTML (css, inlineButton, primaryButton, searchInput, secondaryButton, secondaryLink)
-import Dagobert.Utils.Hooks (PollIO, (<~))
 import Dagobert.Utils.Icons (arrowDownTray, arrowPath, chevronDown, faceFrown, magnifyingGlass, pencil, plus, trash)
 import Dagobert.View.ConfirmDialog (confirmDialog)
 import Data.Array (any, filter, index, mapWithIndex, null, sortWith)
@@ -23,6 +22,8 @@ import Effect (Effect)
 import Effect.Aff (Aff, launchAff_)
 import Effect.Class (liftEffect)
 import FRP.Poll (Poll)
+
+type PollIO a = { poll ∷ Poll a, push ∷ a -> Effect Unit }
 
 data PageState a = Loading
                  | Loaded (Array a)
@@ -135,11 +136,11 @@ entityPage args actions state = Deku.do
 
     reload :: Aff Unit
     reload = do
-      state <~ Loading
+      liftEffect $ state.push Loading
       resp <- args.fetch
       case resp of 
-        Right list -> state <~ (Loaded list)
-        Left err ->  state <~ (Error err)
+        Right list -> liftEffect $ state.push  (Loaded list)
+        Left err   -> liftEffect $ state.push  (Error err)
 
       liftEffect $ setDialog mempty
 
