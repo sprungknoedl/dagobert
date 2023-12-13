@@ -164,7 +164,6 @@ entityPage args actions state = Deku.do
             ] <> map (\a -> a args ctx) actions)
           ]
         ] <> content
-      where ctx = { setDialog: setDialog, setState: state.push, reload: reload }
 
     sortedTableHead :: Nut
     sortedTableHead = Deku.do
@@ -207,6 +206,9 @@ entityPage args actions state = Deku.do
            , inlineButton [ DL.runOn_ DL.click $ deleteDialog elem ] [ trash $ css "w-4 h-4"]
            ]]
 
+    ctx :: Ctx a
+    ctx = { setDialog: setDialog, setState: state.push, reload: reload }
+
   state.poll <#~> case _ of
     -- ----------------------------------------------------
     Loading -> fixed
@@ -240,10 +242,7 @@ entityPage args actions state = Deku.do
                 , D.text_ "Nothing here ..."
                 ] 
               , D.p [ css "mb-4" ] [ D.text_ "It looks empty here. Try adding elements to this page ↓" ]
-              , primaryButton [ DL.runOn_ DL.click $ editDialog args.ctor ] 
-                [ plus (css "inline-block mr-1 w-5 h-5")
-                , D.text_ "Add"
-                ]
+              , addAction args ctx
               ] 
             else mempty
           ]
@@ -264,10 +263,7 @@ entityPage args actions state = Deku.do
               ] 
             , D.p [ css "mb-4" ] [ D.text_ "I'm sorry, but there seems to be an critical error:" ]
             , D.pre [ css "mb-4 p-4 bg-slate-900 rounded-md" ] [ D.text_ err ]
-            , secondaryButton [ DL.runOn_ DL.click $ (launchAff_ reload) ] 
-              [ arrowPath (css "inline-block mr-1 w-5 h-5")
-              , D.text_ "Reload"
-              ]
+            , reloadAction args ctx
             ] 
           ]
         ]
