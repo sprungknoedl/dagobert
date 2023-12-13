@@ -7,7 +7,7 @@
     "build-css": "postcss ./css/index.css -o ./dist/dagobert.css",
     "watch-css": "postcss -w ./css/index.css -o ./dist/dagobert.css",
     "bundle": "spago bundle --minify && postcss css/index.css -o dist/dagobert.css",
-    "serve": "source .env && go build && ./dagobert"
+    "serve": "go build && ./dagobert"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.16",
