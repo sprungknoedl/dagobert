@@ -9,7 +9,10 @@ import (
 
 func GetUsername(c *gin.Context) string {
 	session := sessions.Default(c)
-	claims := session.Get("oidcClaims").(string)
+	claims, ok := session.Get("oidcClaims").(string)
+	if !ok {
+		return "unknown"
+	}
 
 	obj := map[string]interface{}{}
 	err := json.Unmarshal([]byte(claims), &obj)
