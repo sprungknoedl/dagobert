@@ -83,82 +83,82 @@ func main() {
 	r.StaticFile("/favicon.ico", "dist/favicon.svg")
 
 	// cases
-	r.GET("/api/case", ListCaseR)
-	r.GET("/api/case.csv", ExportCaseCsvR)
-	r.GET("/api/case/:cid", GetCaseR)
-	r.POST("/api/case", AddCaseR)
-	r.PUT("/api/case/:cid", EditCaseR)
-	r.DELETE("/api/case/:cid", DeleteCaseR)
+	r.GET("/api/cases", ListCaseR)
+	r.GET("/api/cases.csv", ExportCaseCsvR)
+	r.GET("/api/cases/:cid", GetCaseR)
+	r.POST("/api/cases", AddCaseR)
+	r.PUT("/api/cases/:cid", EditCaseR)
+	r.DELETE("/api/cases/:cid", DeleteCaseR)
 
 	// --------------------------------------
 	// Investigation
 	// --------------------------------------
 	// events
-	r.GET("/api/case/:cid/event", ListEventR)
-	r.GET("/api/case/:cid/event.csv", ExportEventCsvR)
-	r.GET("/api/case/:cid/event/:id", GetEventR)
-	r.POST("/api/case/:cid/event", AddEventR)
-	r.PUT("/api/case/:cid/event/:id", EditEventR)
-	r.DELETE("/api/case/:cid/event/:id", DeleteEventR)
+	r.GET("/api/cases/:cid/events", ListEventR)
+	r.GET("/api/cases/:cid/events.csv", ExportEventCsvR)
+	r.GET("/api/cases/:cid/events/:id", GetEventR)
+	r.POST("/api/cases/:cid/events", AddEventR)
+	r.PUT("/api/cases/:cid/events/:id", EditEventR)
+	r.DELETE("/api/cases/:cid/events/:id", DeleteEventR)
 
 	// assets
-	r.GET("/api/case/:cid/asset", ListAssetR)
-	r.GET("/api/case/:cid/asset.csv", ExportAssetCsvR)
-	r.GET("/api/case/:cid/asset/:id", GetAssetR)
-	r.POST("/api/case/:cid/asset", AddAssetR)
-	r.PUT("/api/case/:cid/asset/:id", EditAssetR)
-	r.DELETE("/api/case/:cid/asset/:id", DeleteAssetR)
+	r.GET("/api/cases/:cid/assets", ListAssetR)
+	r.GET("/api/cases/:cid/assets.csv", ExportAssetCsvR)
+	r.GET("/api/cases/:cid/assets/:id", GetAssetR)
+	r.POST("/api/cases/:cid/assets", AddAssetR)
+	r.PUT("/api/cases/:cid/assets/:id", EditAssetR)
+	r.DELETE("/api/cases/:cid/assets/:id", DeleteAssetR)
 
 	// malware
-	r.GET("/api/case/:cid/malware", ListMalwareR)
-	r.GET("/api/case/:cid/malware.csv", ExportMalwareCsvR)
-	r.GET("/api/case/:cid/malware/:id", GetMalwareR)
-	r.POST("/api/case/:cid/malware", AddMalwareR)
-	r.PUT("/api/case/:cid/malware/:id", EditMalwareR)
-	r.DELETE("/api/case/:cid/malware/:id", DeleteMalwareR)
+	r.GET("/api/cases/:cid/malware", ListMalwareR)
+	r.GET("/api/cases/:cid/malware.csv", ExportMalwareCsvR)
+	r.GET("/api/cases/:cid/malware/:id", GetMalwareR)
+	r.POST("/api/cases/:cid/malware", AddMalwareR)
+	r.PUT("/api/cases/:cid/malware/:id", EditMalwareR)
+	r.DELETE("/api/cases/:cid/malware/:id", DeleteMalwareR)
 
 	// indicators
-	r.GET("/api/case/:cid/indicator", ListIndicatorR)
-	r.GET("/api/case/:cid/indicator.csv", ExportIndicatorCsvR)
-	r.GET("/api/case/:cid/indicator/:id", GetIndicatorR)
-	r.POST("/api/case/:cid/indicator", AddIndicatorR)
-	r.PUT("/api/case/:cid/indicator/:id", EditIndicatorR)
-	r.DELETE("/api/case/:cid/indicator/:id", DeleteIndicatorR)
+	r.GET("/api/cases/:cid/indicators", ListIndicatorR)
+	r.GET("/api/cases/:cid/indicators.csv", ExportIndicatorCsvR)
+	r.GET("/api/cases/:cid/indicators/:id", GetIndicatorR)
+	r.POST("/api/cases/:cid/indicators", AddIndicatorR)
+	r.PUT("/api/cases/:cid/indicators/:id", EditIndicatorR)
+	r.DELETE("/api/cases/:cid/indicators/:id", DeleteIndicatorR)
 
 	// --------------------------------------
 	// Case Management
 	// --------------------------------------
 	// users
-	r.GET("/api/case/:cid/user", ListUserR)
-	r.GET("/api/case/:cid/user.csv", ExportUserCsvR)
-	r.GET("/api/case/:cid/user/:id", GetUserR)
-	r.POST("/api/case/:cid/user", AddUserR)
-	r.PUT("/api/case/:cid/user/:id", EditUserR)
-	r.DELETE("/api/case/:cid/user/:id", DeleteUserR)
+	r.GET("/api/cases/:cid/users", ListUserR)
+	r.GET("/api/cases/:cid/users.csv", ExportUserCsvR)
+	r.GET("/api/cases/:cid/users/:id", GetUserR)
+	r.POST("/api/cases/:cid/users", AddUserR)
+	r.PUT("/api/cases/:cid/users/:id", EditUserR)
+	r.DELETE("/api/cases/:cid/users/:id", DeleteUserR)
 
 	// evidence
-	r.GET("/api/case/:cid/evidence", ListEvidenceR)
-	r.GET("/api/case/:cid/evidence.csv", ExportEvidenceCsvR)
-	r.GET("/api/case/:cid/evidence/:id", GetEvidenceR)
-	r.POST("/api/case/:cid/evidence", AddEvidenceR)
-	r.PUT("/api/case/:cid/evidence/:id", EditEvidenceR)
-	r.DELETE("/api/case/:cid/evidence/:id", DeleteEvidenceR)
+	r.GET("/api/cases/:cid/evidences", ListEvidenceR)
+	r.GET("/api/cases/:cid/evidences.csv", ExportEvidenceCsvR)
+	r.GET("/api/cases/:cid/evidences/:id", GetEvidenceR)
+	r.POST("/api/cases/:cid/evidences", AddEvidenceR)
+	r.PUT("/api/cases/:cid/evidences/:id", EditEvidenceR)
+	r.DELETE("/api/cases/:cid/evidences/:id", DeleteEvidenceR)
 
 	// tasks
-	r.GET("/api/case/:cid/task", ListTaskR)
-	r.GET("/api/case/:cid/task.csv", ExportTaskCsvR)
-	r.GET("/api/case/:cid/task/:id", GetTaskR)
-	r.POST("/api/case/:cid/task", AddTaskR)
-	r.PUT("/api/case/:cid/task/:id", EditTaskR)
-	r.DELETE("/api/case/:cid/task/:id", DeleteTaskR)
+	r.GET("/api/cases/:cid/tasks", ListTaskR)
+	r.GET("/api/cases/:cid/tasks.csv", ExportTaskCsvR)
+	r.GET("/api/cases/:cid/tasks/:id", GetTaskR)
+	r.POST("/api/cases/:cid/tasks", AddTaskR)
+	r.PUT("/api/cases/:cid/tasks/:id", EditTaskR)
+	r.DELETE("/api/cases/:cid/tasks/:id", DeleteTaskR)
 
 	// notes
-	r.GET("/api/case/:cid/note", ListNoteR)
-	r.GET("/api/case/:cid/note.csv", ExportNoteCsvR)
-	r.GET("/api/case/:cid/note/:id", GetNoteR)
-	r.POST("/api/case/:cid/note", AddNoteR)
-	r.PUT("/api/case/:cid/note/:id", EditNoteR)
-	r.DELETE("/api/case/:cid/note/:id", DeleteNoteR)
+	r.GET("/api/cases/:cid/notes", ListNoteR)
+	r.GET("/api/cases/:cid/notes.csv", ExportNoteCsvR)
+	r.GET("/api/cases/:cid/notes/:id", GetNoteR)
+	r.POST("/api/cases/:cid/notes", AddNoteR)
+	r.PUT("/api/cases/:cid/notes/:id", EditNoteR)
+	r.DELETE("/api/cases/:cid/notes/:id", DeleteNoteR)
 
 	// --------------------------------------
 	// Assets

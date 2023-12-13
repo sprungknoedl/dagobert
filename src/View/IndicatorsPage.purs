@@ -41,11 +41,11 @@ indicatorsPage state { kase } = Deku.do
     { title: ViewIndicators c.id
     , ctor: newIndicator
     , id: _.id
-    , csv: "/api/case/" <> show c.id <> "/indicator.csv"
-    , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/indicator")
-    , create: \obj -> XHR.post   ("/api/case/" <> show c.id <> "/indicator") obj
-    , update: \obj -> XHR.put    ("/api/case/" <> show c.id <> "/indicator/" <> show obj.id) obj
-    , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/indicator/" <> show obj.id)
+    , csv:                        "/api/cases/" <> show c.id <> "/indicators.csv"
+    , fetch:          XHR.get    ("/api/cases/" <> show c.id <> "/indicators")
+    , create: \obj -> XHR.post   ("/api/cases/" <> show c.id <> "/indicators") obj
+    , update: \obj -> XHR.put    ("/api/cases/" <> show c.id <> "/indicators/" <> show obj.id) obj
+    , delete: \obj -> XHR.delete ("/api/cases/" <> show c.id <> "/indicators/" <> show obj.id)
     , hydrate:        pure $ pure unit
 
     , columns: [ { title: "Date added",  width: "7rem",  renderString: _.dateAdded >>> printDate, renderNut: renderDateAdded }

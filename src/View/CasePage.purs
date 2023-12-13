@@ -32,11 +32,11 @@ casePage state { kase, setKase } = Deku.do
     { title: ViewCases
     , ctor: newCase
     , id: _.id
-    , csv: "/api/case.csv"
-    , fetch:          XHR.get    ("/api/case")
-    , create: \obj -> XHR.post   ("/api/case") obj
-    , update: \obj -> XHR.put    ("/api/case/" <> show obj.id) obj
-    , delete: \obj -> XHR.delete ("/api/case/" <> show obj.id)
+    , csv:                        "/api/case.csv"
+    , fetch:          XHR.get    ("/api/cases")
+    , create: \obj -> XHR.post   ("/api/cases") obj
+    , update: \obj -> XHR.put    ("/api/cases/" <> show obj.id) obj
+    , delete: \obj -> XHR.delete ("/api/cases/" <> show obj.id)
     , hydrate:        pure $ pure unit
 
     , columns: [ { title: "",               width: "8rem", renderString: _.id >>> show,    renderNut: renderSelect }

@@ -24,11 +24,11 @@ usersPage state { kase } = Deku.do
     { title: ViewUsers c.id
     , ctor: newUser
     , id: _.id
-    , csv: "/api/case/" <> show c.id <> "/user.csv"
-    , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/user")
-    , create: \obj -> XHR.post   ("/api/case/" <> show c.id <> "/user") obj
-    , update: \obj -> XHR.put    ("/api/case/" <> show c.id <> "/user/" <> show obj.id) obj
-    , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/user/" <> show obj.id)
+    , csv:                        "/api/cases/" <> show c.id <> "/users.csv"
+    , fetch:          XHR.get    ("/api/cases/" <> show c.id <> "/users")
+    , create: \obj -> XHR.post   ("/api/cases/" <> show c.id <> "/users") obj
+    , update: \obj -> XHR.put    ("/api/cases/" <> show c.id <> "/users/" <> show obj.id) obj
+    , delete: \obj -> XHR.delete ("/api/cases/" <> show c.id <> "/users/" <> show obj.id)
     , hydrate:        pure $ pure unit
 
     , columns: [ { title: "Name",    width: "auto", renderString: _.name,    renderNut: _.name >>> D.text_ }

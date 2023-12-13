@@ -24,11 +24,11 @@ notesPage state { kase } = Deku.do
     { title: ViewNotes c.id
     , ctor: newNote
     , id: _.id
-    , csv: "/api/case/" <> show c.id <> "/note.csv"
-    , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/note")
-    , create: \obj -> XHR.post   ("/api/case/" <> show c.id <> "/note") obj
-    , update: \obj -> XHR.put    ("/api/case/" <> show c.id <> "/note/" <> show obj.id) obj
-    , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/note/" <> show obj.id)
+    , csv:                        "/api/cases/" <> show c.id <> "/notes.csv"
+    , fetch:          XHR.get    ("/api/cases/" <> show c.id <> "/notes")
+    , create: \obj -> XHR.post   ("/api/cases/" <> show c.id <> "/notes") obj
+    , update: \obj -> XHR.put    ("/api/cases/" <> show c.id <> "/notes/" <> show obj.id) obj
+    , delete: \obj -> XHR.delete ("/api/cases/" <> show c.id <> "/notes/" <> show obj.id)
     , hydrate:        pure $ pure unit
 
     , columns: [ { title: "Category",    width: "15rem", renderString: _.category,    renderNut: _.category >>> D.text_  }

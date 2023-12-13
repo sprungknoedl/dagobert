@@ -37,12 +37,12 @@ eventsPage state { kase } = Deku.do
     { title: ViewTimeline c.id
     , ctor: newEvent
     , id: _.id
-    , csv: "/api/case/" <> show c.id <> "/event.csv"
-    , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/event")
-    , create: \obj -> XHR.post   ("/api/case/" <> show c.id <> "/event") obj
-    , update: \obj -> XHR.put    ("/api/case/" <> show c.id <> "/event/" <> show obj.id) obj
-    , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/event/" <> show obj.id)
-    , hydrate:        XHR.get    ("/api/case/" <> show c.id <> "/asset")
+    , csv:                        "/api/cases/" <> show c.id <> "/events.csv"
+    , fetch:          XHR.get    ("/api/cases/" <> show c.id <> "/events")
+    , create: \obj -> XHR.post   ("/api/cases/" <> show c.id <> "/events") obj
+    , update: \obj -> XHR.put    ("/api/cases/" <> show c.id <> "/events/" <> show obj.id) obj
+    , delete: \obj -> XHR.delete ("/api/cases/" <> show c.id <> "/events/" <> show obj.id)
+    , hydrate:        XHR.get    ("/api/cases/" <> show c.id <> "/assets")
 
     , columns: [ { title: "Date/Time",     width: "12rem", renderString: _.time >>> printDateTime, renderNut: _.time >>> printDateTime >>> D.text_  }
               , { title: "Type",          width: "10rem", renderString: _.type,                   renderNut: _.type >>> D.text_  }

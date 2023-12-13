@@ -83,16 +83,16 @@ main = do
         case new of
           ViewTimeline cid        -> do
             fetchCase setKase cid
-            fetchData events     ("/api/case/" <> show cid <> "/event")
+            fetchData events     ("/api/cases/" <> show cid <> "/events")
           ViewAssets cid          -> do
             fetchCase setKase cid
-            fetchData assets     ("/api/case/" <> show cid <> "/asset")
+            fetchData assets     ("/api/cases/" <> show cid <> "/assets")
           ViewMalware cid         -> do
             fetchCase setKase cid
-            fetchData malware    ("/api/case/" <> show cid <> "/malware")
+            fetchData malware    ("/api/cases/" <> show cid <> "/malware")
           ViewIndicators cid      -> do
             fetchCase setKase cid
-            fetchData indicators ("/api/case/" <> show cid <> "/indicator")
+            fetchData indicators ("/api/cases/" <> show cid <> "/indicators")
 
           ViewVisualTimeline _    -> pure unit
           ViewLateralMovement _   -> pure unit
@@ -100,18 +100,18 @@ main = do
 
           ViewUsers cid           -> do
               fetchCase setKase cid
-              fetchData users     ("/api/case/" <> show cid <> "/user")
+              fetchData users     ("/api/cases/" <> show cid <> "/users")
           ViewEvidences cid       -> do
               fetchCase setKase cid
-              fetchData evidences ("/api/case/" <> show cid <> "/evidence")
+              fetchData evidences ("/api/cases/" <> show cid <> "/evidences")
           ViewTasks cid           -> do
               fetchCase setKase cid
-              fetchData tasks     ("/api/case/" <> show cid <> "/task")
+              fetchData tasks     ("/api/cases/" <> show cid <> "/tasks")
           ViewNotes cid           -> do
               fetchCase setKase cid
-              fetchData notes     ("/api/case/" <> show cid <> "/note")
+              fetchData notes     ("/api/cases/" <> show cid <> "/notes")
 
-          ViewCases               -> fetchData cases     ("/api/case")
+          ViewCases               -> fetchData cases     ("/api/cases")
           FourOhFour              -> pure unit
     )
 
@@ -119,7 +119,7 @@ main = do
 
 fetchCase :: (Maybe Case -> Effect Unit) -> Int -> Aff Unit
 fetchCase set cid = do
-  eitherCase <- XHR.get $ "/api/case/" <> show cid
+  eitherCase <- XHR.get $ "/api/cases/" <> show cid
   case eitherCase of
     Right k -> liftEffect $ set (Just k)
     Left _  -> pure unit

@@ -34,11 +34,11 @@ evidencesPage state { kase } = Deku.do
     { title: ViewEvidences c.id
     , ctor: newEvidence
     , id: _.id
-    , csv: "/api/case/" <> show c.id <> "/evidence.csv"
-    , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/evidence")
-    , create: \obj -> XHR.post   ("/api/case/" <> show c.id <> "/evidence") obj
-    , update: \obj -> XHR.put    ("/api/case/" <> show c.id <> "/evidence/" <> show obj.id) obj
-    , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/evidence/" <> show obj.id)
+    , csv:                        "/api/cases/" <> show c.id <> "/evidences.csv"
+    , fetch:          XHR.get    ("/api/cases/" <> show c.id <> "/evidences")
+    , create: \obj -> XHR.post   ("/api/cases/" <> show c.id <> "/evidences") obj
+    , update: \obj -> XHR.put    ("/api/cases/" <> show c.id <> "/evidences/" <> show obj.id) obj
+    , delete: \obj -> XHR.delete ("/api/cases/" <> show c.id <> "/evidences/" <> show obj.id)
     , hydrate:        pure $ pure unit
 
     , columns: [ { title: "Date added",  width: "7rem",  renderString: _.dateAdded >>> printDate, renderNut: renderDateAdded }

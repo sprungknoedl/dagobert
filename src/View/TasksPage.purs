@@ -39,12 +39,12 @@ tasksPage state { kase } = Deku.do
     { title: ViewTasks c.id
     , ctor: newTask
     , id: _.id
-    , csv: "/api/case/" <> show c.id <> "/task.csv"
-    , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/task")
-    , create: \obj -> XHR.post   ("/api/case/" <> show c.id <> "/task") obj
-    , update: \obj -> XHR.put    ("/api/case/" <> show c.id <> "/task/" <> show obj.id) obj
-    , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/task/" <> show obj.id)
-    , hydrate:        XHR.get    ("/api/case/" <> show c.id <> "/user")
+    , csv:                        "/api/cases/" <> show c.id <> "/tasks.csv"
+    , fetch:          XHR.get    ("/api/cases/" <> show c.id <> "/tasks")
+    , create: \obj -> XHR.post   ("/api/cases/" <> show c.id <> "/tasks") obj
+    , update: \obj -> XHR.put    ("/api/cases/" <> show c.id <> "/tasks/" <> show obj.id) obj
+    , delete: \obj -> XHR.delete ("/api/cases/" <> show c.id <> "/tasks/" <> show obj.id)
+    , hydrate:        XHR.get    ("/api/cases/" <> show c.id <> "/users")
 
     , columns: [ { title: "Date added", width: "7rem",  renderString: _.dateAdded >>> printDate, renderNut: renderDateAdded  }
                , { title: "Date due",   width: "7rem",  renderString: _.dateDue >>> printDate,   renderNut: _.dateDue >>> printDate >>> D.text_  }

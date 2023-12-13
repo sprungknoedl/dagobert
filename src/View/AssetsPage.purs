@@ -43,11 +43,11 @@ assetsPage state { kase } = Deku.do
     { title: ViewAssets c.id
     , ctor: newAsset
     , id: _.id
-    , csv: "/api/case/" <> show c.id <> "/asset.csv"
-    , fetch:          XHR.get    ("/api/case/" <> show c.id <> "/asset")
-    , create: \obj -> XHR.post   ("/api/case/" <> show c.id <> "/asset") obj
-    , update: \obj -> XHR.put    ("/api/case/" <> show c.id <> "/asset/" <> show obj.id) obj
-    , delete: \obj -> XHR.delete ("/api/case/" <> show c.id <> "/asset/" <> show obj.id)
+    , csv:                        "/api/cases/" <> show c.id <> "/assets.csv"
+    , fetch:          XHR.get    ("/api/cases/" <> show c.id <> "/assets")
+    , create: \obj -> XHR.post   ("/api/cases/" <> show c.id <> "/assets") obj
+    , update: \obj -> XHR.put    ("/api/cases/" <> show c.id <> "/assets/" <> show obj.id) obj
+    , delete: \obj -> XHR.delete ("/api/cases/" <> show c.id <> "/assets/" <> show obj.id)
     , hydrate:        pure $ pure unit
 
     , columns: [ { title: "Date added", width: "7rem",  renderString: _.dateAdded >>> printDate, renderNut: renderDateAdded }
