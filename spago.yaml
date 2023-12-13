@@ -1,5 +1,5 @@
 package:
-  name: dagobert4
+  name: dagobert
   dependencies:
     - console
     - deku
@@ -60,4 +60,4 @@ workspace:
         - web-pointerevents
         - web-touchevents
   package_set:
-    registry: 43.2.0
+    registry: 47.5.1
