@@ -6,7 +6,7 @@ import Dagobert.Data.Indicator (Indicator, IndicatorStub, indicatorTypes, newInd
 import Dagobert.Route (Route(..))
 import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, selectField, textField, textareaField, validate)
-import Dagobert.Utils.HTML (css, modal, printDate, renderDateAdded)
+import Dagobert.Utils.HTML (modal, printDate, renderDateAdded)
 import Dagobert.Utils.Icons (commandLine, fingerprint, folderOpen, globeEurope, link, mapPin, questionMarkCircle)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
@@ -14,6 +14,7 @@ import Dagobert.View.EntityPage (DialogControls, PageState, defaultActions, enti
 import Data.Maybe (Maybe(..), maybe)
 import Deku.Core (Nut, fixed)
 import Deku.DOM as D
+import Deku.DOM.Attributes as DA
 import Deku.Do as Deku
 import Deku.Hooks (useHot, (<#~>))
 import Effect (Effect)
@@ -23,18 +24,18 @@ indicatorsPage :: { poll ∷ Poll (PageState Indicator), push ∷ PageState Indi
 indicatorsPage state { kase } = Deku.do
   let
     renderType :: String -> Nut
-    renderType "IP"      = fixed [ mapPin (css "inline-block w-6 h-6 mr-2"), D.text_ "IP" ]
-    renderType "Domain"  = fixed [ globeEurope (css "inline-block w-6 h-6 mr-2"), D.text_ "Domain" ]
-    renderType "URL"     = fixed [ link (css "inline-block w-6 h-6 mr-2"), D.text_ "URL" ]
-    renderType "Path"    = fixed [ folderOpen (css "inline-block w-6 h-6 mr-2"), D.text_ "Path" ]
-    renderType "Hash"    = fixed [ fingerprint (css "inline-block w-6 h-6 mr-2"), D.text_ "Hash" ]
-    renderType "Service" = fixed [ commandLine (css "inline-block w-6 h-6 mr-2"), D.text_ "Service" ]
-    renderType t         = fixed [ questionMarkCircle (css "inline-block w-6 h-6 mr-2"), D.text_ t ]
+    renderType "IP"      = fixed [ mapPin (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "IP" ]
+    renderType "Domain"  = fixed [ globeEurope (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "Domain" ]
+    renderType "URL"     = fixed [ link (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "URL" ]
+    renderType "Path"    = fixed [ folderOpen (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "Path" ]
+    renderType "Hash"    = fixed [ fingerprint (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "Hash" ]
+    renderType "Service" = fixed [ commandLine (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "Service" ]
+    renderType t         = fixed [ questionMarkCircle (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ t ]
 
     renderTlp :: String -> Nut
-    renderTlp t@"TLP:RED"   = D.span [ css "text-red-500" ] [ D.text_ t ]
-    renderTlp t@"TLP:AMBER" = D.span [ css "text-amber-500" ] [ D.text_ t ]
-    renderTlp t@"TLP:GREEN" = D.span [ css "text-green-500" ] [ D.text_ t ]
+    renderTlp t@"TLP:RED"   = D.span [ DA.klass_ "text-red-500" ] [ D.text_ t ]
+    renderTlp t@"TLP:AMBER" = D.span [ DA.klass_ "text-amber-500" ] [ D.text_ t ]
+    renderTlp t@"TLP:GREEN" = D.span [ DA.klass_ "text-green-500" ] [ D.text_ t ]
     renderTlp t             = D.span [] [ D.text_ t ]
 
   kase <#~> maybe mempty (\c -> entityPage

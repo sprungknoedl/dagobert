@@ -3,7 +3,7 @@ module Dagobert.View.EntityPage where
 import Prelude
 
 import Dagobert.Route (Route, routeToTitle)
-import Dagobert.Utils.HTML (css, inlineButton, primaryButton, searchInput, secondaryButton, secondaryLink)
+import Dagobert.Utils.HTML (inlineButton, primaryButton, searchInput, secondaryButton, secondaryLink)
 import Dagobert.Utils.Icons (arrowDownTray, arrowPath, chevronDown, faceFrown, magnifyingGlass, pencil, plus, trash)
 import Dagobert.View.ConfirmDialog (confirmDialog)
 import Data.Array (any, filter, index, mapWithIndex, null, sortWith)
@@ -93,22 +93,22 @@ addAction args ctx = Deku.do
       ctx.setDialog $ hydration <#~> args.modal { save: save, cancel: ctx.setDialog mempty } args.ctor
       launchAff_    $ args.hydrate >>= either (const $ pure unit) (liftEffect <<< setHydration)
 
-  primaryButton [DL.runOn_ DL.click $ addDialog] 
-    [ plus (css "inline-block mr-1 w-5 h-5")
+  primaryButton [ DL.runOn_ DL.click $ addDialog ] 
+    [ plus (DA.klass_ "inline-block mr-1 w-5 h-5")
     , D.text_ "Add"
     ]
 
 reloadAction :: forall a a' b. PageArgs a a' b -> Ctx a -> Nut
 reloadAction _ ctx = Deku.do
-  secondaryButton [DL.runOn_ DL.click $ launchAff_ ctx.reload] 
-    [ arrowPath (css "inline-block mr-1 w-5 h-5")
+  secondaryButton [ DL.runOn_ DL.click $ launchAff_ ctx.reload ] 
+    [ arrowPath (DA.klass_ "inline-block mr-1 w-5 h-5")
     , D.text_ "Refresh"
     ]
 
 exportCsvAction :: forall a a' b. PageArgs a a' b -> Ctx a -> Nut
 exportCsvAction args _ =
   secondaryLink [ DA.href_ args.csv ]
-    [ arrowDownTray (css "inline-block mr-1 w-5 h-5")
+    [ arrowDownTray (DA.klass_ "inline-block mr-1 w-5 h-5")
     , D.text_ "Export CSV"
     ]
 
@@ -155,12 +155,12 @@ entityPage args actions state = Deku.do
 
     entityListPanel :: Array Nut -> Nut
     entityListPanel content =
-      D.main [css "p-4 grow"] $
-        [ D.nav [css "flex items-center justify-between mb-4"]
-          [ D.h3 [css "font-bold text-2xl ml-2"] [ D.text_ (routeToTitle args.title) ]
-          , D.div [css "flex gap-5 items-center"]
-            ([ magnifyingGlass (css "w-6 h-6")
-            , searchInput [DA.style_ "width: 32rem", DA.placeholder_ "Search", DL.valueOn_ DL.input $ setSearchTerm] []
+      D.main [ DA.klass_ "p-4 grow" ] $
+        [ D.nav [ DA.klass_ "flex items-center justify-between mb-4" ]
+          [ D.h3 [ DA.klass_ "font-bold text-2xl ml-2" ] [ D.text_ (routeToTitle args.title) ]
+          , D.div [ DA.klass_ "flex gap-5 items-center" ]
+            ([ magnifyingGlass (DA.klass_ "w-6 h-6")
+            , searchInput [ DA.style_ "width: 32rem", DA.placeholder_ "Search", DL.valueOn_ DL.input $ setSearchTerm ] []
             ] <> map (\a -> a args ctx) actions)
           ]
         ] <> content
@@ -170,18 +170,18 @@ entityPage args actions state = Deku.do
       let 
         column :: Int -> Column a -> Nut
         column i c = D.th 
-          [ css "p-2 text-left cursor-pointer text-slate-400 hover:text-white hover:underline"
+          [ DA.klass_ "p-2 text-left cursor-pointer text-slate-400 hover:text-white hover:underline"
           , DA.style_ $ "width: " <> c.width
           , DL.runOn DL.click (onClick i) 
           ] 
           [ D.text_ c.title
-          , sortCol <#~> (\x -> if x == i then chevronDown (css "inline-block ml-1 w-4 h-4") else mempty) 
+          , sortCol <#~> (\x -> if x == i then chevronDown (DA.klass_ "inline-block ml-1 w-4 h-4") else mempty) 
           ]
 
         onClick :: Int -> Poll (Effect Unit)
         onClick i = pure $ setSortCol i
 
-      D.thead [css "border-b-2 border-b-slate-600"] [ D.tr [css "p-8"] $ (mapWithIndex column args.columns) <> [D.th [DA.style_ $ "width: 7rem"] []]]
+      D.thead [ DA.klass_ "border-b-2 border-b-slate-600" ] [ D.tr [ DA.klass_ "p-8" ] $ (mapWithIndex column args.columns) <> [ D.th [ DA.style_ $ "width: 7rem" ] [] ]]
 
     filteringSortPoll :: String /\ Int -> Array a -> Array a
     filteringSortPoll (f /\ s) = 
@@ -199,11 +199,11 @@ entityPage args actions state = Deku.do
 
     renderElem :: a -> Nut
     renderElem elem =
-      D.tr [css "hover:bg-slate-700"] $
-        map (\c -> D.td [css "p-2"] [c.renderNut elem]) args.columns
-        <> [ D.td [css "p-2 flex gap-2 justify-end" ]
-           [ inlineButton [ DL.runOn_ DL.click $ editDialog elem ] [ pencil $ css "w-4 h-4"]
-           , inlineButton [ DL.runOn_ DL.click $ deleteDialog elem ] [ trash $ css "w-4 h-4"]
+      D.tr [ DA.klass_ "hover:bg-slate-700" ] $
+        map (\c -> D.td [ DA.klass_ "p-2" ] [ c.renderNut elem ]) args.columns
+        <> [ D.td [ DA.klass_ "p-2 flex gap-2 justify-end" ]
+           [ inlineButton [ DL.runOn_ DL.click $ editDialog elem ] [ pencil $ DA.klass_ "w-4 h-4" ]
+           , inlineButton [ DL.runOn_ DL.click $ deleteDialog elem ] [ trash $ DA.klass_ "w-4 h-4" ]
            ]]
 
     ctx :: Ctx a
@@ -214,11 +214,11 @@ entityPage args actions state = Deku.do
     Loading -> fixed
     -- ----------------------------------------------------
       [ entityListPanel
-        [ D.table [css "table-auto w-full" ] 
+        [ D.table [ DA.klass_ "table-auto w-full" ] 
           [ sortedTableHead
-          , D.caption [ css "caption-bottom w-1/3 my-4 mx-auto" ] 
-            [ D.h3 [ css "m-2 text-xl text-slate-400" ] 
-              [ arrowPath $ css "inline-block w-6 h-6 mr-2"
+          , D.caption [ DA.klass_ "caption-bottom w-1/3 my-4 mx-auto" ] 
+            [ D.h3 [ DA.klass_ "m-2 text-xl text-slate-400" ] 
+              [ arrowPath $ DA.klass_ "inline-block w-6 h-6 mr-2"
               , D.text_ "Loading ..."
               ] 
             , D.p_ [ D.text_ "We're getting the page in shape, hang in there." ]
@@ -232,16 +232,16 @@ entityPage args actions state = Deku.do
     Loaded list -> fixed
     -- ----------------------------------------------------
       [ entityListPanel
-        [ D.table [css "table-auto w-full" ] 
+        [ D.table [ DA.klass_ "table-auto w-full" ] 
           [ sortedTableHead
           , (Tuple <$> searchTerm <*> sortCol) <#~> \fs -> D.tbody_ $ (filteringSortPoll fs) list <#> renderElem
           , if null list 
-            then D.caption [ css "caption-bottom w-1/3 my-4 mx-auto" ] 
-              [ D.h3 [ css "mb-2 mt-4 text-xl text-slate-400" ] 
-                [ faceFrown $ css "inline-block w-6 h-6 mr-2"
+            then D.caption [ DA.klass_ "caption-bottom w-1/3 my-4 mx-auto" ] 
+              [ D.h3 [ DA.klass_ "mb-2 mt-4 text-xl text-slate-400" ] 
+                [ faceFrown $ DA.klass_ "inline-block w-6 h-6 mr-2"
                 , D.text_ "Nothing here ..."
                 ] 
-              , D.p [ css "mb-4" ] [ D.text_ "It looks empty here. Try adding elements to this page ↓" ]
+              , D.p [ DA.klass_ "mb-4" ] [ D.text_ "It looks empty here. Try adding elements to this page ↓" ]
               , addAction args ctx
               ] 
             else mempty
@@ -254,15 +254,15 @@ entityPage args actions state = Deku.do
     Error err -> fixed
     -- ----------------------------------------------------
       [ entityListPanel
-        [ D.table [css "table-auto w-full" ] 
+        [ D.table [ DA.klass_ "table-auto w-full" ] 
           [ sortedTableHead
-          , D.caption [ css "caption-bottom w-1/3 my-4 mx-auto" ] 
-            [ D.h3 [ css "mb-2 mt-4 text-xl text-red-500" ] 
-              [ faceFrown $ css "inline-block w-6 h-6 mr-2"
+          , D.caption [ DA.klass_ "caption-bottom w-1/3 my-4 mx-auto" ] 
+            [ D.h3 [ DA.klass_ "mb-2 mt-4 text-xl text-red-500" ] 
+              [ faceFrown $ DA.klass_ "inline-block w-6 h-6 mr-2"
               , D.text_ "Oops ..."
               ] 
-            , D.p [ css "mb-4" ] [ D.text_ "I'm sorry, but there seems to be an critical error:" ]
-            , D.pre [ css "mb-4 p-4 bg-slate-900 rounded-md" ] [ D.text_ err ]
+            , D.p [ DA.klass_ "mb-4" ] [ D.text_ "I'm sorry, but there seems to be an critical error:" ]
+            , D.pre [ DA.klass_ "mb-4 p-4 bg-slate-900 rounded-md" ] [ D.text_ err ]
             , reloadAction args ctx
             ] 
           ]

@@ -2,7 +2,7 @@ module Dagobert.Utils.Forms where
 
 import Prelude
 
-import Dagobert.Utils.HTML (css, primaryButton, secondaryButton)
+import Dagobert.Utils.HTML (primaryButton, secondaryButton)
 import Dagobert.Utils.Icons (xMark)
 import Dagobert.Utils.Validation (Validator)
 import Data.Array ((:))
@@ -26,17 +26,17 @@ import Web.HTML.HTMLTextAreaElement as TextareaElement
 form ∷ String -> Nut -> Poll (Effect Unit) -> Poll (Effect Unit) -> Nut
 form title controls onSubmit onReset =
   D.form_
-    [ D.header [ css "p-6 px-8 border-b border-b-slate-700 flex justify-between" ]
-      [ D.h4  [ css "font-bold text-slate-200" ] [ D.text_ title ]
+    [ D.header [ DA.klass_ "p-6 px-8 border-b border-b-slate-700 flex justify-between" ]
+      [ D.h4  [ DA.klass_ "font-bold text-slate-200" ] [ D.text_ title ]
       , D.div_
           [ D.button [ DA.xtype_ "button", DL.runOn DL.click onReset ]
-          [ xMark $ css "w-6 h-6" ] 
+          [ xMark $ DA.klass_ "w-6 h-6" ] 
           ]
       ]
       
-    , D.section [ css "p-8 flex flex-col gap-6" ] [ controls ]
+    , D.section [ DA.klass_ "p-8 flex flex-col gap-6" ] [ controls ]
 
-    , D.footer [ css "p-6 px-8 border-t border-t-slate-700 flex gap-4" ] 
+    , D.footer [ DA.klass_ "p-6 px-8 border-t border-t-slate-700 flex gap-4" ] 
       [ primaryButton [ DA.xtype_ "submit", DL.runOn DL.click onSubmit ] [ D.text_ "Save" ]
       , secondaryButton [ DA.xtype_ "button", DL.runOn DL.click onReset ] [ D.text_ "Cancel" ]
       ]
@@ -98,19 +98,19 @@ dummyField (_ /\ value) = Form
 
 headingField :: String -> Form Unit
 headingField title = Form
-  { ui: D.h4 [ css "font-bold text-lg border-b border-b-slate-600 my-4" ] [ D.text_ title ]
+  { ui: D.h4 [ DA.klass_ "font-bold text-lg border-b border-b-slate-600 my-4" ] [ D.text_ title ]
   , poll: pure unit
   }
 
 subtitle :: forall a. String -> Form a -> Form a
 subtitle desc (Form f) = Form
-  { ui: f.ui <> D.p [ css "-mt-8 mb-4" ] [ D.text_ desc ]
+  { ui: f.ui <> D.p [ DA.klass_ "-mt-8 mb-4" ] [ D.text_ desc ]
   , poll: f.poll
   }
 
 help :: forall a. String -> Form a -> Form a
 help desc (Form f) = Form
-  { ui: f.ui <> D.p [ css "text-slate-400 mt-2" ] [ D.text_ desc ]
+  { ui: f.ui <> D.p [ DA.klass_ "text-slate-400 mt-2" ] [ D.text_ desc ]
   , poll: f.poll
   }
 
@@ -118,7 +118,7 @@ textField :: (String -> Effect Unit) /\ (Poll String) -> Form String
 textField (pusher /\ value) = Form
   { ui: D.input
     [ DA.xtype_ "text"
-    , css "px-4 w-full h-10 outline outline-2 outline-offset-2 outline-slate-600 focus:outline-pink-500 bg-slate-700 text-white caret-pink-500 rounded-md shadow-sm"
+    , DA.klass_ "px-4 w-full h-10 outline outline-2 outline-offset-2 outline-slate-600 focus:outline-pink-500 bg-slate-700 text-white caret-pink-500 rounded-md shadow-sm"
     , DA.value value
     , valueOnInput DL.input $ pure pusher
     ] []
@@ -129,7 +129,7 @@ dateField :: (String -> Effect Unit) /\ (Poll String) -> Form String
 dateField (pusher /\ value) = Form
   { ui: D.input
     [ DA.xtype_ "date"
-    , css "px-4 w-full h-10 outline outline-2 outline-offset-2 outline-slate-600 focus:outline-pink-500 bg-slate-700 text-white caret-pink-500 rounded-md shadow-sm"
+    , DA.klass_ "px-4 w-full h-10 outline outline-2 outline-offset-2 outline-slate-600 focus:outline-pink-500 bg-slate-700 text-white caret-pink-500 rounded-md shadow-sm"
     , DA.value value
     , valueOnInput DL.input $ pure pusher
     ] []
@@ -140,7 +140,7 @@ datetimeField :: (String -> Effect Unit) /\ (Poll String) -> Form String
 datetimeField (pusher /\ value) = Form
   { ui: D.input
     [ DA.xtype_ "datetime"
-    , css "px-4 w-full h-10 outline outline-2 outline-offset-2 outline-slate-600 focus:outline-pink-500 bg-slate-700 text-white caret-pink-500 rounded-md shadow-sm"
+    , DA.klass_ "px-4 w-full h-10 outline outline-2 outline-offset-2 outline-slate-600 focus:outline-pink-500 bg-slate-700 text-white caret-pink-500 rounded-md shadow-sm"
     , DA.value value
     , valueOnInput DL.input $ pure pusher
     ] []
@@ -151,7 +151,7 @@ checkboxField :: (Boolean -> Effect Unit) /\ (Poll Boolean) -> Form Boolean
 checkboxField (pusher /\ value) = Form
   { ui: D.input
     [ DA.xtype_ "checkbox"
-    , css "accent-pink-500"
+    , DA.klass_ "accent-pink-500"
     , DA.checked $ filter identity value $> "true"
     , DL.checkedOn DL.input $ pure pusher
     ] []
@@ -161,7 +161,7 @@ checkboxField (pusher /\ value) = Form
 textareaField :: (String -> Effect Unit) /\ (Poll String) -> Form String
 textareaField (pusher /\ value) = Form
   { ui: D.textarea
-    [ css "p-4 w-full outline outline-2 outline-offset-2 outline-slate-600 focus:outline-pink-500 bg-slate-700 text-white caret-pink-500 rounded-md shadow-sm"
+    [ DA.klass_ "p-4 w-full outline outline-2 outline-offset-2 outline-slate-600 focus:outline-pink-500 bg-slate-700 text-white caret-pink-500 rounded-md shadow-sm"
     , valueOnTextarea DL.input $ pure pusher
     , DA.rows_ "5"
     ] [ D.text value ]
@@ -171,7 +171,7 @@ textareaField (pusher /\ value) = Form
 selectField :: Array String -> (String -> Effect Unit) /\ (Poll String) -> Form String
 selectField options (pusher /\ value) = Form
   { ui: ( D.select
-    [ css "px-4 w-full h-10 outline outline-2 outline-offset-2 outline-slate-600 focus:outline-pink-500 bg-slate-700 text-white rounded-md shadow-sm"
+    [ DA.klass_ "px-4 w-full h-10 outline outline-2 outline-offset-2 outline-slate-600 focus:outline-pink-500 bg-slate-700 text-white rounded-md shadow-sm"
     , valueOnSelect DL.input $ pure pusher
     ] ( renderDefaultOption : map renderOption options ) )
   , poll: value
@@ -191,9 +191,9 @@ selectField options (pusher /\ value) = Form
 
 label :: forall a. String -> Form a -> Form a
 label str (Form f) = Form
-  { ui: D.div [ css "flex flex-row" ]
-    [ D.div [ css "grow-0 w-56 pt-2" ] [ D.label_ [ D.text_ str ] ]
-    , D.div [ css "grow" ] [ f.ui ]
+  { ui: D.div [ DA.klass_ "flex flex-row" ]
+    [ D.div [ DA.klass_ "grow-0 w-56 pt-2" ] [ D.label_ [ D.text_ str ] ]
+    , D.div [ DA.klass_ "grow" ] [ f.ui ]
     ]
   , poll: f.poll
   }
@@ -201,7 +201,7 @@ label str (Form f) = Form
 validate :: forall a. Validator a -> Form a -> Form (Maybe a)
 validate validator (Form f) = Form 
   { ui: f.ui <> ( f.poll <#~> \x -> case validator x of
-      Left err -> D.p [ css "text-pink-500 mt-2" ] [ D.text_ err]
+      Left err -> D.p [ DA.klass_ "text-pink-500 mt-2" ] [ D.text_ err]
       Right _   -> mempty
       )
   , poll: hush <<< validator <$> f.poll

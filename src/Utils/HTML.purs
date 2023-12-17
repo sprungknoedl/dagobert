@@ -16,40 +16,37 @@ import Deku.Hooks (useState)
 import Effect (Effect)
 import FRP.Poll (Poll)
 
-css :: ∀ r. String → Poll (Attribute ( klass ∷ String | r ) )
-css = DA.klass_
-
 primaryLink :: Array (Poll (Attribute (HTMLAnchorElement ()))) -> Array Nut -> Nut
 primaryLink attr = D.a $
-  [ css "flex items-center px-4 h-10 border border-slate-300 border-transparent rounded-md shadow-sm outline outline-2 outline-offset-2 outline-pink-500 bg-slate-700 hover:bg-pink-500 text-slate-200 text-sm cursor-pointer" ] <> attr
+  [ DA.klass_ "flex items-center px-4 h-10 border border-slate-300 border-transparent rounded-md shadow-sm outline outline-2 outline-offset-2 outline-pink-500 bg-slate-700 hover:bg-pink-500 text-slate-200 text-sm cursor-pointer" ] <> attr
 
 secondaryLink :: Array (Poll (Attribute (HTMLAnchorElement ()))) -> Array Nut -> Nut
 secondaryLink attr = D.a $
-  [ css "flex items-center px-4 h-10 rounded-md shadow-sm  outline outline-2 outline-offset-2 outline-slate-600  bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm cursor-pointer" ] <> attr
+  [ DA.klass_ "flex items-center px-4 h-10 rounded-md shadow-sm  outline outline-2 outline-offset-2 outline-slate-600  bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm cursor-pointer" ] <> attr
 
 primaryButton :: Array (Poll (Attribute (HTMLButtonElement ()))) -> Array Nut -> Nut
 primaryButton attr = D.button $
-  [ DA.xtype_ "button", css "px-4 h-10 border border-slate-300 border-transparent rounded-md shadow-sm outline outline-2 outline-offset-2 outline-pink-500 bg-slate-700 hover:bg-pink-500 text-slate-200 text-sm cursor-pointer" ] <> attr
+  [ DA.xtype_ "button", DA.klass_ "px-4 h-10 border border-slate-300 border-transparent rounded-md shadow-sm outline outline-2 outline-offset-2 outline-pink-500 bg-slate-700 hover:bg-pink-500 text-slate-200 text-sm cursor-pointer" ] <> attr
 
 secondaryButton :: Array (Poll (Attribute (HTMLButtonElement ()))) -> Array Nut -> Nut
 secondaryButton attr = D.button $
-  [ DA.xtype_ "button", css "px-4 h-10 rounded-md shadow-sm  outline outline-2 outline-offset-2 outline-slate-600  bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm cursor-pointer" ] <> attr
+  [ DA.xtype_ "button", DA.klass_ "px-4 h-10 rounded-md shadow-sm  outline outline-2 outline-offset-2 outline-slate-600  bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm cursor-pointer" ] <> attr
 
 dangerButton :: Array (Poll (Attribute (HTMLButtonElement ()))) -> Array Nut -> Nut
 dangerButton attr = D.button $
-  [ DA.xtype_ "button", css "px-4 h-10 border border-slate-300 border-transparent rounded-md shadow-sm outline outline-2 outline-offset-2 outline-red-700 bg-red-700 hover:bg-red-500 hover:outline-red-500 text-slate-200 text-sm cursor-pointer" ] <> attr
+  [ DA.xtype_ "button", DA.klass_ "px-4 h-10 border border-slate-300 border-transparent rounded-md shadow-sm outline outline-2 outline-offset-2 outline-red-700 bg-red-700 hover:bg-red-500 hover:outline-red-500 text-slate-200 text-sm cursor-pointer" ] <> attr
 
 inlineButton :: Array (Poll (Attribute (HTMLButtonElement ()))) -> Array Nut -> Nut
 inlineButton attr = D.button $
-  [ DA.xtype_ "button", css "p-2 rounded-lg hover:bg-pink-500" ] <> attr
+  [ DA.xtype_ "button", DA.klass_ "p-2 rounded-lg hover:bg-pink-500" ] <> attr
 
 searchInput :: Array (Poll (Attribute (HTMLInputElement ()))) -> Array Nut -> Nut
 searchInput attr = D.input $
-  [ DA.xtype_ "search", css "px-4 h-10 outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 text-white rounded-md shadow-sm" ] <> attr
+  [ DA.xtype_ "search", DA.klass_ "px-4 h-10 outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 text-white rounded-md shadow-sm" ] <> attr
 
 modal :: Nut -> Nut
-modal body = D.aside [ css "overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-50 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50" ]
-    [ D.div [ css "w-1/2 m-8 bg-slate-800 shadow-xl rounded-xl" ] [ body ] ]
+modal body = D.aside [ DA.klass_ "overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-50 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50" ]
+    [ D.div [ DA.klass_ "w-1/2 m-8 bg-slate-800 shadow-xl rounded-xl" ] [ body ] ]
 
 printDate :: String -> String
 printDate = takeWhile (not eq $ codePointFromChar 'T')

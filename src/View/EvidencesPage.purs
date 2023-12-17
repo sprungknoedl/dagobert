@@ -6,7 +6,7 @@ import Dagobert.Data.Evidence (Evidence, EvidenceStub, evidenceTypes, newEvidenc
 import Dagobert.Route (Route(..))
 import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, selectField, textField, textareaField, validate)
-import Dagobert.Utils.HTML (css, modal, printDate, renderDateAdded)
+import Dagobert.Utils.HTML (modal, printDate, renderDateAdded)
 import Dagobert.Utils.Icons (archivBox, cpuChip, documentText, folderOpen, questionMarkCircle, server)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
@@ -14,6 +14,7 @@ import Dagobert.View.EntityPage (DialogControls, PageState, defaultActions, enti
 import Data.Maybe (Maybe(..), maybe)
 import Deku.Core (Nut, fixed)
 import Deku.DOM as D
+import Deku.DOM.Attributes as DA
 import Deku.Do as Deku
 import Deku.Hooks (useHot, (<#~>))
 import Effect (Effect)
@@ -23,12 +24,12 @@ evidencesPage :: { poll ∷ Poll (PageState Evidence), push ∷ PageState Eviden
 evidencesPage state { kase } = Deku.do
   let
     renderType :: String -> Nut
-    renderType "File"                 = fixed [ folderOpen (css "inline-block w-6 h-6 mr-2"), D.text_ "File" ]
-    renderType "Log"                  = fixed [ documentText (css "inline-block w-6 h-6 mr-2"), D.text_ "Log" ]
-    renderType "Artifacts Collection" = fixed [ archivBox (css "inline-block w-6 h-6 mr-2"), D.text_ "Artifacts Collection" ]
-    renderType "System Image"         = fixed [ server (css "inline-block w-6 h-6 mr-2"), D.text_ "System Image" ]
-    renderType "Memory Dump"          = fixed [ cpuChip (css "inline-block w-6 h-6 mr-2"), D.text_ "Memory Dump" ]
-    renderType t                      = fixed [ questionMarkCircle (css "inline-block w-6 h-6 mr-2"), D.text_ t ]
+    renderType "File"                 = fixed [ folderOpen (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "File" ]
+    renderType "Log"                  = fixed [ documentText (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "Log" ]
+    renderType "Artifacts Collection" = fixed [ archivBox (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "Artifacts Collection" ]
+    renderType "System Image"         = fixed [ server (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "System Image" ]
+    renderType "Memory Dump"          = fixed [ cpuChip (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "Memory Dump" ]
+    renderType t                      = fixed [ questionMarkCircle (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ t ]
 
   kase <#~> maybe mempty (\c -> entityPage
     { title: ViewEvidences c.id

@@ -7,7 +7,7 @@ import Dagobert.Data.User (User)
 import Dagobert.Route (Route(..))
 import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, checkboxField, dummyField, form, label, poll, render, selectField, textField, textareaField, validate)
-import Dagobert.Utils.HTML (css, modal, printDate, renderDateAdded)
+import Dagobert.Utils.HTML (modal, printDate, renderDateAdded)
 import Dagobert.Utils.Icons (checkCircle, clipboardCheck, documentText, magnifyingGlass, questionMarkCircle, xCircle)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
@@ -16,6 +16,7 @@ import Data.Array ((:))
 import Data.Maybe (Maybe(..), maybe)
 import Deku.Core (Nut, fixed)
 import Deku.DOM as D
+import Deku.DOM.Attributes as DA
 import Deku.Do as Deku
 import Deku.Hooks (useHot, (<#~>))
 import Effect (Effect)
@@ -25,15 +26,15 @@ tasksPage :: { poll ∷ Poll (PageState Task), push ∷ PageState Task -> Effect
 tasksPage state { kase } = Deku.do
   let
     renderType :: String -> Nut
-    renderType "Information request" = fixed [ questionMarkCircle (css "inline-block w-6 h-6 mr-2"), D.text_ "Information request" ]
-    renderType "Analysis"            = fixed [ magnifyingGlass (css "inline-block w-6 h-6 mr-2"), D.text_ "Analysis" ]
-    renderType "Deliverable"         = fixed [ documentText (css "inline-block w-6 h-6 mr-2"), D.text_ "Deliverable" ]
-    renderType "Checkpoint"          = fixed [ clipboardCheck (css "inline-block w-6 h-6 mr-2"), D.text_ "Checkpoint" ]
-    renderType t                     = fixed [ questionMarkCircle (css "inline-block w-6 h-6 mr-2"), D.text_ t ]
+    renderType "Information request" = fixed [ questionMarkCircle (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "Information request" ]
+    renderType "Analysis"            = fixed [ magnifyingGlass (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "Analysis" ]
+    renderType "Deliverable"         = fixed [ documentText (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "Deliverable" ]
+    renderType "Checkpoint"          = fixed [ clipboardCheck (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "Checkpoint" ]
+    renderType t                     = fixed [ questionMarkCircle (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ t ]
 
     renderDone :: Boolean -> Nut
-    renderDone true = checkCircle $ css "w-6 h-6 text-green-500"
-    renderDone false = xCircle $ css "w-6 h-6 text-red-500"
+    renderDone true = checkCircle $ DA.klass_ "w-6 h-6 text-green-500"
+    renderDone false = xCircle $ DA.klass_ "w-6 h-6 text-red-500"
 
   kase <#~> maybe mempty (\c -> entityPage
     { title: ViewTasks c.id

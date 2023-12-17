@@ -6,7 +6,7 @@ import Dagobert.Data.Asset (Asset, AssetStub, assetTypes, compromiseStates, newA
 import Dagobert.Route (Route(..))
 import Dagobert.Utils.Env (Env)
 import Dagobert.Utils.Forms (Form, checkboxField, dummyField, form, label, poll, render, selectField, textField, textareaField, validate)
-import Dagobert.Utils.HTML (css, modal, printDate, renderDateAdded)
+import Dagobert.Utils.HTML (modal, printDate, renderDateAdded)
 import Dagobert.Utils.Icons (bug, checkCircle, desktop, questionMarkCircle, server, user, xCircle)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
@@ -14,6 +14,7 @@ import Dagobert.View.EntityPage (DialogControls, PageState, defaultActions, enti
 import Data.Maybe (Maybe(..), maybe)
 import Deku.Core (Nut, fixed)
 import Deku.DOM as D
+import Deku.DOM.Attributes as DA
 import Deku.Do as Deku
 import Deku.Hooks (useHot, (<#~>))
 import Effect (Effect)
@@ -23,21 +24,21 @@ assetsPage :: { poll ∷ Poll (PageState Asset) , push ∷ (PageState Asset) -> 
 assetsPage state { kase } = Deku.do
   let
     renderType :: String -> Nut
-    renderType "Account" = fixed [ user (css "inline-block w-6 h-6 mr-2"), D.text_ "Account" ]
-    renderType "Desktop" = fixed [ desktop (css "inline-block w-6 h-6 mr-2"), D.text_ "Desktop" ]
-    renderType "Server"  = fixed [ server (css "inline-block w-6 h-6 mr-2"), D.text_ "Server" ]
-    renderType t         = fixed [ questionMarkCircle (css "inline-block w-6 h-6 mr-2"), D.text_ t ]
+    renderType "Account" = fixed [ user (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "Account" ]
+    renderType "Desktop" = fixed [ desktop (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "Desktop" ]
+    renderType "Server"  = fixed [ server (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "Server" ]
+    renderType t         = fixed [ questionMarkCircle (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ t ]
 
     renderCompromised :: String -> Nut
     renderCompromised value
-      | value == "Compromised" = D.span [ css "text-red-500" ] [ bug (css "inline-block w-6 h-6 mr-2"), D.text_ "Yes" ]
+      | value == "Compromised" = D.span [ DA.klass_ "text-red-500" ] [ bug (DA.klass_ "inline-block w-6 h-6 mr-2"), D.text_ "Yes" ]
       | value == "Not compromised" = D.text_ "No"
       | value == "Unknown" = D.text_ "Unknown"
       | otherwise = D.text_ value
 
     renderAnalysed :: Boolean -> Nut
-    renderAnalysed true = checkCircle $ css "w-6 h-6 text-green-500"
-    renderAnalysed false = xCircle $ css "w-6 h-6 text-red-500"
+    renderAnalysed true = checkCircle $ DA.klass_ "w-6 h-6 text-green-500"
+    renderAnalysed false = xCircle $ DA.klass_ "w-6 h-6 text-red-500"
 
   kase <#~> maybe mempty (\c -> entityPage
     { title: ViewAssets c.id
