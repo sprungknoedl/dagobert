@@ -20,7 +20,7 @@ import Deku.Hooks (useHot, (<#~>))
 import Effect (Effect)
 import FRP.Poll (Poll)
 
-assetsPage :: { poll ∷ Poll (PageState Asset) , push ∷ (PageState Asset) -> Effect Unit } -> Env -> Nut
+assetsPage :: { poll ∷ Poll (PageState (Array Asset)) , push ∷ (PageState (Array Asset)) -> Effect Unit } -> Env -> Nut
 assetsPage state { kase } = Deku.do
   let
     renderType :: String -> Nut

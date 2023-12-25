@@ -18,7 +18,7 @@ import Deku.Hooks (useHot, (<#~>))
 import Effect (Effect)
 import FRP.Poll (Poll)
 
-usersPage :: { poll ∷ Poll (PageState User), push ∷ PageState User -> Effect Unit } -> Env -> Nut
+usersPage :: { poll ∷ Poll (PageState (Array User)), push ∷ PageState (Array User) -> Effect Unit } -> Env -> Nut
 usersPage state { kase } = Deku.do
   kase <#~> maybe mempty (\c -> entityPage
     { title: ViewUsers c.id

@@ -9,7 +9,8 @@ import Routing.Duplex.Generic (noArgs, sum)
 import Routing.Duplex.Generic.Syntax ((/))
 
 data Route
-    = ViewTimeline Int
+    = ViewOverview Int
+    | ViewTimeline Int
     | ViewAssets Int
     | ViewMalware Int
     | ViewIndicators Int
@@ -35,6 +36,7 @@ instance showRoute :: Show Route where
   show = genericShow
 
 routeToTitle :: Route -> String
+routeToTitle (ViewOverview _)        = "Overview"
 routeToTitle (ViewTimeline _)        = "Timeline"
 routeToTitle (ViewAssets _)          = "Assets"
 routeToTitle (ViewMalware _)         = "Malware/Tools"
@@ -54,7 +56,8 @@ routeToTitle FourOhFour              = "404"
 
 routes :: RouteDuplex' Route
 routes = sum
-  { "ViewTimeline"        : "case" / int segment / "timeline"
+  { "ViewOverview"        : "case" / int segment / "overview"
+  , "ViewTimeline"        : "case" / int segment / "timeline"
   , "ViewAssets"          : "case" / int segment / "assets"
   , "ViewMalware"         : "case" / int segment / "malware"
   , "ViewIndicators"      : "case" / int segment / "indicators"

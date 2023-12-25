@@ -20,7 +20,7 @@ import Deku.Hooks (useHot, (<#~>))
 import Effect (Effect)
 import FRP.Poll (Poll)
 
-casePage :: { poll ∷ Poll (PageState Case), push ∷ PageState Case -> Effect Unit } -> Env -> Nut
+casePage :: { poll ∷ Poll (PageState (Array Case)), push ∷ PageState (Array Case) -> Effect Unit } -> Env -> Nut
 casePage state { kase, setKase } = Deku.do
   let
     renderSelect :: Case -> Nut
@@ -32,7 +32,7 @@ casePage state { kase, setKase } = Deku.do
     { title: ViewCases
     , ctor: newCase
     , id: _.id
-    , csv:                        "/api/case.csv"
+    , csv:                        "/api/cases.csv"
     , fetch:          XHR.get    ("/api/cases")
     , create: \obj -> XHR.post   ("/api/cases") obj
     , update: \obj -> XHR.put    ("/api/cases/" <> show obj.id) obj

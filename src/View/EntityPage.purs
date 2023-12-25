@@ -26,7 +26,7 @@ import FRP.Poll (Poll)
 type PollIO a = { poll ∷ Poll a, push ∷ a -> Effect Unit }
 
 data PageState a = Loading
-                 | Loaded (Array a)
+                 | Loaded a
                  | Error String
 
 type Dialogs a =
@@ -41,7 +41,7 @@ type DialogControls a =
 
 type Ctx a =
   { setDialog :: Nut -> Effect Unit
-  , setState  :: PageState a -> Effect Unit
+  , setState  :: PageState (Array a) -> Effect Unit
   , reload    :: Aff Unit
   }
 
@@ -112,7 +112,7 @@ exportCsvAction args _ =
     , D.text_ "Export CSV"
     ]
 
-entityPage :: forall a a' b. PageArgs a a' b -> Array (Action a a' b) -> PollIO (PageState a) -> Nut
+entityPage :: forall a a' b. PageArgs a a' b -> Array (Action a a' b) -> PollIO (PageState (Array a)) -> Nut
 entityPage args actions state = Deku.do
   setDialog     /\ dialog     <- useState'
   setHydration  /\ hydration  <- useState'

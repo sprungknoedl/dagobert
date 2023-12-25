@@ -18,7 +18,7 @@ import Deku.Hooks (useHot, (<#~>))
 import Effect (Effect)
 import FRP.Poll (Poll)
 
-notesPage :: { poll ∷ Poll (PageState Note), push ∷ PageState Note -> Effect Unit } -> Env -> Nut
+notesPage :: { poll ∷ Poll (PageState (Array Note)), push ∷ PageState (Array Note) -> Effect Unit } -> Env -> Nut
 notesPage state { kase } = Deku.do
   kase <#~> maybe mempty (\c -> entityPage
     { title: ViewNotes c.id

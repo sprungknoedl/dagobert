@@ -32,6 +32,7 @@ import Effect.Class (liftEffect)
 import FRP.Poll (create)
 import Routing.Duplex (parse)
 import Routing.Hash (matchesWith)
+import View.OverviewPage (overviewPage)
 import Yoga.JSON (class ReadForeign)
 
 main :: Effect Unit
@@ -40,6 +41,7 @@ main = do
   _ /\ setKase /\ kase   <- liftST $ useHot Nothing
   let env = { kase, setKase, route, setRoute }
 
+  case'      <- liftST create
   cases      <- liftST create
 
   -- Investigation states
@@ -57,6 +59,7 @@ main = do
   runInBody $ fixed
     [ navigationPanel env
     , route <#~> case _ of
+      ViewOverview cid      -> overviewPage cid case'
       ViewTimeline _        -> eventsPage events env
       ViewAssets _          -> assetsPage assets env
       ViewMalware _         -> malwarePage malware env
@@ -81,6 +84,9 @@ main = do
     (\old new -> when (old /= Just new) $ launchAff_ do
         liftEffect $ setRoute new
         case new of
+          ViewOverview cid -> do
+            fetchCase setKase cid
+            fetchData case' ("/api/cases/" <> show cid)
           ViewTimeline cid        -> do
             fetchCase setKase cid
             fetchData events     ("/api/cases/" <> show cid <> "/events")

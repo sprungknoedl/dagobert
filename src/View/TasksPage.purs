@@ -22,7 +22,7 @@ import Deku.Hooks (useHot, (<#~>))
 import Effect (Effect)
 import FRP.Poll (Poll)
 
-tasksPage :: { poll ∷ Poll (PageState Task), push ∷ PageState Task -> Effect Unit } -> Env -> Nut
+tasksPage :: { poll ∷ Poll (PageState (Array Task)), push ∷ PageState (Array Task) -> Effect Unit } -> Env -> Nut
 tasksPage state { kase } = Deku.do
   let
     renderType :: String -> Nut

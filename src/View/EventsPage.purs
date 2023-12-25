@@ -31,7 +31,7 @@ detailsHtml = ( Proxy :: Proxy """
   </div>
 """)
 
-eventsPage :: { poll ∷ Poll (PageState Event), push ∷ PageState Event -> Effect Unit } -> Env -> Nut
+eventsPage :: { poll ∷ Poll (PageState (Array Event)), push ∷ PageState (Array Event) -> Effect Unit } -> Env -> Nut
 eventsPage state { kase } = Deku.do
   kase <#~> maybe mempty (\c -> entityPage
     { title: ViewTimeline c.id

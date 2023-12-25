@@ -4,7 +4,7 @@ import Prelude
 
 import Dagobert.Route (Route(..), routeToTitle, routes)
 import Dagobert.Utils.Env (Env)
-import Dagobert.Utils.Icons (bug, chatBubble, clipboardCheck, clock, cube, dagobert, desktop, fire, globeEurope, identification, users)
+import Dagobert.Utils.Icons (briefcase, bug, chatBubble, clipboardCheck, clock, cube, dagobert, desktop, fire, globeEurope, identification, users)
 import Data.Maybe (Maybe(..), maybe)
 import Deku.Attribute (Attribute)
 import Deku.Core (Nut, fixed)
@@ -35,6 +35,7 @@ navigationPanel { route, kase } =
 
     , kase <#~> maybe mempty (\c -> fixed
       [ D.h3 [ DA.klass_ "mt-4 mb-1 font-bold" ] [ D.text_ "Investigation" ]
+      , link (ViewOverview c.id)   briefcase
       , link (ViewTimeline c.id)   clock
       , link (ViewAssets c.id)     desktop
       , link (ViewMalware c.id)    bug
