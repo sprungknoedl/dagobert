@@ -1,9 +1,13 @@
 module Dagobert.Utils.Icons where
 
 import Deku.Attribute (Attribute)
+import Deku.DOM.Attributes as DA
 import Deku.Core (Nut)
 import Deku.Pursx ((~!~))
 import FRP.Poll (Poll)
+
+inline :: forall r. Poll (Attribute ( klass :: String | r))
+inline = DA.klass_ "inline-block mr-2 w-5 h-5"
 
 dagobert :: forall r. Poll (Attribute r) -> Nut
 dagobert attr = ("""

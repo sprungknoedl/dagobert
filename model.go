@@ -7,7 +7,10 @@ import (
 type Case struct {
 	ID             int64  `json:"id" gorm:"primarykey"`
 	Name           string `json:"name" binding:"required"`
+	Closed         bool   `json:"closed"`
 	Classification string `json:"classification"`
+	Severity       string `json:"severity" binding:"required"`
+	Outcome        string `json:"outcome"`
 	Summary        string `json:"summary"`
 
 	DateAdded    time.Time `json:"dateAdded"`

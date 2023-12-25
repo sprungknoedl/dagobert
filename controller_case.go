@@ -86,7 +86,10 @@ func EditCaseR(c *gin.Context) {
 
 	// Only copy over fields we wan't to be editable
 	obj.Name = body.Name
+	obj.Closed = body.Closed
 	obj.Classification = body.Classification
+	obj.Severity = body.Severity
+	obj.Outcome = body.Outcome
 	obj.Summary = body.Summary
 	obj.DateModified = time.Now()
 	obj.UserModified = GetUsername(c)

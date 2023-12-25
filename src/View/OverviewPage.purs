@@ -4,7 +4,7 @@ import Prelude
 
 import Dagobert.Data.Case (Case, CaseStub)
 import Dagobert.Utils.HTML (primaryButton, printDate, secondaryButton)
-import Dagobert.Utils.Icons (arrowPath, bolt, briefcase, clipboardCheck, clock, pencil, viewfinderCircle)
+import Dagobert.Utils.Icons (arrowPath, bolt, briefcase, clipboardCheck, clock, inline, pencil, viewfinderCircle)
 import Dagobert.Utils.XHR as XHR
 import Dagobert.View.CasePage (caseModal)
 import Dagobert.View.EntityPage (PageState(..), PollIO)
@@ -65,11 +65,30 @@ overviewPage cid state = Deku.do
           ]
         ]
 
+    pillar :: String -> Array Nut -> Nut
+    pillar color body = D.span [ DA.klass_ $ "rounded-full py-2 px-4 mr-2 " <> color ] body
+
     dlItem :: String -> Array Nut -> Nut
     dlItem title body = fixed
       [ D.dt [ DA.klass_ "float-left clear-left w-32" ] [ D.text_ title ]
       , D.dd [ DA.klass_ "ml-48 mb-6" ] body
       ]
+
+    dlClosed :: Boolean -> Nut
+    dlClosed true =  pillar "bg-zinc-600"   [ briefcase inline, D.text_ "Closed" ]
+    dlClosed false = pillar "bg-yellow-600" [ briefcase inline, D.text_ "Open" ]
+
+    dlSeverity :: String -> Nut
+    dlSeverity t@"Low"    = pillar "bg-yellow-600" [ bolt inline, D.text_ t ]
+    dlSeverity t@"Medium" = pillar "bg-amber-600"  [ bolt inline, D.text_ t ]
+    dlSeverity t@"High"   = pillar "bg-red-600"    [ bolt inline, D.text_ t ]
+    dlSeverity _        = pillar "bg-zinc-600"   [ bolt inline, D.text_ "Unknown" ]
+
+    dlOutcome :: String -> Nut
+    dlOutcome t@"False positive"  = pillar "bg-green-600" [ viewfinderCircle inline, D.text_ t ]
+    dlOutcome t@"True positive"   = pillar "bg-red-600"   [ viewfinderCircle inline, D.text_ t ]
+    dlOutcome t@"Benign positive" = pillar "bg-zinc-600"  [ viewfinderCircle inline, D.text_ t ]
+    dlOutcome _                   = pillar "bg-zinc-600"  [ viewfinderCircle inline, D.text_ "Unknown" ]
 
   state.poll <#~> case _ of
     Loading   -> topPanel $ "Loading ..."
@@ -86,31 +105,11 @@ overviewPage cid state = Deku.do
         [ D.div [ DA.klass_ "bg-slate-700 p-8 w-1/2" ] 
           [ D.h4 [ DA.klass_ "font-bold text-xl mb-6 pb-2 border-b border-b-slate-600" ] [ D.text_ "Case Overview" ]
           , D.dl_ 
-            [ dlItem "Case opened:" [ D.span [ DA.klass_ "rounded-full bg-slate-800 py-2 px-4 mr-2" ]
-              [ clock $ DA.klass_ "inline-block mr-2 w-5 h-5"
-              , D.text_ $ printDate c.dateAdded
-              ]
-            ]
-            , dlItem "Case state:" [ D.span [ DA.klass_ "rounded-full bg-yellow-600 py-2 px-4 mr-2" ]
-              [ briefcase $ DA.klass_ "inline-block mr-2 w-5 h-5"
-              , D.text_ $ "Open"
-              ]
-            ]
-            , dlItem "Classification:" [ D.span [ DA.klass_ "rounded-full bg-slate-800 py-2 px-4 mr-2" ]
-              [ clipboardCheck $ DA.klass_ "inline-block mr-2 w-5 h-5"
-              , D.text_ $ c.classification
-              ]
-            ]
-            , dlItem "Case severity:" [ D.span [ DA.klass_ "rounded-full bg-red-600 py-2 px-4 mr-2" ]
-              [ bolt $ DA.klass_ "inline-block mr-2 w-5 h-5"
-              , D.text_ $ "High"
-              ]
-            ]
-            , dlItem "Case outcome:" [ D.span [ DA.klass_ "rounded-full bg-yellow-600 py-2 px-4 mr-2" ]
-              [ viewfinderCircle $ DA.klass_ "inline-block mr-2 w-5 h-5"
-              , D.text_ $ "In progress"
-              ]
-            ]
+            [ dlItem "Case opened:"    [ pillar "bg-slate-800" [ clock inline, D.text_ $ printDate c.dateAdded ]]
+            , dlItem "Case state:"     [ dlClosed c.closed ]
+            , dlItem "Classification:" [ pillar "bg-slate-800" [ clipboardCheck inline, D.text_ $ c.classification ]]
+            , dlItem "Case severity:"  [ dlSeverity c.severity ]
+            , dlItem "Case outcome:"   [ dlOutcome c.outcome ]
             ]
           ]
 

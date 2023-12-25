@@ -2,10 +2,10 @@ module Dagobert.View.CasePage where
 
 import Prelude
 
-import Dagobert.Data.Case (Case, CaseStub, newCase)
+import Dagobert.Data.Case (Case, CaseStub, caseOutcomes, caseSeverities, newCase)
 import Dagobert.Route (Route(..))
 import Dagobert.Utils.Env (Env)
-import Dagobert.Utils.Forms (Form, dummyField, form, label, poll, render, textField, textareaField, validate)
+import Dagobert.Utils.Forms (Form, checkboxField, dummyField, form, label, poll, render, selectField, textField, textareaField, validate)
 import Dagobert.Utils.HTML (modal)
 import Dagobert.Utils.Validation as V
 import Dagobert.Utils.XHR as XHR
@@ -53,7 +53,10 @@ caseModal :: DialogControls CaseStub -> Case -> Unit -> Nut
 caseModal { save, cancel } input _ = Deku.do
   id             <- useHot input.id
   name           <- useHot input.name
+  closed         <- useHot input.closed
   classification <- useHot input.classification
+  severity       <- useHot input.severity
+  outcome        <- useHot input.outcome
   summary        <- useHot input.summary
   
   let
@@ -64,15 +67,24 @@ caseModal { save, cancel } input _ = Deku.do
       name' <- textField name
         # validate V.required
         # label "Case name"
+      closed' <- checkboxField closed
+        # validate V.optional
+        # label "Case closed?"
       classification' <- textField classification
         # validate V.optional
         # label "Classification"
+      severity' <- selectField caseSeverities severity
+        # validate V.required
+        # label "Severity"
+      outcome' <- selectField caseOutcomes outcome
+        # validate V.optional
+        # label "Outcome"
       summary' <- textareaField summary
         # validate V.optional
         # label "Summary"
 
-      in { id: _,  name: _,  classification: _,  summary: _ }
-      <$> id' <*> name' <*> classification' <*> summary'
+      in { id: _,  name: _,  closed: _,  classification: _,  severity: _,  outcome: _,  summary: _ }
+       <$> id' <*> name' <*> closed' <*> classification' <*> severity' <*> outcome' <*> summary'
 
     onSubmit :: Poll (Effect Unit)
     onSubmit = do
