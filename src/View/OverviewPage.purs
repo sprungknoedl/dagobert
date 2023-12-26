@@ -3,8 +3,8 @@ module View.OverviewPage where
 import Prelude
 
 import Dagobert.Data.Case (Case, CaseStub)
-import Dagobert.Utils.HTML (primaryButton, printDate, secondaryButton)
-import Dagobert.Utils.Icons (arrowPath, bolt, briefcase, clipboardCheck, clock, inline, pencil, viewfinderCircle)
+import Dagobert.Utils.HTML (primaryButton, printDate, secondaryButton, secondaryLink)
+import Dagobert.Utils.Icons (arrowPath, bolt, briefcase, clipboardCheck, clock, documentArrowDown, inline, pencil, viewfinderCircle)
 import Dagobert.Utils.XHR as XHR
 import Dagobert.View.CasePage (caseModal)
 import Dagobert.View.EntityPage (PageState(..), PollIO)
@@ -55,6 +55,13 @@ overviewPage cid state = Deku.do
       primaryButton [ DL.runOn_ DL.click $ addDialog ] 
         [ pencil (DA.klass_ "inline-block mr-1 w-5 h-5"), D.text_ "Edit" ]
 
+    generateReportAction :: Case -> Nut
+    generateReportAction obj =
+      secondaryLink [ DA.href_ $ "/api/cases/" <> (show obj.id) <> "/render", DA.target_ "blank" ]
+        [ documentArrowDown (DA.klass_ "inline-block mr-1 w-5 h-5")
+        , D.text_ "Generate report"
+        ]
+
     topPanel :: String -> Nut
     topPanel title =
       D.main [ DA.klass_ "p-4 grow" ] $
@@ -99,7 +106,7 @@ overviewPage cid state = Deku.do
       [ D.nav [ DA.klass_ "flex items-center justify-between mb-4" ]
         [ D.h3 [ DA.klass_ "font-bold text-2xl ml-2" ] [ D.text_ $ "#" <> (show c.id) <> " - " <> c.name ]
         , D.div [ DA.klass_ "flex gap-5 items-center" ]
-          [ reloadAction, editAction c ]
+          [ generateReportAction c, reloadAction, editAction c ]
         ]
       , D.section [ DA.klass_ "flex gap-6 my-8" ]
         [ D.div [ DA.klass_ "bg-slate-700 p-8 w-1/2" ] 

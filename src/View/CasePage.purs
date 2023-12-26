@@ -43,7 +43,8 @@ casePage state { kase, setKase } = Deku.do
                , { title: "ID",             width: "8rem", renderString: _.id >>> show,    renderNut: _.id >>> show >>> D.text_ }
                , { title: "Name",           width: "auto", renderString: _.name,           renderNut: _.name >>> D.text_  }
                , { title: "Classification", width: "auto", renderString: _.classification, renderNut: _.classification >>> D.text_ }
-               , { title: "Summary",        width: "auto", renderString: _.summary,        renderNut: _.summary >>> D.text_ }
+               , { title: "Severity",       width: "auto", renderString: _.severity,       renderNut: _.severity >>> D.text_ }
+               , { title: "Outcome",        width: "auto", renderString: _.outcome,        renderNut: _.outcome >>> D.text_ }
                ]
 
     , modal: caseModal

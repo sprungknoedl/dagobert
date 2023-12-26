@@ -17,6 +17,15 @@ type Case struct {
 	DateModified time.Time `json:"dateModified"`
 	UserAdded    string    `json:"userAdded"`
 	UserModified string    `json:"userModified"`
+
+	Assets     []Asset     `json:"-" binding:"-"`
+	Evidences  []Evidence  `json:"-" binding:"-"`
+	Indicators []Indicator `json:"-" binding:"-"`
+	Events     []Event     `json:"-" binding:"-"`
+	Malware    []Malware   `json:"-" binding:"-"`
+	Notes      []Note      `json:"-" binding:"-"`
+	Tasks      []Task      `json:"-" binding:"-"`
+	Users      []User      `json:"-" binding:"-"`
 }
 
 type Evidence struct {

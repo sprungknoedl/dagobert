@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm/clause"
 )
 
 // --------------------------------------
@@ -16,6 +17,14 @@ func ListCase(c *gin.Context) ([]Case, error) {
 func GetCase(c *gin.Context, id int64) (Case, error) {
 	x := Case{}
 	result := db.First(&x, id)
+	return x, result.Error
+}
+
+func GetCaseFull(c *gin.Context, id int64) (Case, error) {
+	x := Case{}
+	result := db.
+		Preload(clause.Associations).
+		First(&x, id)
 	return x, result.Error
 }
 

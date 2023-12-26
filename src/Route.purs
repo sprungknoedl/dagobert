@@ -36,7 +36,7 @@ instance showRoute :: Show Route where
   show = genericShow
 
 routeToTitle :: Route -> String
-routeToTitle (ViewOverview _)        = "Overview"
+routeToTitle (ViewOverview _)        = "Case"
 routeToTitle (ViewTimeline _)        = "Timeline"
 routeToTitle (ViewAssets _)          = "Assets"
 routeToTitle (ViewMalware _)         = "Malware/Tools"

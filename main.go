@@ -90,6 +90,10 @@ func main() {
 	r.PUT("/api/cases/:cid", EditCaseR)
 	r.DELETE("/api/cases/:cid", DeleteCaseR)
 
+	// templates
+	r.GET("/api/templates", ListTemplateR)
+	r.GET("/api/cases/:cid/render", ApplyTemplateR)
+
 	// --------------------------------------
 	// Investigation
 	// --------------------------------------
