@@ -1,9 +1,34 @@
-package main
+package model
 
 import (
 	"github.com/gin-gonic/gin"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
+
+var db *gorm.DB
+
+func InitDatabase(dburl string) {
+	var err error
+	db, err = gorm.Open(sqlite.Open(dburl), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect database")
+	}
+
+	// Migrate the schema
+	db.AutoMigrate(&Case{})
+
+	db.AutoMigrate(&Event{})
+	db.AutoMigrate(&Asset{})
+	db.AutoMigrate(&Malware{})
+	db.AutoMigrate(&Indicator{})
+
+	db.AutoMigrate(&User{})
+	db.AutoMigrate(&Evidence{})
+	db.AutoMigrate(&Task{})
+	db.AutoMigrate(&Note{})
+}
 
 // --------------------------------------
 // Cases

@@ -6,6 +6,7 @@ require (
 	github.com/gin-contrib/sessions v0.0.5
 	github.com/gin-gonic/gin v1.9.1
 	github.com/maximRnback/gin-oidc v0.0.0-20171003060705-a73cb8756d41
+	go.arsenm.dev/pcre v0.0.0-20220530205550-74594f6c8b0e
 	gorm.io/gorm v1.25.2-0.20230530020048-26663ab9bf55
 )
 
@@ -21,7 +22,6 @@ require (
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible // indirect
 	github.com/pquerna/cachecontrol v0.2.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
-	go.arsenm.dev/pcre v0.0.0-20220530205550-74594f6c8b0e // indirect
 	golang.org/x/oauth2 v0.14.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect

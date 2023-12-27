@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"archive/zip"
@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"text/template"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sprungknoedl/dagobert/model"
 	"go.arsenm.dev/pcre"
 )
 
@@ -30,7 +32,7 @@ func ApplyTemplateR(c *gin.Context) {
 		return
 	}
 
-	obj, err := GetCaseFull(c, cid)
+	obj, err := model.GetCaseFull(c, cid)
 	if err != nil {
 		c.Error(err)
 		c.String(http.StatusNotFound, "Case not found", err.Error())
@@ -50,7 +52,7 @@ func ApplyTemplateR(c *gin.Context) {
 	})
 }
 
-func GenerateReport(tpl string, obj Case) (*bytes.Buffer, error) {
+func GenerateReport(tpl string, obj model.Case) (*bytes.Buffer, error) {
 	buf := new(bytes.Buffer)
 
 	zr, err := zip.OpenReader(tpl)
@@ -93,7 +95,7 @@ func GenerateReport(tpl string, obj Case) (*bytes.Buffer, error) {
 				return x
 			})
 
-			// os.WriteFile("debug.xml", b, 0644)
+			os.WriteFile("debug.xml", b, 0644)
 
 			tpl, err := template.New("content.xml").Parse(string(b))
 			if err != nil {

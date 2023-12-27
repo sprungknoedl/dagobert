@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/csv"
@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sprungknoedl/dagobert/model"
 )
 
-func ListEvidenceR(c *gin.Context) {
+func ListNoteR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := ListEvidence(c, cid)
+	list, err := model.ListNote(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -20,29 +21,29 @@ func ListEvidenceR(c *gin.Context) {
 	c.JSON(http.StatusOK, list)
 }
 
-func ExportEvidenceCsvR(c *gin.Context) {
+func ExportNoteCsvR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := ListEvidence(c, cid)
+	list, err := model.ListNote(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
 	}
 
 	c.Status(http.StatusOK)
-	c.Header("Content-Disposition", "attachment; filename=\"evidences.csv\"")
+	c.Header("Content-Disposition", "attachment; filename=\"notes.csv\"")
 
 	w := csv.NewWriter(c.Writer)
-	w.Write([]string{"Type", "Name", "Description", "Size", "Hash", "Location"})
+	w.Write([]string{"Title", "Category", "Description"})
 	for _, e := range list {
-		w.Write([]string{e.Type, e.Name, e.Description, strconv.FormatInt(e.Size, 10), e.Hash, e.Location})
+		w.Write([]string{e.Title, e.Category, e.Description})
 	}
 	w.Flush()
 }
 
-func GetEvidenceR(c *gin.Context) {
+func GetNoteR(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := GetEvidence(c, cid, id)
+	obj, err := model.GetNote(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -51,10 +52,10 @@ func GetEvidenceR(c *gin.Context) {
 	c.JSON(http.StatusOK, obj)
 }
 
-func AddEvidenceR(c *gin.Context) {
+func AddNoteR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 
-	obj := Evidence{}
+	obj := model.Note{}
 	err := c.BindJSON(&obj)
 	if err != nil {
 		c.String(http.StatusBadRequest, "bind: %s", err.Error())
@@ -67,8 +68,7 @@ func AddEvidenceR(c *gin.Context) {
 	obj.UserAdded = username
 	obj.DateModified = time.Now()
 	obj.UserModified = username
-	obj, err = SaveEvidence(c, cid, obj)
-	if err != nil {
+	if _, err := model.SaveNote(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -76,16 +76,16 @@ func AddEvidenceR(c *gin.Context) {
 	c.JSON(http.StatusCreated, obj)
 }
 
-func EditEvidenceR(c *gin.Context) {
+func EditNoteR(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := GetEvidence(c, cid, id)
+	obj, err := model.GetNote(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
 	}
 
-	body := Evidence{}
+	body := model.Note{}
 	err = c.BindJSON(&body)
 	if err != nil {
 		c.String(http.StatusBadRequest, "bind: %s", err.Error())
@@ -93,26 +93,23 @@ func EditEvidenceR(c *gin.Context) {
 	}
 
 	// Only copy over fields we wan't to be editable
-	obj.Type = body.Type
-	obj.Name = body.Name
+	obj.Title = body.Title
+	obj.Category = body.Category
 	obj.Description = body.Description
-	obj.Size = body.Size
-	obj.Hash = body.Hash
-	obj.Location = body.Location
 	obj.DateModified = time.Now()
 	obj.UserModified = GetUsername(c)
 
-	if _, err := SaveEvidence(c, cid, obj); err != nil {
+	if _, err := model.SaveNote(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, obj)
 }
 
-func DeleteEvidenceR(c *gin.Context) {
+func DeleteNoteR(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	err := DeleteEvidence(c, cid, id)
+	err := model.DeleteNote(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())
 		return

@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/csv"
@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sprungknoedl/dagobert/model"
 )
 
-func ListMalwareR(c *gin.Context) {
+func ListEvidenceR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := ListMalware(c, cid)
+	list, err := model.ListEvidence(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -20,29 +21,29 @@ func ListMalwareR(c *gin.Context) {
 	c.JSON(http.StatusOK, list)
 }
 
-func ExportMalwareCsvR(c *gin.Context) {
+func ExportEvidenceCsvR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := ListMalware(c, cid)
+	list, err := model.ListEvidence(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
 	}
 
 	c.Status(http.StatusOK)
-	c.Header("Content-Disposition", "attachment; filename=\"malware.csv\"")
+	c.Header("Content-Disposition", "attachment; filename=\"evidences.csv\"")
 
 	w := csv.NewWriter(c.Writer)
-	w.Write([]string{"Filename", "Filepath", "Create Date", "Modified Date", "System", "Hash", "Notes"})
+	w.Write([]string{"Type", "Name", "Description", "Size", "Hash", "Location"})
 	for _, e := range list {
-		w.Write([]string{e.Filename, e.Filepath, e.CDate.Format(time.RFC3339), e.MDate.Format(time.RFC3339), e.System, e.Hash, e.Notes})
+		w.Write([]string{e.Type, e.Name, e.Description, strconv.FormatInt(e.Size, 10), e.Hash, e.Location})
 	}
 	w.Flush()
 }
 
-func GetMalwareR(c *gin.Context) {
+func GetEvidenceR(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := GetMalware(c, cid, id)
+	obj, err := model.GetEvidence(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -51,10 +52,10 @@ func GetMalwareR(c *gin.Context) {
 	c.JSON(http.StatusOK, obj)
 }
 
-func AddMalwareR(c *gin.Context) {
+func AddEvidenceR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 
-	obj := Malware{}
+	obj := model.Evidence{}
 	err := c.BindJSON(&obj)
 	if err != nil {
 		c.String(http.StatusBadRequest, "bind: %s", err.Error())
@@ -67,7 +68,8 @@ func AddMalwareR(c *gin.Context) {
 	obj.UserAdded = username
 	obj.DateModified = time.Now()
 	obj.UserModified = username
-	if _, err := SaveMalware(c, cid, obj); err != nil {
+	obj, err = model.SaveEvidence(c, cid, obj)
+	if err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -75,16 +77,16 @@ func AddMalwareR(c *gin.Context) {
 	c.JSON(http.StatusCreated, obj)
 }
 
-func EditMalwareR(c *gin.Context) {
+func EditEvidenceR(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := GetMalware(c, cid, id)
+	obj, err := model.GetEvidence(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
 	}
 
-	body := Malware{}
+	body := model.Evidence{}
 	err = c.BindJSON(&body)
 	if err != nil {
 		c.String(http.StatusBadRequest, "bind: %s", err.Error())
@@ -92,28 +94,26 @@ func EditMalwareR(c *gin.Context) {
 	}
 
 	// Only copy over fields we wan't to be editable
-	obj.Filename = body.Filename
-	obj.Filepath = body.Filepath
-	obj.CDate = body.CDate
-	obj.MDate = body.MDate
-	obj.System = body.System
+	obj.Type = body.Type
+	obj.Name = body.Name
+	obj.Description = body.Description
+	obj.Size = body.Size
 	obj.Hash = body.Hash
-	obj.Notes = body.Notes
+	obj.Location = body.Location
 	obj.DateModified = time.Now()
 	obj.UserModified = GetUsername(c)
 
-	if _, err := SaveMalware(c, cid, obj); err != nil {
+	if _, err := model.SaveEvidence(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
-
 	c.JSON(http.StatusOK, obj)
 }
 
-func DeleteMalwareR(c *gin.Context) {
+func DeleteEvidenceR(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	err := DeleteMalware(c, cid, id)
+	err := model.DeleteEvidence(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())
 		return

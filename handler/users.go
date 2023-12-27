@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/csv"
@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sprungknoedl/dagobert/model"
 )
 
 func ListUserR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := ListUser(c, cid)
+	list, err := model.ListUser(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -22,7 +23,7 @@ func ListUserR(c *gin.Context) {
 
 func ExportUserCsvR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := ListUser(c, cid)
+	list, err := model.ListUser(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -42,7 +43,7 @@ func ExportUserCsvR(c *gin.Context) {
 func GetUserR(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := GetUser(c, cid, id)
+	obj, err := model.GetUser(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -54,7 +55,7 @@ func GetUserR(c *gin.Context) {
 func AddUserR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 
-	obj := User{}
+	obj := model.User{}
 	err := c.BindJSON(&obj)
 	if err != nil {
 		c.String(http.StatusBadRequest, "bind: %s", err.Error())
@@ -67,7 +68,7 @@ func AddUserR(c *gin.Context) {
 	obj.UserAdded = username
 	obj.DateModified = time.Now()
 	obj.UserModified = username
-	obj, err = SaveUser(c, cid, obj)
+	obj, err = model.SaveUser(c, cid, obj)
 	if err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
@@ -79,13 +80,13 @@ func AddUserR(c *gin.Context) {
 func EditUserR(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := GetUser(c, cid, id)
+	obj, err := model.GetUser(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
 	}
 
-	body := User{}
+	body := model.User{}
 	err = c.BindJSON(&body)
 	if err != nil {
 		c.String(http.StatusBadRequest, "bind: %s", err.Error())
@@ -102,7 +103,7 @@ func EditUserR(c *gin.Context) {
 	obj.DateModified = time.Now()
 	obj.UserModified = GetUsername(c)
 
-	if _, err := SaveUser(c, cid, obj); err != nil {
+	if _, err := model.SaveUser(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -112,7 +113,7 @@ func EditUserR(c *gin.Context) {
 func DeleteUserR(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	err := DeleteUser(c, cid, id)
+	err := model.DeleteUser(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())
 		return

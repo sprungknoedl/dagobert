@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/csv"
@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sprungknoedl/dagobert/model"
 )
 
 func ListIndicatorR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := ListIndicator(c, cid)
+	list, err := model.ListIndicator(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -22,7 +23,7 @@ func ListIndicatorR(c *gin.Context) {
 
 func ExportIndicatorCsvR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := ListIndicator(c, cid)
+	list, err := model.ListIndicator(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -42,7 +43,7 @@ func ExportIndicatorCsvR(c *gin.Context) {
 func GetIndicatorR(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := GetIndicator(c, cid, id)
+	obj, err := model.GetIndicator(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -54,7 +55,7 @@ func GetIndicatorR(c *gin.Context) {
 func AddIndicatorR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 
-	obj := Indicator{}
+	obj := model.Indicator{}
 	err := c.BindJSON(&obj)
 	if err != nil {
 		c.String(http.StatusBadRequest, "bind: %s", err.Error())
@@ -67,7 +68,7 @@ func AddIndicatorR(c *gin.Context) {
 	obj.UserAdded = username
 	obj.DateModified = time.Now()
 	obj.UserModified = username
-	if _, err := SaveIndicator(c, cid, obj); err != nil {
+	if _, err := model.SaveIndicator(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -78,13 +79,13 @@ func AddIndicatorR(c *gin.Context) {
 func EditIndicatorR(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := GetIndicator(c, cid, id)
+	obj, err := model.GetIndicator(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
 	}
 
-	body := Indicator{}
+	body := model.Indicator{}
 	err = c.BindJSON(&body)
 	if err != nil {
 		c.String(http.StatusBadRequest, "bind: %s", err.Error())
@@ -100,7 +101,7 @@ func EditIndicatorR(c *gin.Context) {
 	obj.DateModified = time.Now()
 	obj.UserModified = GetUsername(c)
 
-	if _, err := SaveIndicator(c, cid, obj); err != nil {
+	if _, err := model.SaveIndicator(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -111,7 +112,7 @@ func EditIndicatorR(c *gin.Context) {
 func DeleteIndicatorR(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	err := DeleteIndicator(c, cid, id)
+	err := model.DeleteIndicator(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())
 		return

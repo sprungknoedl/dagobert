@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/csv"
@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sprungknoedl/dagobert/model"
 )
 
-func ListEventR(c *gin.Context) {
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := ListEvent(c, cid)
+func ListCaseR(c *gin.Context) {
+	list, err := model.ListCase(c)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -20,29 +20,27 @@ func ListEventR(c *gin.Context) {
 	c.JSON(http.StatusOK, list)
 }
 
-func ExportEventCsvR(c *gin.Context) {
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := ListEvent(c, cid)
+func ExportCaseCsvR(c *gin.Context) {
+	list, err := model.ListCase(c)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
 	}
 
 	c.Status(http.StatusOK)
-	c.Header("Content-Disposition", "attachment; filename=\"events.csv\"")
+	c.Header("Content-Disposition", "attachment; filename=\"cases.csv\"")
 
 	w := csv.NewWriter(c.Writer)
-	w.Write([]string{"Time", "Type", "Event System", "Direction", "Remote System", "Event", "Raw"})
+	w.Write([]string{"ID", "Name", "Classification", "Summary"})
 	for _, e := range list {
-		w.Write([]string{e.Time.Format(time.RFC3339), e.Type, e.AssetA, e.Direction, e.AssetB, e.Event, e.Raw})
+		w.Write([]string{strconv.FormatInt(e.ID, 10), e.Name, e.Classification, e.Summary})
 	}
 	w.Flush()
 }
 
-func GetEventR(c *gin.Context) {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+func GetCaseR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := GetEvent(c, cid, id)
+	obj, err := model.GetCase(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -51,10 +49,8 @@ func GetEventR(c *gin.Context) {
 	c.JSON(http.StatusOK, obj)
 }
 
-func AddEventR(c *gin.Context) {
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-
-	obj := Event{}
+func AddCaseR(c *gin.Context) {
+	obj := model.Case{}
 	err := c.BindJSON(&obj)
 	if err != nil {
 		c.String(http.StatusBadRequest, "bind: %s", err.Error())
@@ -62,12 +58,11 @@ func AddEventR(c *gin.Context) {
 	}
 
 	username := GetUsername(c)
-	obj.CaseID = cid
 	obj.DateAdded = time.Now()
 	obj.UserAdded = username
 	obj.DateModified = time.Now()
 	obj.UserModified = username
-	if _, err := SaveEvent(c, cid, obj); err != nil {
+	if _, err := model.SaveCase(c, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -75,16 +70,15 @@ func AddEventR(c *gin.Context) {
 	c.JSON(http.StatusCreated, obj)
 }
 
-func EditEventR(c *gin.Context) {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+func EditCaseR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := GetEvent(c, cid, id)
+	obj, err := model.GetCase(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
 	}
 
-	body := Event{}
+	body := model.Case{}
 	err = c.BindJSON(&body)
 	if err != nil {
 		c.String(http.StatusBadRequest, "bind: %s", err.Error())
@@ -92,17 +86,16 @@ func EditEventR(c *gin.Context) {
 	}
 
 	// Only copy over fields we wan't to be editable
-	obj.Time = body.Time
-	obj.Type = body.Type
-	obj.AssetA = body.AssetA
-	obj.AssetB = body.AssetB
-	obj.Direction = body.Direction
-	obj.Event = body.Event
-	obj.Raw = body.Raw
+	obj.Name = body.Name
+	obj.Closed = body.Closed
+	obj.Classification = body.Classification
+	obj.Severity = body.Severity
+	obj.Outcome = body.Outcome
+	obj.Summary = body.Summary
 	obj.DateModified = time.Now()
 	obj.UserModified = GetUsername(c)
 
-	if _, err := SaveEvent(c, cid, obj); err != nil {
+	if _, err := model.SaveCase(c, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -110,10 +103,9 @@ func EditEventR(c *gin.Context) {
 	c.JSON(http.StatusOK, obj)
 }
 
-func DeleteEventR(c *gin.Context) {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+func DeleteCaseR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	err := DeleteEvent(c, cid, id)
+	err := model.DeleteCase(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())
 		return

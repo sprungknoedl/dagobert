@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/csv"
@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sprungknoedl/dagobert/model"
 )
 
-func ListCaseR(c *gin.Context) {
-	list, err := ListCase(c)
+func ListTaskR(c *gin.Context) {
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
+	list, err := model.ListTask(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -19,27 +21,29 @@ func ListCaseR(c *gin.Context) {
 	c.JSON(http.StatusOK, list)
 }
 
-func ExportCaseCsvR(c *gin.Context) {
-	list, err := ListCase(c)
+func ExportTaskCsvR(c *gin.Context) {
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
+	list, err := model.ListTask(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
 	}
 
 	c.Status(http.StatusOK)
-	c.Header("Content-Disposition", "attachment; filename=\"cases.csv\"")
+	c.Header("Content-Disposition", "attachment; filename=\"tasks.csv\"")
 
 	w := csv.NewWriter(c.Writer)
-	w.Write([]string{"ID", "Name", "Classification", "Summary"})
+	w.Write([]string{"Type", "Task", "Done", "Owner", "Due Date"})
 	for _, e := range list {
-		w.Write([]string{strconv.FormatInt(e.ID, 10), e.Name, e.Classification, e.Summary})
+		w.Write([]string{e.Type, e.Task, strconv.FormatBool(e.Done), e.Owner, e.DateDue.Format(time.RFC3339)})
 	}
 	w.Flush()
 }
 
-func GetCaseR(c *gin.Context) {
+func GetTaskR(c *gin.Context) {
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := GetCase(c, cid)
+	obj, err := model.GetTask(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -48,8 +52,10 @@ func GetCaseR(c *gin.Context) {
 	c.JSON(http.StatusOK, obj)
 }
 
-func AddCaseR(c *gin.Context) {
-	obj := Case{}
+func AddTaskR(c *gin.Context) {
+	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
+
+	obj := model.Task{}
 	err := c.BindJSON(&obj)
 	if err != nil {
 		c.String(http.StatusBadRequest, "bind: %s", err.Error())
@@ -57,11 +63,13 @@ func AddCaseR(c *gin.Context) {
 	}
 
 	username := GetUsername(c)
+	obj.CaseID = cid
 	obj.DateAdded = time.Now()
 	obj.UserAdded = username
 	obj.DateModified = time.Now()
 	obj.UserModified = username
-	if _, err := SaveCase(c, obj); err != nil {
+	obj, err = model.SaveTask(c, cid, obj)
+	if err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -69,15 +77,16 @@ func AddCaseR(c *gin.Context) {
 	c.JSON(http.StatusCreated, obj)
 }
 
-func EditCaseR(c *gin.Context) {
+func EditTaskR(c *gin.Context) {
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := GetCase(c, cid)
+	obj, err := model.GetTask(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
 	}
 
-	body := Case{}
+	body := model.Task{}
 	err = c.BindJSON(&body)
 	if err != nil {
 		c.String(http.StatusBadRequest, "bind: %s", err.Error())
@@ -85,26 +94,26 @@ func EditCaseR(c *gin.Context) {
 	}
 
 	// Only copy over fields we wan't to be editable
-	obj.Name = body.Name
-	obj.Closed = body.Closed
-	obj.Classification = body.Classification
-	obj.Severity = body.Severity
-	obj.Outcome = body.Outcome
-	obj.Summary = body.Summary
+	obj.Type = body.Type
+	obj.Task = body.Task
+	obj.Done = body.Done
+	obj.Owner = body.Owner
+	obj.DateAdded = body.DateAdded
+	obj.DateDue = body.DateDue
 	obj.DateModified = time.Now()
 	obj.UserModified = GetUsername(c)
 
-	if _, err := SaveCase(c, obj); err != nil {
+	if _, err := model.SaveTask(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
-
 	c.JSON(http.StatusOK, obj)
 }
 
-func DeleteCaseR(c *gin.Context) {
+func DeleteTaskR(c *gin.Context) {
+	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	err := DeleteCase(c, cid)
+	err := model.DeleteTask(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())
 		return

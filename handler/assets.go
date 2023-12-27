@@ -1,4 +1,4 @@
-package main
+package handler
 
 import (
 	"encoding/csv"
@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sprungknoedl/dagobert/model"
 )
 
 func ListAssetR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := ListAsset(c, cid)
+	list, err := model.ListAsset(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -22,7 +23,7 @@ func ListAssetR(c *gin.Context) {
 
 func ExportAssetCsvR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := ListAsset(c, cid)
+	list, err := model.ListAsset(c, cid)
 	if err != nil {
 		c.String(http.StatusBadRequest, "list: %s", err.Error())
 		return
@@ -42,7 +43,7 @@ func ExportAssetCsvR(c *gin.Context) {
 func GetAssetR(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := GetAsset(c, cid, id)
+	obj, err := model.GetAsset(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
@@ -54,7 +55,7 @@ func GetAssetR(c *gin.Context) {
 func AddAssetR(c *gin.Context) {
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
 
-	obj := Asset{}
+	obj := model.Asset{}
 	err := c.BindJSON(&obj)
 	if err != nil {
 		c.String(http.StatusBadRequest, "bind: %s", err.Error())
@@ -67,7 +68,7 @@ func AddAssetR(c *gin.Context) {
 	obj.UserAdded = username
 	obj.DateModified = time.Now()
 	obj.UserModified = username
-	if _, err := SaveAsset(c, cid, obj); err != nil {
+	if _, err := model.SaveAsset(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -78,13 +79,13 @@ func AddAssetR(c *gin.Context) {
 func EditAssetR(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := GetAsset(c, cid, id)
+	obj, err := model.GetAsset(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "get: %s", err.Error())
 		return
 	}
 
-	body := Asset{}
+	body := model.Asset{}
 	err = c.BindJSON(&body)
 	if err != nil {
 		c.String(http.StatusBadRequest, "bind: %s", err.Error())
@@ -101,7 +102,7 @@ func EditAssetR(c *gin.Context) {
 	obj.DateModified = time.Now()
 	obj.UserModified = GetUsername(c)
 
-	if _, err := SaveAsset(c, cid, obj); err != nil {
+	if _, err := model.SaveAsset(c, cid, obj); err != nil {
 		c.String(http.StatusBadRequest, "save: %s", err.Error())
 		return
 	}
@@ -112,7 +113,7 @@ func EditAssetR(c *gin.Context) {
 func DeleteAssetR(c *gin.Context) {
 	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	err := DeleteAsset(c, cid, id)
+	err := model.DeleteAsset(c, cid, id)
 	if err != nil {
 		c.String(http.StatusBadRequest, "delete: %s", err.Error())
 		return
