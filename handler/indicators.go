@@ -6,117 +6,149 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
+	"github.com/sprungknoedl/dagobert/components/indicators"
+	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
 )
 
-func ListIndicatorR(c *gin.Context) {
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := model.ListIndicator(c, cid)
-	if err != nil {
-		c.String(http.StatusBadRequest, "list: %s", err.Error())
-		return
-	}
-
-	c.JSON(http.StatusOK, list)
+type IndicatorDTO struct {
+	Type        string `form:"type"`
+	Value       string `form:"value"`
+	TLP         string `form:"tlp"`
+	Description string `form:"description"`
+	Source      string `form:"source"`
 }
 
-func ExportIndicatorCsvR(c *gin.Context) {
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := model.ListIndicator(c, cid)
-	if err != nil {
-		c.String(http.StatusBadRequest, "list: %s", err.Error())
-		return
+func ListIndicators(c echo.Context) error {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	c.Status(http.StatusOK)
-	c.Header("Content-Disposition", "attachment; filename=\"indicators.csv\"")
+	search := c.QueryParam("search")
+	list, err := model.FindIndicators(cid, search)
+	if err != nil {
+		return err
+	}
 
-	w := csv.NewWriter(c.Writer)
+	return render(c, indicators.List(ctx(c), cid, list))
+}
+
+func ExportIndicators(c echo.Context) error {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	list, err := model.ListIndicators(cid)
+	if err != nil {
+		return err
+	}
+
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"assets.csv\"")
+	c.Response().WriteHeader(http.StatusOK)
+
+	w := csv.NewWriter(c.Response().Writer)
 	w.Write([]string{"Type", "Value", "TLP", "Description", "Source"})
 	for _, e := range list {
 		w.Write([]string{e.Type, e.Value, e.TLP, e.Description, e.Source})
 	}
-	w.Flush()
+
+	return nil
 }
 
-func GetIndicatorR(c *gin.Context) {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := model.GetIndicator(c, cid, id)
-	if err != nil {
-		c.String(http.StatusBadRequest, "get: %s", err.Error())
-		return
+func ViewIndicator(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil { // id == 0 is valid in this context
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid indicator id")
 	}
 
-	c.JSON(http.StatusOK, obj)
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	obj := model.Indicator{CaseID: cid}
+	if id != 0 {
+		obj, err = model.GetIndicator(cid, id)
+		if err != nil {
+			return err
+		}
+	}
+
+	return render(c, indicators.Form(ctx(c), obj))
 }
 
-func AddIndicatorR(c *gin.Context) {
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-
-	obj := model.Indicator{}
-	err := c.BindJSON(&obj)
-	if err != nil {
-		c.String(http.StatusBadRequest, "bind: %s", err.Error())
-		return
+func SaveIndicator(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil { // id == 0 is valid in this context
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid indicator id")
 	}
 
-	username := GetUsername(c)
-	obj.CaseID = cid
-	obj.DateAdded = time.Now()
-	obj.UserAdded = username
-	obj.DateModified = time.Now()
-	obj.UserModified = username
-	if _, err := model.SaveIndicator(c, cid, obj); err != nil {
-		c.String(http.StatusBadRequest, "save: %s", err.Error())
-		return
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	c.JSON(http.StatusCreated, obj)
+	dto := IndicatorDTO{}
+	if err = c.Bind(&dto); err != nil {
+		return err
+	}
+
+	now := time.Now()
+	usr := getUser(c)
+	obj := model.Indicator{
+		ID:           id,
+		CaseID:       cid,
+		Type:         dto.Type,
+		Value:        dto.Value,
+		TLP:          dto.Value,
+		Description:  dto.Description,
+		Source:       dto.Source,
+		DateAdded:    now,
+		UserAdded:    usr,
+		DateModified: now,
+		UserModified: usr,
+	}
+
+	if id != 0 {
+		src, err := model.GetIndicator(cid, id)
+		if err != nil {
+			return err
+		}
+
+		obj.DateAdded = src.DateAdded
+		obj.UserAdded = src.UserAdded
+	}
+
+	if _, err := model.SaveIndicator(cid, obj); err != nil {
+		return err
+	}
+
+	return refresh(c)
 }
 
-func EditIndicatorR(c *gin.Context) {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := model.GetIndicator(c, cid, id)
+func DeleteIndicator(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || id == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid indicator id")
+	}
+
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	if c.QueryParam("confirm") != "yes" {
+		uri := c.Echo().Reverse("delete-indicator", cid, id) + "?confirm=yes"
+		return render(c, utils.Confirm(ctx(c), uri))
+	}
+
+	err = model.DeleteIndicator(cid, id)
 	if err != nil {
-		c.String(http.StatusBadRequest, "get: %s", err.Error())
-		return
+		return err
 	}
 
-	body := model.Indicator{}
-	err = c.BindJSON(&body)
-	if err != nil {
-		c.String(http.StatusBadRequest, "bind: %s", err.Error())
-		return
-	}
-
-	// Only copy over fields we wan't to be editable
-	obj.Type = body.Type
-	obj.Value = body.Value
-	obj.TLP = body.TLP
-	obj.Description = body.Description
-	obj.Source = body.Source
-	obj.DateModified = time.Now()
-	obj.UserModified = GetUsername(c)
-
-	if _, err := model.SaveIndicator(c, cid, obj); err != nil {
-		c.String(http.StatusBadRequest, "save: %s", err.Error())
-		return
-	}
-
-	c.JSON(http.StatusOK, obj)
-}
-
-func DeleteIndicatorR(c *gin.Context) {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	err := model.DeleteIndicator(c, cid, id)
-	if err != nil {
-		c.String(http.StatusBadRequest, "delete: %s", err.Error())
-		return
-	}
-
-	c.JSON(http.StatusOK, nil)
+	return refresh(c)
 }

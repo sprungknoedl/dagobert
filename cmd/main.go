@@ -1,15 +1,14 @@
 package main
 
 import (
-	"log"
-	"net/http"
-	"net/url"
+	"encoding/gob"
 	"os"
 
-	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
-	"github.com/gin-gonic/gin"
-	gin_oidc "github.com/maximRnback/gin-oidc"
+	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/handler"
 	"github.com/sprungknoedl/dagobert/model"
 )
@@ -28,10 +27,8 @@ type Configuration struct {
 	SessionSecret string
 }
 
-var cfg = Configuration{}
-
 func main() {
-	cfg = Configuration{
+	cfg := Configuration{
 		AssetsFolder:   getEnv("ASSETS_FOLDER", "./dist"),
 		EvidenceFolder: getEnv("EVIDENCE_FOLDER", "./files/evidences"),
 
@@ -44,135 +41,131 @@ func main() {
 
 		SessionSecret: getEnv("SESSION_SECRET", ""),
 	}
-	log.Printf("configuration: %+v", cfg)
 
 	model.InitDatabase(cfg.Database)
 
-	r := gin.Default()
+	e := echo.New()
+	e.Use(PrettyLogger)
+	e.Use(middleware.Gzip())
+	e.Use(middleware.Recover())
 
 	// --------------------------------------
 	// Session Store
 	// --------------------------------------
-	store := cookie.NewStore([]byte(cfg.SessionSecret))
-	r.Use(sessions.Sessions("dagobert", store))
+	store := sessions.NewCookieStore([]byte(cfg.SessionSecret))
+	e.Use(session.Middleware(store))
+	gob.Register(utils.CaseDTO{})
 
 	// --------------------------------------
 	// OIDC Authentication
 	// --------------------------------------
-	issuer, _ := url.Parse(cfg.Issuer)
-	clientUrl, _ := url.Parse(cfg.ClientUrl)
-	r.Use(gin_oidc.Init(gin_oidc.InitParams{
-		Router:       r,
-		ClientId:     cfg.ClientId,
-		ClientSecret: cfg.ClientSecret,
-		Issuer:       *issuer,
-		ClientUrl:    *clientUrl,
-		Scopes:       []string{"openid", "profile", "email"},
-		ErrorHandler: func(c *gin.Context) {
-			message := c.Errors.Last().Error()
-			c.String(http.StatusExpectationFailed, "oidc: %s", message)
-		},
-		PostLogoutUrl: *clientUrl,
-	}))
+	// issuer, _ := url.Parse(cfg.Issuer)
+	// clientUrl, _ := url.Parse(cfg.ClientUrl)
+	// r.Use(gin_oidc.Init(gin_oidc.InitParams{
+	// 	Router:       r,
+	// 	ClientId:     cfg.ClientId,
+	// 	ClientSecret: cfg.ClientSecret,
+	// 	Issuer:       *issuer,
+	// 	ClientUrl:    *clientUrl,
+	// 	Scopes:       []string{"openid", "profile", "email"},
+	// 	ErrorHandler: func(c *gin.Context) {
+	// 		message := c.Errors.Last().Error()
+	// 		c.String(http.StatusExpectationFailed, "oidc: %s", message)
+	// 	},
+	// 	PostLogoutUrl: *clientUrl,
+	// }))
 
 	// --------------------------------------
 	// Home
 	// --------------------------------------
-	r.StaticFile("/", "dist/index.html")
-	r.StaticFile("/favicon.ico", "dist/favicon.svg")
+	e.GET("/empty", handler.Empty)
 
 	// cases
-	r.GET("/api/cases", handler.ListCaseR)
-	r.GET("/api/cases.csv", handler.ExportCaseCsvR)
-	r.GET("/api/cases/:cid", handler.GetCaseR)
-	r.POST("/api/cases", handler.AddCaseR)
-	r.PUT("/api/cases/:cid", handler.EditCaseR)
-	r.DELETE("/api/cases/:cid", handler.DeleteCaseR)
+	e.GET("/", handler.ListCases).Name = "list-cases"
+	e.GET("/cases/export", handler.ExportCases).Name = "export-cases"
+	e.GET("/cases/:cid/select", handler.SelectCase).Name = "select-case"
+	e.GET("/cases/:cid/show", handler.ShowCase).Name = "show-case"
+	e.GET("/cases/:cid", handler.ViewCase).Name = "view-case"
+	e.POST("/cases/:cid", handler.SaveCase).Name = "save-case"
+	e.DELETE("/cases/:cid", handler.DeleteCase).Name = "delete-case"
 
 	// templates
-	r.GET("/api/templates", handler.ListTemplateR)
-	r.GET("/api/cases/:cid/render", handler.ApplyTemplateR)
+	e.GET("/reports", handler.ListTemplate).Name = "choose-report"
+	e.GET("/cases/:cid/render", handler.ApplyTemplate).Name = "generate-report"
 
 	// --------------------------------------
 	// Investigation
 	// --------------------------------------
 	// events
-	r.GET("/api/cases/:cid/events", handler.ListEventR)
-	r.GET("/api/cases/:cid/events.csv", handler.ExportEventCsvR)
-	r.GET("/api/cases/:cid/events/:id", handler.GetEventR)
-	r.POST("/api/cases/:cid/events", handler.AddEventR)
-	r.PUT("/api/cases/:cid/events/:id", handler.EditEventR)
-	r.DELETE("/api/cases/:cid/events/:id", handler.DeleteEventR)
+	e.GET("/cases/:cid/events", handler.ListEvents).Name = "list-events"
+	e.GET("/cases/:cid/events/export", handler.ExportEvents).Name = "export-events"
+	e.GET("/cases/:cid/events/:id", handler.ViewEvent).Name = "view-event"
+	e.POST("/cases/:cid/events/:id", handler.SaveEvent).Name = "save-event"
+	e.DELETE("/cases/:cid/events/:id", handler.DeleteEvent).Name = "delete-event"
 
 	// assets
-	r.GET("/api/cases/:cid/assets", handler.ListAssetR)
-	r.GET("/api/cases/:cid/assets.csv", handler.ExportAssetCsvR)
-	r.GET("/api/cases/:cid/assets/:id", handler.GetAssetR)
-	r.POST("/api/cases/:cid/assets", handler.AddAssetR)
-	r.PUT("/api/cases/:cid/assets/:id", handler.EditAssetR)
-	r.DELETE("/api/cases/:cid/assets/:id", handler.DeleteAssetR)
+	e.GET("/cases/:cid/assets", handler.ListAssets).Name = "list-assets"
+	e.GET("/cases/:cid/assets/export", handler.ExportAssets).Name = "export-assets"
+	e.GET("/cases/:cid/assets/:id", handler.ViewAsset).Name = "view-asset"
+	e.POST("/cases/:cid/assets/:id", handler.SaveAsset).Name = "save-asset"
+	e.DELETE("/cases/:cid/assets/:id", handler.DeleteAsset).Name = "delete-asset"
 
 	// malware
-	r.GET("/api/cases/:cid/malware", handler.ListMalwareR)
-	r.GET("/api/cases/:cid/malware.csv", handler.ExportMalwareCsvR)
-	r.GET("/api/cases/:cid/malware/:id", handler.GetMalwareR)
-	r.POST("/api/cases/:cid/malware", handler.AddMalwareR)
-	r.PUT("/api/cases/:cid/malware/:id", handler.EditMalwareR)
-	r.DELETE("/api/cases/:cid/malware/:id", handler.DeleteMalwareR)
+	e.GET("/cases/:cid/malware", handler.ListMalware).Name = "list-malware"
+	e.GET("/cases/:cid/malware.csv", handler.ExportMalware).Name = "export-malware"
+	e.GET("/cases/:cid/malware/:id", handler.ViewMalware).Name = "view-malware"
+	e.POST("/cases/:cid/malware/:id", handler.SaveMalware).Name = "save-malware"
+	e.DELETE("/cases/:cid/malware/:id", handler.DeleteMalware).Name = "delete-malware"
 
 	// indicators
-	r.GET("/api/cases/:cid/indicators", handler.ListIndicatorR)
-	r.GET("/api/cases/:cid/indicators.csv", handler.ExportIndicatorCsvR)
-	r.GET("/api/cases/:cid/indicators/:id", handler.GetIndicatorR)
-	r.POST("/api/cases/:cid/indicators", handler.AddIndicatorR)
-	r.PUT("/api/cases/:cid/indicators/:id", handler.EditIndicatorR)
-	r.DELETE("/api/cases/:cid/indicators/:id", handler.DeleteIndicatorR)
+	e.GET("/cases/:cid/indicators", handler.ListIndicators).Name = "list-indicators"
+	e.GET("/cases/:cid/indicators.csv", handler.ExportIndicators).Name = "export-indicators"
+	e.GET("/cases/:cid/indicators/:id", handler.ViewIndicator).Name = "view-indicator"
+	e.POST("/cases/:cid/indicators/:id", handler.SaveIndicator).Name = "save-indicator"
+	e.DELETE("/cases/:cid/indicators/:id", handler.DeleteIndicator).Name = "delete-indicator"
 
 	// --------------------------------------
 	// Case Management
 	// --------------------------------------
 	// users
-	r.GET("/api/cases/:cid/users", handler.ListUserR)
-	r.GET("/api/cases/:cid/users.csv", handler.ExportUserCsvR)
-	r.GET("/api/cases/:cid/users/:id", handler.GetUserR)
-	r.POST("/api/cases/:cid/users", handler.AddUserR)
-	r.PUT("/api/cases/:cid/users/:id", handler.EditUserR)
-	r.DELETE("/api/cases/:cid/users/:id", handler.DeleteUserR)
+	e.GET("/cases/:cid/users", handler.ListUsers).Name = "list-users"
+	e.GET("/cases/:cid/users/export", handler.ExportUsers).Name = "export-users"
+	e.GET("/cases/:cid/users/:id", handler.ViewUser).Name = "view-user"
+	e.POST("/cases/:cid/users/:id", handler.SaveUser).Name = "save-user"
+	e.DELETE("/cases/:cid/users/:id", handler.DeleteUser).Name = "delete-user"
 
 	// evidence
-	r.GET("/api/cases/:cid/evidences", handler.ListEvidenceR)
-	r.GET("/api/cases/:cid/evidences.csv", handler.ExportEvidenceCsvR)
-	r.GET("/api/cases/:cid/evidences/:id", handler.GetEvidenceR)
-	r.POST("/api/cases/:cid/evidences", handler.AddEvidenceR)
-	r.PUT("/api/cases/:cid/evidences/:id", handler.EditEvidenceR)
-	r.DELETE("/api/cases/:cid/evidences/:id", handler.DeleteEvidenceR)
+	e.GET("/cases/:cid/evidences", handler.ListEvidences).Name = "list-evidences"
+	e.GET("/cases/:cid/evidences.csv", handler.ExportEvidences).Name = "export-evidences"
+	e.GET("/cases/:cid/evidences/:id", handler.ViewEvidence).Name = "view-evidence"
+	e.POST("/cases/:cid/evidences/:id", handler.SaveEvidence).Name = "save-evidence"
+	e.DELETE("/cases/:cid/evidences/:id", handler.DeleteEvidence).Name = "delete-evidence"
 
 	// tasks
-	r.GET("/api/cases/:cid/tasks", handler.ListTaskR)
-	r.GET("/api/cases/:cid/tasks.csv", handler.ExportTaskCsvR)
-	r.GET("/api/cases/:cid/tasks/:id", handler.GetTaskR)
-	r.POST("/api/cases/:cid/tasks", handler.AddTaskR)
-	r.PUT("/api/cases/:cid/tasks/:id", handler.EditTaskR)
-	r.DELETE("/api/cases/:cid/tasks/:id", handler.DeleteTaskR)
+	e.GET("/cases/:cid/tasks", handler.ListTasks).Name = "list-tasks"
+	e.GET("/cases/:cid/tasks/export", handler.ExportTasks).Name = "export-tasks"
+	e.GET("/cases/:cid/tasks/:id", handler.ViewTask).Name = "view-task"
+	e.POST("/cases/:cid/tasks/:id", handler.SaveTask).Name = "save-task"
+	e.DELETE("/cases/:cid/tasks/:id", handler.DeleteTask).Name = "delete-task"
 
 	// notes
-	r.GET("/api/cases/:cid/notes", handler.ListNoteR)
-	r.GET("/api/cases/:cid/notes.csv", handler.ExportNoteCsvR)
-	r.GET("/api/cases/:cid/notes/:id", handler.GetNoteR)
-	r.POST("/api/cases/:cid/notes", handler.AddNoteR)
-	r.PUT("/api/cases/:cid/notes/:id", handler.EditNoteR)
-	r.DELETE("/api/cases/:cid/notes/:id", handler.DeleteNoteR)
+	e.GET("/cases/:cid/notes", handler.ListNotes).Name = "list-notes"
+	e.GET("/cases/:cid/notes.csv", handler.ExportNotes).Name = "export-notes"
+	e.GET("/cases/:cid/notes/:id", handler.ViewNote).Name = "view-note"
+	e.POST("/cases/:cid/notes/:id", handler.SaveNote).Name = "save-note"
+	e.DELETE("/cases/:cid/notes/:id", handler.DeleteNote).Name = "delete-note"
 
 	// --------------------------------------
 	// Assets
 	// --------------------------------------
-	r.Static("/dist", cfg.AssetsFolder)
-	r.Run()
+	e.File("/favicon.ico", "dist/favicon.svg")
+	e.Static("/dist", cfg.AssetsFolder)
+
+	e.Logger.Fatal(e.Start(":8080"))
 }
 
 func getEnv(key string, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
-		log.Printf("ENV | %s = %s", key, value)
 		return value
 	}
 	return fallback

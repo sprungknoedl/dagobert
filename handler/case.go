@@ -6,110 +6,173 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gorilla/sessions"
+	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/echo/v4"
+	"github.com/sprungknoedl/dagobert/components/cases"
+	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
 )
 
-func ListCaseR(c *gin.Context) {
-	list, err := model.ListCase(c)
-	if err != nil {
-		c.String(http.StatusBadRequest, "list: %s", err.Error())
-		return
-	}
-
-	c.JSON(http.StatusOK, list)
+type CaseDTO struct {
+	Name           string `form:"name"`
+	Closed         bool   `form:"closed"`
+	Classification string `form:"classification"`
+	Severity       string `form:"severity"`
+	Outcome        string `form:"outcome"`
+	Summary        string `form:"summary"`
 }
 
-func ExportCaseCsvR(c *gin.Context) {
-	list, err := model.ListCase(c)
+func ListCases(c echo.Context) error {
+	search := c.QueryParam("search")
+	list, err := model.FindCases(search)
 	if err != nil {
-		c.String(http.StatusBadRequest, "list: %s", err.Error())
-		return
+		return err
 	}
 
-	c.Status(http.StatusOK)
-	c.Header("Content-Disposition", "attachment; filename=\"cases.csv\"")
+	return render(c, cases.List(ctx(c), list))
+}
 
-	w := csv.NewWriter(c.Writer)
+func ExportCases(c echo.Context) error {
+	list, err := model.ListCases()
+	if err != nil {
+		return err
+	}
+
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"cases.csv\"")
+	c.Response().WriteHeader(http.StatusOK)
+
+	w := csv.NewWriter(c.Response().Writer)
 	w.Write([]string{"ID", "Name", "Classification", "Summary"})
 	for _, e := range list {
 		w.Write([]string{strconv.FormatInt(e.ID, 10), e.Name, e.Classification, e.Summary})
 	}
-	w.Flush()
+
+	return nil
 }
 
-func GetCaseR(c *gin.Context) {
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := model.GetCase(c, cid)
-	if err != nil {
-		c.String(http.StatusBadRequest, "get: %s", err.Error())
-		return
+func SelectCase(c echo.Context) error {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	c.JSON(http.StatusOK, obj)
+	obj, err := model.GetCase(cid)
+	if err != nil {
+		return err
+	}
+
+	// store active case in session
+	sess, _ := session.Get(SessionName, c)
+	sess.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   86400 * 7,
+		HttpOnly: true,
+	}
+
+	sess.Values["activeCase"] = utils.CaseDTO{
+		ID:   obj.ID,
+		Name: obj.Name,
+	}
+
+	err = sess.Save(c.Request(), c.Response())
+	if err != nil {
+		return err
+	}
+
+	c.Response().Header().Add("HX-Refresh", "true")
+	return c.NoContent(http.StatusOK)
 }
 
-func AddCaseR(c *gin.Context) {
-	obj := model.Case{}
-	err := c.BindJSON(&obj)
+func ShowCase(c echo.Context) error {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	obj, err := model.GetCase(cid)
 	if err != nil {
-		c.String(http.StatusBadRequest, "bind: %s", err.Error())
-		return
+		return err
 	}
 
-	username := GetUsername(c)
-	obj.DateAdded = time.Now()
-	obj.UserAdded = username
-	obj.DateModified = time.Now()
-	obj.UserModified = username
-	if _, err := model.SaveCase(c, obj); err != nil {
-		c.String(http.StatusBadRequest, "save: %s", err.Error())
-		return
-	}
-
-	c.JSON(http.StatusCreated, obj)
+	return render(c, cases.Overview(ctx(c), obj))
 }
 
-func EditCaseR(c *gin.Context) {
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := model.GetCase(c, cid)
+func ViewCase(c echo.Context) error {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil {
-		c.String(http.StatusBadRequest, "get: %s", err.Error())
-		return
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	body := model.Case{}
-	err = c.BindJSON(&body)
-	if err != nil {
-		c.String(http.StatusBadRequest, "bind: %s", err.Error())
-		return
+	var obj model.Case
+	if cid != 0 {
+		obj, err = model.GetCase(cid)
+		if err != nil {
+			return err
+		}
 	}
 
-	// Only copy over fields we wan't to be editable
-	obj.Name = body.Name
-	obj.Closed = body.Closed
-	obj.Classification = body.Classification
-	obj.Severity = body.Severity
-	obj.Outcome = body.Outcome
-	obj.Summary = body.Summary
-	obj.DateModified = time.Now()
-	obj.UserModified = GetUsername(c)
-
-	if _, err := model.SaveCase(c, obj); err != nil {
-		c.String(http.StatusBadRequest, "save: %s", err.Error())
-		return
-	}
-
-	c.JSON(http.StatusOK, obj)
+	return render(c, cases.Form(ctx(c), obj))
 }
 
-func DeleteCaseR(c *gin.Context) {
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	err := model.DeleteCase(c, cid)
+func SaveCase(c echo.Context) error {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil {
-		c.String(http.StatusBadRequest, "delete: %s", err.Error())
-		return
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	c.JSON(http.StatusOK, nil)
+	dto := CaseDTO{}
+	if err = c.Bind(&dto); err != nil {
+		return err
+	}
+
+	now := time.Now()
+	usr := getUser(c)
+	obj := model.Case{
+		ID:             cid,
+		Name:           dto.Name,
+		Closed:         dto.Closed,
+		Classification: dto.Classification,
+		Severity:       dto.Severity,
+		Outcome:        dto.Outcome,
+		Summary:        dto.Summary,
+		DateAdded:      now,
+		UserAdded:      usr,
+		DateModified:   now,
+		UserModified:   usr,
+	}
+
+	if cid != 0 {
+		src, err := model.GetCase(cid)
+		if err != nil {
+			return err
+		}
+
+		obj.DateAdded = src.DateAdded
+		obj.UserAdded = src.UserAdded
+	}
+
+	if _, err := model.SaveCase(obj); err != nil {
+		return err
+	}
+
+	return refresh(c)
+}
+
+func DeleteCase(c echo.Context) error {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	if c.QueryParam("confirm") != "yes" {
+		uri := c.Echo().Reverse("delete-case", cid) + "?confirm=yes"
+		return render(c, utils.Confirm(ctx(c), uri))
+	}
+
+	if err := model.DeleteCase(cid); err != nil {
+		return err
+	}
+
+	return refresh(c)
 }

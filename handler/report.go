@@ -11,7 +11,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 	"github.com/sprungknoedl/dagobert/model"
 	"go.arsenm.dev/pcre"
 )
@@ -20,36 +20,34 @@ var pRegexp = pcre.MustCompile(`<text:p[^>]*?>{{p (.+?)}}<\/text:p>`)
 var trRegexp = pcre.MustCompile(`<table:table-row[^>]*>(?:(?!<table:table-row).)*{{tr (.+?)}}.*?<\/table:table-row>`)
 var expRegexp = pcre.MustCompile(`{{([^}]+)}}`)
 
-func ListTemplateR(c *gin.Context) {
-
+func ListTemplate(c echo.Context) error {
+	return nil
 }
 
-func ApplyTemplateR(c *gin.Context) {
+func ApplyTemplate(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
-	if err != nil {
-		c.Error(err)
-		c.String(http.StatusBadRequest, "Invalid case id")
-		return
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	obj, err := model.GetCaseFull(c, cid)
+	obj, err := model.GetCaseFull(cid)
 	if err != nil {
-		c.Error(err)
-		c.String(http.StatusNotFound, "Case not found", err.Error())
-		return
+		return err
 	}
 
 	buf, err := GenerateReport("templates/template.odt", obj)
 	if err != nil {
-		c.Error(err)
-		c.String(http.StatusInternalServerError, "Failed to create report: %s", err.Error())
-		return
+		return err
 	}
 
 	filename := fmt.Sprintf("%s - %s.odt", time.Now().Format("20060102"), obj.Name)
-	c.DataFromReader(http.StatusOK, int64(buf.Len()), "application/vnd.oasis.opendocument.text", buf, map[string]string{
-		"Content-Disposition": "attachment; filename=\"" + filename + "\"",
-	})
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+	c.Response().Header().Set("Content-Type", "application/vnd.oasis.opendocument.text")
+	c.Response().Header().Set("Content-Length", strconv.Itoa(buf.Len()))
+	c.Response().WriteHeader(http.StatusOK)
+
+	_, err = io.Copy(c.Response().Writer, buf)
+	return err
 }
 
 func GenerateReport(tpl string, obj model.Case) (*bytes.Buffer, error) {
@@ -102,7 +100,7 @@ func GenerateReport(tpl string, obj model.Case) (*bytes.Buffer, error) {
 				return nil, err
 			}
 
-			err = tpl.Execute(target, gin.H{
+			err = tpl.Execute(target, map[string]any{
 				"Case": obj,
 				"Now":  time.Now(),
 			})

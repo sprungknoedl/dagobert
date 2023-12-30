@@ -6,118 +6,149 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
+	"github.com/sprungknoedl/dagobert/components/tasks"
+	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
 )
 
-func ListTaskR(c *gin.Context) {
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := model.ListTask(c, cid)
-	if err != nil {
-		c.String(http.StatusBadRequest, "list: %s", err.Error())
-		return
-	}
-
-	c.JSON(http.StatusOK, list)
+type TaskDTO struct {
+	Type    string    `form:"type"`
+	Task    string    `form:"task"`
+	Done    bool      `form:"done"`
+	Owner   string    `form:"owner"`
+	DateDue time.Time `form:"dateDue"`
 }
 
-func ExportTaskCsvR(c *gin.Context) {
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := model.ListTask(c, cid)
-	if err != nil {
-		c.String(http.StatusBadRequest, "list: %s", err.Error())
-		return
+func ListTasks(c echo.Context) error {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	c.Status(http.StatusOK)
-	c.Header("Content-Disposition", "attachment; filename=\"tasks.csv\"")
+	search := c.QueryParam("search")
+	list, err := model.FindTasks(cid, search)
+	if err != nil {
+		return err
+	}
 
-	w := csv.NewWriter(c.Writer)
+	return render(c, tasks.List(ctx(c), cid, list))
+}
+
+func ExportTasks(c echo.Context) error {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	list, err := model.ListTasks(cid)
+	if err != nil {
+		return err
+	}
+
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"tasks.csv\"")
+	c.Response().WriteHeader(http.StatusOK)
+
+	w := csv.NewWriter(c.Response().Writer)
 	w.Write([]string{"Type", "Task", "Done", "Owner", "Due Date"})
 	for _, e := range list {
 		w.Write([]string{e.Type, e.Task, strconv.FormatBool(e.Done), e.Owner, e.DateDue.Format(time.RFC3339)})
 	}
-	w.Flush()
+
+	return nil
 }
 
-func GetTaskR(c *gin.Context) {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := model.GetTask(c, cid, id)
-	if err != nil {
-		c.String(http.StatusBadRequest, "get: %s", err.Error())
-		return
+func ViewTask(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil { // id == 0 is valid in this context
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid task id")
 	}
 
-	c.JSON(http.StatusOK, obj)
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	obj := model.Task{CaseID: cid}
+	if id != 0 {
+		obj, err = model.GetTask(cid, id)
+		if err != nil {
+			return err
+		}
+	}
+
+	return render(c, tasks.Form(ctx(c), obj))
 }
 
-func AddTaskR(c *gin.Context) {
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-
-	obj := model.Task{}
-	err := c.BindJSON(&obj)
-	if err != nil {
-		c.String(http.StatusBadRequest, "bind: %s", err.Error())
-		return
+func SaveTask(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil { // id == 0 is valid in this context
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid task id")
 	}
 
-	username := GetUsername(c)
-	obj.CaseID = cid
-	obj.DateAdded = time.Now()
-	obj.UserAdded = username
-	obj.DateModified = time.Now()
-	obj.UserModified = username
-	obj, err = model.SaveTask(c, cid, obj)
-	if err != nil {
-		c.String(http.StatusBadRequest, "save: %s", err.Error())
-		return
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	c.JSON(http.StatusCreated, obj)
+	dto := TaskDTO{}
+	if err = c.Bind(&dto); err != nil {
+		return err
+	}
+
+	now := time.Now()
+	usr := getUser(c)
+	obj := model.Task{
+		ID:           id,
+		CaseID:       cid,
+		Type:         dto.Type,
+		Task:         dto.Task,
+		Done:         dto.Done,
+		Owner:        dto.Owner,
+		DateDue:      dto.DateDue,
+		DateAdded:    now,
+		UserAdded:    usr,
+		DateModified: now,
+		UserModified: usr,
+	}
+
+	if id != 0 {
+		src, err := model.GetTask(cid, id)
+		if err != nil {
+			return err
+		}
+
+		obj.DateAdded = src.DateAdded
+		obj.UserAdded = src.UserAdded
+	}
+
+	if _, err := model.SaveTask(cid, obj); err != nil {
+		return err
+	}
+
+	return refresh(c)
 }
 
-func EditTaskR(c *gin.Context) {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := model.GetTask(c, cid, id)
+func DeleteTask(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || id == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid task id")
+	}
+
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	if c.QueryParam("confirm") != "yes" {
+		uri := c.Echo().Reverse("delete-task", cid, id) + "?confirm=yes"
+		return render(c, utils.Confirm(ctx(c), uri))
+	}
+
+	err = model.DeleteTask(cid, id)
 	if err != nil {
-		c.String(http.StatusBadRequest, "get: %s", err.Error())
-		return
+		return err
 	}
 
-	body := model.Task{}
-	err = c.BindJSON(&body)
-	if err != nil {
-		c.String(http.StatusBadRequest, "bind: %s", err.Error())
-		return
-	}
-
-	// Only copy over fields we wan't to be editable
-	obj.Type = body.Type
-	obj.Task = body.Task
-	obj.Done = body.Done
-	obj.Owner = body.Owner
-	obj.DateAdded = body.DateAdded
-	obj.DateDue = body.DateDue
-	obj.DateModified = time.Now()
-	obj.UserModified = GetUsername(c)
-
-	if _, err := model.SaveTask(c, cid, obj); err != nil {
-		c.String(http.StatusBadRequest, "save: %s", err.Error())
-		return
-	}
-	c.JSON(http.StatusOK, obj)
-}
-
-func DeleteTaskR(c *gin.Context) {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	err := model.DeleteTask(c, cid, id)
-	if err != nil {
-		c.String(http.StatusBadRequest, "delete: %s", err.Error())
-		return
-	}
-
-	c.JSON(http.StatusOK, nil)
+	return refresh(c)
 }

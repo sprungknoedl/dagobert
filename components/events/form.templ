@@ -1,0 +1,45 @@
+package events
+
+import (
+    "time"
+
+    "github.com/sprungknoedl/dagobert/components/icons"
+    "github.com/sprungknoedl/dagobert/model"
+	"github.com/sprungknoedl/dagobert/components/utils"
+)
+
+templ Form(env utils.Env, obj model.Event) {
+    <aside class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-50 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50">
+        <div class="w-1/2 m-8 bg-slate-800 shadow-xl rounded-xl">
+            <form hx-post={env.Routes("save-event", obj.CaseID, obj.ID)} hx-target="#modal">
+                <header class="p-6 px-8 border-b border-b-slate-700 flex justify-between">
+                    <h4 class="font-bold text-slate-200">
+                        if obj.ID == 0 {
+                            Add event
+                        } else {
+                            Edit event
+                        }
+                    </h4>
+                    <div>
+                        <button type="button" hx-get={env.Routes("empty")} hx-target="#modal"> @icons.XMark(icons.Default) </button>
+                    </div>
+                </header>
+      
+                <section class="p-8 flex flex-col gap-6">
+                    @utils.WithLabel("Date / Time")   { @utils.TextInput("time", obj.Time.Format(time.RFC3339)) }
+                    @utils.WithLabel("Type")          { @utils.SelectInput("type", obj.Type, model.EventTypes) }
+                    @utils.WithLabel("Event System")  { @utils.TextInput("assetA", obj.AssetA) }
+                    @utils.WithLabel("Direction")     { @utils.SelectInput("direction", obj.Direction, model.EventDirections) }
+                    @utils.WithLabel("Remote System") { @utils.TextInput("assetB", obj.AssetB) }
+                    @utils.WithLabel("Event")         { @utils.TextareaInput("event", obj.Event) }
+                    @utils.WithLabel("Raw")           { @utils.TextareaInput("raw", obj.Raw) }
+                </section>
+
+                <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4">
+                    @utils.PrimaryButton(templ.Attributes{"type": "submit"}) { Save }
+                    @utils.SecondaryButton(templ.Attributes{"hx-get": env.Routes("empty"), "hx-target": "#modal"}) { Cancel }
+                </footer>
+            </form>
+        </div>
+    </aside>
+}

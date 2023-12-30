@@ -4,6 +4,9 @@ import (
 	"time"
 )
 
+var CaseSeverities = []string{"Low", "Medium", "High"}
+var CaseOutcomes = []string{"False positive", "True positive", "Benign positive"}
+
 type Case struct {
 	ID             int64  `json:"id" gorm:"primarykey"`
 	Name           string `json:"name" binding:"required"`
@@ -28,6 +31,8 @@ type Case struct {
 	Users      []User      `json:"-" binding:"-"`
 }
 
+var EvidenceTypes = []string{"File", "Log", "Artifacts Collection", "System Image", "Memory Dump", "Other"}
+
 type Evidence struct {
 	ID          int64  `json:"id" gorm:"primarykey"`
 	Type        string `json:"type" binding:"required"`
@@ -45,6 +50,9 @@ type Evidence struct {
 	UserAdded    string    `json:"userAdded"`
 	UserModified string    `json:"userModified"`
 }
+
+var AssetTypes = []string{"Account", "Desktop", "Server", "Other"}
+var AssetCompromised = []string{"Compromised", "Not compromised", "Unknown"}
 
 type Asset struct {
 	ID          int64  `json:"id" gorm:"primarykey"`
@@ -64,6 +72,9 @@ type Asset struct {
 	UserModified string    `json:"userModified"`
 }
 
+var IndicatorTypes = []string{"IP", "Domain", "URL", "Path", "Hash", "Service", "Other"}
+var IndicatorTLPs = []string{"TLP:RED", "TLP:AMBER", "TLP:GREEN", "TLP:CLEAR"}
+
 type Indicator struct {
 	ID          int64  `json:"id" gorm:"primarykey"`
 	Type        string `json:"type" binding:"required"`
@@ -80,6 +91,9 @@ type Indicator struct {
 	UserAdded    string    `json:"userAdded"`
 	UserModified string    `json:"userModified"`
 }
+
+var EventTypes = []string{"Event Log", "File", "Human", "Lateral Movement", "Exfiltration", "Malware", "C2", "DFIR", "Other"}
+var EventDirections = []string{"", "→", "←"}
 
 type Event struct {
 	ID        int64     `json:"id" gorm:"primarykey"`
@@ -133,6 +147,8 @@ type Note struct {
 	UserAdded    string    `json:"userAdded"`
 	UserModified string    `json:"userModified"`
 }
+
+var TaskTypes = []string{"Information request", "Analysis", "Deliverable", "Checkpoint", "Other"}
 
 type Task struct {
 	ID      int64     `json:"id" gorm:"primarykey"`

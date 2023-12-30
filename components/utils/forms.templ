@@ -1,0 +1,35 @@
+package utils
+
+templ WithLabel(label string) {
+    <div class="flex flex-row">
+        <div class="grow-0 w-56 pt-2">
+            <label>{ label }</label>
+        </div>
+        <div class="grow">
+            { children... }
+        </div>
+    </div>
+}
+
+templ TextInput(name string, value string) {
+    <input name={name} value={value} type="text" class="px-4 w-full h-10 outline outline-2 outline-offset-2 outline-slate-600 focus:outline-pink-500 bg-slate-700 text-white caret-pink-500 rounded-md shadow-sm" />
+}
+
+templ TextareaInput(name string, value string) {
+    <textarea name={name} rows="5" class="p-4 w-full outline outline-2 outline-offset-2 outline-slate-600 focus:outline-pink-500 bg-slate-700 text-white caret-pink-500 rounded-md shadow-sm">
+        { value }
+    </textarea>
+}
+
+templ BooleanInput(name string, value bool) {
+    <input name={name} value="true" checked?={value} type="checkbox" class="accent-pink-500" />
+}
+
+templ SelectInput(name string, value string, options []string) {
+    <select name={name} class="px-4 w-full h-10 outline outline-2 outline-offset-2 outline-slate-600 focus:outline-pink-500 bg-slate-700 text-white rounded-md shadow-sm">
+        <option disabled value="" selected?={value == ""}>Select an option</option>
+        for _, opt := range options {
+        <option selected?={value == opt}>{opt}</option>
+        }
+    </select>
+}

@@ -1,7 +1,6 @@
 package model
 
 import (
-	"github.com/gin-gonic/gin"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -33,19 +32,31 @@ func InitDatabase(dburl string) {
 // --------------------------------------
 // Cases
 // --------------------------------------
-func ListCase(c *gin.Context) ([]Case, error) {
+func FindCases(term string) ([]Case, error) {
+	var list []Case
+	result := db.Order("name asc").
+		Where("instr(name, ?) > 0", term).
+		Or("instr(classification, ?) > 0", term).
+		Or("instr(severity, ?) > 0", term).
+		Or("instr(outcome, ?) > 0", term).
+		Or("instr(summary, ?) > 0", term).
+		Find(&list)
+	return list, result.Error
+}
+
+func ListCases() ([]Case, error) {
 	var list []Case
 	result := db.Order("name asc").Find(&list)
 	return list, result.Error
 }
 
-func GetCase(c *gin.Context, id int64) (Case, error) {
+func GetCase(id int64) (Case, error) {
 	x := Case{}
 	result := db.First(&x, id)
 	return x, result.Error
 }
 
-func GetCaseFull(c *gin.Context, id int64) (Case, error) {
+func GetCaseFull(id int64) (Case, error) {
 	x := Case{}
 	result := db.
 		Preload(clause.Associations).
@@ -53,12 +64,12 @@ func GetCaseFull(c *gin.Context, id int64) (Case, error) {
 	return x, result.Error
 }
 
-func SaveCase(c *gin.Context, x Case) (Case, error) {
+func SaveCase(x Case) (Case, error) {
 	result := db.Save(&x)
 	return x, result.Error
 }
 
-func DeleteCase(c *gin.Context, id int64) error {
+func DeleteCase(id int64) error {
 	x := Case{}
 	return db.Delete(&x, id).Error
 }
@@ -66,7 +77,20 @@ func DeleteCase(c *gin.Context, id int64) error {
 // --------------------------------------
 // Events
 // --------------------------------------
-func ListEvent(c *gin.Context, cid int64) ([]Event, error) {
+func FindEvents(cid int64, term string) ([]Event, error) {
+	var list []Event
+	result := db.Order("time asc").
+		Where("case_id = ?", cid).
+		Where(db.
+			Where("instr(type, ?) > 0", term).
+			Or("instr(asset_a, ?) > 0", term).
+			Or("instr(asset_b, ?) > 0", term).
+			Or("instr(event, ?) > 0", term)).
+		Find(&list)
+	return list, result.Error
+}
+
+func ListEvents(cid int64) ([]Event, error) {
 	var list []Event
 	result := db.Order("time asc").
 		Where("case_id = ?", cid).
@@ -74,7 +98,7 @@ func ListEvent(c *gin.Context, cid int64) ([]Event, error) {
 	return list, result.Error
 }
 
-func GetEvent(c *gin.Context, cid int64, id int64) (Event, error) {
+func GetEvent(cid int64, id int64) (Event, error) {
 	x := Event{}
 	result := db.
 		Where("case_id = ?", cid).
@@ -82,14 +106,14 @@ func GetEvent(c *gin.Context, cid int64, id int64) (Event, error) {
 	return x, result.Error
 }
 
-func SaveEvent(c *gin.Context, cid int64, x Event) (Event, error) {
+func SaveEvent(cid int64, x Event) (Event, error) {
 	result := db.
 		Where("case_id = ?", cid).
 		Save(&x)
 	return x, result.Error
 }
 
-func DeleteEvent(c *gin.Context, cid int64, id int64) error {
+func DeleteEvent(cid int64, id int64) error {
 	x := Event{}
 	return db.
 		Where("case_id = ?", cid).
@@ -99,7 +123,7 @@ func DeleteEvent(c *gin.Context, cid int64, id int64) error {
 // --------------------------------------
 // Assets
 // --------------------------------------
-func ListAsset(c *gin.Context, cid int64) ([]Asset, error) {
+func ListAssets(cid int64) ([]Asset, error) {
 	var list []Asset
 	result := db.
 		Where("case_id = ?", cid).
@@ -108,7 +132,21 @@ func ListAsset(c *gin.Context, cid int64) ([]Asset, error) {
 	return list, result.Error
 }
 
-func GetAsset(c *gin.Context, cid int64, id int64) (Asset, error) {
+func FindAssets(cid int64, term string) ([]Asset, error) {
+	var list []Asset
+	result := db.Order("name asc").
+		Where("case_id = ?", cid).
+		Where(db.
+			Where("instr(type, ?) > 0", term).
+			Or("instr(name, ?) > 0", term).
+			Or("instr(ip, ?) > 0", term).
+			Or("instr(description, ?) > 0", term).
+			Or("instr(compromised, ?) > 0", term)).
+		Find(&list)
+	return list, result.Error
+}
+
+func GetAsset(cid int64, id int64) (Asset, error) {
 	x := Asset{}
 	result := db.
 		Where("case_id = ?", cid).
@@ -116,14 +154,14 @@ func GetAsset(c *gin.Context, cid int64, id int64) (Asset, error) {
 	return x, result.Error
 }
 
-func SaveAsset(c *gin.Context, cid int64, x Asset) (Asset, error) {
+func SaveAsset(cid int64, x Asset) (Asset, error) {
 	result := db.
 		Where("case_id = ?", cid).
 		Save(&x)
 	return x, result.Error
 }
 
-func DeleteAsset(c *gin.Context, cid int64, id int64) error {
+func DeleteAsset(cid int64, id int64) error {
 	x := Asset{}
 	return db.
 		Where("case_id = ?", cid).
@@ -133,7 +171,7 @@ func DeleteAsset(c *gin.Context, cid int64, id int64) error {
 // --------------------------------------
 // Malware
 // --------------------------------------
-func ListMalware(c *gin.Context, cid int64) ([]Malware, error) {
+func ListMalware(cid int64) ([]Malware, error) {
 	var list []Malware
 	result := db.Where("case_id = ?", cid).
 		Order("filename asc").
@@ -141,7 +179,21 @@ func ListMalware(c *gin.Context, cid int64) ([]Malware, error) {
 	return list, result.Error
 }
 
-func GetMalware(c *gin.Context, cid int64, id int64) (Malware, error) {
+func FindMalware(cid int64, term string) ([]Malware, error) {
+	var list []Malware
+	result := db.Order("filename asc").
+		Where("case_id = ?", cid).
+		Where(db.
+			Where("instr(filename, ?) > 0", term).
+			Or("instr(filepath, ?) > 0", term).
+			Or("instr(system, ?) > 0", term).
+			Or("instr(hash, ?) > 0", term).
+			Or("instr(notes, ?) > 0", term)).
+		Find(&list)
+	return list, result.Error
+}
+
+func GetMalware(cid int64, id int64) (Malware, error) {
 	x := Malware{}
 	result := db.
 		Where("case_id = ?", cid).
@@ -149,14 +201,14 @@ func GetMalware(c *gin.Context, cid int64, id int64) (Malware, error) {
 	return x, result.Error
 }
 
-func SaveMalware(c *gin.Context, cid int64, x Malware) (Malware, error) {
+func SaveMalware(cid int64, x Malware) (Malware, error) {
 	result := db.
 		Where("case_id = ?", cid).
 		Save(&x)
 	return x, result.Error
 }
 
-func DeleteMalware(c *gin.Context, cid int64, id int64) error {
+func DeleteMalware(cid int64, id int64) error {
 	x := Asset{}
 	return db.
 		Where("case_id = ?", cid).
@@ -166,7 +218,7 @@ func DeleteMalware(c *gin.Context, cid int64, id int64) error {
 // --------------------------------------
 // Indicators
 // --------------------------------------
-func ListIndicator(c *gin.Context, cid int64) ([]Indicator, error) {
+func ListIndicators(cid int64) ([]Indicator, error) {
 	var list []Indicator
 	result := db.
 		Where("case_id = ?", cid).
@@ -175,7 +227,21 @@ func ListIndicator(c *gin.Context, cid int64) ([]Indicator, error) {
 	return list, result.Error
 }
 
-func GetIndicator(c *gin.Context, cid int64, id int64) (Indicator, error) {
+func FindIndicators(cid int64, term string) ([]Indicator, error) {
+	var list []Indicator
+	result := db.Order("type asc, value asc").
+		Where("case_id = ?", cid).
+		Where(db.
+			Where("instr(type, ?) > 0", term).
+			Or("instr(value, ?) > 0", term).
+			Or("instr(description, ?) > 0", term).
+			Or("instr(tlp, ?) > 0", term).
+			Or("instr(source, ?) > 0", term)).
+		Find(&list)
+	return list, result.Error
+}
+
+func GetIndicator(cid int64, id int64) (Indicator, error) {
 	x := Indicator{}
 	result := db.
 		Where("case_id = ?", cid).
@@ -183,14 +249,14 @@ func GetIndicator(c *gin.Context, cid int64, id int64) (Indicator, error) {
 	return x, result.Error
 }
 
-func SaveIndicator(c *gin.Context, cid int64, x Indicator) (Indicator, error) {
+func SaveIndicator(cid int64, x Indicator) (Indicator, error) {
 	result := db.
 		Where("case_id = ?", cid).
 		Save(&x)
 	return x, result.Error
 }
 
-func DeleteIndicator(c *gin.Context, cid int64, id int64) error {
+func DeleteIndicator(cid int64, id int64) error {
 	x := Indicator{}
 	return db.
 		Where("case_id = ?", cid).
@@ -200,7 +266,7 @@ func DeleteIndicator(c *gin.Context, cid int64, id int64) error {
 // --------------------------------------
 // Users
 // --------------------------------------
-func ListUser(c *gin.Context, cid int64) ([]User, error) {
+func ListUsers(cid int64) ([]User, error) {
 	var list []User
 	result := db.
 		Where("case_id = ?", cid).
@@ -209,7 +275,22 @@ func ListUser(c *gin.Context, cid int64) ([]User, error) {
 	return list, result.Error
 }
 
-func GetUser(c *gin.Context, cid int64, id int64) (User, error) {
+func FindUsers(cid int64, term string) ([]User, error) {
+	var list []User
+	result := db.Order("name asc").
+		Where("case_id = ?", cid).
+		Where(db.
+			Where("instr(name, ?) > 0", term).
+			Or("instr(company, ?) > 0", term).
+			Or("instr(role, ?) > 0", term).
+			Or("instr(email, ?) > 0", term).
+			Or("instr(phone, ?) > 0", term).
+			Or("instr(notes, ?) > 0", term)).
+		Find(&list)
+	return list, result.Error
+}
+
+func GetUser(cid int64, id int64) (User, error) {
 	x := User{}
 	result := db.
 		Where("case_id = ?", cid).
@@ -217,14 +298,14 @@ func GetUser(c *gin.Context, cid int64, id int64) (User, error) {
 	return x, result.Error
 }
 
-func SaveUser(c *gin.Context, cid int64, x User) (User, error) {
+func SaveUser(cid int64, x User) (User, error) {
 	result := db.
 		Where("case_id = ?", cid).
 		Save(&x)
 	return x, result.Error
 }
 
-func DeleteUser(c *gin.Context, cid int64, id int64) error {
+func DeleteUser(cid int64, id int64) error {
 	x := User{}
 	return db.
 		Where("case_id = ?", cid).
@@ -234,7 +315,7 @@ func DeleteUser(c *gin.Context, cid int64, id int64) error {
 // --------------------------------------
 // Evidences
 // --------------------------------------
-func ListEvidence(c *gin.Context, cid int64) ([]Evidence, error) {
+func ListEvidences(cid int64) ([]Evidence, error) {
 	var list []Evidence
 	result := db.
 		Where("case_id = ?", cid).
@@ -243,7 +324,21 @@ func ListEvidence(c *gin.Context, cid int64) ([]Evidence, error) {
 	return list, result.Error
 }
 
-func GetEvidence(c *gin.Context, cid int64, id int64) (Evidence, error) {
+func FindEvidences(cid int64, term string) ([]Evidence, error) {
+	var list []Evidence
+	result := db.Order("name asc").
+		Where("case_id = ?", cid).
+		Where(db.
+			Where("instr(type, ?) > 0", term).
+			Or("instr(name, ?) > 0", term).
+			Or("instr(description, ?) > 0", term).
+			Or("instr(hash, ?) > 0", term).
+			Or("instr(location, ?) > 0", term)).
+		Find(&list)
+	return list, result.Error
+}
+
+func GetEvidence(cid int64, id int64) (Evidence, error) {
 	x := Evidence{}
 	result := db.
 		Where("case_id = ?", cid).
@@ -251,14 +346,14 @@ func GetEvidence(c *gin.Context, cid int64, id int64) (Evidence, error) {
 	return x, result.Error
 }
 
-func SaveEvidence(c *gin.Context, cid int64, x Evidence) (Evidence, error) {
+func SaveEvidence(cid int64, x Evidence) (Evidence, error) {
 	result := db.
 		Where("case_id = ?", cid).
 		Save(&x)
 	return x, result.Error
 }
 
-func DeleteEvidence(c *gin.Context, cid int64, id int64) error {
+func DeleteEvidence(cid int64, id int64) error {
 	x := Evidence{}
 	return db.
 		Where("case_id = ?", cid).
@@ -268,7 +363,7 @@ func DeleteEvidence(c *gin.Context, cid int64, id int64) error {
 // --------------------------------------
 // Tasks
 // --------------------------------------
-func ListTask(c *gin.Context, cid int64) ([]Task, error) {
+func ListTasks(cid int64) ([]Task, error) {
 	var list []Task
 	result := db.
 		Where("case_id = ?", cid).
@@ -277,7 +372,19 @@ func ListTask(c *gin.Context, cid int64) ([]Task, error) {
 	return list, result.Error
 }
 
-func GetTask(c *gin.Context, cid int64, id int64) (Task, error) {
+func FindTasks(cid int64, term string) ([]Task, error) {
+	var list []Task
+	result := db.Order("date_due asc, type asc, task asc").
+		Where("case_id = ?", cid).
+		Where(db.
+			Where("instr(type, ?) > 0", term).
+			Or("instr(task, ?) > 0", term).
+			Or("instr(owner, ?) > 0", term)).
+		Find(&list)
+	return list, result.Error
+}
+
+func GetTask(cid int64, id int64) (Task, error) {
 	x := Task{}
 	result := db.
 		Where("case_id = ?", cid).
@@ -285,14 +392,14 @@ func GetTask(c *gin.Context, cid int64, id int64) (Task, error) {
 	return x, result.Error
 }
 
-func SaveTask(c *gin.Context, cid int64, x Task) (Task, error) {
+func SaveTask(cid int64, x Task) (Task, error) {
 	result := db.
 		Where("case_id = ?", cid).
 		Save(&x)
 	return x, result.Error
 }
 
-func DeleteTask(c *gin.Context, cid int64, id int64) error {
+func DeleteTask(cid int64, id int64) error {
 	x := Task{}
 	return db.
 		Where("case_id = ?", cid).
@@ -302,7 +409,7 @@ func DeleteTask(c *gin.Context, cid int64, id int64) error {
 // --------------------------------------
 // Notes
 // --------------------------------------
-func ListNote(c *gin.Context, cid int64) ([]Note, error) {
+func ListNotes(cid int64) ([]Note, error) {
 	var list []Note
 	result := db.
 		Where("case_id = ?", cid).
@@ -311,7 +418,19 @@ func ListNote(c *gin.Context, cid int64) ([]Note, error) {
 	return list, result.Error
 }
 
-func GetNote(c *gin.Context, cid int64, id int64) (Note, error) {
+func FindNotes(cid int64, term string) ([]Note, error) {
+	var list []Note
+	result := db.Order("category asc, title asc").
+		Where("case_id = ?", cid).
+		Where(db.
+			Where("instr(category, ?) > 0", term).
+			Or("instr(title, ?) > 0", term).
+			Or("instr(description, ?) > 0", term)).
+		Find(&list)
+	return list, result.Error
+}
+
+func GetNote(cid int64, id int64) (Note, error) {
 	x := Note{}
 	result := db.
 		Where("case_id = ?", cid).
@@ -319,14 +438,14 @@ func GetNote(c *gin.Context, cid int64, id int64) (Note, error) {
 	return x, result.Error
 }
 
-func SaveNote(c *gin.Context, cid int64, x Note) (Note, error) {
+func SaveNote(cid int64, x Note) (Note, error) {
 	result := db.
 		Where("case_id = ?", cid).
 		Save(&x)
 	return x, result.Error
 }
 
-func DeleteNote(c *gin.Context, cid int64, id int64) error {
+func DeleteNote(cid int64, id int64) error {
 	x := Note{}
 	return db.
 		Where("case_id = ?", cid).

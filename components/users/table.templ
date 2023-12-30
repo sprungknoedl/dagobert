@@ -1,0 +1,90 @@
+package users
+
+import (
+	"github.com/sprungknoedl/dagobert/components/base"
+	"github.com/sprungknoedl/dagobert/components/utils"
+    "github.com/sprungknoedl/dagobert/components/icons"
+    "github.com/sprungknoedl/dagobert/model"
+)
+
+templ List(env utils.Env, cid int64, list []model.User) {
+    @base.Layout(env) {
+        <main class="p-4 grow">
+            <nav class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-2xl ml-2">Users</h3>
+                
+                <div class="flex gap-5 items-center">
+                    @icons.MagnifyingGlass(icons.Default)
+
+                    <input style="width: 32rem" name="search" placeholder="Search" type="search" class="px-4 h-10 outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 text-white rounded-md shadow-sm" 
+                        hx-get={env.Routes("list-users", cid)} hx-trigger="input changed delay:300ms, search" 
+                        hx-target="#list" hx-select="#list" hx-swap="outerHTML"/>
+                    
+                    @utils.SecondaryLink(templ.Attributes{"href": env.Routes("export-users", cid), "target": "blank"}) {
+                        @icons.ArrowDownTray("inline-block mr-1 w-5 h-5")
+                        Export CSV
+                    }
+                    @utils.SecondaryButton(templ.Attributes{"hx-get": env.Routes("list-users", cid), "hx-target": "#list", "hx-select": "#list", "hx-swap": "outerHTML"}) {
+                        @icons.ArrowPath("inline-block mr-1 w-5 h-5")
+                        Refresh
+                    }
+                    @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-user", cid, 0), "hx-target": "#modal"}) {
+                        @icons.Plus("inline-block mr-1 w-5 h-5")
+                        Add
+                    }
+                </div>
+            </nav>
+
+            <table id="list" class="table-auto w-full">
+                <thead class="border-b-2 border-b-slate-600">
+                    <tr class="p-8">
+                        @utils.TH(templ.Attributes{"style": "width: auto"}) { Name }
+                        @utils.TH(templ.Attributes{"style": "width: auto"}) { Company }
+                        @utils.TH(templ.Attributes{"style": "width: auto"}) { Role }
+                        @utils.TH(templ.Attributes{"style": "width: auto"}) { Email }
+                        @utils.TH(templ.Attributes{"style": "width: auto"}) { Phone }
+                        @utils.TH(templ.Attributes{"style": "width: auto"}) { Notes }
+                        @utils.TH(templ.Attributes{"style": "width: 7rem"}) { }
+                    </tr>
+                </thead>
+                <tbody>
+                    for _, obj := range list {
+                    <tr class="hover:bg-slate-700">
+                        <td class="p-2">{ obj.Name }</td>
+                        <td class="p-2">{ obj.Company }</td>
+                        <td class="p-2">{ obj.Role }</td>
+                        <td class="p-2">{ obj.Email }</td>
+                        <td class="p-2">{ obj.Phone }</td>
+                        <td class="p-2">{ obj.Notes }</td>
+
+                        <td class="p-2 flex gap-2 justify-end">
+                            @utils.InlineButton(templ.Attributes{
+                                "hx-get": env.Routes("view-user", cid, obj.ID), 
+                                "hx-target": "#modal"}) {
+                                @icons.Pencil("w-4 h-4") }
+                            @utils.InlineButton(templ.Attributes{
+                                "hx-delete": env.Routes("delete-user", cid, obj.ID), 
+                                "hx-target": "#modal"}) {
+                                @icons.Trash("w-4 h-4") }
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+
+                if len(list) == 0 {
+                <caption class="caption-bottom w-1/3 my-4 mx-auto">
+                    <h3 class="mb-2 mt-4 text-xl text-slate-400">
+                        @icons.FaceFrown("inline-block w-6 h-6 mr-2")
+                        Nothing here ...
+                    </h3>
+                    <p class="mb-4">It looks empty here. Try creating a new case ↓</p>
+                    @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-user", cid, 0), "hx-target": "#modal"}) {
+                        @icons.Plus("inline-block mr-1 w-5 h-5")
+                        Add
+                    }
+                </caption>
+                }
+            </table>
+        </main>
+    }
+}

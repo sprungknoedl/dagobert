@@ -6,118 +6,151 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
+	"github.com/sprungknoedl/dagobert/components/users"
+	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
 )
 
-func ListUserR(c *gin.Context) {
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := model.ListUser(c, cid)
-	if err != nil {
-		c.String(http.StatusBadRequest, "list: %s", err.Error())
-		return
-	}
-
-	c.JSON(http.StatusOK, list)
+type UserDTO struct {
+	Name    string `form:"name"`
+	Company string `form:"company"`
+	Role    string `form:"role"`
+	Email   string `form:"email"`
+	Phone   string `form:"phone"`
+	Notes   string `form:"notes"`
 }
 
-func ExportUserCsvR(c *gin.Context) {
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	list, err := model.ListUser(c, cid)
-	if err != nil {
-		c.String(http.StatusBadRequest, "list: %s", err.Error())
-		return
+func ListUsers(c echo.Context) error {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	c.Status(http.StatusOK)
-	c.Header("Content-Disposition", "attachment; filename=\"users.csv\"")
+	search := c.QueryParam("search")
+	list, err := model.FindUsers(cid, search)
+	if err != nil {
+		return err
+	}
 
-	w := csv.NewWriter(c.Writer)
-	w.Write([]string{"Name", "Company", "Role", "Email", "Phone", "Notes"})
+	return render(c, users.List(ctx(c), cid, list))
+}
+
+func ExportUsers(c echo.Context) error {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	list, err := model.ListUsers(cid)
+	if err != nil {
+		return err
+	}
+
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"users.csv\"")
+	c.Response().WriteHeader(http.StatusOK)
+
+	w := csv.NewWriter(c.Response().Writer)
+	w.Write([]string{"Type", "User", "Done", "Owner", "Due Date"})
 	for _, e := range list {
 		w.Write([]string{e.Name, e.Company, e.Role, e.Email, e.Phone, e.Notes})
 	}
-	w.Flush()
+
+	return nil
 }
 
-func GetUserR(c *gin.Context) {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := model.GetUser(c, cid, id)
-	if err != nil {
-		c.String(http.StatusBadRequest, "get: %s", err.Error())
-		return
+func ViewUser(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil { // id == 0 is valid in this context
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid user id")
 	}
 
-	c.JSON(http.StatusOK, obj)
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	obj := model.User{CaseID: cid}
+	if id != 0 {
+		obj, err = model.GetUser(cid, id)
+		if err != nil {
+			return err
+		}
+	}
+
+	return render(c, users.Form(ctx(c), obj))
 }
 
-func AddUserR(c *gin.Context) {
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-
-	obj := model.User{}
-	err := c.BindJSON(&obj)
-	if err != nil {
-		c.String(http.StatusBadRequest, "bind: %s", err.Error())
-		return
+func SaveUser(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil { // id == 0 is valid in this context
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid user id")
 	}
 
-	username := GetUsername(c)
-	obj.CaseID = cid
-	obj.DateAdded = time.Now()
-	obj.UserAdded = username
-	obj.DateModified = time.Now()
-	obj.UserModified = username
-	obj, err = model.SaveUser(c, cid, obj)
-	if err != nil {
-		c.String(http.StatusBadRequest, "save: %s", err.Error())
-		return
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	c.JSON(http.StatusCreated, obj)
+	dto := UserDTO{}
+	if err = c.Bind(&dto); err != nil {
+		return err
+	}
+
+	now := time.Now()
+	usr := getUser(c)
+	obj := model.User{
+		ID:           id,
+		CaseID:       cid,
+		Name:         dto.Name,
+		Company:      dto.Company,
+		Role:         dto.Role,
+		Email:        dto.Email,
+		Phone:        dto.Phone,
+		Notes:        dto.Notes,
+		DateAdded:    now,
+		UserAdded:    usr,
+		DateModified: now,
+		UserModified: usr,
+	}
+
+	if id != 0 {
+		src, err := model.GetUser(cid, id)
+		if err != nil {
+			return err
+		}
+
+		obj.DateAdded = src.DateAdded
+		obj.UserAdded = src.UserAdded
+	}
+
+	if _, err := model.SaveUser(cid, obj); err != nil {
+		return err
+	}
+
+	return refresh(c)
 }
 
-func EditUserR(c *gin.Context) {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	obj, err := model.GetUser(c, cid, id)
+func DeleteUser(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || id == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid User id")
+	}
+
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	if c.QueryParam("confirm") != "yes" {
+		uri := c.Echo().Reverse("delete-user", cid, id) + "?confirm=yes"
+		return render(c, utils.Confirm(ctx(c), uri))
+	}
+
+	err = model.DeleteUser(cid, id)
 	if err != nil {
-		c.String(http.StatusBadRequest, "get: %s", err.Error())
-		return
+		return err
 	}
 
-	body := model.User{}
-	err = c.BindJSON(&body)
-	if err != nil {
-		c.String(http.StatusBadRequest, "bind: %s", err.Error())
-		return
-	}
-
-	// Only copy over fields we wan't to be editable
-	obj.Name = body.Name
-	obj.Company = body.Company
-	obj.Role = body.Role
-	obj.Email = body.Email
-	obj.Phone = body.Phone
-	obj.Notes = body.Notes
-	obj.DateModified = time.Now()
-	obj.UserModified = GetUsername(c)
-
-	if _, err := model.SaveUser(c, cid, obj); err != nil {
-		c.String(http.StatusBadRequest, "save: %s", err.Error())
-		return
-	}
-	c.JSON(http.StatusOK, obj)
-}
-
-func DeleteUserR(c *gin.Context) {
-	id, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	cid, _ := strconv.ParseInt(c.Param("cid"), 10, 64)
-	err := model.DeleteUser(c, cid, id)
-	if err != nil {
-		c.String(http.StatusBadRequest, "delete: %s", err.Error())
-		return
-	}
-
-	c.JSON(http.StatusOK, nil)
+	return refresh(c)
 }

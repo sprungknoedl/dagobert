@@ -1,12 +1,5 @@
-node_modules
-output
-.spago
-
+tmp
 dagobert
 dagobert.db
-dist/dev.html
-
 *.env
-
 .DS_Store
-.psc-ide-port

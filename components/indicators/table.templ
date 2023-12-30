@@ -1,0 +1,123 @@
+package indicators
+
+import (
+	"github.com/sprungknoedl/dagobert/components/base"
+	"github.com/sprungknoedl/dagobert/components/utils"
+    "github.com/sprungknoedl/dagobert/components/icons"
+    "github.com/sprungknoedl/dagobert/model"
+)
+
+templ renderType(value string) {
+    switch value {
+    case "IP":
+        @icons.MapPin("inline-block w-6 h-6 mr-2")
+    case "Domain":
+        @icons.GlobeEurope("inline-block w-6 h-6 mr-2")
+    case "URL":
+        @icons.Link("inline-block w-6 h-6 mr-2")
+    case "Path":
+        @icons.FolderOpen("inline-block w-6 h-6 mr-2")
+    case "Hash":
+        @icons.Fingerprint("inline-block w-6 h-6 mr-2")
+    case "Service":
+        @icons.CommandLine("inline-block w-6 h-6 mr-2")
+    default:
+        @icons.QuestionMarkCircle("inline-block w-6 h-6 mr-2")
+    }
+    {value}
+}
+
+templ renderTLP(value string) {
+    switch value {
+    case "TLP:RED":
+        <span class="text-red-500">{value}</span>
+    case "TLP:AMBER":
+        <span class="text-amber-500">{value}</span>
+    case "TLP:GREEN":
+        <span class="text-green-500">{value}</span>
+    default:
+        {value}
+    }
+}
+
+templ List(env utils.Env, cid int64, list []model.Indicator) {
+    @base.Layout(env) {
+        <main class="p-4 grow">
+            <nav class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-2xl ml-2">Indicators</h3>
+                
+                <div class="flex gap-5 items-center">
+                    @icons.MagnifyingGlass(icons.Default)
+
+                    <input style="width: 32rem" name="search" placeholder="Search" type="search" class="px-4 h-10 outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 text-white rounded-md shadow-sm" 
+                        hx-get={env.Routes("list-indicators", cid)} hx-trigger="input changed delay:300ms, search" 
+                        hx-target="#list" hx-select="#list" hx-swap="outerHTML"/>
+                    
+                    @utils.SecondaryLink(templ.Attributes{"href": env.Routes("export-indicators", cid), "target": "blank"}) {
+                        @icons.ArrowDownTray("inline-block mr-1 w-5 h-5")
+                        Export CSV
+                    }
+                    @utils.SecondaryButton(templ.Attributes{"hx-get": env.Routes("list-indicators", cid), "hx-target": "main table", "hx-select": "table", "hx-swap": "outerHTML"}) {
+                        @icons.ArrowPath("inline-block mr-1 w-5 h-5")
+                        Refresh
+                    }
+                    @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-indicator", cid, 0), "hx-target": "#modal"}) {
+                        @icons.Plus("inline-block mr-1 w-5 h-5")
+                        Add
+                    }
+                </div>
+            </nav>
+
+            <table id="list" class="table-auto w-full">
+                <thead class="border-b-2 border-b-slate-600">
+                    <tr class="p-8">
+                        @utils.TH(templ.Attributes{"style": "width: 8rem"})  { Date added  }
+                        @utils.TH(templ.Attributes{"style": "width: 10rem"}) { Type  }
+                        @utils.TH(templ.Attributes{"style": "width: auto"})  { Value  }
+                        @utils.TH(templ.Attributes{"style": "width: auto"})  { Description  }
+                        @utils.TH(templ.Attributes{"style": "width: 8rem"})  { TLP  }
+                        @utils.TH(templ.Attributes{"style": "width: auto"})  { Source  }
+                        @utils.TH(templ.Attributes{"style": "width: 7rem"})  { }
+                    </tr>
+                </thead>
+                <tbody>
+                    for _, obj := range list {
+                    <tr class="hover:bg-slate-700">
+                        <td class="p-2">{ obj.DateAdded.Format("2006-01-02") }</td>
+                        <td class="p-2">@renderType(obj.Type)</td>
+                        <td class="p-2">{ obj.Value }</td>
+                        <td class="p-2">{ obj.Description }</td>
+                        <td class="p-2">@renderTLP(obj.TLP)</td>
+                        <td class="p-2">{ obj.Source }</td>
+
+                        <td class="p-2 flex gap-2 justify-end">
+                            @utils.InlineButton(templ.Attributes{
+                                "hx-get": env.Routes("view-indicator", cid, obj.ID), 
+                                "hx-target": "#modal"}) {
+                                @icons.Pencil("w-4 h-4") }
+                            @utils.InlineButton(templ.Attributes{
+                                "hx-delete": env.Routes("delete-indicator", cid, obj.ID), 
+                                "hx-target": "#modal"}) {
+                                @icons.Trash("w-4 h-4") }
+                        </td>
+                    </tr>
+                    }
+                </tbody>
+
+                if len(list) == 0 {
+                <caption class="caption-bottom w-1/3 my-4 mx-auto">
+                    <h3 class="mb-2 mt-4 text-xl text-slate-400">
+                        @icons.FaceFrown("inline-block w-6 h-6 mr-2")
+                        Nothing here ...
+                    </h3>
+                    <p class="mb-4">It looks empty here. Try creating a new indicator ↓</p>
+                    @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-indicator", cid, 0), "hx-target": "#modal"}) {
+                        @icons.Plus("inline-block mr-1 w-5 h-5")
+                        Add
+                    }
+                </caption>
+                }
+            </table>
+        </main>
+    }
+}

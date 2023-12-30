@@ -1,6 +1,6 @@
 module.exports = {
     content: [
-      './dist/*.{html,js}'
+      './components/**/*.templ',
     ],
 
     darkMode: true, // or 'media' or 'class'

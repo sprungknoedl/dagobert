@@ -1,0 +1,31 @@
+root = "."
+
+[build]
+  bin = "./dagobert"
+  cmd = "make build"
+  delay = 500
+  exclude_dir = ["dist", "src"]
+  exclude_file = []
+  exclude_regex = [".*_templ.go"]
+  exclude_unchanged = false
+  follow_symlink = false
+  full_bin = ""
+  include_dir = []
+  include_ext = ["go", "templ", "css"]
+  kill_delay = "0s"
+  log = "build-errors.log"
+  send_interrupt = false
+  stop_on_error = true
+
+[color]
+  app = ""
+  build = "yellow"
+  main = "magenta"
+  runner = "green"
+  watcher = "cyan"
+
+[log]
+  time = true
+
+[misc]
+  clean_on_exit = false
