@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strconv"
 	"text/template"
 	"time"
@@ -19,6 +18,13 @@ import (
 var pRegexp = pcre.MustCompile(`<text:p[^>]*?>{{p (.+?)}}<\/text:p>`)
 var trRegexp = pcre.MustCompile(`<table:table-row[^>]*>(?:(?!<table:table-row).)*{{tr (.+?)}}.*?<\/table:table-row>`)
 var expRegexp = pcre.MustCompile(`{{([^}]+)}}`)
+
+// replace {<something>{ by {{   ( works with {{ }} {% and %} {# and #})
+var clean1Regexp = pcre.MustCompile(`(?<={)(<[^>]*>)+(?=[\{%\#])|(?<=[%\}\#])(<[^>]*>)+(?=\})`)
+
+// replace {{<some tags>go stuff<some other tags>}} by {{go stuff}}
+var clean2Regexp = pcre.MustCompile(`{%(?:(?!%}).)*|{#(?:(?!#}).)*|{{(?:(?!}}).)*`)
+var clean2SubRegexp = pcre.MustCompile(`<\/?text:span[^>]*>`)
 
 func ListTemplate(c echo.Context) error {
 	return nil
@@ -83,18 +89,39 @@ func GenerateReport(tpl string, obj model.Case) (*bytes.Buffer, error) {
 				return nil, err
 			}
 
-			// process content.xml with text/template
+			// replace {<something>{ by {{ ( works with {{ }} {% and %} {# and #})
+			b = clean1Regexp.ReplaceAll(b, nil)
+
+			// replace {{<some tags>go stuff<some other tags>}} by {{go stuff}}
+			b = clean2Regexp.ReplaceAllFunc(b, func(x []byte) []byte {
+				return clean2SubRegexp.ReplaceAll(x, nil)
+			})
+
+			// replace into xml code the paragraph containing
+			// {{p xxx }} template tag by {{ xxx }} without any surrounding
+			// <text:p> tags
 			b = pRegexp.ReplaceAll(b, []byte("{{ $1 }}"))
+
+			// replace into xml code the table row containing
+			// {{tr xxx }} template tag by {{ xxx }} without any surrounding
+			// <table:table-row> tags
 			b = trRegexp.ReplaceAll(b, []byte("{{ $1 }}"))
+
+			// clean tags
 			b = expRegexp.ReplaceAllFunc(b, func(x []byte) []byte {
 				x = bytes.ReplaceAll(x, []byte("&quot;"), []byte("\""))
+				x = bytes.ReplaceAll(x, []byte("&lt;"), []byte("<"))
+				x = bytes.ReplaceAll(x, []byte("&gt;"), []byte(">"))
 				x = bytes.ReplaceAll(x, []byte("“"), []byte("\""))
 				x = bytes.ReplaceAll(x, []byte("”"), []byte("\""))
+				x = bytes.ReplaceAll(x, []byte("‘"), []byte("'"))
+				x = bytes.ReplaceAll(x, []byte("’"), []byte("'"))
 				return x
 			})
 
-			os.WriteFile("debug.xml", b, 0644)
+			// os.WriteFile("debug.xml", b, 0644)
 
+			// process content.xml with text/template
 			tpl, err := template.New("content.xml").Parse(string(b))
 			if err != nil {
 				return nil, err
