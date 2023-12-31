@@ -29,7 +29,7 @@ templ Form(env utils.Env, obj model.Case) {
                     @utils.WithLabel("Classification") { @utils.TextInput("classification", obj.Classification) }
                     @utils.WithLabel("Severity")       { @utils.SelectInput("severity", obj.Severity, model.CaseSeverities) }
                     @utils.WithLabel("Outcome")        { @utils.SelectInput("outcome", obj.Outcome, model.CaseOutcomes) }
-                    @utils.WithLabel("Summary")        { @utils.TextInput("summary", obj.Summary) }
+                    @utils.WithLabel("Summary")        { @utils.TextareaInput("summary", obj.Summary) }
                 </section>
 
                 <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4">
