@@ -47,10 +47,10 @@ templ Navigation(env utils.Env) {
         @navLink(env, templ.URL(env.Routes("list-indicators", env.ActiveCase.ID))) { @icons.GlobeEurope(icons.Inline) Indicators }
 
         <h3 class="mt-4 mb-1 font-bold">Case Management</h3>
-        @navLink(env, templ.URL("/cases/1/users"))     { @icons.Users(icons.Inline) Users }
-        @navLink(env, templ.URL("/cases/1/evidences")) { @icons.Cube(icons.Inline) Evidence }
-        @navLink(env, templ.URL("/cases/1/tasks"))     { @icons.ClipboardCheck(icons.Inline) Tasks }
-        @navLink(env, templ.URL("/cases/1/notes"))     { @icons.ChatBubble(icons.Inline) Notes }
+        @navLink(env, templ.URL(env.Routes("list-users", env.ActiveCase.ID)))     { @icons.Users(icons.Inline) Users }
+        @navLink(env, templ.URL(env.Routes("list-evidences", env.ActiveCase.ID))) { @icons.Cube(icons.Inline) Evidence }
+        @navLink(env, templ.URL(env.Routes("list-tasks", env.ActiveCase.ID)))     { @icons.ClipboardCheck(icons.Inline) Tasks }
+        @navLink(env, templ.URL(env.Routes("list-notes", env.ActiveCase.ID)))     { @icons.ChatBubble(icons.Inline) Notes }
         }
     </aside>
 }
