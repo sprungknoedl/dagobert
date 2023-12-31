@@ -16,6 +16,7 @@ FROM golang:1.21
 WORKDIR /app
 
 COPY --from=build /src/dist /app/dist
+COPY --from=build /src/templates /app/templates
 COPY --from=build /src/dagobert /app/dagobert
 
 CMD ["/app/dagobert"]
