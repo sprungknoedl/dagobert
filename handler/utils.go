@@ -9,7 +9,7 @@ import (
 	"github.com/sprungknoedl/dagobert/components/utils"
 )
 
-const SessionName = "session"
+const SessionName = "default"
 
 func Empty(c echo.Context) error {
 	return render(c, utils.DialogPlaceholder())
@@ -25,6 +25,12 @@ func refresh(c echo.Context) error {
 }
 
 func getUser(c echo.Context) string {
+	sess, _ := session.Get(SessionName, c)
+	claims, _ := sess.Values["oidcClaims"].(map[string]interface{})
+	if email, ok := claims["email"].(string); ok {
+		return email
+	}
+
 	return "unknown"
 }
 

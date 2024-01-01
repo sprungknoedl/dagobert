@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/gob"
+	"net/url"
 	"os"
 
 	"github.com/gorilla/sessions"
@@ -59,21 +60,16 @@ func main() {
 	// --------------------------------------
 	// OIDC Authentication
 	// --------------------------------------
-	// issuer, _ := url.Parse(cfg.Issuer)
-	// clientUrl, _ := url.Parse(cfg.ClientUrl)
-	// r.Use(gin_oidc.Init(gin_oidc.InitParams{
-	// 	Router:       r,
-	// 	ClientId:     cfg.ClientId,
-	// 	ClientSecret: cfg.ClientSecret,
-	// 	Issuer:       *issuer,
-	// 	ClientUrl:    *clientUrl,
-	// 	Scopes:       []string{"openid", "profile", "email"},
-	// 	ErrorHandler: func(c *gin.Context) {
-	// 		message := c.Errors.Last().Error()
-	// 		c.String(http.StatusExpectationFailed, "oidc: %s", message)
-	// 	},
-	// 	PostLogoutUrl: *clientUrl,
-	// }))
+	issuer, _ := url.Parse(cfg.Issuer)
+	clientUrl, _ := url.Parse(cfg.ClientUrl)
+	e.Use(OIDC(e, InitParams{
+		ClientId:      cfg.ClientId,
+		ClientSecret:  cfg.ClientSecret,
+		Issuer:        *issuer,
+		ClientUrl:     *clientUrl,
+		Scopes:        []string{"openid", "profile", "email"},
+		PostLogoutUrl: *clientUrl,
+	}))
 
 	// --------------------------------------
 	// Home
@@ -99,6 +95,8 @@ func main() {
 	// events
 	e.GET("/cases/:cid/events", handler.ListEvents).Name = "list-events"
 	e.GET("/cases/:cid/events/export", handler.ExportEvents).Name = "export-events"
+	e.GET("/cases/:cid/events/import", handler.ImportEvents).Name = "import-events"
+	e.POST("/cases/:cid/events/import", handler.ImportEvents).Name = "import-events"
 	e.GET("/cases/:cid/events/:id", handler.ViewEvent).Name = "view-event"
 	e.POST("/cases/:cid/events/:id", handler.SaveEvent).Name = "save-event"
 	e.DELETE("/cases/:cid/events/:id", handler.DeleteEvent).Name = "delete-event"
