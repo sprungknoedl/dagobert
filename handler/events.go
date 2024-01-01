@@ -57,6 +57,7 @@ func ExportEvents(c echo.Context) error {
 		w.Write([]string{e.Time.Format(time.RFC3339), e.Type, e.AssetA, e.Direction, e.AssetB, e.Event, e.Raw})
 	}
 
+	w.Flush()
 	return nil
 }
 

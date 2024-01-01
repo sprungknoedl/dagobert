@@ -55,6 +55,7 @@ func ExportTasks(c echo.Context) error {
 		w.Write([]string{e.Type, e.Task, strconv.FormatBool(e.Done), e.Owner, e.DateDue.Format(time.RFC3339)})
 	}
 
+	w.Flush()
 	return nil
 }
 

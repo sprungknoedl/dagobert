@@ -56,6 +56,7 @@ func ExportUsers(c echo.Context) error {
 		w.Write([]string{e.Name, e.Company, e.Role, e.Email, e.Phone, e.Notes})
 	}
 
+	w.Flush()
 	return nil
 }
 

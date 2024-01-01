@@ -56,6 +56,7 @@ func ExportAssets(c echo.Context) error {
 		w.Write([]string{e.Type, e.Name, e.IP, e.Description, e.Compromised, strconv.FormatBool(e.Analysed)})
 	}
 
+	w.Flush()
 	return nil
 }
 

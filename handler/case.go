@@ -48,6 +48,7 @@ func ExportCases(c echo.Context) error {
 		w.Write([]string{strconv.FormatInt(e.ID, 10), e.Name, e.Classification, e.Summary})
 	}
 
+	w.Flush()
 	return nil
 }
 

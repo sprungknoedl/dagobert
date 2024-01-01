@@ -54,6 +54,7 @@ func ExportNotes(c echo.Context) error {
 		w.Write([]string{e.Title, e.Category, e.Description})
 	}
 
+	w.Flush()
 	return nil
 }
 

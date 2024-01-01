@@ -55,6 +55,7 @@ func ExportIndicators(c echo.Context) error {
 		w.Write([]string{e.Type, e.Value, e.TLP, e.Description, e.Source})
 	}
 
+	w.Flush()
 	return nil
 }
 

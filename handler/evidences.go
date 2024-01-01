@@ -56,6 +56,7 @@ func ExportEvidences(c echo.Context) error {
 		w.Write([]string{e.Type, e.Name, e.Description, strconv.FormatInt(e.Size, 10), e.Hash, e.Location})
 	}
 
+	w.Flush()
 	return nil
 }
 
