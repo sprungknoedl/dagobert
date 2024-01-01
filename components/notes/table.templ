@@ -24,7 +24,7 @@ templ List(env utils.Env, cid int64, list []model.Note) {
                         @icons.ArrowDownTray("inline-block mr-1 w-5 h-5")
                         Export CSV
                     }
-                    @utils.SecondaryButton(templ.Attributes{"hx-get": env.Routes("list-notes", cid), "hx-target": "main table", "hx-select": "table", "hx-swap": "outerHTML"}) {
+                    @utils.SecondaryButton(templ.Attributes{"hx-get": env.Routes("list-notes", cid), "hx-target": "#list", "hx-select": "#list", "hx-swap": "outerHTML"}) {
                         @icons.ArrowPath("inline-block mr-1 w-5 h-5")
                         Refresh
                     }
