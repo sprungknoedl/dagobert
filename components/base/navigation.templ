@@ -9,11 +9,11 @@ import (
 
 templ navLink(env utils.Env, href templ.SafeURL) {
     if string(href) == env.ActiveRoute {
-    <a href={ href } class="block p-2 pl-4 border-l-2 border-pink-500 text-pink-500 font-bold hover:text-white hover:border-slate-100">
+    <a href={ href } class="flex items-center gap-2 p-2 pl-4 border-l-2 border-pink-500 text-pink-500 font-bold hover:text-white hover:border-slate-100">
         { children... }
     </a>
     } else {
-    <a href={ href } class="block p-2 pl-4 border-l-2 border-slate-600 text-slate-400 hover:text-white hover:border-slate-100">
+    <a href={ href } class="flex items-center gap-3 p-2 pl-4 border-l-2 border-slate-600 text-slate-400 hover:text-white hover:border-slate-100">
         { children... }
     </a>
     }
@@ -29,13 +29,13 @@ templ Navigation(env utils.Env) {
         @navLink(env, templ.URL("/")) { @icons.Identification(icons.Inline) Cases }
         @navLink(env, templ.URL("/#")) {
             @icons.Identification(icons.Inline)
-            <span>Active Case: </span>
-
+            <span>Active Case:<br />
             if env.ActiveCase.ID != 0 {
-            <span class="font-bold text-green-500 block ml-8">{ fmt.Sprintf("#%d - %s", env.ActiveCase.ID, env.ActiveCase.Name) }</span>
+            <span class="font-bold text-green-500">{ fmt.Sprintf("#%d - %s", env.ActiveCase.ID, env.ActiveCase.Name) }</span>
             } else {
-            <span class="font-bold text-red-500 block ml-8">No case selected</span>    
+            <span class="font-bold text-red-500">No case selected</span>    
             }
+            </span>
         }
 
         if env.ActiveCase.ID != 0 {

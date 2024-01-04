@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/csv"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -51,13 +52,73 @@ func ExportUsers(c echo.Context) error {
 	c.Response().WriteHeader(http.StatusOK)
 
 	w := csv.NewWriter(c.Response().Writer)
-	w.Write([]string{"Type", "User", "Done", "Owner", "Due Date"})
+	w.Write([]string{"Name", "Company", "Role", "Email", "Phone", "Notes"})
 	for _, e := range list {
 		w.Write([]string{e.Name, e.Company, e.Role, e.Email, e.Phone, e.Notes})
 	}
 
 	w.Flush()
 	return nil
+}
+
+func ImportUsers(c echo.Context) error {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	if c.Request().Method == http.MethodGet {
+		uri := c.Echo().Reverse("import-users", cid)
+		return render(c, utils.Import(ctx(c), uri))
+	}
+
+	now := time.Now()
+	usr := getUser(c)
+
+	fh, err := c.FormFile("file")
+	if err != nil {
+		return err
+	}
+
+	fr, err := fh.Open()
+	if err != nil {
+		return err
+	}
+
+	r := csv.NewReader(fr)
+	r.FieldsPerRecord = 6
+	r.Read() // skip header
+
+	for {
+		rec, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		obj := model.User{
+			CaseID:       cid,
+			Name:         rec[0],
+			Company:      rec[1],
+			Role:         rec[2],
+			Email:        rec[3],
+			Phone:        rec[4],
+			Notes:        rec[5],
+			DateAdded:    now,
+			UserAdded:    usr,
+			DateModified: now,
+			UserModified: usr,
+		}
+
+		_, err = model.SaveUser(cid, obj)
+		if err != nil {
+			return err
+		}
+	}
+
+	return refresh(c)
 }
 
 func ViewUser(c echo.Context) error {

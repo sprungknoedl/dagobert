@@ -31,7 +31,7 @@ func PrimaryButton(attr templ.Attributes) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" type=\"button\" class=\"px-4 h-10 border border-slate-300 border-transparent rounded-md shadow-sm outline outline-2 outline-offset-2 outline-pink-500 bg-slate-700 hover:bg-pink-500 text-slate-200 text-sm cursor-pointer\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" type=\"button\" class=\"flex items-center gap-2 px-4 h-10 border border-slate-300 border-transparent rounded-md shadow-sm outline outline-2 outline-offset-2 outline-pink-500 bg-slate-700 hover:bg-pink-500 text-slate-200 text-sm cursor-pointer\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -71,7 +71,7 @@ func SecondaryButton(attr templ.Attributes) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" type=\"button\" class=\"px-4 h-10 rounded-md shadow-sm outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm cursor-pointer\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" type=\"button\" class=\"flex items-center gap-2 px-4 h-10 rounded-md shadow-sm outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm cursor-pointer\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -111,7 +111,7 @@ func DangerButton(attr templ.Attributes) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" type=\"button\" class=\"px-4 h-10 border border-slate-300 border-transparent rounded-md shadow-sm outline outline-2 outline-offset-2 outline-red-700 bg-red-700 hover:bg-red-500 hover:outline-red-500 text-slate-200 text-sm cursor-pointer\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" type=\"button\" class=\"flex items-center gap-2 px-4 h-10 border border-slate-300 border-transparent rounded-md shadow-sm outline outline-2 outline-offset-2 outline-red-700 bg-red-700 hover:bg-red-500 hover:outline-red-500 text-slate-200 text-sm cursor-pointer\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -191,7 +191,7 @@ func PrimaryLink(attr templ.Attributes) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" class=\"flex items-center px-4 h-10 rounded-md shadow-sm outline outline-2 outline-offset-2 outline-pink-500 bg-slate-700 hover:bg-pink-500 text-slate-200 text-sm cursor-pointer\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" class=\"flex items-center flex items-center gap-2 px-4 h-10 rounded-md shadow-sm outline outline-2 outline-offset-2 outline-pink-500 bg-slate-700 hover:bg-pink-500 text-slate-200 text-sm cursor-pointer\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -231,7 +231,7 @@ func SecondaryLink(attr templ.Attributes) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" class=\"flex items-center px-4 h-10 rounded-md shadow-sm outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm cursor-pointer\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" class=\"flex items-center flex items-center gap-2 px-4 h-10 rounded-md shadow-sm outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm cursor-pointer\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

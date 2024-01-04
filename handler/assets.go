@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/csv"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -58,6 +59,71 @@ func ExportAssets(c echo.Context) error {
 
 	w.Flush()
 	return nil
+}
+
+func ImportAssets(c echo.Context) error {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	if c.Request().Method == http.MethodGet {
+		uri := c.Echo().Reverse("import-assets", cid)
+		return render(c, utils.Import(ctx(c), uri))
+	}
+
+	now := time.Now()
+	usr := getUser(c)
+
+	fh, err := c.FormFile("file")
+	if err != nil {
+		return err
+	}
+
+	fr, err := fh.Open()
+	if err != nil {
+		return err
+	}
+
+	r := csv.NewReader(fr)
+	r.FieldsPerRecord = 6
+	r.Read() // skip header
+
+	for {
+		rec, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		analysed, err := strconv.ParseBool(rec[5])
+		if err != nil {
+			return err
+		}
+
+		obj := model.Asset{
+			CaseID:       cid,
+			Type:         rec[0],
+			Name:         rec[1],
+			IP:           rec[2],
+			Description:  rec[3],
+			Compromised:  rec[4],
+			Analysed:     analysed,
+			DateAdded:    now,
+			UserAdded:    usr,
+			DateModified: now,
+			UserModified: usr,
+		}
+
+		_, err = model.SaveAsset(cid, obj)
+		if err != nil {
+			return err
+		}
+	}
+
+	return refresh(c)
 }
 
 func ViewAsset(c echo.Context) error {

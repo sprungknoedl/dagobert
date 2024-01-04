@@ -55,6 +55,10 @@ templ List(env utils.Env, cid int64, list []model.Asset) {
                         hx-get={env.Routes("list-assets", cid)} hx-trigger="input changed delay:300ms, search" 
                         hx-target="#list" hx-select="#list" hx-swap="outerHTML"/>
                     
+                    @utils.SecondaryButton(templ.Attributes{"hx-get": env.Routes("import-assets", cid), "hx-target": "#modal"}) {
+                        @icons.ArrowUpTray("inline-block mr-1 w-5 h-5")
+                        Import CSV
+                    }
                     @utils.SecondaryLink(templ.Attributes{"href": env.Routes("export-assets", cid), "target": "blank"}) {
                         @icons.ArrowDownTray("inline-block mr-1 w-5 h-5")
                         Export CSV

@@ -79,6 +79,8 @@ func main() {
 	// cases
 	e.GET("/", handler.ListCases).Name = "list-cases"
 	e.GET("/cases/export", handler.ExportCases).Name = "export-cases"
+	e.GET("/cases/import", handler.ImportCases).Name = "import-cases"
+	e.POST("/cases/import", handler.ImportCases).Name = "import-cases"
 	e.GET("/cases/:cid/select", handler.SelectCase).Name = "select-case"
 	e.GET("/cases/:cid/show", handler.ShowCase).Name = "show-case"
 	e.GET("/cases/:cid", handler.ViewCase).Name = "view-case"
@@ -104,6 +106,8 @@ func main() {
 	// assets
 	e.GET("/cases/:cid/assets", handler.ListAssets).Name = "list-assets"
 	e.GET("/cases/:cid/assets/export", handler.ExportAssets).Name = "export-assets"
+	e.GET("/cases/:cid/assets/import", handler.ImportAssets).Name = "import-assets"
+	e.POST("/cases/:cid/assets/import", handler.ImportAssets).Name = "import-assets"
 	e.GET("/cases/:cid/assets/:id", handler.ViewAsset).Name = "view-asset"
 	e.POST("/cases/:cid/assets/:id", handler.SaveAsset).Name = "save-asset"
 	e.DELETE("/cases/:cid/assets/:id", handler.DeleteAsset).Name = "delete-asset"
@@ -111,6 +115,8 @@ func main() {
 	// malware
 	e.GET("/cases/:cid/malware", handler.ListMalware).Name = "list-malware"
 	e.GET("/cases/:cid/malware.csv", handler.ExportMalware).Name = "export-malware"
+	e.GET("/cases/:cid/malware/import", handler.ImportMalware).Name = "import-malware"
+	e.POST("/cases/:cid/malware/import", handler.ImportMalware).Name = "import-malware"
 	e.GET("/cases/:cid/malware/:id", handler.ViewMalware).Name = "view-malware"
 	e.POST("/cases/:cid/malware/:id", handler.SaveMalware).Name = "save-malware"
 	e.DELETE("/cases/:cid/malware/:id", handler.DeleteMalware).Name = "delete-malware"
@@ -118,6 +124,8 @@ func main() {
 	// indicators
 	e.GET("/cases/:cid/indicators", handler.ListIndicators).Name = "list-indicators"
 	e.GET("/cases/:cid/indicators.csv", handler.ExportIndicators).Name = "export-indicators"
+	e.GET("/cases/:cid/indicators/import", handler.ImportIndicators).Name = "import-indicators"
+	e.POST("/cases/:cid/indicators/import", handler.ImportIndicators).Name = "import-indicators"
 	e.GET("/cases/:cid/indicators/:id", handler.ViewIndicator).Name = "view-indicator"
 	e.POST("/cases/:cid/indicators/:id", handler.SaveIndicator).Name = "save-indicator"
 	e.DELETE("/cases/:cid/indicators/:id", handler.DeleteIndicator).Name = "delete-indicator"
@@ -128,13 +136,17 @@ func main() {
 	// users
 	e.GET("/cases/:cid/users", handler.ListUsers).Name = "list-users"
 	e.GET("/cases/:cid/users/export", handler.ExportUsers).Name = "export-users"
+	e.GET("/cases/:cid/users/import", handler.ImportUsers).Name = "import-users"
+	e.POST("/cases/:cid/users/import", handler.ImportUsers).Name = "import-users"
 	e.GET("/cases/:cid/users/:id", handler.ViewUser).Name = "view-user"
 	e.POST("/cases/:cid/users/:id", handler.SaveUser).Name = "save-user"
 	e.DELETE("/cases/:cid/users/:id", handler.DeleteUser).Name = "delete-user"
 
 	// evidence
 	e.GET("/cases/:cid/evidences", handler.ListEvidences).Name = "list-evidences"
-	e.GET("/cases/:cid/evidences.csv", handler.ExportEvidences).Name = "export-evidences"
+	e.GET("/cases/:cid/evidences/export", handler.ExportEvidences).Name = "export-evidences"
+	e.GET("/cases/:cid/evidences/import", handler.ImportEvidences).Name = "import-evidences"
+	e.POST("/cases/:cid/evidences/import", handler.ImportEvidences).Name = "import-evidences"
 	e.GET("/cases/:cid/evidences/:id", handler.ViewEvidence).Name = "view-evidence"
 	e.POST("/cases/:cid/evidences/:id", handler.SaveEvidence).Name = "save-evidence"
 	e.DELETE("/cases/:cid/evidences/:id", handler.DeleteEvidence).Name = "delete-evidence"
@@ -142,13 +154,17 @@ func main() {
 	// tasks
 	e.GET("/cases/:cid/tasks", handler.ListTasks).Name = "list-tasks"
 	e.GET("/cases/:cid/tasks/export", handler.ExportTasks).Name = "export-tasks"
+	e.GET("/cases/:cid/tasks/import", handler.ImportTasks).Name = "import-tasks"
+	e.POST("/cases/:cid/tasks/import", handler.ImportTasks).Name = "import-tasks"
 	e.GET("/cases/:cid/tasks/:id", handler.ViewTask).Name = "view-task"
 	e.POST("/cases/:cid/tasks/:id", handler.SaveTask).Name = "save-task"
 	e.DELETE("/cases/:cid/tasks/:id", handler.DeleteTask).Name = "delete-task"
 
 	// notes
 	e.GET("/cases/:cid/notes", handler.ListNotes).Name = "list-notes"
-	e.GET("/cases/:cid/notes.csv", handler.ExportNotes).Name = "export-notes"
+	e.GET("/cases/:cid/notes/export", handler.ExportNotes).Name = "export-notes"
+	e.GET("/cases/:cid/notes/import", handler.ImportNotes).Name = "import-notes"
+	e.POST("/cases/:cid/notes/import", handler.ImportNotes).Name = "import-notes"
 	e.GET("/cases/:cid/notes/:id", handler.ViewNote).Name = "view-note"
 	e.POST("/cases/:cid/notes/:id", handler.SaveNote).Name = "save-note"
 	e.DELETE("/cases/:cid/notes/:id", handler.DeleteNote).Name = "delete-note"

@@ -1,13 +1,85 @@
 package events
 
 import (
+    "fmt"
+    "math"
+    "time"
+    "strings"
+
 	"github.com/sprungknoedl/dagobert/components/base"
 	"github.com/sprungknoedl/dagobert/components/utils"
     "github.com/sprungknoedl/dagobert/components/icons"
     "github.com/sprungknoedl/dagobert/model"
 )
 
-templ List(env utils.Env, cid int64, list []model.Event) {
+func rowColor(typ string) string {
+    switch typ {
+        case "Event Log": return "hover:bg-slate-700"
+        case "File": return "hover:bg-slate-700"
+        case "Human": return "pr-4 border-l-8 border-l-indigo-500 hover:bg-indigo-900"
+        case "Lateral Movement": return "pr-4 border-l-8 border-l-cyan-500 hover:bg-cyan-900"
+        case "Exfiltration": return "pr-4 border-l-8 border-l-red-500 hover:bg-red-900"
+        case "Malware": return "pr-4 border-l-8 border-l-yellow-500 hover:bg-yellow-900"
+        case "C2": return "pr-4 border-l-8 border-l-fuchsia-500 hover:bg-fuchsia-700"
+        case "DFIR": return "pr-4 border-l-8 border-l-green-500 hover:bg-green-900"
+        case "Other": return "hover:bg-slate-700"
+        default: return "hover:bg-slate-700"
+    }
+}
+
+func hasTimeGap(list []model.Event, i int) (bool, string) {
+    if i > 0 {
+        prev := list[i-1].Time
+        curr := list[i].Time
+        if d := curr.Sub(prev); d > 2 * 24 * time.Hour {
+            return true, humanizeDuration(d)
+        }
+    }
+
+    return false, ""
+}
+
+func humanizeDuration(duration time.Duration) string {
+	days := int64(duration.Hours() / 24)
+	hours := int64(math.Mod(duration.Hours(), 24))
+	minutes := int64(math.Mod(duration.Minutes(), 60))
+	seconds := int64(math.Mod(duration.Seconds(), 60))
+
+	chunks := []struct {
+		singularName string
+		amount       int64
+	}{
+		{"day", days},
+		{"hour", hours},
+		{"minute", minutes},
+		{"second", seconds},
+	}
+
+	parts := []string{}
+
+	for _, chunk := range chunks {
+		switch chunk.amount {
+		case 0:
+			continue
+		case 1:
+			parts = append(parts, fmt.Sprintf("%d %s", chunk.amount, chunk.singularName))
+		default:
+			parts = append(parts, fmt.Sprintf("%d %ss", chunk.amount, chunk.singularName))
+		}
+	}
+
+	return strings.Join(parts, " ")
+}
+
+func highlightIndicators(event string, indicators []model.Indicator) templ.Component {
+    event = templ.EscapeString(event)
+    for _, ioc := range indicators {
+        event = strings.ReplaceAll(event, ioc.Value, "<span title=\"Indicator: " + templ.EscapeString(ioc.Description) + "\" class=\"text-red-400 underline\">" + templ.EscapeString(ioc.Value) + "</span>")
+    }
+    return templ.Raw(event)
+}
+
+templ List(env utils.Env, cid int64, list []model.Event, indicators []model.Indicator) {
     @base.Layout(env) {
         <main class="p-4 grow">
             <nav class="flex items-center justify-between mb-4">
@@ -20,6 +92,10 @@ templ List(env utils.Env, cid int64, list []model.Event) {
                         hx-get={env.Routes("list-events", cid)} hx-trigger="input changed delay:300ms, search" 
                         hx-target="#list" hx-select="#list" hx-swap="outerHTML"/>
                     
+                    @utils.SecondaryButton(templ.Attributes{"hx-get": env.Routes("import-events", cid), "hx-target": "#modal"}) {
+                        @icons.ArrowUpTray("inline-block mr-1 w-5 h-5")
+                        Import CSV
+                    }
                     @utils.SecondaryLink(templ.Attributes{"href": env.Routes("export-events", cid), "target": "blank"}) {
                         @icons.ArrowDownTray("inline-block mr-1 w-5 h-5")
                         Export CSV
@@ -38,7 +114,7 @@ templ List(env utils.Env, cid int64, list []model.Event) {
             <table id="list" class="table-auto w-full">
                 <thead class="border-b-2 border-b-slate-600">
                     <tr class="p-8">
-                        @utils.TH(templ.Attributes{"style": "width: 12rem"}) { Date/Time  }
+                        @utils.TH(templ.Attributes{"style": "width: 17rem"}) { Date/Time  }
                         @utils.TH(templ.Attributes{"style": "width: 10rem"}) { Type  }
                         @utils.TH(templ.Attributes{"style": "width: 12rem"}) { Event System  }
                         @utils.TH(templ.Attributes{"style": "width: 12rem"}) { Remote System  }
@@ -47,15 +123,28 @@ templ List(env utils.Env, cid int64, list []model.Event) {
                     </tr>
                 </thead>
                 <tbody>
-                    for _, obj := range list {
-                    <tr class="hover:bg-slate-700">
-                        <td class="p-2">{ obj.DateAdded.Format("2006-01-02 15:04:05Z07:00") }</td>
+                    for i, obj := range list {
+                    if b, d := hasTimeGap(list, i); b {
+                        <tr>
+                            <td class="text-center p-8" colspan="6">
+                            <span class="rounded-full py-4 px-8 mr-2 bg-slate-900">Mind the gap: { d }</span>
+                            </td>
+                        </tr>
+                    }
+                    <tr class={rowColor(obj.Type)}>
+                        <td class="p-2 pl-4">
+                            { obj.Time.Format("2006-01-02 15:04:05") }
+                            <span class="text-slate-500">{ obj.Time.Format("Z07:00") }</span>
+                        </td>
                         <td class="p-2">{ obj.Type }</td>
                         <td class="p-2">{ obj.AssetA }</td>
                         <td class="p-2">{ obj.Direction + " " + obj.AssetB }</td>
-                        <td class="p-2">{ obj.Event }</td>
+                        <td class="p-2">@highlightIndicators(obj.Event, indicators)</td>
 
-                        <td class="p-2 flex gap-2 justify-end">
+                        <td class="p-2 flex items-center gap-2 justify-end">
+                            if obj.KeyEvent {
+                                @icons.SolidStar(icons.Inline + " text-yellow-500")
+                            }
                             @utils.InlineButton(templ.Attributes{
                                 "hx-get": env.Routes("view-event", cid, obj.ID), 
                                 "hx-target": "#modal"}) {

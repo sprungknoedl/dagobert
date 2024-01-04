@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/csv"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -57,6 +58,75 @@ func ExportTasks(c echo.Context) error {
 
 	w.Flush()
 	return nil
+}
+
+func ImportTasks(c echo.Context) error {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	if c.Request().Method == http.MethodGet {
+		uri := c.Echo().Reverse("import-tasks", cid)
+		return render(c, utils.Import(ctx(c), uri))
+	}
+
+	now := time.Now()
+	usr := getUser(c)
+
+	fh, err := c.FormFile("file")
+	if err != nil {
+		return err
+	}
+
+	fr, err := fh.Open()
+	if err != nil {
+		return err
+	}
+
+	r := csv.NewReader(fr)
+	r.FieldsPerRecord = 5
+	r.Read() // skip header
+
+	for {
+		rec, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		done, err := strconv.ParseBool(rec[2])
+		if err != nil {
+			return err
+		}
+
+		datedue, err := time.Parse(time.RFC3339, rec[4])
+		if err != nil {
+			return err
+		}
+
+		obj := model.Task{
+			CaseID:       cid,
+			Type:         rec[0],
+			Task:         rec[1],
+			Done:         done, // 2
+			Owner:        rec[3],
+			DateDue:      datedue, // 4
+			DateAdded:    now,
+			UserAdded:    usr,
+			DateModified: now,
+			UserModified: usr,
+		}
+
+		_, err = model.SaveTask(cid, obj)
+		if err != nil {
+			return err
+		}
+	}
+
+	return refresh(c)
 }
 
 func ViewTask(c echo.Context) error {

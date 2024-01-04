@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/csv"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -46,7 +47,7 @@ func ExportIndicators(c echo.Context) error {
 		return err
 	}
 
-	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"assets.csv\"")
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"indicators.csv\"")
 	c.Response().WriteHeader(http.StatusOK)
 
 	w := csv.NewWriter(c.Response().Writer)
@@ -57,6 +58,65 @@ func ExportIndicators(c echo.Context) error {
 
 	w.Flush()
 	return nil
+}
+
+func ImportIndicators(c echo.Context) error {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	if c.Request().Method == http.MethodGet {
+		uri := c.Echo().Reverse("import-indicators", cid)
+		return render(c, utils.Import(ctx(c), uri))
+	}
+
+	now := time.Now()
+	usr := getUser(c)
+
+	fh, err := c.FormFile("file")
+	if err != nil {
+		return err
+	}
+
+	fr, err := fh.Open()
+	if err != nil {
+		return err
+	}
+
+	r := csv.NewReader(fr)
+	r.FieldsPerRecord = 5
+	r.Read() // skip header
+
+	for {
+		rec, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		obj := model.Indicator{
+			CaseID:       cid,
+			Type:         rec[0],
+			Value:        rec[1],
+			TLP:          rec[2],
+			Description:  rec[3],
+			Source:       rec[4],
+			DateAdded:    now,
+			UserAdded:    usr,
+			DateModified: now,
+			UserModified: usr,
+		}
+
+		_, err = model.SaveIndicator(cid, obj)
+		if err != nil {
+			return err
+		}
+	}
+
+	return refresh(c)
 }
 
 func ViewIndicator(c echo.Context) error {
@@ -104,7 +164,7 @@ func SaveIndicator(c echo.Context) error {
 		CaseID:       cid,
 		Type:         dto.Type,
 		Value:        dto.Value,
-		TLP:          dto.Value,
+		TLP:          dto.TLP,
 		Description:  dto.Description,
 		Source:       dto.Source,
 		DateAdded:    now,

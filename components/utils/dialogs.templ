@@ -31,3 +31,34 @@ templ Confirm(env Env, dst string) {
         </div>
     </aside>
 }
+
+templ Import(env Env, dst string) {
+    <aside class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-50 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50">
+        <div class="w-1/2 m-8 bg-slate-800 shadow-xl rounded-xl">
+            <form id="form" hx-post={dst} hx-encoding="multipart/form-data" hx-target="#modal">
+                <header class="p-6 px-8 border-b border-b-slate-700 flex justify-between">
+                    <h4 class="font-bold text-slate-200">
+                        Import from CSV
+                    </h4>
+                    <div>
+                        <button type="button" hx-get={env.Routes("empty")} hx-target="#modal"> @icons.XMark(icons.Default) </button>
+                    </div>
+                </header>
+        
+                <section class="p-8 flex flex-col gap-6">
+                    <p>
+                    @icons.InformationCircle(icons.Inline)
+                    Please note, that dagobert will attempt to deduplicate entries.
+                    </p>
+
+                    <p><input type="file" name="file" /></p>
+                </section>
+
+                <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4">
+                    @PrimaryButton(templ.Attributes{"type": "submit"}) { Import }
+                    @SecondaryButton(templ.Attributes{"hx-get": env.Routes("empty"), "hx-target": "#modal"}) { Cancel }
+                </footer>
+            </form>
+        </div>
+    </aside>
+}

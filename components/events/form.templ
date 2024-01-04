@@ -33,6 +33,7 @@ templ Form(env utils.Env, obj model.Event) {
                     @utils.WithLabel("Remote System") { @utils.TextInput("assetB", obj.AssetB) }
                     @utils.WithLabel("Event")         { @utils.TextareaInput("event", obj.Event) }
                     @utils.WithLabel("Raw")           { @utils.TextareaInput("raw", obj.Raw) }
+                    @utils.WithLabel("Key Event?")    { @utils.BooleanInput("keyevent", obj.KeyEvent) }
                 </section>
 
                 <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4">

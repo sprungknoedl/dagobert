@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/csv"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -47,7 +48,7 @@ func ExportEvidences(c echo.Context) error {
 		return err
 	}
 
-	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"timeline.csv\"")
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"evidences.csv\"")
 	c.Response().WriteHeader(http.StatusOK)
 
 	w := csv.NewWriter(c.Response().Writer)
@@ -58,6 +59,71 @@ func ExportEvidences(c echo.Context) error {
 
 	w.Flush()
 	return nil
+}
+
+func ImportEvidences(c echo.Context) error {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	if c.Request().Method == http.MethodGet {
+		uri := c.Echo().Reverse("import-evidences", cid)
+		return render(c, utils.Import(ctx(c), uri))
+	}
+
+	now := time.Now()
+	usr := getUser(c)
+
+	fh, err := c.FormFile("file")
+	if err != nil {
+		return err
+	}
+
+	fr, err := fh.Open()
+	if err != nil {
+		return err
+	}
+
+	r := csv.NewReader(fr)
+	r.FieldsPerRecord = 6
+	r.Read() // skip header
+
+	for {
+		rec, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		size, err := strconv.ParseInt(rec[3], 10, 64)
+		if err != nil {
+			return err
+		}
+
+		obj := model.Evidence{
+			CaseID:       cid,
+			Type:         rec[0],
+			Name:         rec[1],
+			Description:  rec[2],
+			Size:         size,
+			Hash:         rec[4],
+			Location:     rec[5],
+			DateAdded:    now,
+			UserAdded:    usr,
+			DateModified: now,
+			UserModified: usr,
+		}
+
+		_, err = model.SaveEvidence(cid, obj)
+		if err != nil {
+			return err
+		}
+	}
+
+	return refresh(c)
 }
 
 func ViewEvidence(c echo.Context) error {

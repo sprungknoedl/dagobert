@@ -10,12 +10,14 @@ import (
 )
 
 templ pill(color string) {
-    <span class={"rounded-full py-2 px-4 mr-2 " + color}>{ children... }</span>
+    <span class={"rounded-full py-2 px-4 mr-2 inline-flex items-center gap-2 " + color}>{ children... }</span>
 }
 
 templ dlItem(title string) {
-    <dt class="float-left clear-left w-32">{title}</dt>
-    <dd class="ml-48 mb-6">{ children... }</dd>
+    <div class="flex items-center mb-4">
+    <dt class="w-32">{title}</dt>
+    <dd class="ml-4">{ children... }</dd>
+    </div>
 }
 
 templ dlClosed(closed bool) {

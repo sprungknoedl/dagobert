@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/csv"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -20,6 +21,7 @@ type EventDTO struct {
 	Direction string    `form:"direction"`
 	Event     string    `form:"event"`
 	Raw       string    `form:"raw"`
+	KeyEvent  bool      `form:"keyevent"`
 }
 
 func ListEvents(c echo.Context) error {
@@ -34,7 +36,12 @@ func ListEvents(c echo.Context) error {
 		return err
 	}
 
-	return render(c, events.List(ctx(c), cid, list))
+	indicators, err := model.ListIndicators(cid)
+	if err != nil {
+		return err
+	}
+
+	return render(c, events.List(ctx(c), cid, list, indicators))
 }
 
 func ExportEvents(c echo.Context) error {
@@ -52,13 +59,94 @@ func ExportEvents(c echo.Context) error {
 	c.Response().WriteHeader(http.StatusOK)
 
 	w := csv.NewWriter(c.Response().Writer)
-	w.Write([]string{"Time", "Type", "Event System", "Direction", "Remote System", "Event", "Raw"})
+	w.Write([]string{"Time", "Type", "Event System", "Direction", "Remote System", "Event", "Raw", "Key Event"})
 	for _, e := range list {
-		w.Write([]string{e.Time.Format(time.RFC3339), e.Type, e.AssetA, e.Direction, e.AssetB, e.Event, e.Raw})
+		w.Write([]string{
+			e.Time.Format(time.RFC3339),
+			e.Type,
+			e.AssetA,
+			e.Direction,
+			e.AssetB,
+			e.Event,
+			e.Raw,
+			strconv.FormatBool(e.KeyEvent),
+		})
 	}
 
 	w.Flush()
 	return nil
+}
+
+func ImportEvents(c echo.Context) error {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	if c.Request().Method == http.MethodGet {
+		uri := c.Echo().Reverse("import-events", cid)
+		return render(c, utils.Import(ctx(c), uri))
+	}
+
+	now := time.Now()
+	usr := getUser(c)
+
+	fh, err := c.FormFile("file")
+	if err != nil {
+		return err
+	}
+
+	fr, err := fh.Open()
+	if err != nil {
+		return err
+	}
+
+	r := csv.NewReader(fr)
+	r.FieldsPerRecord = 8
+	r.Read() // skip header
+
+	for {
+		rec, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+
+		t, err := time.Parse(time.RFC3339, rec[0])
+		if err != nil {
+			return err
+		}
+
+		ke, err := strconv.ParseBool(rec[7])
+		if err != nil {
+			return err
+		}
+
+		obj := model.Event{
+			CaseID:       cid,
+			Time:         t,
+			Type:         rec[1],
+			AssetA:       rec[2],
+			Direction:    rec[3],
+			AssetB:       rec[4],
+			Event:        rec[5],
+			Raw:          rec[6],
+			KeyEvent:     ke,
+			DateAdded:    now,
+			UserAdded:    usr,
+			DateModified: now,
+			UserModified: usr,
+		}
+
+		_, err = model.SaveEvent(cid, obj)
+		if err != nil {
+			return err
+		}
+	}
+
+	return refresh(c)
 }
 
 func ViewEvent(c echo.Context) error {
@@ -111,6 +199,7 @@ func SaveEvent(c echo.Context) error {
 		Direction:    dto.Direction,
 		Event:        dto.Event,
 		Raw:          dto.Raw,
+		KeyEvent:     dto.KeyEvent,
 		DateAdded:    now,
 		UserAdded:    usr,
 		DateModified: now,

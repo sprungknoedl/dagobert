@@ -1,19 +1,19 @@
 package utils
 
 templ PrimaryButton(attr templ.Attributes) {
-    <button { attr... } type="button" class="px-4 h-10 border border-slate-300 border-transparent rounded-md shadow-sm outline outline-2 outline-offset-2 outline-pink-500 bg-slate-700 hover:bg-pink-500 text-slate-200 text-sm cursor-pointer">
+    <button { attr... } type="button" class="flex items-center gap-2 px-4 h-10 border border-slate-300 border-transparent rounded-md shadow-sm outline outline-2 outline-offset-2 outline-pink-500 bg-slate-700 hover:bg-pink-500 text-slate-200 text-sm cursor-pointer">
         { children... }
     </button>
 }
 
 templ SecondaryButton(attr templ.Attributes) {
-    <button { attr... } type="button" class="px-4 h-10 rounded-md shadow-sm outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm cursor-pointer">
+    <button { attr... } type="button" class="flex items-center gap-2 px-4 h-10 rounded-md shadow-sm outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm cursor-pointer">
         { children... }
     </button>
 }
 
 templ DangerButton(attr templ.Attributes) {
-    <button { attr... } type="button" class="px-4 h-10 border border-slate-300 border-transparent rounded-md shadow-sm outline outline-2 outline-offset-2 outline-red-700 bg-red-700 hover:bg-red-500 hover:outline-red-500 text-slate-200 text-sm cursor-pointer">
+    <button { attr... } type="button" class="flex items-center gap-2 px-4 h-10 border border-slate-300 border-transparent rounded-md shadow-sm outline outline-2 outline-offset-2 outline-red-700 bg-red-700 hover:bg-red-500 hover:outline-red-500 text-slate-200 text-sm cursor-pointer">
         { children... }
     </button>
 }
@@ -25,13 +25,13 @@ templ InlineButton(attr templ.Attributes) {
 }
 
 templ PrimaryLink(attr templ.Attributes) {
-    <a { attr... } class="flex items-center px-4 h-10 rounded-md shadow-sm outline outline-2 outline-offset-2 outline-pink-500 bg-slate-700 hover:bg-pink-500 text-slate-200 text-sm cursor-pointer">
+    <a { attr... } class="flex items-center flex items-center gap-2 px-4 h-10 rounded-md shadow-sm outline outline-2 outline-offset-2 outline-pink-500 bg-slate-700 hover:bg-pink-500 text-slate-200 text-sm cursor-pointer">
         { children... }
     </a>
 }
 
 templ SecondaryLink(attr templ.Attributes) {
-    <a { attr... } class="flex items-center px-4 h-10 rounded-md shadow-sm outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm cursor-pointer">
+    <a { attr... } class="flex items-center flex items-center gap-2 px-4 h-10 rounded-md shadow-sm outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm cursor-pointer">
         { children... }
     </a>
 }

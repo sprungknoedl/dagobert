@@ -1,6 +1,8 @@
 package model
 
 import (
+	"log"
+
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -12,21 +14,24 @@ func InitDatabase(dburl string) {
 	var err error
 	db, err = gorm.Open(sqlite.Open(dburl), &gorm.Config{})
 	if err != nil {
-		panic("failed to connect database")
+		log.Fatalf("failed to connect db: %v", err)
 	}
 
 	// Migrate the schema
-	db.AutoMigrate(&Case{})
-
-	db.AutoMigrate(&Event{})
-	db.AutoMigrate(&Asset{})
-	db.AutoMigrate(&Malware{})
-	db.AutoMigrate(&Indicator{})
-
-	db.AutoMigrate(&User{})
-	db.AutoMigrate(&Evidence{})
-	db.AutoMigrate(&Task{})
-	db.AutoMigrate(&Note{})
+	err = db.AutoMigrate(
+		&Case{},
+		&Event{},
+		&Asset{},
+		&Malware{},
+		&Indicator{},
+		&User{},
+		&Evidence{},
+		&Task{},
+		&Note{},
+	)
+	if err != nil {
+		log.Fatalf("failed to migrate db: %v", err)
+	}
 }
 
 // --------------------------------------
@@ -65,7 +70,18 @@ func GetCaseFull(id int64) (Case, error) {
 }
 
 func SaveCase(x Case) (Case, error) {
-	result := db.Save(&x)
+	x.CRC = HashFields(
+		x.Name,
+		x.Closed,
+		x.Classification,
+		x.Severity,
+		x.Outcome,
+		x.Summary,
+	)
+
+	result := db.
+		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "crc"}}, DoNothing: true}).
+		Save(&x)
 	return x, result.Error
 }
 
@@ -107,8 +123,20 @@ func GetEvent(cid int64, id int64) (Event, error) {
 }
 
 func SaveEvent(cid int64, x Event) (Event, error) {
+	x.CRC = HashFields(
+		x.CaseID,
+		x.Time,
+		x.AssetA,
+		x.Direction,
+		x.AssetB,
+		x.Event,
+		x.Raw,
+		x.KeyEvent,
+	)
+
 	result := db.
 		Where("case_id = ?", cid).
+		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "crc"}}, DoNothing: true}).
 		Save(&x)
 	return x, result.Error
 }
@@ -155,8 +183,19 @@ func GetAsset(cid int64, id int64) (Asset, error) {
 }
 
 func SaveAsset(cid int64, x Asset) (Asset, error) {
+	x.CRC = HashFields(
+		x.CaseID,
+		x.Type,
+		x.Name,
+		x.IP,
+		x.Description,
+		x.Compromised,
+		x.Analysed,
+	)
+
 	result := db.
 		Where("case_id = ?", cid).
+		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "crc"}}, DoNothing: true}).
 		Save(&x)
 	return x, result.Error
 }
@@ -202,8 +241,20 @@ func GetMalware(cid int64, id int64) (Malware, error) {
 }
 
 func SaveMalware(cid int64, x Malware) (Malware, error) {
+	x.CRC = HashFields(
+		x.CaseID,
+		x.Filename,
+		x.Filepath,
+		x.CDate,
+		x.MDate,
+		x.System,
+		x.Hash,
+		x.Notes,
+	)
+
 	result := db.
 		Where("case_id = ?", cid).
+		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "crc"}}, DoNothing: true}).
 		Save(&x)
 	return x, result.Error
 }
@@ -250,8 +301,18 @@ func GetIndicator(cid int64, id int64) (Indicator, error) {
 }
 
 func SaveIndicator(cid int64, x Indicator) (Indicator, error) {
+	x.CRC = HashFields(
+		x.CaseID,
+		x.Type,
+		x.Value,
+		x.TLP,
+		x.Description,
+		x.Source,
+	)
+
 	result := db.
 		Where("case_id = ?", cid).
+		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "crc"}}, DoNothing: true}).
 		Save(&x)
 	return x, result.Error
 }
@@ -299,8 +360,19 @@ func GetUser(cid int64, id int64) (User, error) {
 }
 
 func SaveUser(cid int64, x User) (User, error) {
+	x.CRC = HashFields(
+		x.CaseID,
+		x.Name,
+		x.Company,
+		x.Role,
+		x.Email,
+		x.Phone,
+		x.Notes,
+	)
+
 	result := db.
 		Where("case_id = ?", cid).
+		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "crc"}}, DoNothing: true}).
 		Save(&x)
 	return x, result.Error
 }
@@ -347,8 +419,19 @@ func GetEvidence(cid int64, id int64) (Evidence, error) {
 }
 
 func SaveEvidence(cid int64, x Evidence) (Evidence, error) {
+	x.CRC = HashFields(
+		x.CaseID,
+		x.Type,
+		x.Name,
+		x.Description,
+		x.Size,
+		x.Hash,
+		x.Location,
+	)
+
 	result := db.
 		Where("case_id = ?", cid).
+		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "crc"}}, DoNothing: true}).
 		Save(&x)
 	return x, result.Error
 }
@@ -393,8 +476,18 @@ func GetTask(cid int64, id int64) (Task, error) {
 }
 
 func SaveTask(cid int64, x Task) (Task, error) {
+	x.CRC = HashFields(
+		x.CaseID,
+		x.Type,
+		x.Task,
+		x.Done,
+		x.Owner,
+		x.DateDue,
+	)
+
 	result := db.
 		Where("case_id = ?", cid).
+		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "crc"}}, DoNothing: true}).
 		Save(&x)
 	return x, result.Error
 }
@@ -439,8 +532,16 @@ func GetNote(cid int64, id int64) (Note, error) {
 }
 
 func SaveNote(cid int64, x Note) (Note, error) {
+	x.CRC = HashFields(
+		x.CaseID,
+		x.Title,
+		x.Category,
+		x.Description,
+	)
+
 	result := db.
 		Where("case_id = ?", cid).
+		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "crc"}}, DoNothing: true}).
 		Save(&x)
 	return x, result.Error
 }
