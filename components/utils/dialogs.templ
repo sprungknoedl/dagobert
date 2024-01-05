@@ -1,15 +1,35 @@
 package utils
 
 import (
+    "fmt"
+
     "github.com/sprungknoedl/dagobert/components/icons"
+	"github.com/labstack/echo/v4"
 )
 
 templ ErrorNotification(err error) {
     <div class="w-[42rem] m-8 p-8 bg-red-800 shadow-xl rounded-xl"
         _="on click remove me">
-        <div class="flex items-center gap-2 ">
+        <div class="flex items-center gap-8">
             @icons.Bug(icons.Default)
-            {err.Error()}
+            <div>
+                <h6 class="font-bold pb-2">Unrecoverable error encountered!</h6>
+                <p>{err.Error()}</p>
+            </div>
+        </div>
+    </div>
+}
+
+templ WarningNotification(err *echo.HTTPError) {
+    <div class="w-[42rem] m-8 p-8 bg-amber-600 shadow-xl rounded-xl"
+        _="on click remove me
+           on load wait 5s then transition opacity to 0 over 200ms then remove me">
+        <div class="flex items-center gap-8">
+            @icons.Bug(icons.Default)
+            <div>
+                <h6 class="font-bold pb-2">Bad request.</h6>
+                <p>{ fmt.Sprintf("%v", err.Message) }</p>
+            </div>
         </div>
     </div>
 }
