@@ -187,7 +187,7 @@ func Import(env Env, dst string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button></div></header><section class=\"p-8 flex flex-col gap-6\"><p>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</button></div></header><section class=\"p-8 flex flex-col gap-6\"><p class=\"flex items-center gap-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
