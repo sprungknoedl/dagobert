@@ -75,8 +75,6 @@ func main() {
 	// --------------------------------------
 	// Home
 	// --------------------------------------
-	e.GET("/empty", handler.Empty)
-
 	// cases
 	e.GET("/", handler.ListCases).Name = "list-cases"
 	e.GET("/cases/export", handler.ExportCases).Name = "export-cases"

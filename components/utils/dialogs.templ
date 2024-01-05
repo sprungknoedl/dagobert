@@ -4,13 +4,9 @@ import (
     "github.com/sprungknoedl/dagobert/components/icons"
 )
 
-templ DialogPlaceholder() {
-    <div id="modal" hx-swap-oob="true"></div>
-}
-
 templ ErrorNotification(err error) {
     <div class="w-[42rem] m-8 p-8 bg-red-800 shadow-xl rounded-xl"
-        _="on click transition opacity to 0 then remove me">
+        _="on click remove me">
         <div class="flex items-center gap-2 ">
             @icons.Bug(icons.Default)
             {err.Error()}
@@ -19,14 +15,15 @@ templ ErrorNotification(err error) {
 }
 
 templ Confirm(env Env, dst string) {
-    <aside class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-10 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50">
+    <aside class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-10 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50"
+        _="on closeModal remove me">
         <div class="w-1/2 m-8 bg-slate-800 shadow-xl rounded-xl">
             <header class="p-6 px-8 border-b border-b-slate-700 flex justify-between">
                 <h4 class="font-bold text-slate-200">
                     Confirm
                 </h4>
                 <div>
-                    <button type="button" hx-get={env.Routes("empty")} hx-target="#modal"> @icons.XMark(icons.Default) </button>
+                    <button type="button" _="on click trigger closeModal"> @icons.XMark(icons.Default) </button>
                 </div>
             </header>
     
@@ -36,14 +33,15 @@ templ Confirm(env Env, dst string) {
 
             <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4">
                 @DangerButton(templ.Attributes{"hx-delete": dst, "hx-swap": "none"}) { Confirm }
-                @SecondaryButton(templ.Attributes{"hx-get": env.Routes("empty"), "hx-target": "#modal"}) { Cancel }
+                @SecondaryButton(templ.Attributes{"_": "on click trigger closeModal"}) { Cancel }
             </footer>
         </div>
     </aside>
 }
 
 templ Import(env Env, dst string) {
-    <aside class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-10 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50">
+    <aside class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-10 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50"
+        _="on closeModal remove me">
         <div class="w-1/2 m-8 bg-slate-800 shadow-xl rounded-xl">
             <form id="form" hx-post={dst} hx-encoding="multipart/form-data" hx-target="#modal">
                 <header class="p-6 px-8 border-b border-b-slate-700 flex justify-between">
@@ -51,7 +49,7 @@ templ Import(env Env, dst string) {
                         Import from CSV
                     </h4>
                     <div>
-                        <button type="button" hx-get={env.Routes("empty")} hx-target="#modal"> @icons.XMark(icons.Default) </button>
+                        <button type="button" _="on click trigger closeModal"> @icons.XMark(icons.Default) </button>
                     </div>
                 </header>
         
@@ -66,7 +64,7 @@ templ Import(env Env, dst string) {
 
                 <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4">
                     @PrimaryButton(templ.Attributes{"type": "submit"}) { Import }
-                    @SecondaryButton(templ.Attributes{"hx-get": env.Routes("empty"), "hx-target": "#modal"}) { Cancel }
+                    @SecondaryButton(templ.Attributes{"_": "on click trigger closeModal"}) { Cancel }
                 </footer>
             </form>
         </div>

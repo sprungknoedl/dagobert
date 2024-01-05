@@ -11,10 +11,6 @@ import (
 
 const SessionName = "default"
 
-func Empty(c echo.Context) error {
-	return render(c, utils.DialogPlaceholder())
-}
-
 func ErrorHandler(err error, c echo.Context) {
 	if c.Response().Committed {
 		return

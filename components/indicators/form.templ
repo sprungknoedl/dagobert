@@ -7,7 +7,8 @@ import (
 )
 
 templ Form(env utils.Env, obj model.Indicator) {
-    <aside class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-10 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50">
+    <aside class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-10 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50"
+        _="on closeModal remove me">
         <div class="w-1/2 m-8 bg-slate-800 shadow-xl rounded-xl">
             <form hx-post={env.Routes("save-indicator", obj.CaseID, obj.ID)} hx-target="#modal">
                 <header class="p-6 px-8 border-b border-b-slate-700 flex justify-between">
@@ -19,7 +20,7 @@ templ Form(env utils.Env, obj model.Indicator) {
                         }
                     </h4>
                     <div>
-                        <button type="button" hx-get={env.Routes("empty")} hx-target="#modal"> @icons.XMark(icons.Default) </button>
+                        <button type="button" _="on click trigger closeModal"> @icons.XMark(icons.Default) </button>
                     </div>
                 </header>
       
@@ -33,7 +34,7 @@ templ Form(env utils.Env, obj model.Indicator) {
 
                 <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4">
                     @utils.PrimaryButton(templ.Attributes{"type": "submit"}) { Save }
-                    @utils.SecondaryButton(templ.Attributes{"hx-get": env.Routes("empty"), "hx-target": "#modal"}) { Cancel }
+                    @utils.SecondaryButton(templ.Attributes{"_": "on click trigger closeModal"}) { Cancel }
                 </footer>
             </form>
         </div>
