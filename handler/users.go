@@ -70,7 +70,7 @@ func ImportUsers(c echo.Context) error {
 	now := time.Now()
 	usr := getUser(c)
 
-	return importHelper(c, uri, func(c echo.Context, rec []string) error {
+	return importHelper(c, uri, 6, func(c echo.Context, rec []string) error {
 		obj := model.User{
 			CaseID:       cid,
 			Name:         rec[0],

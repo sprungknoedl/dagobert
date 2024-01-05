@@ -86,7 +86,7 @@ func ImportEvents(c echo.Context) error {
 	now := time.Now()
 	usr := getUser(c)
 
-	return importHelper(c, uri, func(c echo.Context, rec []string) error {
+	return importHelper(c, uri, 8, func(c echo.Context, rec []string) error {
 		t, err := time.Parse(time.RFC3339, rec[0])
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err)

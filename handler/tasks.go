@@ -69,7 +69,7 @@ func ImportTasks(c echo.Context) error {
 	now := time.Now()
 	usr := getUser(c)
 
-	return importHelper(c, uri, func(c echo.Context, rec []string) error {
+	return importHelper(c, uri, 5, func(c echo.Context, rec []string) error {
 		done, err := strconv.ParseBool(rec[2])
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err)

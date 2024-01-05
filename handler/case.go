@@ -57,7 +57,7 @@ func ImportCases(c echo.Context) error {
 	now := time.Now()
 	usr := getUser(c)
 
-	return importHelper(c, uri, func(c echo.Context, rec []string) error {
+	return importHelper(c, uri, 4, func(c echo.Context, rec []string) error {
 		id, err := strconv.ParseInt(rec[0], 10, 64)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err)

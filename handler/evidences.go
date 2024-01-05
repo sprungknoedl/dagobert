@@ -70,7 +70,7 @@ func ImportEvidences(c echo.Context) error {
 	now := time.Now()
 	usr := getUser(c)
 
-	return importHelper(c, uri, func(c echo.Context, rec []string) error {
+	return importHelper(c, uri, 6, func(c echo.Context, rec []string) error {
 		size, err := strconv.ParseInt(rec[3], 10, 64)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err)

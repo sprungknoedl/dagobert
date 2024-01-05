@@ -64,7 +64,7 @@ func ctx(c echo.Context) utils.Env {
 	}
 }
 
-func importHelper(c echo.Context, uri string, cb func(c echo.Context, rec []string) error) error {
+func importHelper(c echo.Context, uri string, numFields int, cb func(c echo.Context, rec []string) error) error {
 	if c.Request().Method == http.MethodGet {
 		return render(c, utils.Import(ctx(c), uri))
 	}
@@ -80,7 +80,7 @@ func importHelper(c echo.Context, uri string, cb func(c echo.Context, rec []stri
 	}
 
 	r := csv.NewReader(fr)
-	r.FieldsPerRecord = 4
+	r.FieldsPerRecord = numFields
 	r.Read() // skip header
 
 	for {

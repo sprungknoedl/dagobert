@@ -69,7 +69,7 @@ func ImportIndicators(c echo.Context) error {
 	now := time.Now()
 	usr := getUser(c)
 
-	return importHelper(c, uri, func(c echo.Context, rec []string) error {
+	return importHelper(c, uri, 5, func(c echo.Context, rec []string) error {
 		obj := model.Indicator{
 			CaseID:       cid,
 			Type:         rec[0],
