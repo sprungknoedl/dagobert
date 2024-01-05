@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/csv"
-	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -66,45 +65,19 @@ func ImportTasks(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	if c.Request().Method == http.MethodGet {
-		uri := c.Echo().Reverse("import-tasks", cid)
-		return render(c, utils.Import(ctx(c), uri))
-	}
-
+	uri := c.Echo().Reverse("import-tasks", cid)
 	now := time.Now()
 	usr := getUser(c)
 
-	fh, err := c.FormFile("file")
-	if err != nil {
-		return err
-	}
-
-	fr, err := fh.Open()
-	if err != nil {
-		return err
-	}
-
-	r := csv.NewReader(fr)
-	r.FieldsPerRecord = 5
-	r.Read() // skip header
-
-	for {
-		rec, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
+	return importHelper(c, uri, func(c echo.Context, rec []string) error {
 		done, err := strconv.ParseBool(rec[2])
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
 		datedue, err := time.Parse(time.RFC3339, rec[4])
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
 		obj := model.Task{
@@ -121,12 +94,8 @@ func ImportTasks(c echo.Context) error {
 		}
 
 		_, err = model.SaveTask(cid, obj)
-		if err != nil {
-			return err
-		}
-	}
-
-	return refresh(c)
+		return err
+	})
 }
 
 func ViewTask(c echo.Context) error {

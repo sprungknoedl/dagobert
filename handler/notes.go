@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/csv"
-	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -65,37 +64,11 @@ func ImportNotes(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	if c.Request().Method == http.MethodGet {
-		uri := c.Echo().Reverse("import-notes", cid)
-		return render(c, utils.Import(ctx(c), uri))
-	}
-
+	uri := c.Echo().Reverse("import-notes", cid)
 	now := time.Now()
 	usr := getUser(c)
 
-	fh, err := c.FormFile("file")
-	if err != nil {
-		return err
-	}
-
-	fr, err := fh.Open()
-	if err != nil {
-		return err
-	}
-
-	r := csv.NewReader(fr)
-	r.FieldsPerRecord = 3
-	r.Read() // skip header
-
-	for {
-		rec, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
+	return importHelper(c, uri, func(c echo.Context, rec []string) error {
 		obj := model.Note{
 			CaseID:       cid,
 			Title:        rec[0],
@@ -108,12 +81,8 @@ func ImportNotes(c echo.Context) error {
 		}
 
 		_, err = model.SaveNote(cid, obj)
-		if err != nil {
-			return err
-		}
-	}
-
-	return refresh(c)
+		return err
+	})
 }
 
 func ViewNote(c echo.Context) error {

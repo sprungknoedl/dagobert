@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/csv"
-	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -67,37 +66,11 @@ func ImportUsers(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	if c.Request().Method == http.MethodGet {
-		uri := c.Echo().Reverse("import-users", cid)
-		return render(c, utils.Import(ctx(c), uri))
-	}
-
+	uri := c.Echo().Reverse("import-users", cid)
 	now := time.Now()
 	usr := getUser(c)
 
-	fh, err := c.FormFile("file")
-	if err != nil {
-		return err
-	}
-
-	fr, err := fh.Open()
-	if err != nil {
-		return err
-	}
-
-	r := csv.NewReader(fr)
-	r.FieldsPerRecord = 6
-	r.Read() // skip header
-
-	for {
-		rec, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
+	return importHelper(c, uri, func(c echo.Context, rec []string) error {
 		obj := model.User{
 			CaseID:       cid,
 			Name:         rec[0],
@@ -113,12 +86,8 @@ func ImportUsers(c echo.Context) error {
 		}
 
 		_, err = model.SaveUser(cid, obj)
-		if err != nil {
-			return err
-		}
-	}
-
-	return refresh(c)
+		return err
+	})
 }
 
 func ViewUser(c echo.Context) error {

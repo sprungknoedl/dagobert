@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/csv"
-	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -83,45 +82,19 @@ func ImportEvents(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	if c.Request().Method == http.MethodGet {
-		uri := c.Echo().Reverse("import-events", cid)
-		return render(c, utils.Import(ctx(c), uri))
-	}
-
+	uri := c.Echo().Reverse("import-events", cid)
 	now := time.Now()
 	usr := getUser(c)
 
-	fh, err := c.FormFile("file")
-	if err != nil {
-		return err
-	}
-
-	fr, err := fh.Open()
-	if err != nil {
-		return err
-	}
-
-	r := csv.NewReader(fr)
-	r.FieldsPerRecord = 8
-	r.Read() // skip header
-
-	for {
-		rec, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
+	return importHelper(c, uri, func(c echo.Context, rec []string) error {
 		t, err := time.Parse(time.RFC3339, rec[0])
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
 		ke, err := strconv.ParseBool(rec[7])
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
 		obj := model.Event{
@@ -141,12 +114,8 @@ func ImportEvents(c echo.Context) error {
 		}
 
 		_, err = model.SaveEvent(cid, obj)
-		if err != nil {
-			return err
-		}
-	}
-
-	return refresh(c)
+		return err
+	})
 }
 
 func ViewEvent(c echo.Context) error {

@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/csv"
-	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -54,40 +53,14 @@ func ExportCases(c echo.Context) error {
 }
 
 func ImportCases(c echo.Context) error {
-	if c.Request().Method == http.MethodGet {
-		uri := c.Echo().Reverse("import-cases")
-		return render(c, utils.Import(ctx(c), uri))
-	}
-
+	uri := c.Echo().Reverse("import-cases")
 	now := time.Now()
 	usr := getUser(c)
 
-	fh, err := c.FormFile("file")
-	if err != nil {
-		return err
-	}
-
-	fr, err := fh.Open()
-	if err != nil {
-		return err
-	}
-
-	r := csv.NewReader(fr)
-	r.FieldsPerRecord = 4
-	r.Read() // skip header
-
-	for {
-		rec, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
+	return importHelper(c, uri, func(c echo.Context, rec []string) error {
 		id, err := strconv.ParseInt(rec[0], 10, 64)
 		if err != nil {
-			return err
+			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
 		obj := model.Case{
@@ -102,12 +75,8 @@ func ImportCases(c echo.Context) error {
 		}
 
 		_, err = model.SaveCase(obj)
-		if err != nil {
-			return err
-		}
-	}
-
-	return refresh(c)
+		return err
+	})
 }
 
 func SelectCase(c echo.Context) error {

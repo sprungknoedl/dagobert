@@ -1,6 +1,9 @@
 package handler
 
 import (
+	"encoding/csv"
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/a-h/templ"
@@ -20,7 +23,11 @@ func ErrorHandler(err error, c echo.Context) {
 	c.Response().Header().Add("HX-Reswap", "beforeend")
 	c.Response().WriteHeader(http.StatusOK)
 
-	render(c, utils.ErrorNotification(err))
+	if he, ok := err.(*echo.HTTPError); ok {
+		render(c, utils.WarningNotification(he))
+	} else {
+		render(c, utils.ErrorNotification(err))
+	}
 }
 
 func render(c echo.Context, component templ.Component) error {
@@ -55,4 +62,41 @@ func ctx(c echo.Context) utils.Env {
 		ActiveRoute: c.Request().RequestURI,
 		ActiveCase:  getCase(c),
 	}
+}
+
+func importHelper(c echo.Context, uri string, cb func(c echo.Context, rec []string) error) error {
+	if c.Request().Method == http.MethodGet {
+		return render(c, utils.Import(ctx(c), uri))
+	}
+
+	fh, err := c.FormFile("file")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	fr, err := fh.Open()
+	if err != nil {
+		return fmt.Errorf("open file: %w", err)
+	}
+
+	r := csv.NewReader(fr)
+	r.FieldsPerRecord = 4
+	r.Read() // skip header
+
+	for {
+		rec, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		}
+
+		err = cb(c, rec)
+		if err != nil {
+			return err
+		}
+	}
+
+	return refresh(c)
 }
