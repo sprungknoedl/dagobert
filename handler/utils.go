@@ -15,6 +15,18 @@ func Empty(c echo.Context) error {
 	return render(c, utils.DialogPlaceholder())
 }
 
+func ErrorHandler(err error, c echo.Context) {
+	if c.Response().Committed {
+		return
+	}
+
+	c.Response().Header().Add("HX-Retarget", "#errors")
+	c.Response().Header().Add("HX-Reswap", "beforeend")
+	c.Response().WriteHeader(http.StatusOK)
+
+	render(c, utils.ErrorNotification(err))
+}
+
 func render(c echo.Context, component templ.Component) error {
 	return component.Render(c.Request().Context(), c.Response().Writer)
 }

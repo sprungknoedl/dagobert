@@ -29,7 +29,7 @@ func Form(env utils.Env, obj model.User) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<aside class=\"overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-50 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50\"><div class=\"w-1/2 m-8 bg-slate-800 shadow-xl rounded-xl\"><form hx-post=\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<aside class=\"overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-10 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50\"><div class=\"w-1/2 m-8 bg-slate-800 shadow-xl rounded-xl\"><form hx-post=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

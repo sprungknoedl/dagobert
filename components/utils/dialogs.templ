@@ -8,8 +8,18 @@ templ DialogPlaceholder() {
     <div id="modal" hx-swap-oob="true"></div>
 }
 
+templ ErrorNotification(err error) {
+    <div class="w-[42rem] m-8 p-8 bg-red-800 shadow-xl rounded-xl"
+        _="on click transition opacity to 0 then remove me">
+        <div class="flex items-center gap-2 ">
+            @icons.Bug(icons.Default)
+            {err.Error()}
+        </div>
+    </div>
+}
+
 templ Confirm(env Env, dst string) {
-    <aside class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-50 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50">
+    <aside class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-10 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50">
         <div class="w-1/2 m-8 bg-slate-800 shadow-xl rounded-xl">
             <header class="p-6 px-8 border-b border-b-slate-700 flex justify-between">
                 <h4 class="font-bold text-slate-200">
@@ -33,7 +43,7 @@ templ Confirm(env Env, dst string) {
 }
 
 templ Import(env Env, dst string) {
-    <aside class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-50 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50">
+    <aside class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-10 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50">
         <div class="w-1/2 m-8 bg-slate-800 shadow-xl rounded-xl">
             <form id="form" hx-post={dst} hx-encoding="multipart/form-data" hx-target="#modal">
                 <header class="p-6 px-8 border-b border-b-slate-700 flex justify-between">

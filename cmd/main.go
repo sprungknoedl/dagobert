@@ -46,6 +46,7 @@ func main() {
 	model.InitDatabase(cfg.Database)
 
 	e := echo.New()
+	e.HTTPErrorHandler = handler.ErrorHandler
 	e.Use(PrettyLogger)
 	e.Use(middleware.Gzip())
 	e.Use(middleware.Recover())
