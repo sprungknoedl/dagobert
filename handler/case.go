@@ -43,9 +43,17 @@ func ExportCases(c echo.Context) error {
 	c.Response().WriteHeader(http.StatusOK)
 
 	w := csv.NewWriter(c.Response().Writer)
-	w.Write([]string{"ID", "Name", "Classification", "Summary"})
+	w.Write([]string{"ID", "Name", "Severity", "Classification", "Closed", "Outcome", "Summary"})
 	for _, e := range list {
-		w.Write([]string{strconv.FormatInt(e.ID, 10), e.Name, e.Classification, e.Summary})
+		w.Write([]string{
+			strconv.FormatInt(e.ID, 10),
+			e.Name,
+			e.Severity,
+			e.Classification,
+			strconv.FormatBool(e.Closed),
+			e.Outcome,
+			e.Summary,
+		})
 	}
 
 	w.Flush()
@@ -57,8 +65,13 @@ func ImportCases(c echo.Context) error {
 	now := time.Now()
 	usr := getUser(c)
 
-	return importHelper(c, uri, 4, func(c echo.Context, rec []string) error {
+	return importHelper(c, uri, 7, func(c echo.Context, rec []string) error {
 		id, err := strconv.ParseInt(rec[0], 10, 64)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusBadRequest, err)
+		}
+
+		closed, err := strconv.ParseBool(rec[4])
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
@@ -66,8 +79,11 @@ func ImportCases(c echo.Context) error {
 		obj := model.Case{
 			ID:             id,
 			Name:           rec[1],
-			Classification: rec[2],
-			Summary:        rec[3],
+			Severity:       rec[2],
+			Classification: rec[3],
+			Closed:         closed,
+			Outcome:        rec[5],
+			Summary:        rec[6],
 			DateAdded:      now,
 			UserAdded:      usr,
 			DateModified:   now,
