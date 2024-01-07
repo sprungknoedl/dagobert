@@ -99,11 +99,13 @@ templ List(env utils.Env, cid int64, list []model.Evidence) {
                         @icons.FaceFrown("inline-block w-6 h-6 mr-2")
                         Nothing here ...
                     </h3>
-                    <p class="mb-4">It looks empty here. Try creating a new evidence ↓</p>
-                    @utils.PrimaryButton(templ.Attributes{"hx-get": "/forms/evidence/0", "hx-target": "#modal"}) {
+                    <p class="mb-8">It looks empty here. Try creating a new evidence ↓</p>
+                    <p class="flex justify-center">
+                    @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-evidence", cid, 0), "hx-target": "#modal"}) {
                         @icons.Plus("inline-block mr-1 w-5 h-5")
                         Add
                     }
+                    </p>
                 </caption>
                 }
             </table>

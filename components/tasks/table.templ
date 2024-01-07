@@ -105,11 +105,13 @@ templ List(env utils.Env, cid int64, list []model.Task) {
                         @icons.FaceFrown("inline-block w-6 h-6 mr-2")
                         Nothing here ...
                     </h3>
-                    <p class="mb-4">It looks empty here. Try creating a new case ↓</p>
+                    <p class="mb-8">It looks empty here. Try creating a new case ↓</p>
+                    <p class="flex justify-center">
                     @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-task", cid, 0), "hx-target": "#modal"}) {
                         @icons.Plus("inline-block mr-1 w-5 h-5")
                         Add
                     }
+                    </p>
                 </caption>
                 }
             </table>
