@@ -10,15 +10,8 @@ import (
 	"github.com/sprungknoedl/dagobert/components/indicators"
 	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
+	"github.com/sprungknoedl/dagobert/valid"
 )
-
-type IndicatorDTO struct {
-	Type        string `form:"type"`
-	Value       string `form:"value"`
-	TLP         string `form:"tlp"`
-	Description string `form:"description"`
-	Source      string `form:"source"`
-}
 
 func ListIndicators(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
@@ -107,7 +100,15 @@ func ViewIndicator(c echo.Context) error {
 		}
 	}
 
-	return render(c, indicators.Form(ctx(c), obj))
+	return render(c, indicators.Form(ctx(c), indicators.IndicatorDTO{
+		ID:          id,
+		CaseID:      cid,
+		Type:        obj.Type,
+		Value:       obj.Value,
+		TLP:         obj.TLP,
+		Description: obj.Description,
+		Source:      obj.Source,
+	}, valid.Result{}))
 }
 
 func SaveIndicator(c echo.Context) error {
@@ -121,9 +122,13 @@ func SaveIndicator(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	dto := IndicatorDTO{}
+	dto := indicators.IndicatorDTO{ID: id, CaseID: cid}
 	if err = c.Bind(&dto); err != nil {
 		return err
+	}
+
+	if vr := ValidateIndicator(dto); !vr.Valid() {
+		return render(c, indicators.Form(ctx(c), dto, vr))
 	}
 
 	now := time.Now()

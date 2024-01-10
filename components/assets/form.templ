@@ -2,11 +2,23 @@ package assets
 
 import (
     "github.com/sprungknoedl/dagobert/components/icons"
-    "github.com/sprungknoedl/dagobert/model"
 	"github.com/sprungknoedl/dagobert/components/utils"
+    "github.com/sprungknoedl/dagobert/model"
+    "github.com/sprungknoedl/dagobert/valid"
 )
 
-templ Form(env utils.Env, obj model.Asset) {
+type AssetDTO struct {
+    ID          int64
+    CaseID      int64
+	Type        string `form:"type"`
+	Name        string `form:"name"`
+	IP          string `form:"ip"`
+	Description string `form:"description"`
+	Compromised string `form:"compromised"`
+	Analysed    bool   `form:"analysed"`
+}
+
+templ Form(env utils.Env, obj AssetDTO, vr valid.Result) {
     <aside class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-10 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50"
         _="on closeModal remove me">
         <div class="w-1/2 m-8 bg-slate-800 shadow-xl rounded-xl">
@@ -25,17 +37,18 @@ templ Form(env utils.Env, obj model.Asset) {
                 </header>
       
                 <section class="p-8 flex flex-col gap-6">
-                    @utils.WithLabel("Type")        { @utils.SelectInput("type", obj.Type, model.AssetTypes) }
-                    @utils.WithLabel("Name")        { @utils.TextInput("name", obj.Name) }
-                    @utils.WithLabel("IP")          { @utils.TextInput("ip", obj.IP) }
-                    @utils.WithLabel("Description") { @utils.TextareaInput("description", obj.Description) }
-                    @utils.WithLabel("Compromised") { @utils.SelectInput("compromised", obj.Compromised, model.AssetCompromised) }
-                    @utils.WithLabel("Analysed")    { @utils.BooleanInput("analysed", obj.Analysed) }
+                    @utils.WithLabel2("Type", true)         { @utils.SelectInput2("type", obj.Type, model.AssetTypes, vr["Type"]) }
+                    @utils.WithLabel2("Name", true)         { @utils.TextInput2("name", obj.Name, vr["Name"]) }
+                    @utils.WithLabel2("IP", false)          { @utils.TextInput2("ip", obj.IP, vr["IP"]) }
+                    @utils.WithLabel2("Description", false) { @utils.TextareaInput2("description", obj.Description, vr["Description"]) }
+                    @utils.WithLabel2("Compromised", true)  { @utils.SelectInput2("compromised", obj.Compromised, model.AssetCompromised, vr["Compromised"]) }
+                    @utils.WithLabel2("Analysed", false)    { @utils.BooleanInput2("analysed", obj.Analysed, vr["Analysed"]) }
                 </section>
 
-                <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4">
+                <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4 items-center">
                     @utils.PrimaryButton(templ.Attributes{"type": "submit"}) { Save }
                     @utils.SecondaryButton(templ.Attributes{"_": "on click trigger closeModal"}) { Cancel }
+                    <p class="ml-4 text-slate-600">Fields marked with <span class="font-bold text-rose-500">*</span> are required.</p>
                 </footer>
             </form>
         </div>

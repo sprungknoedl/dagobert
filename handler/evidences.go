@@ -10,16 +10,8 @@ import (
 	"github.com/sprungknoedl/dagobert/components/evidences"
 	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
+	"github.com/sprungknoedl/dagobert/valid"
 )
-
-type EvidenceDTO struct {
-	Type        string `form:"type"`
-	Name        string `form:"name"`
-	Description string `form:"description"`
-	Size        int64  `form:"size"`
-	Hash        string `form:"hash"`
-	Location    string `form:"location"`
-}
 
 func ListEvidences(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
@@ -114,7 +106,16 @@ func ViewEvidence(c echo.Context) error {
 		}
 	}
 
-	return render(c, evidences.Form(ctx(c), obj))
+	return render(c, evidences.Form(ctx(c), evidences.EvidenceDTO{
+		ID:          id,
+		CaseID:      cid,
+		Type:        obj.Type,
+		Name:        obj.Name,
+		Description: obj.Description,
+		Size:        obj.Size,
+		Hash:        obj.Hash,
+		Location:    obj.Location,
+	}, valid.Result{}))
 }
 
 func SaveEvidence(c echo.Context) error {
@@ -128,9 +129,13 @@ func SaveEvidence(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	dto := EvidenceDTO{}
+	dto := evidences.EvidenceDTO{ID: id, CaseID: cid}
 	if err = c.Bind(&dto); err != nil {
 		return err
+	}
+
+	if vr := ValidateEvidence(dto); !vr.Valid() {
+		return render(c, evidences.Form(ctx(c), dto, vr))
 	}
 
 	now := time.Now()

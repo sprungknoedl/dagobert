@@ -10,15 +10,8 @@ import (
 	"github.com/sprungknoedl/dagobert/components/tasks"
 	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
+	"github.com/sprungknoedl/dagobert/valid"
 )
-
-type TaskDTO struct {
-	Type    string    `form:"type"`
-	Task    string    `form:"task"`
-	Done    bool      `form:"done"`
-	Owner   string    `form:"owner"`
-	DateDue time.Time `form:"dateDue"`
-}
 
 func ListTasks(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
@@ -117,7 +110,15 @@ func ViewTask(c echo.Context) error {
 		}
 	}
 
-	return render(c, tasks.Form(ctx(c), obj))
+	return render(c, tasks.Form(ctx(c), tasks.TaskDTO{
+		ID:      id,
+		CaseID:  cid,
+		Type:    obj.Type,
+		Task:    obj.Task,
+		Done:    obj.Done,
+		Owner:   obj.Owner,
+		DateDue: formatNonZero("2006-01-02", obj.DateDue),
+	}, valid.Result{}))
 }
 
 func SaveTask(c echo.Context) error {
@@ -131,9 +132,18 @@ func SaveTask(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	dto := TaskDTO{}
+	dto := tasks.TaskDTO{ID: id, CaseID: cid}
 	if err = c.Bind(&dto); err != nil {
 		return err
+	}
+
+	if vr := ValidateTask(dto); !vr.Valid() {
+		return render(c, tasks.Form(ctx(c), dto, vr))
+	}
+
+	dateDue, err := time.Parse("2006-01-02", dto.DateDue)
+	if err != nil {
+		return err // if ValidateTask is correct, this should never happen
 	}
 
 	now := time.Now()
@@ -145,7 +155,7 @@ func SaveTask(c echo.Context) error {
 		Task:         dto.Task,
 		Done:         dto.Done,
 		Owner:        dto.Owner,
-		DateDue:      dto.DateDue,
+		DateDue:      dateDue,
 		DateAdded:    now,
 		UserAdded:    usr,
 		DateModified: now,

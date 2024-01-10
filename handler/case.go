@@ -12,16 +12,8 @@ import (
 	"github.com/sprungknoedl/dagobert/components/cases"
 	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
+	"github.com/sprungknoedl/dagobert/valid"
 )
-
-type CaseDTO struct {
-	Name           string `form:"name"`
-	Closed         bool   `form:"closed"`
-	Classification string `form:"classification"`
-	Severity       string `form:"severity"`
-	Outcome        string `form:"outcome"`
-	Summary        string `form:"summary"`
-}
 
 func ListCases(c echo.Context) error {
 	search := c.QueryParam("search")
@@ -156,7 +148,16 @@ func ViewCase(c echo.Context) error {
 		}
 	}
 
-	return render(c, cases.Form(ctx(c), obj))
+	vr := valid.Result{}
+	return render(c, cases.Form(ctx(c), cases.CaseDTO{
+		ID:             obj.ID,
+		Name:           obj.Name,
+		Closed:         obj.Closed,
+		Classification: obj.Classification,
+		Severity:       obj.Severity,
+		Outcome:        obj.Outcome,
+		Summary:        obj.Summary,
+	}, vr))
 }
 
 func SaveCase(c echo.Context) error {
@@ -165,9 +166,13 @@ func SaveCase(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	dto := CaseDTO{}
+	dto := cases.CaseDTO{ID: cid}
 	if err = c.Bind(&dto); err != nil {
 		return err
+	}
+
+	if vr := ValidateCase(dto); !vr.Valid() {
+		return render(c, cases.Form(ctx(c), dto, vr))
 	}
 
 	now := time.Now()

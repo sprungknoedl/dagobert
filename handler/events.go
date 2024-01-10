@@ -10,18 +10,8 @@ import (
 	"github.com/sprungknoedl/dagobert/components/events"
 	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
+	"github.com/sprungknoedl/dagobert/valid"
 )
-
-type EventDTO struct {
-	Time      time.Time `form:"time"`
-	Type      string    `form:"type"`
-	AssetA    string    `form:"assetA"`
-	AssetB    string    `form:"assetB"`
-	Direction string    `form:"direction"`
-	Event     string    `form:"event"`
-	Raw       string    `form:"raw"`
-	KeyEvent  bool      `form:"keyevent"`
-}
 
 func ListEvents(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
@@ -137,7 +127,18 @@ func ViewEvent(c echo.Context) error {
 		}
 	}
 
-	return render(c, events.Form(ctx(c), obj))
+	return render(c, events.Form(ctx(c), events.EventDTO{
+		ID:        obj.ID,
+		CaseID:    obj.CaseID,
+		Time:      formatNonZero(time.RFC3339, obj.Time),
+		Type:      obj.Type,
+		AssetA:    obj.AssetA,
+		AssetB:    obj.AssetB,
+		Direction: obj.Direction,
+		Event:     obj.Event,
+		Raw:       obj.Raw,
+		KeyEvent:  obj.KeyEvent,
+	}, valid.Result{}))
 }
 
 func SaveEvent(c echo.Context) error {
@@ -151,9 +152,18 @@ func SaveEvent(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	dto := EventDTO{}
+	dto := events.EventDTO{ID: id, CaseID: cid}
 	if err = c.Bind(&dto); err != nil {
 		return err
+	}
+
+	if vr := ValidateEvent(dto); !vr.Valid() {
+		return render(c, events.Form(ctx(c), dto, vr))
+	}
+
+	t, err := time.Parse(time.RFC3339, dto.Time)
+	if err != nil {
+		return err // if ValidateEvent is correct, this should never happen
 	}
 
 	now := time.Now()
@@ -161,7 +171,7 @@ func SaveEvent(c echo.Context) error {
 	obj := model.Event{
 		ID:           id,
 		CaseID:       cid,
-		Time:         dto.Time,
+		Time:         t,
 		Type:         dto.Type,
 		AssetA:       dto.AssetA,
 		AssetB:       dto.AssetB,

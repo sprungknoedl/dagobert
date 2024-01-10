@@ -10,16 +10,8 @@ import (
 	"github.com/sprungknoedl/dagobert/components/assets"
 	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
+	"github.com/sprungknoedl/dagobert/valid"
 )
-
-type AssetCTO struct {
-	Type        string `form:"type"`
-	Name        string `form:"name"`
-	IP          string `form:"ip"`
-	Description string `form:"description"`
-	Compromised string `form:"compromised"`
-	Analysed    bool   `form:"analysed"`
-}
 
 func ListAssets(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
@@ -114,7 +106,16 @@ func ViewAsset(c echo.Context) error {
 		}
 	}
 
-	return render(c, assets.Form(ctx(c), obj))
+	return render(c, assets.Form(ctx(c), assets.AssetDTO{
+		ID:          id,
+		CaseID:      cid,
+		Type:        obj.Type,
+		Name:        obj.Name,
+		IP:          obj.IP,
+		Description: obj.Description,
+		Compromised: obj.Compromised,
+		Analysed:    obj.Analysed,
+	}, valid.Result{}))
 }
 
 func SaveAsset(c echo.Context) error {
@@ -128,9 +129,13 @@ func SaveAsset(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	dto := AssetCTO{}
+	dto := assets.AssetDTO{ID: id, CaseID: cid}
 	if err = c.Bind(&dto); err != nil {
 		return err
+	}
+
+	if vr := ValidateAsset(dto); !vr.Valid() {
+		return render(c, assets.Form(ctx(c), dto, vr))
 	}
 
 	now := time.Now()

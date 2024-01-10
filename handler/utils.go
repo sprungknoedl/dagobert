@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo-contrib/session"
@@ -62,6 +63,13 @@ func ctx(c echo.Context) utils.Env {
 		ActiveRoute: c.Request().RequestURI,
 		ActiveCase:  getCase(c),
 	}
+}
+
+func formatNonZero(layout string, t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return t.Format(layout)
 }
 
 func importHelper(c echo.Context, uri string, numFields int, cb func(c echo.Context, rec []string) error) error {

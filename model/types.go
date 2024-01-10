@@ -5,7 +5,7 @@ import (
 )
 
 var CaseSeverities = []string{"Low", "Medium", "High"}
-var CaseOutcomes = []string{"False positive", "True positive", "Benign positive"}
+var CaseOutcomes = []string{"", "False positive", "True positive", "Benign positive"}
 
 type Case struct {
 	ID  int64  `json:"id" gorm:"primaryKey"`

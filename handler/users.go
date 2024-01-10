@@ -10,16 +10,8 @@ import (
 	"github.com/sprungknoedl/dagobert/components/users"
 	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
+	"github.com/sprungknoedl/dagobert/valid"
 )
-
-type UserDTO struct {
-	Name    string `form:"name"`
-	Company string `form:"company"`
-	Role    string `form:"role"`
-	Email   string `form:"email"`
-	Phone   string `form:"phone"`
-	Notes   string `form:"notes"`
-}
 
 func ListUsers(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
@@ -109,7 +101,16 @@ func ViewUser(c echo.Context) error {
 		}
 	}
 
-	return render(c, users.Form(ctx(c), obj))
+	return render(c, users.Form(ctx(c), users.UserDTO{
+		ID:      id,
+		CaseID:  cid,
+		Name:    obj.Name,
+		Company: obj.Company,
+		Role:    obj.Role,
+		Email:   obj.Email,
+		Phone:   obj.Phone,
+		Notes:   obj.Notes,
+	}, valid.Result{}))
 }
 
 func SaveUser(c echo.Context) error {
@@ -123,9 +124,13 @@ func SaveUser(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	dto := UserDTO{}
+	dto := users.UserDTO{ID: id, CaseID: cid}
 	if err = c.Bind(&dto); err != nil {
 		return err
+	}
+
+	if vr := ValidateUser(dto); !vr.Valid() {
+		return render(c, users.Form(ctx(c), dto, vr))
 	}
 
 	now := time.Now()

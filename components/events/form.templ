@@ -1,14 +1,26 @@
 package events
 
 import (
-    "time"
-
     "github.com/sprungknoedl/dagobert/components/icons"
-    "github.com/sprungknoedl/dagobert/model"
 	"github.com/sprungknoedl/dagobert/components/utils"
+    "github.com/sprungknoedl/dagobert/model"
+    "github.com/sprungknoedl/dagobert/valid"
 )
 
-templ Form(env utils.Env, obj model.Event) {
+type EventDTO struct {
+	ID        int64
+	CaseID    int64
+	Time      string `form:"time"`
+	Type      string `form:"type"`
+	AssetA    string `form:"assetA"`
+	AssetB    string `form:"assetB"`
+	Direction string `form:"direction"`
+	Event     string `form:"event"`
+	Raw       string `form:"raw"`
+	KeyEvent  bool   `form:"keyevent"`
+}
+
+templ Form(env utils.Env, obj EventDTO, vr valid.Result) {
     <aside class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-10 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50"
         _="on closeModal remove me">
         <div class="w-1/2 m-8 bg-slate-800 shadow-xl rounded-xl">
@@ -27,19 +39,20 @@ templ Form(env utils.Env, obj model.Event) {
                 </header>
       
                 <section class="p-8 flex flex-col gap-6">
-                    @utils.WithLabel("Date / Time")   { @utils.TextInput("time", obj.Time.Format(time.RFC3339)) }
-                    @utils.WithLabel("Type")          { @utils.SelectInput("type", obj.Type, model.EventTypes) }
-                    @utils.WithLabel("Event System")  { @utils.TextInput("assetA", obj.AssetA) }
-                    @utils.WithLabel("Direction")     { @utils.SelectInput("direction", obj.Direction, model.EventDirections) }
-                    @utils.WithLabel("Remote System") { @utils.TextInput("assetB", obj.AssetB) }
-                    @utils.WithLabel("Event")         { @utils.TextareaInput("event", obj.Event) }
-                    @utils.WithLabel("Raw")           { @utils.TextareaInput("raw", obj.Raw) }
-                    @utils.WithLabel("Key Event?")    { @utils.BooleanInput("keyevent", obj.KeyEvent) }
+                    @utils.WithLabel2("Date / Time", true)    { @utils.TextInput2("time", obj.Time, vr["Time"]) }
+                    @utils.WithLabel2("Type", true)           { @utils.SelectInput2("type", obj.Type, model.EventTypes, vr["Type"]) }
+                    @utils.WithLabel2("Event System", true)   { @utils.TextInput2("assetA", obj.AssetA, vr["Event System"]) }
+                    @utils.WithLabel2("Direction", false)     { @utils.SelectInput2("direction", obj.Direction, model.EventDirections, vr["Direction"]) }
+                    @utils.WithLabel2("Remote System", false) { @utils.TextInput2("assetB", obj.AssetB, vr["Remote System"]) }
+                    @utils.WithLabel2("Event", true)          { @utils.TextareaInput2("event", obj.Event, vr["Event"]) }
+                    @utils.WithLabel2("Raw", false)           { @utils.TextareaInput2("raw", obj.Raw, vr["Raw"]) }
+                    @utils.WithLabel2("Key Event?", false)    { @utils.BooleanInput2("keyevent", obj.KeyEvent, vr["Key Event"]) }
                 </section>
 
-                <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4">
+                <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4 items-center">
                     @utils.PrimaryButton(templ.Attributes{"type": "submit"}) { Save }
                     @utils.SecondaryButton(templ.Attributes{"_": "on click trigger closeModal"}) { Cancel }
+                    <p class="ml-4 text-slate-600">Fields marked with <span class="font-bold text-rose-500">*</span> are required.</p>
                 </footer>
             </form>
         </div>

@@ -11,13 +11,8 @@ import (
 	"github.com/sprungknoedl/dagobert/components/notes"
 	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
+	"github.com/sprungknoedl/dagobert/valid"
 )
-
-type NoteDTO struct {
-	Title       string `form:"title"`
-	Category    string `form:"category"`
-	Description string `form:"description"`
-}
 
 func ListNotes(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
@@ -104,7 +99,13 @@ func ViewNote(c echo.Context) error {
 		}
 	}
 
-	return render(c, notes.Form(ctx(c), obj))
+	return render(c, notes.Form(ctx(c), notes.NoteDTO{
+		ID:          id,
+		CaseID:      cid,
+		Title:       obj.Title,
+		Category:    obj.Category,
+		Description: obj.Description,
+	}, valid.Result{}))
 }
 
 func SaveNote(c echo.Context) error {
@@ -118,9 +119,13 @@ func SaveNote(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	dto := NoteDTO{}
+	dto := notes.NoteDTO{ID: id, CaseID: cid}
 	if err = c.Bind(&dto); err != nil {
 		return err
+	}
+
+	if vr := ValidateNote(dto); !vr.Valid() {
+		return render(c, notes.Form(ctx(c), dto, vr))
 	}
 
 	now := time.Now()
