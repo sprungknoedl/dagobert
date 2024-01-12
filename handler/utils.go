@@ -62,6 +62,8 @@ func ctx(c echo.Context) utils.Env {
 		Username:    getUser(c),
 		ActiveRoute: c.Request().RequestURI,
 		ActiveCase:  getCase(c),
+		Search:      c.QueryParam("search"),
+		Sort:        c.QueryParam("sort"),
 	}
 }
 

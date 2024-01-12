@@ -37,15 +37,43 @@ func InitDatabase(dburl string) {
 // --------------------------------------
 // Cases
 // --------------------------------------
-func FindCases(term string) ([]Case, error) {
+func FindCases(search string, sort string) ([]Case, error) {
 	var list []Case
-	result := db.Order("name asc").
-		Where("instr(name, ?) > 0", term).
-		Or("instr(classification, ?) > 0", term).
-		Or("instr(severity, ?) > 0", term).
-		Or("instr(outcome, ?) > 0", term).
-		Or("instr(summary, ?) > 0", term).
-		Find(&list)
+	query := db.
+		Where("instr(name, ?) > 0", search).
+		Or("instr(classification, ?) > 0", search).
+		Or("instr(severity, ?) > 0", search).
+		Or("instr(outcome, ?) > 0", search).
+		Or("instr(summary, ?) > 0", search)
+
+	switch sort {
+	case "outcome":
+		query = query.Order("outcome asc, name asc")
+	case "-outcome":
+		query = query.Order("outcome desc, name asc")
+	case "severity":
+		query = query.Order("severity asc, name asc")
+	case "-severity":
+		query = query.Order("classification desc, name asc")
+	case "closed":
+		query = query.Order("closed asc, name asc")
+	case "-closed":
+		query = query.Order("closed desc, name asc")
+	case "summary":
+		query = query.Order("summary asc, name asc")
+	case "-summary":
+		query = query.Order("summary desc, name asc")
+	case "classification":
+		query = query.Order("classification asc, name asc")
+	case "-classification":
+		query = query.Order("classification desc, name asc")
+	case "-name":
+		query = query.Order("name desc")
+	default: // case "name"
+		query = query.Order("name asc")
+	}
+
+	result := query.Find(&list)
 	return list, result.Error
 }
 
@@ -93,16 +121,40 @@ func DeleteCase(id int64) error {
 // --------------------------------------
 // Events
 // --------------------------------------
-func FindEvents(cid int64, term string) ([]Event, error) {
+func FindEvents(cid int64, search string, sort string) ([]Event, error) {
 	var list []Event
-	result := db.Order("time asc").
+	query := db.
 		Where("case_id = ?", cid).
 		Where(db.
-			Where("instr(type, ?) > 0", term).
-			Or("instr(asset_a, ?) > 0", term).
-			Or("instr(asset_b, ?) > 0", term).
-			Or("instr(event, ?) > 0", term)).
-		Find(&list)
+			Where("instr(type, ?) > 0", search).
+			Or("instr(asset_a, ?) > 0", search).
+			Or("instr(asset_b, ?) > 0", search).
+			Or("instr(event, ?) > 0", search))
+
+	switch sort {
+	case "type":
+		query = query.Order("type asc, time asc")
+	case "-type":
+		query = query.Order("type desc, time asc")
+	case "src":
+		query = query.Order("asset_a asc, time asc")
+	case "-src":
+		query = query.Order("asset_a desc, time asc")
+	case "dst":
+		query = query.Order("asset_b asc, time asc")
+	case "-dst":
+		query = query.Order("asset_b desc, time asc")
+	case "event":
+		query = query.Order("event asc, time asc")
+	case "-event":
+		query = query.Order("event desc, time asc")
+	case "-time":
+		query = query.Order("time desc, asset_a asc")
+	default: // case "time":
+		query = query.Order("time asc, asset_a asc")
+	}
+
+	result := query.Find(&list)
 	return list, result.Error
 }
 
@@ -160,17 +212,45 @@ func ListAssets(cid int64) ([]Asset, error) {
 	return list, result.Error
 }
 
-func FindAssets(cid int64, term string) ([]Asset, error) {
+func FindAssets(cid int64, search string, sort string) ([]Asset, error) {
 	var list []Asset
-	result := db.Order("name asc").
+	query := db.
 		Where("case_id = ?", cid).
 		Where(db.
-			Where("instr(type, ?) > 0", term).
-			Or("instr(name, ?) > 0", term).
-			Or("instr(ip, ?) > 0", term).
-			Or("instr(description, ?) > 0", term).
-			Or("instr(compromised, ?) > 0", term)).
-		Find(&list)
+			Where("instr(type, ?) > 0", search).
+			Or("instr(name, ?) > 0", search).
+			Or("instr(ip, ?) > 0", search).
+			Or("instr(description, ?) > 0", search).
+			Or("instr(compromised, ?) > 0", search))
+
+	switch sort {
+	case "analysed":
+		query = query.Order("analysed asc, name asc")
+	case "-analysed":
+		query = query.Order("analysed desc, name asc")
+	case "compromised":
+		query = query.Order("compromised asc, name asc")
+	case "-compromised":
+		query = query.Order("compromised desc, name asc")
+	case "desc":
+		query = query.Order("description asc, name asc")
+	case "-desc":
+		query = query.Order("description desc, name asc")
+	case "ip":
+		query = query.Order("ip asc, name asc")
+	case "-ip":
+		query = query.Order("ip desc, name asc")
+	case "type":
+		query = query.Order("type asc, name asc")
+	case "-type":
+		query = query.Order("type desc, name asc")
+	case "-name":
+		query = query.Order("name desc")
+	default: // case "name"
+		query = query.Order("name asc")
+	}
+
+	result := query.Find(&list)
 	return list, result.Error
 }
 
@@ -218,17 +298,41 @@ func ListMalware(cid int64) ([]Malware, error) {
 	return list, result.Error
 }
 
-func FindMalware(cid int64, term string) ([]Malware, error) {
+func FindMalware(cid int64, search string, sort string) ([]Malware, error) {
 	var list []Malware
-	result := db.Order("filename asc").
+	query := db.
 		Where("case_id = ?", cid).
 		Where(db.
-			Where("instr(filename, ?) > 0", term).
-			Or("instr(filepath, ?) > 0", term).
-			Or("instr(system, ?) > 0", term).
-			Or("instr(hash, ?) > 0", term).
-			Or("instr(notes, ?) > 0", term)).
-		Find(&list)
+			Where("instr(filename, ?) > 0", search).
+			Or("instr(filepath, ?) > 0", search).
+			Or("instr(system, ?) > 0", search).
+			Or("instr(hash, ?) > 0", search).
+			Or("instr(notes, ?) > 0", search))
+
+	switch sort {
+	case "notes":
+		query = query.Order("notes asc, filename asc")
+	case "-notes":
+		query = query.Order("notes desc, filename asc")
+	case "hash":
+		query = query.Order("hash asc, filename asc")
+	case "-hash":
+		query = query.Order("hash desc, filename asc")
+	case "system":
+		query = query.Order("system asc, filename asc")
+	case "-system":
+		query = query.Order("system desc, filename asc")
+	case "filepath":
+		query = query.Order("filepath asc, filename asc")
+	case "-filepath":
+		query = query.Order("filepath desc, filename asc")
+	case "-filename":
+		query = query.Order("filename desc")
+	default: // case "filename":
+		query = query.Order("filename asc")
+	}
+
+	result := query.Find(&list)
 	return list, result.Error
 }
 
@@ -278,17 +382,41 @@ func ListIndicators(cid int64) ([]Indicator, error) {
 	return list, result.Error
 }
 
-func FindIndicators(cid int64, term string) ([]Indicator, error) {
+func FindIndicators(cid int64, search string, sort string) ([]Indicator, error) {
 	var list []Indicator
-	result := db.Order("type asc, value asc").
+	query := db.
 		Where("case_id = ?", cid).
 		Where(db.
-			Where("instr(type, ?) > 0", term).
-			Or("instr(value, ?) > 0", term).
-			Or("instr(description, ?) > 0", term).
-			Or("instr(tlp, ?) > 0", term).
-			Or("instr(source, ?) > 0", term)).
-		Find(&list)
+			Where("instr(type, ?) > 0", search).
+			Or("instr(value, ?) > 0", search).
+			Or("instr(description, ?) > 0", search).
+			Or("instr(tlp, ?) > 0", search).
+			Or("instr(source, ?) > 0", search))
+
+	switch sort {
+	case "description":
+		query = query.Order("description asc, type desc, value asc")
+	case "-description":
+		query = query.Order("description desc, type desc, value asc")
+	case "source":
+		query = query.Order("source asc, type desc, value asc")
+	case "-source":
+		query = query.Order("source desc, type desc, value asc")
+	case "tlp":
+		query = query.Order("tlp desc, type desc, value asc")
+	case "-tlp":
+		query = query.Order("tlp desc, type desc, value asc")
+	case "value":
+		query = query.Order("value desc")
+	case "-value":
+		query = query.Order("value desc")
+	case "-type":
+		query = query.Order("type desc, value asc")
+	default: // case "type":
+		query = query.Order("type asc, value asc")
+	}
+
+	result := query.Find(&list)
 	return list, result.Error
 }
 
@@ -336,18 +464,46 @@ func ListUsers(cid int64) ([]User, error) {
 	return list, result.Error
 }
 
-func FindUsers(cid int64, term string) ([]User, error) {
+func FindUsers(cid int64, search string, sort string) ([]User, error) {
 	var list []User
-	result := db.Order("name asc").
+	query := db.Order("name asc").
 		Where("case_id = ?", cid).
 		Where(db.
-			Where("instr(name, ?) > 0", term).
-			Or("instr(company, ?) > 0", term).
-			Or("instr(role, ?) > 0", term).
-			Or("instr(email, ?) > 0", term).
-			Or("instr(phone, ?) > 0", term).
-			Or("instr(notes, ?) > 0", term)).
-		Find(&list)
+			Where("instr(name, ?) > 0", search).
+			Or("instr(company, ?) > 0", search).
+			Or("instr(role, ?) > 0", search).
+			Or("instr(email, ?) > 0", search).
+			Or("instr(phone, ?) > 0", search).
+			Or("instr(notes, ?) > 0", search))
+
+	switch sort {
+	case "notes":
+		query = query.Order("notes asc, name asc")
+	case "-notes":
+		query = query.Order("notes desc, name asc")
+	case "phone":
+		query = query.Order("phone asc, name asc")
+	case "-phone":
+		query = query.Order("phone desc, name asc")
+	case "email":
+		query = query.Order("email asc, name asc")
+	case "-email":
+		query = query.Order("email desc, name asc")
+	case "role":
+		query = query.Order("role asc, name asc")
+	case "-role":
+		query = query.Order("role desc, name asc")
+	case "company":
+		query = query.Order("company asc, name asc")
+	case "-company":
+		query = query.Order("company desc, name asc")
+	case "-name":
+		query = query.Order("name desc")
+	default: // case "name"
+		query = query.Order("name asc")
+	}
+
+	result := query.Find(&list)
 	return list, result.Error
 }
 
@@ -396,17 +552,41 @@ func ListEvidences(cid int64) ([]Evidence, error) {
 	return list, result.Error
 }
 
-func FindEvidences(cid int64, term string) ([]Evidence, error) {
+func FindEvidences(cid int64, search string, sort string) ([]Evidence, error) {
 	var list []Evidence
-	result := db.Order("name asc").
+	query := db.
 		Where("case_id = ?", cid).
 		Where(db.
-			Where("instr(type, ?) > 0", term).
-			Or("instr(name, ?) > 0", term).
-			Or("instr(description, ?) > 0", term).
-			Or("instr(hash, ?) > 0", term).
-			Or("instr(location, ?) > 0", term)).
-		Find(&list)
+			Where("instr(type, ?) > 0", search).
+			Or("instr(name, ?) > 0", search).
+			Or("instr(description, ?) > 0", search).
+			Or("instr(hash, ?) > 0", search).
+			Or("instr(location, ?) > 0", search))
+
+	switch sort {
+	case "location":
+		query = query.Order("location asc, name asc")
+	case "-location":
+		query = query.Order("location desc, name asc")
+	case "hash":
+		query = query.Order("hash asc, name asc")
+	case "-hash":
+		query = query.Order("hash desc, name asc")
+	case "description":
+		query = query.Order("description asc, name asc")
+	case "-description":
+		query = query.Order("description desc, name asc")
+	case "type":
+		query = query.Order("type asc, name asc")
+	case "-type":
+		query = query.Order("type desc, name asc")
+	case "-name":
+		query = query.Order("name desc")
+	default: // case "name":
+		query = query.Order("name asc")
+	}
+
+	result := query.Find(&list)
 	return list, result.Error
 }
 
@@ -455,15 +635,35 @@ func ListTasks(cid int64) ([]Task, error) {
 	return list, result.Error
 }
 
-func FindTasks(cid int64, term string) ([]Task, error) {
+func FindTasks(cid int64, search string, sort string) ([]Task, error) {
 	var list []Task
-	result := db.Order("date_due asc, type asc, task asc").
+	query := db.
 		Where("case_id = ?", cid).
 		Where(db.
-			Where("instr(type, ?) > 0", term).
-			Or("instr(task, ?) > 0", term).
-			Or("instr(owner, ?) > 0", term)).
-		Find(&list)
+			Where("instr(type, ?) > 0", search).
+			Or("instr(task, ?) > 0", search).
+			Or("instr(owner, ?) > 0", search))
+
+	switch sort {
+	case "type":
+		query = query.Order("type asc, date_due asc")
+	case "-type":
+		query = query.Order("type desc, date_due asc")
+	case "task":
+		query = query.Order("task desc, date_due asc")
+	case "-task":
+		query = query.Order("task asc, date_due asc")
+	case "owner":
+		query = query.Order("owner asc, date_due asc")
+	case "-owner":
+		query = query.Order("owner desc, date_due asc")
+	case "-due":
+		query = query.Order("date_due desc, type asc, task asc")
+	default: // case "due"
+		query = query.Order("date_due asc, type asc, task asc")
+	}
+
+	result := query.Find(&list)
 	return list, result.Error
 }
 
@@ -511,15 +711,31 @@ func ListNotes(cid int64) ([]Note, error) {
 	return list, result.Error
 }
 
-func FindNotes(cid int64, term string) ([]Note, error) {
+func FindNotes(cid int64, search string, sort string) ([]Note, error) {
 	var list []Note
-	result := db.Order("category asc, title asc").
+	query := db.
 		Where("case_id = ?", cid).
 		Where(db.
-			Where("instr(category, ?) > 0", term).
-			Or("instr(title, ?) > 0", term).
-			Or("instr(description, ?) > 0", term)).
-		Find(&list)
+			Where("instr(category, ?) > 0", search).
+			Or("instr(title, ?) > 0", search).
+			Or("instr(description, ?) > 0", search))
+
+	switch sort {
+	case "title":
+		query = query.Order("title asc")
+	case "-title":
+		query = query.Order("title desc")
+	case "desc":
+		query = query.Order("description asc")
+	case "-desc":
+		query = query.Order("description desc")
+	case "-category":
+		query = query.Order("category desc, title asc")
+	default: // case "category"
+		query = query.Order("category asc, title asc")
+	}
+
+	result := query.Find(&list)
 	return list, result.Error
 }
 

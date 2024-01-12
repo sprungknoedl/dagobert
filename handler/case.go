@@ -16,8 +16,9 @@ import (
 )
 
 func ListCases(c echo.Context) error {
+	sort := c.QueryParam("sort")
 	search := c.QueryParam("search")
-	list, err := model.FindCases(search)
+	list, err := model.FindCases(search, sort)
 	if err != nil {
 		return err
 	}

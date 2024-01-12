@@ -10,4 +10,6 @@ type Env struct {
 	Username    string
 	ActiveRoute string
 	ActiveCase  CaseDTO
+	Search      string
+	Sort        string
 }

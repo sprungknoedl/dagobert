@@ -19,8 +19,9 @@ func ListTasks(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
+	sort := c.QueryParam("sort")
 	search := c.QueryParam("search")
-	list, err := model.FindTasks(cid, search)
+	list, err := model.FindTasks(cid, search, sort)
 	if err != nil {
 		return err
 	}
