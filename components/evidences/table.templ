@@ -1,6 +1,8 @@
 package evidences
 
 import (
+    "fmt"
+
 	"github.com/sprungknoedl/dagobert/components/base"
 	"github.com/sprungknoedl/dagobert/components/utils"
     "github.com/sprungknoedl/dagobert/components/icons"
@@ -28,29 +30,34 @@ templ renderType(value string) {
 templ List(env utils.Env, cid int64, list []model.Evidence) {
     @base.Layout(env) {
         <main class="p-4 grow">
+        <form hx-get={env.Routes("list-evidences", cid)} hx-trigger="input delay:500ms, sort"
+            hx-target="#list" hx-select="#list" hx-swap="outerHTML" hx-push-url="true"
+            x-data={fmt.Sprintf("{ sort_by: '%s' }", env.Sort)}>
+
             <nav class="flex items-center justify-between mb-4">
                 <h3 class="font-bold text-2xl ml-2">Evidences</h3>
                 
                 <div class="flex gap-5 items-center">
                     @icons.MagnifyingGlass(icons.Default)
-
-                    <input style="width: 32rem" name="search" placeholder="Search" type="search" class="px-4 h-10 outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 text-white rounded-md shadow-sm" 
-                        hx-get={env.Routes("list-evidences", cid)} hx-trigger="input changed delay:300ms, search" 
-                        hx-target="#list" hx-select="#list" hx-swap="outerHTML"/>
+                    <input name="search" value={env.Search} placeholder="Search" style="width: 32rem" class="px-4 h-10 outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 text-white rounded-md shadow-sm" />
+                    <input name="sort" value={env.Sort} x-model="sort_by" x-init="$watch('sort_by', () => { $dispatch('sort'); } )" class="hidden" />
                     
-                    @utils.SecondaryButton(templ.Attributes{"hx-get": env.Routes("import-evidences", cid), "hx-target": "#modal"}) {
+                    @utils.SecondaryButton(templ.Attributes{"hx-get": env.Routes("import-evidences", cid),
+                    "hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false"}) {
                         @icons.ArrowUpTray("inline-block mr-1 w-5 h-5")
                         Import CSV
                     }
-                    @utils.SecondaryLink(templ.Attributes{"href": env.Routes("export-evidences", cid), "target": "blank"}) {
+                    @utils.SecondaryLink(templ.Attributes{"href": env.Routes("export-evidences", cid),
+                    "target": "blank"}) {
                         @icons.ArrowDownTray("inline-block mr-1 w-5 h-5")
                         Export CSV
                     }
-                    @utils.SecondaryButton(templ.Attributes{"hx-get": env.Routes("list-evidences", cid), "hx-target": "#list", "hx-select": "#list", "hx-swap": "outerHTML"}) {
+                    @utils.SecondaryButton(templ.Attributes{"@click": "$dispatch('sort')"}) {
                         @icons.ArrowPath("inline-block mr-1 w-5 h-5")
                         Refresh
                     }
-                    @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-evidence", cid, 0), "hx-target": "#modal"}) {
+                    @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-evidence", cid, 0),
+                    "hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false"}) {
                         @icons.Plus("inline-block mr-1 w-5 h-5")
                         Add
                     }
@@ -61,11 +68,11 @@ templ List(env utils.Env, cid int64, list []model.Evidence) {
                 <thead class="border-b-2 border-b-slate-600">
                     <tr class="p-8">
                         @utils.TH(templ.Attributes{"style": "width: 8rem"})  { Date added }
-                        @utils.TH(templ.Attributes{"style": "width: 15rem"}) { Type }
-                        @utils.TH(templ.Attributes{"style": "width: auto"})  { Name }
-                        @utils.TH(templ.Attributes{"style": "width: auto"})  { Description }
-                        @utils.TH(templ.Attributes{"style": "width: auto"})  { Hash }
-                        @utils.TH(templ.Attributes{"style": "width: auto"})  { Location }
+                        @utils.TH2(env, "type", templ.Attributes{"style": "width: 15rem"}) { Type }
+                        @utils.TH2(env, "name", templ.Attributes{"style": "width: auto"})  { Name }
+                        @utils.TH2(env, "desc", templ.Attributes{"style": "width: auto"})  { Description }
+                        @utils.TH2(env, "hash", templ.Attributes{"style": "width: auto"})  { Hash }
+                        @utils.TH2(env, "location", templ.Attributes{"style": "width: auto"})  { Location }
                         @utils.TH(templ.Attributes{"style": "width: 7rem"})  { }
                     </tr>
                 </thead>
@@ -82,11 +89,11 @@ templ List(env utils.Env, cid int64, list []model.Evidence) {
                         <td class="p-2 flex gap-2 justify-end">
                             @utils.InlineButton(templ.Attributes{
                                 "hx-get": env.Routes("view-evidence", cid, obj.ID), 
-                                "hx-target": "#modal"}) {
+                                "hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "aside", "hx-push-url": "false"}) {
                                 @icons.Pencil("w-4 h-4") }
                             @utils.InlineButton(templ.Attributes{
                                 "hx-delete": env.Routes("delete-evidence", cid, obj.ID), 
-                                "hx-target": "#modal"}) {
+                                "hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "aside", "hx-push-url": "false"}) { 
                                 @icons.Trash("w-4 h-4") }
                         </td>
                     </tr>
@@ -101,7 +108,8 @@ templ List(env utils.Env, cid int64, list []model.Evidence) {
                     </h3>
                     <p class="mb-8">It looks empty here. Try creating a new evidence ↓</p>
                     <p class="flex justify-center">
-                    @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-evidence", cid, 0), "hx-target": "#modal"}) {
+                    @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-evidence", cid, 0),
+                        "hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "aside", "hx-push-url": "false"}) { 
                         @icons.Plus("inline-block mr-1 w-5 h-5")
                         Add
                     }
@@ -109,6 +117,8 @@ templ List(env utils.Env, cid int64, list []model.Evidence) {
                 </caption>
                 }
             </table>
+
+        </form>
         </main>
     }
 }

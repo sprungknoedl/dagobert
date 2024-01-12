@@ -12,9 +12,11 @@ templ Layout(env utils.Env) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Dagobert</title>
         <link rel="stylesheet" href="/dist/dagobert.css" />
-        
-        <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
-        <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
+
+        <!-- <script src="https://unpkg.com/alpinejs" defer></script> -->
+        <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
+        <script src="https://unpkg.com/hyperscript.org" defer></script>
+        <script src="https://unpkg.com/htmx.org" defer></script>
     </head>
     <body class="flex bg-slate-800 text-white">
         @Navigation(env)
@@ -22,6 +24,7 @@ templ Layout(env utils.Env) {
 
         <div id="modal" hx-swap-oob="true"></div>
         <div id="errors" class="fixed bottom-0 right-0 z-50"></div>
+
     </body>
     </html> 
 }

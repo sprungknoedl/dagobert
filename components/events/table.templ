@@ -82,29 +82,34 @@ func highlightIndicators(event string, indicators []model.Indicator) templ.Compo
 templ List(env utils.Env, cid int64, list []model.Event, indicators []model.Indicator) {
     @base.Layout(env) {
         <main class="p-4 grow">
+        <form hx-get={env.Routes("list-events", cid)} hx-trigger="input delay:500ms, sort"
+            hx-target="#list" hx-select="#list" hx-swap="outerHTML" hx-push-url="true"
+            x-data={fmt.Sprintf("{ sort_by: '%s' }", env.Sort)}>
+
             <nav class="flex items-center justify-between mb-4">
                 <h3 class="font-bold text-2xl ml-2">Timeline</h3>
                 
                 <div class="flex gap-5 items-center">
                     @icons.MagnifyingGlass(icons.Default)
+                    <input name="search" value={env.Search} placeholder="Search" style="width: 32rem" class="px-4 h-10 outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 text-white rounded-md shadow-sm" />
+                    <input name="sort" value={env.Sort} x-model="sort_by" x-init="$watch('sort_by', () => { $dispatch('sort'); } )" class="hidden" />
 
-                    <input style="width: 32rem" name="search" placeholder="Search" type="search" class="px-4 h-10 outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 text-white rounded-md shadow-sm" 
-                        hx-get={env.Routes("list-events", cid)} hx-trigger="input changed delay:300ms, search" 
-                        hx-target="#list" hx-select="#list" hx-swap="outerHTML"/>
-                    
-                    @utils.SecondaryButton(templ.Attributes{"hx-get": env.Routes("import-events", cid), "hx-target": "#modal"}) {
+                    @utils.SecondaryButton(templ.Attributes{"hx-get": env.Routes("import-events", cid), 
+                    "hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false"}) {
                         @icons.ArrowUpTray("inline-block mr-1 w-5 h-5")
                         Import CSV
                     }
-                    @utils.SecondaryLink(templ.Attributes{"href": env.Routes("export-events", cid), "target": "blank"}) {
+                    @utils.SecondaryLink(templ.Attributes{"href": env.Routes("export-events", cid), 
+                    "target": "blank"}) {
                         @icons.ArrowDownTray("inline-block mr-1 w-5 h-5")
                         Export CSV
                     }
-                    @utils.SecondaryButton(templ.Attributes{"hx-get": env.Routes("list-events", cid), "hx-target": "#list", "hx-select": "#list", "hx-swap": "outerHTML"}) {
+                    @utils.SecondaryButton(templ.Attributes{"@click": "$dispatch('sort')"}) {
                         @icons.ArrowPath("inline-block mr-1 w-5 h-5")
                         Refresh
                     }
-                    @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-event", cid, 0), "hx-target": "#modal"}) {
+                    @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-event", cid, 0), 
+                    "hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false"}) {
                         @icons.Plus("inline-block mr-1 w-5 h-5")
                         Add
                     }
@@ -114,11 +119,11 @@ templ List(env utils.Env, cid int64, list []model.Event, indicators []model.Indi
             <table id="list" class="table-auto w-full">
                 <thead class="border-b-2 border-b-slate-600">
                     <tr class="p-8">
-                        @utils.TH(templ.Attributes{"style": "width: 17rem"}) { Date/Time  }
-                        @utils.TH(templ.Attributes{"style": "width: 10rem"}) { Type  }
-                        @utils.TH(templ.Attributes{"style": "width: 12rem"}) { Event System  }
-                        @utils.TH(templ.Attributes{"style": "width: 12rem"}) { Remote System  }
-                        @utils.TH(templ.Attributes{"style": "width: auto"})  { Event  }
+                        @utils.TH2(env, "time", templ.Attributes{"style": "width: 17rem"}) { Date/Time  }
+                        @utils.TH2(env, "type", templ.Attributes{"style": "width: 10rem"}) { Type  }
+                        @utils.TH2(env, "src", templ.Attributes{"style": "width: 12rem"}) { Event System  }
+                        @utils.TH2(env, "dst", templ.Attributes{"style": "width: 12rem"}) { Remote System  }
+                        @utils.TH2(env, "event", templ.Attributes{"style": "width: auto"})  { Event  }
                         @utils.TH(templ.Attributes{"style": "width: 7rem"})  { }
                     </tr>
                 </thead>
@@ -147,11 +152,11 @@ templ List(env utils.Env, cid int64, list []model.Event, indicators []model.Indi
                             }
                             @utils.InlineButton(templ.Attributes{
                                 "hx-get": env.Routes("view-event", cid, obj.ID), 
-                                "hx-target": "#modal"}) {
+                                "hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "aside", "hx-push-url": "false"}) {
                                 @icons.Pencil("w-4 h-4") }
                              @utils.InlineButton(templ.Attributes{
                                 "hx-delete": env.Routes("delete-event", cid, obj.ID), 
-                                "hx-target": "#modal"}) { 
+                                "hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "aside", "hx-push-url": "false"}) { 
                                 @icons.Trash("w-4 h-4") }
                         </td>
                     </tr>
@@ -166,7 +171,8 @@ templ List(env utils.Env, cid int64, list []model.Event, indicators []model.Indi
                     </h3>
                     <p class="mb-8">It looks empty here. Try creating a new event ↓</p>
                     <p class="flex justify-center">
-                    @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-event", cid, 0), "hx-target": "#modal"}) {
+                    @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-event", cid, 0),
+                        "hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "aside", "hx-push-url": "false"}) { 
                         @icons.Plus("inline-block mr-1 w-5 h-5")
                         Add
                     }
@@ -174,6 +180,8 @@ templ List(env utils.Env, cid int64, list []model.Event, indicators []model.Indi
                 </caption>
                 }
             </table>
+
+        </form>
         </main>
     }
 }
