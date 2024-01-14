@@ -49,10 +49,10 @@ templ List(env utils.Env, cid int64, list []model.Note) {
             <table id="list" class="table-auto w-full">
                 <thead class="border-b-2 border-b-slate-600">
                     <tr class="p-8">
-                        @utils.TH2(env, "category", templ.Attributes{"style": "width: 15rem"}) { Category }
-                        @utils.TH2(env, "title", templ.Attributes{"style": "width: 15rem"}) { Title  }
-                        @utils.TH2(env, "desc", templ.Attributes{"style": "width: auto"})  { Description  }
-                        @utils.TH(templ.Attributes{"style": "width: 7rem"})  { }
+                        @utils.TH(env, "category", templ.Attributes{"style": "width: 15rem"}) { Category }
+                        @utils.TH(env, "title", templ.Attributes{"style": "width: 15rem"}) { Title  }
+                        @utils.TH(env, "desc", templ.Attributes{"style": "width: auto"})  { Description  }
+                        @utils.TH(env, "", templ.Attributes{"style": "width: 7rem"})  { }
                     </tr>
                 </thead>
                 <tbody>

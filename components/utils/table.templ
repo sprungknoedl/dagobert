@@ -6,13 +6,8 @@ import (
     "github.com/sprungknoedl/dagobert/components/icons"
 )
 
-templ TH(attr templ.Attributes) {
-     <th { attr... } class="p-2 text-left cursor-pointer text-slate-400 hover:text-white hover:underline">
-        { children... }
-     </th>
-}
-
-templ TH2(env Env, name string, attr templ.Attributes) {
+templ TH(env Env, name string, attr templ.Attributes) {
+   if name != "" {
      <th { attr... } class="p-2 text-left cursor-pointer text-slate-400 hover:text-white hover:underline flex-inline gap-2 items-center"
       x-data={ fmt.Sprintf("{ toggle(event) { sort_by = (sort_by == '%s') ? '-%s' : '%s'}}", name, name, name) }
       @click="toggle()">
@@ -24,4 +19,9 @@ templ TH2(env Env, name string, attr templ.Attributes) {
          @icons.ChevronDown(icons.Inline)
         }
      </th>
+   } else {
+     <th { attr... } class="p-2 text-left cursor-pointer text-slate-400 hover:text-white hover:underline">
+        { children... }
+     </th>
+   }
 }

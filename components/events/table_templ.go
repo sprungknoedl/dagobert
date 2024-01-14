@@ -306,7 +306,7 @@ func List(env utils.Env, cid int64, list []model.Event, indicators []model.Indic
 				}
 				return templ_7745c5c3_Err
 			})
-			templ_7745c5c3_Err = utils.TH2(env, "time", templ.Attributes{"style": "width: 17rem"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.TH(env, "time", templ.Attributes{"style": "width: 17rem"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var12), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -326,7 +326,7 @@ func List(env utils.Env, cid int64, list []model.Event, indicators []model.Indic
 				}
 				return templ_7745c5c3_Err
 			})
-			templ_7745c5c3_Err = utils.TH2(env, "type", templ.Attributes{"style": "width: 10rem"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.TH(env, "type", templ.Attributes{"style": "width: 10rem"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var14), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -346,7 +346,7 @@ func List(env utils.Env, cid int64, list []model.Event, indicators []model.Indic
 				}
 				return templ_7745c5c3_Err
 			})
-			templ_7745c5c3_Err = utils.TH2(env, "src", templ.Attributes{"style": "width: 12rem"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var16), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.TH(env, "src", templ.Attributes{"style": "width: 12rem"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var16), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -366,7 +366,7 @@ func List(env utils.Env, cid int64, list []model.Event, indicators []model.Indic
 				}
 				return templ_7745c5c3_Err
 			})
-			templ_7745c5c3_Err = utils.TH2(env, "dst", templ.Attributes{"style": "width: 12rem"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var18), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.TH(env, "dst", templ.Attributes{"style": "width: 12rem"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var18), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -386,11 +386,11 @@ func List(env utils.Env, cid int64, list []model.Event, indicators []model.Indic
 				}
 				return templ_7745c5c3_Err
 			})
-			templ_7745c5c3_Err = utils.TH2(env, "event", templ.Attributes{"style": "width: auto"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var20), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.TH(env, "event", templ.Attributes{"style": "width: auto"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var20), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = utils.TH(templ.Attributes{"style": "width: 7rem"}).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.TH(env, "", templ.Attributes{"style": "width: 7rem"}).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

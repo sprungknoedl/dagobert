@@ -84,13 +84,13 @@ templ List(env utils.Env, cid int64, list []model.Asset) {
             <table id="list" class="table-auto w-full">
                 <thead class="border-b-2 border-b-slate-600">
                     <tr class="p-8">
-                        @utils.TH2(env, "type", templ.Attributes{"style": "width: 10rem"}) { Type  }
-                        @utils.TH2(env, "name", templ.Attributes{"style": "width: auto"})  { Name  }
-                        @utils.TH2(env, "ip", templ.Attributes{"style": "width: 10rem"}) { IP  }
-                        @utils.TH2(env, "desc", templ.Attributes{"style": "width: auto"})  { Description  }
-                        @utils.TH2(env, "compromised", templ.Attributes{"style": "width: 10rem"})  { Compromised  }
-                        @utils.TH2(env, "analysed", templ.Attributes{"style": "width: 8rem"})  { Analysed  }
-                        @utils.TH(templ.Attributes{"style": "width: 7rem"})  { }
+                        @utils.TH(env, "type", templ.Attributes{"style": "width: 10rem"}) { Type  }
+                        @utils.TH(env, "name", templ.Attributes{"style": "width: auto"})  { Name  }
+                        @utils.TH(env, "ip", templ.Attributes{"style": "width: 10rem"}) { IP  }
+                        @utils.TH(env, "desc", templ.Attributes{"style": "width: auto"})  { Description  }
+                        @utils.TH(env, "compromised", templ.Attributes{"style": "width: 10rem"})  { Compromised  }
+                        @utils.TH(env, "analysed", templ.Attributes{"style": "width: 8rem"})  { Analysed  }
+                        @utils.TH(env, "", templ.Attributes{"style": "width: 7rem"})  { }
                     </tr>
                 </thead>
                 <tbody>
