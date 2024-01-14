@@ -224,5 +224,17 @@ func DeleteCase(c echo.Context) error {
 		return err
 	}
 
+	kase := getCase(c)
+	if cid == kase.ID {
+		sess, _ := session.Get(SessionName, c)
+		sess.Options = &sessions.Options{Path: "/", MaxAge: 86400 * 7, HttpOnly: true}
+		delete(sess.Values, "activeCase")
+
+		err = sess.Save(c.Request(), c.Response())
+		if err != nil {
+			return err
+		}
+	}
+
 	return refresh(c)
 }
