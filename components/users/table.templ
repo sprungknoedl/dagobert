@@ -49,12 +49,12 @@ templ List(env utils.Env, cid int64, list []model.User) {
             <table id="list" class="table-auto w-full">
                 <thead class="border-b-2 border-b-slate-600">
                     <tr class="p-8">
-                        @utils.TH(templ.Attributes{"style": "width: auto"}) { Name }
-                        @utils.TH(templ.Attributes{"style": "width: auto"}) { Company }
-                        @utils.TH(templ.Attributes{"style": "width: auto"}) { Role }
-                        @utils.TH(templ.Attributes{"style": "width: auto"}) { Email }
-                        @utils.TH(templ.Attributes{"style": "width: auto"}) { Phone }
-                        @utils.TH(templ.Attributes{"style": "width: auto"}) { Notes }
+                        @utils.TH2(env, "name", templ.Attributes{"style": "width: auto"}) { Name }
+                        @utils.TH2(env, "company", templ.Attributes{"style": "width: auto"}) { Company }
+                        @utils.TH2(env, "role", templ.Attributes{"style": "width: auto"}) { Role }
+                        @utils.TH2(env, "email", templ.Attributes{"style": "width: auto"}) { Email }
+                        @utils.TH2(env, "phone", templ.Attributes{"style": "width: auto"}) { Phone }
+                        @utils.TH2(env, "notes", templ.Attributes{"style": "width: auto"}) { Notes }
                         @utils.TH(templ.Attributes{"style": "width: 7rem"}) { }
                     </tr>
                 </thead>
