@@ -67,7 +67,6 @@ templ List(env utils.Env, cid int64, list []model.Evidence) {
             <table id="list" class="table-auto w-full">
                 <thead class="border-b-2 border-b-slate-600">
                     <tr class="p-8">
-                        @utils.TH(templ.Attributes{"style": "width: 8rem"})  { Date added }
                         @utils.TH2(env, "type", templ.Attributes{"style": "width: 15rem"}) { Type }
                         @utils.TH2(env, "name", templ.Attributes{"style": "width: auto"})  { Name }
                         @utils.TH2(env, "desc", templ.Attributes{"style": "width: auto"})  { Description }
@@ -79,7 +78,6 @@ templ List(env utils.Env, cid int64, list []model.Evidence) {
                 <tbody>
                     for _, obj := range list {
                     <tr class="hover:bg-slate-700">
-                        <td class="p-2">{ obj.DateAdded.Format("2006-01-02") }</td>
                         <td class="p-2">@renderType(obj.Type)</td>
                         <td class="p-2">{ obj.Name }</td>
                         <td class="p-2">{ obj.Description }</td>
