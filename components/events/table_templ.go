@@ -445,9 +445,9 @@ func List(env utils.Env, cid int64, list []model.Event, indicators []model.Indic
 					return templ_7745c5c3_Err
 				}
 				var templ_7745c5c3_Var25 string
-				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Time.Format("2006-01-02 15:04:05"))
+				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Time.Format("2006-01-02 15:04:05.000"))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/events/table.templ`, Line: 140, Col: 68}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/events/table.templ`, Line: 140, Col: 72}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
