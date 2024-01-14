@@ -36,11 +36,11 @@ templ Form(env utils.Env, obj TaskDTO, vr valid.Result) {
                 </header>
       
                 <section class="p-8 flex flex-col gap-6">
-                    @utils.WithLabel2("Type", true)      { @utils.SelectInput2("type", obj.Type, model.TaskTypes, vr["Type"]) }
-                    @utils.WithLabel2("Task", true)      { @utils.TextInput2("task", obj.Task, vr["Task"]) }
-                    @utils.WithLabel2("Owner", false)    { @utils.TextInput2("owner", obj.Owner, vr["Owner"]) }
-                    @utils.WithLabel2("Due date", false) { @utils.TextInput2("dueDate", obj.DateDue, vr["DateDue"]) }
-                    @utils.WithLabel2("Done", false)     { @utils.BooleanInput2("done", obj.Done, vr["Done"]) }
+                    @utils.WithLabel("Type", true)      { @utils.SelectInput("type", obj.Type, model.TaskTypes, vr["Type"]) }
+                    @utils.WithLabel("Task", true)      { @utils.TextInput("task", obj.Task, vr["Task"]) }
+                    @utils.WithLabel("Owner", false)    { @utils.TextInput("owner", obj.Owner, vr["Owner"]) }
+                    @utils.WithLabel("Due date", false) { @utils.TextInput("dueDate", obj.DateDue, vr["DateDue"]) }
+                    @utils.WithLabel("Done", false)     { @utils.BooleanInput("done", obj.Done, vr["Done"]) }
                 </section>
 
                 <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4 items-center">

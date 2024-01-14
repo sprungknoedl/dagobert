@@ -36,12 +36,12 @@ templ Form(env utils.Env, obj CaseDTO, vr valid.Result) {
                 </header>
       
                 <section class="p-8 flex flex-col gap-6">
-                    @utils.WithLabel2("Name", true)            { @utils.TextInput2("name", obj.Name, vr["Name"]) }
-                    @utils.WithLabel2("Case closed?", false)   { @utils.BooleanInput2("closed", obj.Closed, vr["Closed"]) }
-                    @utils.WithLabel2("Classification", true)  { @utils.TextInput2("classification", obj.Classification, vr["Classification"]) }
-                    @utils.WithLabel2("Severity", true)        { @utils.SelectInput2("severity", obj.Severity, model.CaseSeverities, vr["Severity"]) }
-                    @utils.WithLabel2("Outcome", false)        { @utils.SelectInput2("outcome", obj.Outcome, model.CaseOutcomes, vr["Outcome"]) }
-                    @utils.WithLabel2("Summary", false)        { @utils.TextareaInput2("summary", obj.Summary, vr["Summary"]) }
+                    @utils.WithLabel("Name", true)            { @utils.TextInput("name", obj.Name, vr["Name"]) }
+                    @utils.WithLabel("Case closed?", false)   { @utils.BooleanInput("closed", obj.Closed, vr["Closed"]) }
+                    @utils.WithLabel("Classification", true)  { @utils.TextInput("classification", obj.Classification, vr["Classification"]) }
+                    @utils.WithLabel("Severity", true)        { @utils.SelectInput("severity", obj.Severity, model.CaseSeverities, vr["Severity"]) }
+                    @utils.WithLabel("Outcome", false)        { @utils.SelectInput("outcome", obj.Outcome, model.CaseOutcomes, vr["Outcome"]) }
+                    @utils.WithLabel("Summary", false)        { @utils.TextareaInput("summary", obj.Summary, vr["Summary"]) }
                 </section>
 
                 <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4 items-center">

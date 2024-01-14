@@ -86,7 +86,7 @@ func Form(env utils.Env, obj EventDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.TextInput2("time", obj.Time, vr["Time"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.TextInput("time", obj.Time, vr["Time"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -95,7 +95,7 @@ func Form(env utils.Env, obj EventDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Date / Time", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Date / Time", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -105,7 +105,7 @@ func Form(env utils.Env, obj EventDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.SelectInput2("type", obj.Type, model.EventTypes, vr["Type"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.SelectInput("type", obj.Type, model.EventTypes, vr["Type"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -114,7 +114,7 @@ func Form(env utils.Env, obj EventDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Type", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Type", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -124,7 +124,7 @@ func Form(env utils.Env, obj EventDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.TextInput2("assetA", obj.AssetA, vr["Event System"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.TextInput("assetA", obj.AssetA, vr["Event System"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -133,7 +133,7 @@ func Form(env utils.Env, obj EventDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Event System", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Event System", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -143,7 +143,7 @@ func Form(env utils.Env, obj EventDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.SelectInput2("direction", obj.Direction, model.EventDirections, vr["Direction"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.SelectInput("direction", obj.Direction, model.EventDirections, vr["Direction"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -152,7 +152,7 @@ func Form(env utils.Env, obj EventDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Direction", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Direction", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -162,7 +162,7 @@ func Form(env utils.Env, obj EventDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.TextInput2("assetB", obj.AssetB, vr["Remote System"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.TextInput("assetB", obj.AssetB, vr["Remote System"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -171,7 +171,7 @@ func Form(env utils.Env, obj EventDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Remote System", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Remote System", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -181,7 +181,7 @@ func Form(env utils.Env, obj EventDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.TextareaInput2("event", obj.Event, vr["Event"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.TextareaInput("event", obj.Event, vr["Event"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -190,7 +190,7 @@ func Form(env utils.Env, obj EventDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Event", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Event", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -200,7 +200,7 @@ func Form(env utils.Env, obj EventDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.TextareaInput2("raw", obj.Raw, vr["Raw"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.TextareaInput("raw", obj.Raw, vr["Raw"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -209,7 +209,7 @@ func Form(env utils.Env, obj EventDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Raw", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Raw", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var10), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -219,7 +219,7 @@ func Form(env utils.Env, obj EventDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.BooleanInput2("keyevent", obj.KeyEvent, vr["Key Event"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.BooleanInput("keyevent", obj.KeyEvent, vr["Key Event"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -228,7 +228,7 @@ func Form(env utils.Env, obj EventDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Key Event?", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Key Event?", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var11), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

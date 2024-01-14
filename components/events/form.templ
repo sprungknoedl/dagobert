@@ -39,14 +39,14 @@ templ Form(env utils.Env, obj EventDTO, vr valid.Result) {
                 </header>
       
                 <section class="p-8 flex flex-col gap-6">
-                    @utils.WithLabel2("Date / Time", true)    { @utils.TextInput2("time", obj.Time, vr["Time"]) }
-                    @utils.WithLabel2("Type", true)           { @utils.SelectInput2("type", obj.Type, model.EventTypes, vr["Type"]) }
-                    @utils.WithLabel2("Event System", true)   { @utils.TextInput2("assetA", obj.AssetA, vr["Event System"]) }
-                    @utils.WithLabel2("Direction", false)     { @utils.SelectInput2("direction", obj.Direction, model.EventDirections, vr["Direction"]) }
-                    @utils.WithLabel2("Remote System", false) { @utils.TextInput2("assetB", obj.AssetB, vr["Remote System"]) }
-                    @utils.WithLabel2("Event", true)          { @utils.TextareaInput2("event", obj.Event, vr["Event"]) }
-                    @utils.WithLabel2("Raw", false)           { @utils.TextareaInput2("raw", obj.Raw, vr["Raw"]) }
-                    @utils.WithLabel2("Key Event?", false)    { @utils.BooleanInput2("keyevent", obj.KeyEvent, vr["Key Event"]) }
+                    @utils.WithLabel("Date / Time", true)    { @utils.TextInput("time", obj.Time, vr["Time"]) }
+                    @utils.WithLabel("Type", true)           { @utils.SelectInput("type", obj.Type, model.EventTypes, vr["Type"]) }
+                    @utils.WithLabel("Event System", true)   { @utils.TextInput("assetA", obj.AssetA, vr["Event System"]) }
+                    @utils.WithLabel("Direction", false)     { @utils.SelectInput("direction", obj.Direction, model.EventDirections, vr["Direction"]) }
+                    @utils.WithLabel("Remote System", false) { @utils.TextInput("assetB", obj.AssetB, vr["Remote System"]) }
+                    @utils.WithLabel("Event", true)          { @utils.TextareaInput("event", obj.Event, vr["Event"]) }
+                    @utils.WithLabel("Raw", false)           { @utils.TextareaInput("raw", obj.Raw, vr["Raw"]) }
+                    @utils.WithLabel("Key Event?", false)    { @utils.BooleanInput("keyevent", obj.KeyEvent, vr["Key Event"]) }
                 </section>
 
                 <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4 items-center">

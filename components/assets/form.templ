@@ -37,12 +37,12 @@ templ Form(env utils.Env, obj AssetDTO, vr valid.Result) {
                 </header>
       
                 <section class="p-8 flex flex-col gap-6">
-                    @utils.WithLabel2("Type", true)         { @utils.SelectInput2("type", obj.Type, model.AssetTypes, vr["Type"]) }
-                    @utils.WithLabel2("Name", true)         { @utils.TextInput2("name", obj.Name, vr["Name"]) }
-                    @utils.WithLabel2("IP", false)          { @utils.TextInput2("ip", obj.IP, vr["IP"]) }
-                    @utils.WithLabel2("Description", false) { @utils.TextareaInput2("description", obj.Description, vr["Description"]) }
-                    @utils.WithLabel2("Compromised", true)  { @utils.SelectInput2("compromised", obj.Compromised, model.AssetCompromised, vr["Compromised"]) }
-                    @utils.WithLabel2("Analysed", false)    { @utils.BooleanInput2("analysed", obj.Analysed, vr["Analysed"]) }
+                    @utils.WithLabel("Type", true)         { @utils.SelectInput("type", obj.Type, model.AssetTypes, vr["Type"]) }
+                    @utils.WithLabel("Name", true)         { @utils.TextInput("name", obj.Name, vr["Name"]) }
+                    @utils.WithLabel("IP", false)          { @utils.TextInput("ip", obj.IP, vr["IP"]) }
+                    @utils.WithLabel("Description", false) { @utils.TextareaInput("description", obj.Description, vr["Description"]) }
+                    @utils.WithLabel("Compromised", true)  { @utils.SelectInput("compromised", obj.Compromised, model.AssetCompromised, vr["Compromised"]) }
+                    @utils.WithLabel("Analysed", false)    { @utils.BooleanInput("analysed", obj.Analysed, vr["Analysed"]) }
                 </section>
 
                 <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4 items-center">

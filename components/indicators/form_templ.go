@@ -83,7 +83,7 @@ func Form(env utils.Env, obj IndicatorDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.SelectInput2("type", obj.Type, model.IndicatorTypes, vr["Type"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.SelectInput("type", obj.Type, model.IndicatorTypes, vr["Type"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -92,7 +92,7 @@ func Form(env utils.Env, obj IndicatorDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Type", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Type", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -102,7 +102,7 @@ func Form(env utils.Env, obj IndicatorDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.TextInput2("value", obj.Value, vr["Value"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.TextInput("value", obj.Value, vr["Value"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -111,7 +111,7 @@ func Form(env utils.Env, obj IndicatorDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Value", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Value", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -121,7 +121,7 @@ func Form(env utils.Env, obj IndicatorDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.TextareaInput2("description", obj.Description, vr["Description"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.TextareaInput("description", obj.Description, vr["Description"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -130,7 +130,7 @@ func Form(env utils.Env, obj IndicatorDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Description", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Description", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -140,7 +140,7 @@ func Form(env utils.Env, obj IndicatorDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.SelectInput2("tlp", obj.TLP, model.IndicatorTLPs, vr["TLP"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.SelectInput("tlp", obj.TLP, model.IndicatorTLPs, vr["TLP"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -149,7 +149,7 @@ func Form(env utils.Env, obj IndicatorDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("TLP", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("TLP", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -159,7 +159,7 @@ func Form(env utils.Env, obj IndicatorDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.TextInput2("source", obj.Source, vr["Source"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.TextInput("source", obj.Source, vr["Source"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -168,7 +168,7 @@ func Form(env utils.Env, obj IndicatorDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Source", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Source", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

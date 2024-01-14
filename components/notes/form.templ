@@ -33,9 +33,9 @@ templ Form(env utils.Env, obj NoteDTO, vr valid.Result) {
                 </header>
       
                 <section class="p-8 flex flex-col gap-6">
-                    @utils.WithLabel2("Category", false)   { @utils.TextInput2("category", obj.Category, vr["Category"]) }
-                    @utils.WithLabel2("Title", true)       { @utils.TextInput2("title", obj.Title, vr["Title"]) }
-                    @utils.WithLabel2("Description", true) { @utils.TextareaInput2("description", obj.Description, vr["Description"]) }
+                    @utils.WithLabel("Category", false)   { @utils.TextInput("category", obj.Category, vr["Category"]) }
+                    @utils.WithLabel("Title", true)       { @utils.TextInput("title", obj.Title, vr["Title"]) }
+                    @utils.WithLabel("Description", true) { @utils.TextareaInput("description", obj.Description, vr["Description"]) }
                 </section>
 
                 <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4 items-center">

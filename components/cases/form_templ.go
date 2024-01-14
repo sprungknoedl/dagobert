@@ -83,7 +83,7 @@ func Form(env utils.Env, obj CaseDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.TextInput2("name", obj.Name, vr["Name"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.TextInput("name", obj.Name, vr["Name"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -92,7 +92,7 @@ func Form(env utils.Env, obj CaseDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Name", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Name", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -102,7 +102,7 @@ func Form(env utils.Env, obj CaseDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.BooleanInput2("closed", obj.Closed, vr["Closed"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.BooleanInput("closed", obj.Closed, vr["Closed"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -111,7 +111,7 @@ func Form(env utils.Env, obj CaseDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Case closed?", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Case closed?", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var5), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -121,7 +121,7 @@ func Form(env utils.Env, obj CaseDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.TextInput2("classification", obj.Classification, vr["Classification"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.TextInput("classification", obj.Classification, vr["Classification"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -130,7 +130,7 @@ func Form(env utils.Env, obj CaseDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Classification", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Classification", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -140,7 +140,7 @@ func Form(env utils.Env, obj CaseDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.SelectInput2("severity", obj.Severity, model.CaseSeverities, vr["Severity"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.SelectInput("severity", obj.Severity, model.CaseSeverities, vr["Severity"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -149,7 +149,7 @@ func Form(env utils.Env, obj CaseDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Severity", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Severity", true).Render(templ.WithChildren(ctx, templ_7745c5c3_Var7), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -159,7 +159,7 @@ func Form(env utils.Env, obj CaseDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.SelectInput2("outcome", obj.Outcome, model.CaseOutcomes, vr["Outcome"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.SelectInput("outcome", obj.Outcome, model.CaseOutcomes, vr["Outcome"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -168,7 +168,7 @@ func Form(env utils.Env, obj CaseDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Outcome", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Outcome", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -178,7 +178,7 @@ func Form(env utils.Env, obj CaseDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.TextareaInput2("summary", obj.Summary, vr["Summary"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.TextareaInput("summary", obj.Summary, vr["Summary"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -187,7 +187,7 @@ func Form(env utils.Env, obj CaseDTO, vr valid.Result) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = utils.WithLabel2("Summary", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = utils.WithLabel("Summary", false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

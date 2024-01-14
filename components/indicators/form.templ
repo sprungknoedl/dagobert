@@ -36,11 +36,11 @@ templ Form(env utils.Env, obj IndicatorDTO, vr valid.Result) {
                 </header>
       
                 <section class="p-8 flex flex-col gap-6">
-                    @utils.WithLabel2("Type", true)         { @utils.SelectInput2("type", obj.Type, model.IndicatorTypes, vr["Type"]) }
-                    @utils.WithLabel2("Value", true)        { @utils.TextInput2("value", obj.Value, vr["Value"]) }
-                    @utils.WithLabel2("Description", false) { @utils.TextareaInput2("description", obj.Description, vr["Description"]) }
-                    @utils.WithLabel2("TLP", true)          { @utils.SelectInput2("tlp", obj.TLP, model.IndicatorTLPs, vr["TLP"]) }
-                    @utils.WithLabel2("Source", false)      { @utils.TextInput2("source", obj.Source, vr["Source"]) }
+                    @utils.WithLabel("Type", true)         { @utils.SelectInput("type", obj.Type, model.IndicatorTypes, vr["Type"]) }
+                    @utils.WithLabel("Value", true)        { @utils.TextInput("value", obj.Value, vr["Value"]) }
+                    @utils.WithLabel("Description", false) { @utils.TextareaInput("description", obj.Description, vr["Description"]) }
+                    @utils.WithLabel("TLP", true)          { @utils.SelectInput("tlp", obj.TLP, model.IndicatorTLPs, vr["TLP"]) }
+                    @utils.WithLabel("Source", false)      { @utils.TextInput("source", obj.Source, vr["Source"]) }
                 </section>
 
                 <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4 items-center">
