@@ -2,17 +2,31 @@ package model
 
 import (
 	"log"
+	"os"
+	"time"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm/logger"
 )
 
 var db *gorm.DB
 
 func InitDatabase(dburl string) {
+	debugLog := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
+		logger.Config{
+			SlowThreshold:             time.Second,   // Slow SQL threshold
+			LogLevel:                  logger.Silent, // Log level
+			IgnoreRecordNotFoundError: true,          // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      true,          // Don't include params in the SQL log
+			Colorful:                  false,         // Disable color
+		},
+	)
+
 	var err error
-	db, err = gorm.Open(sqlite.Open(dburl), &gorm.Config{})
+	db, err = gorm.Open(sqlite.Open(dburl), &gorm.Config{Logger: debugLog})
 	if err != nil {
 		log.Fatalf("failed to connect db: %v", err)
 	}
@@ -114,8 +128,17 @@ func SaveCase(x Case) (Case, error) {
 }
 
 func DeleteCase(id int64) error {
-	x := Case{}
-	return db.Delete(&x, id).Error
+	tx := db.Begin()
+	tx.Delete(&Asset{}, "case_id = ?", id)
+	tx.Delete(&Event{}, "case_id = ?", id)
+	tx.Delete(&Evidence{}, "case_id = ?", id)
+	tx.Delete(&Indicator{}, "case_id = ?", id)
+	tx.Delete(&Malware{}, "case_id = ?", id)
+	tx.Delete(&Note{}, "case_id = ?", id)
+	tx.Delete(&Task{}, "case_id = ?", id)
+	tx.Delete(&User{}, "case_id = ?", id)
+	tx.Delete(&Case{}, id)
+	return tx.Commit().Error
 }
 
 // --------------------------------------
