@@ -13,6 +13,7 @@ import "bytes"
 import (
 	"github.com/sprungknoedl/dagobert/components/icons"
 	"github.com/sprungknoedl/dagobert/components/utils"
+	"github.com/sprungknoedl/dagobert/model"
 	"github.com/sprungknoedl/dagobert/valid"
 )
 
@@ -83,7 +84,7 @@ func Form(env utils.Env, obj EvidenceDTO, vr valid.Result) templ.Component {
 				templ_7745c5c3_Buffer = templ.GetBuffer()
 				defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 			}
-			templ_7745c5c3_Err = utils.TextInput2("type", obj.Type, vr["Type"]).Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = utils.SelectInput2("type", obj.Type, model.EvidenceTypes, vr["Type"]).Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

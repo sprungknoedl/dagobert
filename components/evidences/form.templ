@@ -3,6 +3,7 @@ package evidences
 import (
 	"github.com/sprungknoedl/dagobert/components/utils"
     "github.com/sprungknoedl/dagobert/components/icons"
+	"github.com/sprungknoedl/dagobert/model"
     "github.com/sprungknoedl/dagobert/valid"
 )
 
@@ -36,7 +37,7 @@ templ Form(env utils.Env, obj EvidenceDTO, vr valid.Result) {
                 </header>
       
                 <section class="p-8 flex flex-col gap-6">
-                    @utils.WithLabel2("Type", true)         { @utils.TextInput2("type", obj.Type, vr["Type"]) }
+                    @utils.WithLabel2("Type", true)         { @utils.SelectInput2("type", obj.Type, model.EvidenceTypes, vr["Type"]) }
                     @utils.WithLabel2("Name", true)         { @utils.TextInput2("name", obj.Name, vr["Name"]) }
                     @utils.WithLabel2("Hash", false)        { @utils.TextInput2("hash", obj.Hash, vr["Hash"]) }
                     @utils.WithLabel2("Location", false)    { @utils.TextInput2("location", obj.Location, vr["Location"]) }

@@ -53,7 +53,7 @@ func ValidateEvent(dto events.EventDTO) valid.Result {
 func ValidateEvidence(dto evidences.EvidenceDTO) valid.Result {
 	return valid.Check([]valid.Condition{
 		{Name: "Name", Missing: dto.Name == ""},
-		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !slices.Contains(model.EventTypes, dto.Type)},
+		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !slices.Contains(model.EvidenceTypes, dto.Type)},
 	})
 }
 
