@@ -1,13 +1,47 @@
 package assets
 
 import (
-    "fmt"
-
 	"github.com/sprungknoedl/dagobert/components/base"
     "github.com/sprungknoedl/dagobert/components/icons"
 	"github.com/sprungknoedl/dagobert/components/utils"
     "github.com/sprungknoedl/dagobert/model"
 )
+
+templ List(env utils.Env, cid int64, list []model.Asset) {
+    @base.TableView(env, "Assets", base.CrudUrls{
+        List: env.Routes("list-assets", cid),
+        Import: env.Routes("import-assets", cid),
+        Export: env.Routes("export-assets", cid),
+        Add: env.Routes("view-asset", cid, 0),
+    }) {
+        @utils.TableHead() {
+            @utils.TH(env, "type", templ.Attributes{"style": "width: 10rem"}) { Type  }
+            @utils.TH(env, "name", templ.Attributes{"style": "width: auto"})  { Name  }
+            @utils.TH(env, "ip", templ.Attributes{"style": "width: 10rem"}) { IP  }
+            @utils.TH(env, "desc", templ.Attributes{"style": "width: auto"})  { Description  }
+            @utils.TH(env, "compromised", templ.Attributes{"style": "width: 10rem"})  { Compromised  }
+            @utils.TH(env, "analysed", templ.Attributes{"style": "width: 8rem"})  { Analysed  }
+            @utils.TH(env, "", templ.Attributes{"style": "width: 7rem"})  { }
+        }
+
+        @utils.TableBody() {
+            for _, obj := range list {
+            @utils.TR() {
+                @utils.TD() {@renderType(obj.Type)}
+                @utils.TD() {{ obj.Name }}
+                @utils.TD() {{ obj.IP }}
+                @utils.TD() {{ obj.Description }}
+                @utils.TD() {@renderCompromised(obj.Compromised)}
+                @utils.TD() {@renderAnalysed(obj.Analysed)}
+                @utils.DefaultTableButtons(env.Routes("view-asset", cid, obj.ID), env.Routes("delete-asset", cid, obj.ID)) {}
+            }}
+        }
+
+        if len(list) == 0 {
+            @utils.EmptyCaption(env.Routes("view-asset", cid)) {}
+        }
+    }
+}
 
 templ renderType(value string) {
     switch value {
@@ -41,102 +75,5 @@ templ renderAnalysed(value bool) {
         @icons.CheckCircle("w-6 h-6 text-green-500")
     } else {
         @icons.XCircle("w-6 h-6 text-red-500")
-    }
-}
-
-templ List(env utils.Env, cid int64, list []model.Asset) {
-    @base.Layout(env) {
-        <main class="p-4 grow">
-        <form hx-get={env.Routes("list-assets", cid)} hx-trigger="input delay:500ms, sort"
-            hx-target="#list" hx-select="#list" hx-swap="outerHTML" hx-push-url="true"
-            x-data={fmt.Sprintf("{ sort_by: '%s' }", env.Sort)}>
-
-            <nav class="flex items-center justify-between mb-4">
-                <h3 class="font-bold text-2xl ml-2">Assets</h3>
-                
-                <div class="flex gap-5 items-center">
-                    @icons.MagnifyingGlass(icons.Default)
-                    <input name="search" value={env.Search} placeholder="Search" style="width: 32rem" class="px-4 h-10 outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 text-white rounded-md shadow-sm" />
-                    <input name="sort" value={env.Sort} x-model="sort_by" x-init="$watch('sort_by', () => { $dispatch('sort'); } )" class="hidden" />
-                    
-                    @utils.SecondaryButton(templ.Attributes{"hx-get": env.Routes("import-assets", cid), 
-                    "hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false"}) {
-                        @icons.ArrowUpTray("inline-block mr-1 w-5 h-5")
-                        Import CSV
-                    }
-                    @utils.SecondaryLink(templ.Attributes{"href": env.Routes("export-assets", cid), 
-                    "target": "blank"}) {
-                        @icons.ArrowDownTray("inline-block mr-1 w-5 h-5")
-                        Export CSV
-                    }
-                    @utils.SecondaryButton(templ.Attributes{"@click": "$dispatch('sort')"}) {
-                        @icons.ArrowPath("inline-block mr-1 w-5 h-5")
-                        Refresh
-                    }
-                    @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-asset", cid, 0), 
-                    "hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false"}) {
-                        @icons.Plus("inline-block mr-1 w-5 h-5")
-                        Add
-                    }
-                </div>
-            </nav>
-
-            <table id="list" class="table-auto w-full">
-                <thead class="border-b-2 border-b-slate-600">
-                    <tr class="p-8">
-                        @utils.TH(env, "type", templ.Attributes{"style": "width: 10rem"}) { Type  }
-                        @utils.TH(env, "name", templ.Attributes{"style": "width: auto"})  { Name  }
-                        @utils.TH(env, "ip", templ.Attributes{"style": "width: 10rem"}) { IP  }
-                        @utils.TH(env, "desc", templ.Attributes{"style": "width: auto"})  { Description  }
-                        @utils.TH(env, "compromised", templ.Attributes{"style": "width: 10rem"})  { Compromised  }
-                        @utils.TH(env, "analysed", templ.Attributes{"style": "width: 8rem"})  { Analysed  }
-                        @utils.TH(env, "", templ.Attributes{"style": "width: 7rem"})  { }
-                    </tr>
-                </thead>
-                <tbody>
-                    for _, obj := range list {
-                    <tr class="hover:bg-slate-700">
-                        <td class="p-2">@renderType(obj.Type)</td>
-                        <td class="p-2">{ obj.Name }</td>
-                        <td class="p-2">{ obj.IP }</td>
-                        <td class="p-2">{ obj.Description }</td>
-                        <td class="p-2">@renderCompromised(obj.Compromised)</td>
-                        <td class="p-2">@renderAnalysed(obj.Analysed)</td>
-
-                        <td class="p-2 flex gap-2 justify-end">
-                            @utils.InlineButton(templ.Attributes{
-                                "hx-get": env.Routes("view-asset", cid, obj.ID), 
-                                "hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "aside", "hx-push-url": "false"}) {
-                                @icons.Pencil("w-4 h-4")
-                            }
-                             @utils.InlineButton(templ.Attributes{
-                                "hx-delete": env.Routes("delete-asset", cid, obj.ID), 
-                                "hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "aside", "hx-push-url": "false"}) { 
-                                @icons.Trash("w-4 h-4") }
-                        </td>
-                    </tr>
-                    }
-                </tbody>
-
-                if len(list) == 0 {
-                <caption class="caption-bottom w-1/3 my-4 mx-auto">
-                    <h3 class="mb-2 mt-4 text-xl text-slate-400">
-                        @icons.FaceFrown("inline-block w-6 h-6 mr-2")
-                        Nothing here ...
-                    </h3>
-                    <p class="mb-8">It looks empty here. Try creating a new asset ↓</p>
-                    <p class="flex justify-center">
-                    @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-asset", cid, 0),
-                        "hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "aside", "hx-push-url": "false"}) { 
-                        @icons.Plus("inline-block mr-1 w-5 h-5")
-                        Add
-                    }
-                    </p>
-                </caption>
-                }
-            </table>
-
-        </form>
-        </main>
     }
 }

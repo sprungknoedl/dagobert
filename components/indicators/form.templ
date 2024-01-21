@@ -1,7 +1,6 @@
 package indicators
 
 import (
-    "github.com/sprungknoedl/dagobert/components/icons"
 	"github.com/sprungknoedl/dagobert/components/utils"
     "github.com/sprungknoedl/dagobert/model"
     "github.com/sprungknoedl/dagobert/valid"
@@ -18,37 +17,25 @@ type IndicatorDTO struct {
 }
 
 templ Form(env utils.Env, obj IndicatorDTO, vr valid.Result) {
-    <aside class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-10 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50"
-        _="on closeModal remove me">
-        <div class="w-1/2 m-8 bg-slate-800 shadow-xl rounded-xl">
-            <form hx-post={env.Routes("save-indicator", obj.CaseID, obj.ID)} hx-target="#modal">
-                <header class="p-6 px-8 border-b border-b-slate-700 flex justify-between">
-                    <h4 class="font-bold text-slate-200">
-                        if obj.ID == 0 {
-                            Add indicator
-                        } else {
-                            Edit indicator
-                        }
-                    </h4>
-                    <div>
-                        <button type="button" _="on click trigger closeModal"> @icons.XMark(icons.Default) </button>
-                    </div>
-                </header>
-      
-                <section class="p-8 flex flex-col gap-6">
-                    @utils.WithLabel("Type", true)         { @utils.SelectInput("type", obj.Type, model.IndicatorTypes, vr["Type"]) }
-                    @utils.WithLabel("Value", true)        { @utils.TextInput("value", obj.Value, vr["Value"]) }
-                    @utils.WithLabel("Description", false) { @utils.TextareaInput("description", obj.Description, vr["Description"]) }
-                    @utils.WithLabel("TLP", true)          { @utils.SelectInput("tlp", obj.TLP, model.IndicatorTLPs, vr["TLP"]) }
-                    @utils.WithLabel("Source", false)      { @utils.TextInput("source", obj.Source, vr["Source"]) }
-                </section>
+    @utils.Modal("max-w-4xl") {
+        <form hx-post={env.Routes("save-indicator", obj.CaseID, obj.ID)} hx-target="#modal">
+        @utils.ModalHeader() {
+            if obj.ID == 0 {
+                Add indicator
+            } else {
+                Edit indicator
+            }
+        }
+                
+        @utils.ModalBody() {
+            @utils.SelectInput("Type", "type", obj.Type, model.IndicatorTypes, true, vr["Type"])
+            @utils.TextInput("Value", "value", obj.Value, true, vr["Value"])
+            @utils.SelectInput("TLP", "tlp", obj.TLP, model.IndicatorTLPs, true, vr["TLP"])
+            @utils.TextInput("Source", "source", obj.Source, false, vr["Source"])
+            @utils.TextareaInput("Description", "description", obj.Description, false, vr["Description"])
+        }
 
-                <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4 items-center">
-                    @utils.PrimaryButton(templ.Attributes{"type": "submit"}) { Save }
-                    @utils.SecondaryButton(templ.Attributes{"_": "on click trigger closeModal"}) { Cancel }
-                    <p class="ml-4 text-slate-600">Fields marked with <span class="font-bold text-rose-500">*</span> are required.</p>
-                </footer>
-            </form>
-        </div>
-    </aside>
+        @utils.DefaultCrudFooter() {}
+        </form>
+    }
 }

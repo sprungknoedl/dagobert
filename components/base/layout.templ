@@ -11,12 +11,13 @@ templ Layout(env utils.Env) {
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Dagobert</title>
-        <link rel="stylesheet" href="/dist/dagobert.css" />
+        <link href="/dist/flowbite.min.css" rel="stylesheet" />
+        <link href="/dist/dagobert.css" rel="stylesheet" />
 
-        <!-- <script src="https://unpkg.com/alpinejs" defer></script> -->
-        <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
-        <script src="https://unpkg.com/hyperscript.org" defer></script>
-        <script src="https://unpkg.com/htmx.org" defer></script>
+        <!-- <script src="/dist/flowbite.min.js" defer></script> -->
+        <script src="/dist/alpine.min.js" defer></script>
+        <script src="/dist/hyperscript.min.js" defer></script>
+        <script src="/dist/htmx.min.js" defer></script>
     </head>
     <body class="flex bg-slate-800 text-white">
         @Navigation(env)

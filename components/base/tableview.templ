@@ -1,0 +1,60 @@
+package base
+
+import (
+	"fmt"
+
+	"github.com/sprungknoedl/dagobert/components/icons"
+	"github.com/sprungknoedl/dagobert/components/utils"
+)
+
+type CrudUrls struct {
+	List string
+	Import string
+	Export string
+	Add string
+}
+
+templ TableView(env utils.Env, title string, urls CrudUrls) {
+    @Layout(env) {
+        <main class="p-4 grow">
+        <form hx-get={urls.List} hx-trigger="input delay:500ms, sort"
+            hx-target="#list" hx-select="#list" hx-swap="outerHTML" hx-push-url="true"
+            x-data={fmt.Sprintf("{ sort_by: '%s' }", env.Sort)}>
+
+            @Navbar(env, title, true, true) {
+                @utils.GroupedButton(templ.Attributes{
+                    "hx-get": urls.Import, 
+                    "hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false",
+                }) {
+                    @icons.ArrowUpTray("inline-block mr-1 w-5 h-5")
+                    Import CSV
+                }
+                @utils.GroupedLink(templ.Attributes{
+                    "href": urls.Export,
+                }) {
+                    @icons.ArrowDownTray("inline-block mr-1 w-5 h-5")
+                    Export CSV
+                }
+                @utils.GroupedButton(templ.Attributes{
+                    "@click": "$dispatch('sort')",
+                }) {
+                    @icons.ArrowPath("inline-block mr-1 w-5 h-5")
+                    Refresh
+                }
+                @utils.GroupedButton(templ.Attributes{
+                    "hx-get": urls.Add, 
+                    "hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false",
+                }) {
+                    @icons.Plus("inline-block mr-1 w-5 h-5")
+                    Add
+                }
+            }
+
+            @utils.Table() {
+				{ children... }
+            }
+
+        </form>
+        </main>
+    }
+}

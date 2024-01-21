@@ -1,7 +1,6 @@
 package events
 
 import (
-    "github.com/sprungknoedl/dagobert/components/icons"
 	"github.com/sprungknoedl/dagobert/components/utils"
     "github.com/sprungknoedl/dagobert/model"
     "github.com/sprungknoedl/dagobert/valid"
@@ -21,40 +20,28 @@ type EventDTO struct {
 }
 
 templ Form(env utils.Env, obj EventDTO, vr valid.Result) {
-    <aside class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 z-10 flex justify-center items-center w-full h-full backdrop-blur-lg backdrop-brightness-50"
-        _="on closeModal remove me">
-        <div class="w-1/2 m-8 bg-slate-800 shadow-xl rounded-xl">
-            <form hx-post={env.Routes("save-event", obj.CaseID, obj.ID)} hx-target="#modal">
-                <header class="p-6 px-8 border-b border-b-slate-700 flex justify-between">
-                    <h4 class="font-bold text-slate-200">
-                        if obj.ID == 0 {
-                            Add event
-                        } else {
-                            Edit event
-                        }
-                    </h4>
-                    <div>
-                        <button type="button" _="on click trigger closeModal"> @icons.XMark(icons.Default) </button>
-                    </div>
-                </header>
-      
-                <section class="p-8 flex flex-col gap-6">
-                    @utils.WithLabel("Date / Time", true)    { @utils.TextInput("time", obj.Time, vr["Time"]) }
-                    @utils.WithLabel("Type", true)           { @utils.SelectInput("type", obj.Type, model.EventTypes, vr["Type"]) }
-                    @utils.WithLabel("Event System", true)   { @utils.TextInput("assetA", obj.AssetA, vr["Event System"]) }
-                    @utils.WithLabel("Direction", false)     { @utils.SelectInput("direction", obj.Direction, model.EventDirections, vr["Direction"]) }
-                    @utils.WithLabel("Remote System", false) { @utils.TextInput("assetB", obj.AssetB, vr["Remote System"]) }
-                    @utils.WithLabel("Event", true)          { @utils.TextareaInput("event", obj.Event, vr["Event"]) }
-                    @utils.WithLabel("Raw", false)           { @utils.TextareaInput("raw", obj.Raw, vr["Raw"]) }
-                    @utils.WithLabel("Key Event?", false)    { @utils.BooleanInput("keyevent", obj.KeyEvent, vr["Key Event"]) }
-                </section>
+    @utils.Modal("max-w-4xl") {
+        <form hx-post={env.Routes("save-event", obj.CaseID, obj.ID)} hx-target="#modal">
+        @utils.ModalHeader() {
+            if obj.ID == 0 {
+                Add event
+            } else {
+                Edit event
+            }
+        }
+                
+        @utils.ModalBody() {
+            @utils.TextInput("Date / Time", "time", obj.Time, true, vr["Time"])
+            @utils.SelectInput("Type", "type", obj.Type, model.EventTypes, true, vr["Type"])
+            @utils.TextInput("Event System", "assetA", obj.AssetA, true, vr["Event System"])
+            @utils.SelectInput("Direction", "direction", obj.Direction, model.EventDirections, false, vr["Direction"])
+            @utils.TextInput("Remote System", "assetB", obj.AssetB, false, vr["Remote System"])
+            @utils.TextareaInput("Event", "event", obj.Event, true, vr["Event"])
+            @utils.TextareaInput("Raw", "raw", obj.Raw, false, vr["Raw"])
+            @utils.BooleanInput("Key Event", "keyevent", obj.KeyEvent, vr["Key Event"])
+        }
 
-                <footer class="p-6 px-8 border-t border-t-slate-700 flex gap-4 items-center">
-                    @utils.PrimaryButton(templ.Attributes{"type": "submit"}) { Save }
-                    @utils.SecondaryButton(templ.Attributes{"_": "on click trigger closeModal"}) { Cancel }
-                    <p class="ml-4 text-slate-600">Fields marked with <span class="font-bold text-rose-500">*</span> are required.</p>
-                </footer>
-            </form>
-        </div>
-    </aside>
+        @utils.DefaultCrudFooter() {}
+        </form>
+    }
 }

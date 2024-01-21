@@ -1,106 +1,43 @@
 package users
 
 import (
-    "fmt"
-
 	"github.com/sprungknoedl/dagobert/components/base"
 	"github.com/sprungknoedl/dagobert/components/utils"
-    "github.com/sprungknoedl/dagobert/components/icons"
     "github.com/sprungknoedl/dagobert/model"
 )
 
 templ List(env utils.Env, cid int64, list []model.User) {
-    @base.Layout(env) {
-        <main class="p-4 grow">
-        <form hx-get={env.Routes("list-users", cid)} hx-trigger="input delay:500ms, sort"
-            hx-target="#list" hx-select="#list" hx-swap="outerHTML" hx-push-url="true"
-            x-data={fmt.Sprintf("{ sort_by: '%s' }", env.Sort)}>
-
-            <nav class="flex items-center justify-between mb-4">
-                <h3 class="font-bold text-2xl ml-2">Users</h3>
+    @base.TableView(env, "Users", base.CrudUrls{
+        List: env.Routes("list-users", 0),
+        Import: env.Routes("import-users", cid),
+        Export: env.Routes("export-users", cid),
+        Add: env.Routes("view-user", cid, 0),
+    }) {
+        @utils.TableHead() {
+            @utils.TH(env, "name", templ.Attributes{"style": "width: auto"}) { Name }
+            @utils.TH(env, "company", templ.Attributes{"style": "width: auto"}) { Company }
+            @utils.TH(env, "role", templ.Attributes{"style": "width: auto"}) { Role }
+            @utils.TH(env, "email", templ.Attributes{"style": "width: auto"}) { Email }
+            @utils.TH(env, "phone", templ.Attributes{"style": "width: auto"}) { Phone }
+            @utils.TH(env, "notes", templ.Attributes{"style": "width: auto"}) { Notes }
+            @utils.TH(env, "", templ.Attributes{"style": "width: 7rem"}) { }
+        }
                 
-                <div class="flex gap-5 items-center">
-                    @icons.MagnifyingGlass(icons.Default)
-                    <input name="search" value={env.Search} placeholder="Search" style="width: 32rem" class="px-4 h-10 outline outline-2 outline-offset-2 outline-slate-600 bg-slate-700 text-white rounded-md shadow-sm" />
-                    <input name="sort" value={env.Sort} x-model="sort_by" x-init="$watch('sort_by', () => { $dispatch('sort'); } )" class="hidden" />
+        @utils.TableBody() {
+            for _, obj := range list {
+            @utils.TR() {
+                @utils.TD() {{ obj.Name }}
+                @utils.TD() {{ obj.Company }}
+                @utils.TD() {{ obj.Role }}
+                @utils.TD() {{ obj.Email }}
+                @utils.TD() {{ obj.Phone }}
+                @utils.TD() {{ obj.Notes }}
+                @utils.DefaultTableButtons(env.Routes("view-user", cid, obj.ID), env.Routes("delete-user", cid, obj.ID)) {}
+            }}
+        }
 
-                    @utils.SecondaryButton(templ.Attributes{"hx-get": env.Routes("import-users", cid), 
-                    "hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false"}) {
-                        @icons.ArrowUpTray("inline-block mr-1 w-5 h-5")
-                        Import CSV
-                    }
-                    @utils.SecondaryLink(templ.Attributes{"href": env.Routes("export-users", cid), 
-                    "target": "blank"}) {
-                        @icons.ArrowDownTray("inline-block mr-1 w-5 h-5")
-                        Export CSV
-                    }
-                    @utils.SecondaryButton(templ.Attributes{"@click": "$dispatch('sort')"}) {
-                        @icons.ArrowPath("inline-block mr-1 w-5 h-5")
-                        Refresh
-                    }
-                    @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-user", cid, 0), 
-                    "hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false"}) {
-                        @icons.Plus("inline-block mr-1 w-5 h-5")
-                        Add
-                    }
-                </div>
-            </nav>
-
-            <table id="list" class="table-auto w-full">
-                <thead class="border-b-2 border-b-slate-600">
-                    <tr class="p-8">
-                        @utils.TH(env, "name", templ.Attributes{"style": "width: auto"}) { Name }
-                        @utils.TH(env, "company", templ.Attributes{"style": "width: auto"}) { Company }
-                        @utils.TH(env, "role", templ.Attributes{"style": "width: auto"}) { Role }
-                        @utils.TH(env, "email", templ.Attributes{"style": "width: auto"}) { Email }
-                        @utils.TH(env, "phone", templ.Attributes{"style": "width: auto"}) { Phone }
-                        @utils.TH(env, "notes", templ.Attributes{"style": "width: auto"}) { Notes }
-                        @utils.TH(env, "", templ.Attributes{"style": "width: 7rem"}) { }
-                    </tr>
-                </thead>
-                <tbody>
-                    for _, obj := range list {
-                    <tr class="hover:bg-slate-700">
-                        <td class="p-2">{ obj.Name }</td>
-                        <td class="p-2">{ obj.Company }</td>
-                        <td class="p-2">{ obj.Role }</td>
-                        <td class="p-2">{ obj.Email }</td>
-                        <td class="p-2">{ obj.Phone }</td>
-                        <td class="p-2">{ obj.Notes }</td>
-
-                        <td class="p-2 flex gap-2 justify-end">
-                            @utils.InlineButton(templ.Attributes{
-                                "hx-get": env.Routes("view-user", cid, obj.ID), 
-                                "hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "aside", "hx-push-url": "false"}) {
-                                @icons.Pencil("w-4 h-4") }
-                            @utils.InlineButton(templ.Attributes{
-                                "hx-delete": env.Routes("delete-user", cid, obj.ID), 
-                                "hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "aside", "hx-push-url": "false"}) { 
-                                @icons.Trash("w-4 h-4") }
-                        </td>
-                    </tr>
-                    }
-                </tbody>
-
-                if len(list) == 0 {
-                <caption class="caption-bottom w-1/3 my-4 mx-auto">
-                    <h3 class="mb-2 mt-4 text-xl text-slate-400">
-                        @icons.FaceFrown("inline-block w-6 h-6 mr-2")
-                        Nothing here ...
-                    </h3>
-                    <p class="mb-8">It looks empty here. Try creating a new case ↓</p>
-                    <p class="flex justify-center">
-                    @utils.PrimaryButton(templ.Attributes{"hx-get": env.Routes("view-user", cid, 0), 
-                        "hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "aside", "hx-push-url": "false"}) { 
-                        @icons.Plus("inline-block mr-1 w-5 h-5")
-                        Add
-                    }
-                    </p>
-                </caption>
-                }
-            </table>
-
-        </form>
-        </main>
+        if len(list) == 0 {
+            @utils.EmptyCaption(env.Routes("view-user", cid, 0)) {}
+        }
     }
 }

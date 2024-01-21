@@ -4,53 +4,89 @@ import (
     "github.com/sprungknoedl/dagobert/valid"
 )
 
-templ WithLabel(label string, required bool) {
-    <div class="flex flex-row">
-        <div class="grow-0 w-56 pt-2">
-            <label>
-                { label }
-                if required {
-                    <span class="font-bold text-rose-500">*</span>
-                }
-            </label>
-        </div>
-        <div class="grow">
-            { children... }
-        </div>
+templ TextInput(label string, name string, value string, required bool, vr valid.Condition) {
+    <div class="mb-5">
+        <label class="block mb-2 text-sm font-medium text-white">
+        { label }
+        if required {
+            <span class="font-bold text-rose-500">*</span>
+        }
+        </label>
+
+        <input name={name} value={value} type="text" class="border text-sm rounded-lg block w-full p-2.5 bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-pink-500 focus:border-pink-500" />
+
+        if vr.Missing || vr.Invalid {
+            <p class="mt-2 text-sm text-red-500">{ vr.String() }</p>
+        }
     </div>
 }
 
-templ TextInput(name string, value string, vr valid.Condition) {
-    <input name={name} value={value} type="text" class="px-4 w-full h-10 outline outline-2 outline-offset-2 only:outline-slate-600 outline-red-500 focus:outline-pink-500 bg-slate-700 text-white caret-pink-500 rounded-md shadow-sm" />
-    if vr.Missing || vr.Invalid {
-        <p class="text-red-500 pt-2">{ vr.String() }</p>
-    }
-}
-
-templ TextareaInput(name string, value string, vr valid.Condition) {
-    <textarea name={name} rows="5" class="p-4 w-full outline outline-2 outline-offset-2 outline-red-500 only:outline-slate-600 focus:outline-pink-500 bg-slate-700 text-white caret-pink-500 rounded-md shadow-sm">
-    { value }
-    </textarea>
-    if vr.Missing || vr.Invalid{
-        <p class="text-red-500 pt-2">{ vr.String() }</p>
-    }
-}
-
-templ BooleanInput(name string, value bool, vr valid.Condition) {
-    <input name={name} value="true" checked?={value} type="checkbox" class="accent-pink-500" />
-    if vr.Missing || vr.Invalid{
-        <p class="text-red-500 pt-2">{ vr.String() }</p>
-    }
-}
-
-templ SelectInput(name string, value string, options []string, vr valid.Condition) {
-    <select name={name} class="px-4 w-full h-10 outline outline-2 outline-offset-2 outline-red-500 only:outline-slate-600 focus:outline-pink-500 bg-slate-700 text-white rounded-md shadow-sm">
-        <option disabled value="" selected?={value == ""}>Select an option</option>
-        for _, opt := range options {
-        <option selected?={value == opt}>{opt}</option>
+templ TextareaInput(label string, name string, value string, required bool, vr valid.Condition) {
+    <div class="mb-5">
+        <label class="block mb-2 text-sm font-medium text-white">
+        { label }
+        if required {
+            <span class="font-bold text-rose-500">*</span>
         }
-    </select>
-    if vr.Missing || vr.Invalid{
-        <p class="text-red-500 pt-2">{ vr.String() }</p>
-    }
+        </label>
+
+        <textarea name={name} rows="5" class="block p-2.5 w-full text-sm rounded-lg border bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-pink-500 focus:border-pink-500">
+        { value }
+        </textarea>
+
+        if vr.Missing || vr.Invalid{
+            <p class="mt-2 text-sm text-red-500">{ vr.String() }</p>
+        }
+    </div>
+}
+
+templ BooleanInput(label string, name string, value bool, vr valid.Condition) {
+    <div class="mb-5">
+        <div class="flex items-center">
+            <input id={name} name={name} value="true" checked?={value} type="checkbox" class="w-4 h-4 text-pink-600 rounded focus:ring-3  focus:ring-pink-600 ring-offset-slate-800 focus:ring-offset-slate-80 bg-slate-700 border border-slate-600" />
+            <label for={name} class="ms-2 text-sm font-medium text-slate-300">{label}</label>
+        </div>
+
+        if vr.Missing || vr.Invalid{
+            <p class="mt-2 text-sm text-red-500">{ vr.String() }</p>
+        }
+    </div>
+}
+
+templ SelectInput(label string, name string, value string, options []string, required bool, vr valid.Condition) {
+    <div class="mb-5">
+        <label class="block mb-2 text-sm font-medium text-white">
+        { label }
+        if required {
+            <span class="font-bold text-rose-500">*</span>
+        }
+        </label>
+
+        <select name={name} class="border text-sm rounded-lg block w-full p-2.5 bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-pink-500 focus:border-pink-500">
+            <option disabled value="" selected?={value == ""}>Select an option</option>
+            for _, opt := range options {
+            <option selected?={value == opt}>{opt}</option>
+            }
+        </select>
+
+        if vr.Missing || vr.Invalid{
+            <p class="mt-2 text-sm text-red-500">{ vr.String() }</p>
+        }
+    </div>
+}
+
+templ Search(env Env) {
+    <label for="default-search" class="mb-2 text-sm font-medium sr-only text-white">Search</label>
+    <div class="relative">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+            <svg class="w-4 h-4 text-slate-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+            </svg>
+        </div>
+        <input type="search" name="search" value={env.Search} style="width: 32rem" class="block w-full px-4 py-2 ps-10 text-sm border rounded-lg bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-pink-500 focus:border-pink-500" placeholder="Search ..." />
+    </div>
+}
+
+templ Sort(env Env) {
+    <input name="sort" value={env.Sort} x-model="sort_by" x-init="$watch('sort_by', () => { $dispatch('sort'); } )" class="hidden" />
 }
