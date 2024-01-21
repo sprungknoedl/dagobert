@@ -19,7 +19,13 @@ type EventDTO struct {
 	KeyEvent  bool   `form:"keyevent"`
 }
 
-templ Form(env utils.Env, obj EventDTO, vr valid.Result) {
+func optional(slice []string) []string {
+    return append([]string{""}, slice...)
+}
+
+templ Form(env utils.Env, obj EventDTO, assets []string, vr valid.Result) {
+    var assets2 = prepend("", assets)
+
     @utils.Modal("max-w-4xl") {
         <form hx-post={env.Routes("save-event", obj.CaseID, obj.ID)} hx-target="#modal">
         @utils.ModalHeader() {
@@ -33,9 +39,9 @@ templ Form(env utils.Env, obj EventDTO, vr valid.Result) {
         @utils.ModalBody() {
             @utils.TextInput("Date / Time", "time", obj.Time, true, vr["Time"])
             @utils.SelectInput("Type", "type", obj.Type, model.EventTypes, true, vr["Type"])
-            @utils.TextInput("Event System", "assetA", obj.AssetA, true, vr["Event System"])
+            @utils.SelectInput("Event System", "assetA", obj.AssetA, assets, true, vr["Event System"])
             @utils.SelectInput("Direction", "direction", obj.Direction, model.EventDirections, false, vr["Direction"])
-            @utils.TextInput("Remote System", "assetB", obj.AssetB, false, vr["Remote System"])
+            @utils.SelectInput("Remote System", "assetB", obj.AssetB, optional(assets), false, vr["Remote System"])
             @utils.TextareaInput("Event", "event", obj.Event, true, vr["Event"])
             @utils.TextareaInput("Raw", "raw", obj.Raw, false, vr["Raw"])
             @utils.BooleanInput("Key Event", "keyevent", obj.KeyEvent, vr["Key Event"])

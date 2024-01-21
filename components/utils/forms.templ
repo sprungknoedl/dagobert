@@ -7,71 +7,69 @@ import (
 templ TextInput(label string, name string, value string, required bool, vr valid.Condition) {
     <div class="mb-5">
         <label class="block mb-2 text-sm font-medium text-white">
-        { label }
-        if required {
-            <span class="font-bold text-rose-500">*</span>
-        }
+            { label }
+            if required {
+                <span class="font-bold text-rose-500">*</span>
+            }
+            if vr.Missing || vr.Invalid{
+                <span class="ml-2 text-sm text-red-500">{ vr.String() }</span>
+            }
         </label>
 
-        <input name={name} value={value} type="text" class="border text-sm rounded-lg block w-full p-2.5 bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-pink-500 focus:border-pink-500" />
-
-        if vr.Missing || vr.Invalid {
-            <p class="mt-2 text-sm text-red-500">{ vr.String() }</p>
-        }
+        <input name={name} value={value} type="text" class={validationColors(vr, "border text-sm rounded-lg block w-full p-2.5")} />
     </div>
 }
 
 templ TextareaInput(label string, name string, value string, required bool, vr valid.Condition) {
     <div class="mb-5">
         <label class="block mb-2 text-sm font-medium text-white">
-        { label }
-        if required {
-            <span class="font-bold text-rose-500">*</span>
-        }
+            { label }
+            if required {
+                <span class="font-bold text-rose-500">*</span>
+            }
+            if vr.Missing || vr.Invalid{
+                <span class="ml-2 text-sm text-red-500">{ vr.String() }</span>
+            }
         </label>
 
-        <textarea name={name} rows="5" class="block p-2.5 w-full text-sm rounded-lg border bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-pink-500 focus:border-pink-500">
+        <textarea name={name} rows="5" class={validationColors(vr, "block p-2.5 w-full text-sm rounded-lg border")}>
         { value }
         </textarea>
 
-        if vr.Missing || vr.Invalid{
-            <p class="mt-2 text-sm text-red-500">{ vr.String() }</p>
-        }
     </div>
 }
 
 templ BooleanInput(label string, name string, value bool, vr valid.Condition) {
     <div class="mb-5">
         <div class="flex items-center">
-            <input id={name} name={name} value="true" checked?={value} type="checkbox" class="w-4 h-4 text-pink-600 rounded focus:ring-3  focus:ring-pink-600 ring-offset-slate-800 focus:ring-offset-slate-80 bg-slate-700 border border-slate-600" />
+            <input id={name} name={name} value="true" checked?={value} type="checkbox" class="w-4 h-4 text-pink-600 rounded focus:ring-3 focus:ring-pink-600 ring-offset-slate-800 focus:ring-offset-slate-80 bg-slate-700 border border-slate-600" />
             <label for={name} class="ms-2 text-sm font-medium text-slate-300">{label}</label>
+            if vr.Missing || vr.Invalid {
+                <span class="mt-2 text-sm text-red-500">{ vr.String() }</span>
+            }
         </div>
-
-        if vr.Missing || vr.Invalid{
-            <p class="mt-2 text-sm text-red-500">{ vr.String() }</p>
-        }
     </div>
 }
 
 templ SelectInput(label string, name string, value string, options []string, required bool, vr valid.Condition) {
     <div class="mb-5">
         <label class="block mb-2 text-sm font-medium text-white">
-        { label }
-        if required {
-            <span class="font-bold text-rose-500">*</span>
-        }
+            { label }
+            if required {
+                <span class="font-bold text-rose-500">*</span>
+            }
+            if vr.Missing || vr.Invalid {
+                <span class="ml-2 text-sm text-red-500">{ vr.String() }</span>
+            }
         </label>
 
-        <select name={name} class="border text-sm rounded-lg block w-full p-2.5 bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-pink-500 focus:border-pink-500">
+        <select name={name} class={validationColors(vr, "border text-sm rounded-lg block w-full p-2.5")}>
             <option disabled value="" selected?={value == ""}>Select an option</option>
             for _, opt := range options {
-            <option selected?={value == opt}>{opt}</option>
+                <option selected?={value == opt}>{opt}</option>
             }
         </select>
 
-        if vr.Missing || vr.Invalid{
-            <p class="mt-2 text-sm text-red-500">{ vr.String() }</p>
-        }
     </div>
 }
 
@@ -89,4 +87,12 @@ templ Search(env Env) {
 
 templ Sort(env Env) {
     <input name="sort" value={env.Sort} x-model="sort_by" x-init="$watch('sort_by', () => { $dispatch('sort'); } )" class="hidden" />
+}
+
+func validationColors(vr valid.Condition, css string) string {
+    if vr.Missing || vr.Invalid {
+        return css + " bg-slate-700 border-red-600 placeholder-red-400 text-red-400 focus:ring-red-500 focus:border-red-500"
+    } else {
+        return css + " bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-pink-500 focus:border-pink-500"
+    }
 }

@@ -128,6 +128,11 @@ func ViewEvent(c echo.Context) error {
 		}
 	}
 
+	assets, err := listAssets(cid)
+	if err != nil {
+		return err
+	}
+
 	return render(c, events.Form(ctx(c), events.EventDTO{
 		ID:        obj.ID,
 		CaseID:    obj.CaseID,
@@ -139,7 +144,7 @@ func ViewEvent(c echo.Context) error {
 		Event:     obj.Event,
 		Raw:       obj.Raw,
 		KeyEvent:  obj.KeyEvent,
-	}, valid.Result{}))
+	}, assets, valid.Result{}))
 }
 
 func SaveEvent(c echo.Context) error {
@@ -159,7 +164,12 @@ func SaveEvent(c echo.Context) error {
 	}
 
 	if vr := ValidateEvent(dto); !vr.Valid() {
-		return render(c, events.Form(ctx(c), dto, vr))
+		assets, err := listAssets(cid)
+		if err != nil {
+			return err
+		}
+
+		return render(c, events.Form(ctx(c), dto, assets, vr))
 	}
 
 	t, err := time.Parse(time.RFC3339, dto.Time)
@@ -225,4 +235,18 @@ func DeleteEvent(c echo.Context) error {
 	}
 
 	return refresh(c)
+}
+
+func listAssets(cid int64) ([]string, error) {
+	ret := []string{}
+	assets, err := model.ListAssets(cid)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, x := range assets {
+		ret = append(ret, x.Name)
+	}
+
+	return ret, nil
 }
