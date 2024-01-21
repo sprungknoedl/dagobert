@@ -24,8 +24,6 @@ func optional(slice []string) []string {
 }
 
 templ Form(env utils.Env, obj EventDTO, assets []string, vr valid.Result) {
-    var assets2 = prepend("", assets)
-
     @utils.Modal("max-w-4xl") {
         <form hx-post={env.Routes("save-event", obj.CaseID, obj.ID)} hx-target="#modal">
         @utils.ModalHeader() {
