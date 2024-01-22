@@ -73,6 +73,14 @@ func main() {
 	}))
 
 	// --------------------------------------
+	// Reports
+	// --------------------------------------
+	err := handler.LoadTemplates("./templates/")
+	if err != nil {
+		e.Logger.Fatalf("failed to load report: %v", err)
+	}
+
+	// --------------------------------------
 	// Home
 	// --------------------------------------
 	// cases
@@ -87,7 +95,7 @@ func main() {
 	e.DELETE("/cases/:cid", handler.DeleteCase).Name = "delete-case"
 
 	// templates
-	e.GET("/reports", handler.ListTemplate).Name = "choose-report"
+	e.GET("/cases/:cid/reports", handler.ListTemplates).Name = "choose-report"
 	e.GET("/cases/:cid/render", handler.ApplyTemplate).Name = "generate-report"
 
 	// --------------------------------------

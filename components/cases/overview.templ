@@ -13,7 +13,7 @@ templ Overview(env utils.Env, obj model.Case) {
     @base.Layout(env) {
         <main class="p-4 grow">
             @base.Navbar(env, fmt.Sprintf("#%d - %s", obj.ID, obj.Name), false, false) {
-                @utils.GroupedLink(templ.Attributes{"href": env.Routes("generate-report", obj.ID), "target": "blank"}) {
+                @utils.GroupedButton(templ.Attributes{"hx-get": env.Routes("choose-report", obj.ID), "hx-target": "#modal"}) {
                     @icons.DocumentArrowDown("inline-block mr-1 w-5 h-5")
                     Generate report
                 }

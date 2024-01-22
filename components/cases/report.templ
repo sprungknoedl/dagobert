@@ -1,0 +1,23 @@
+package cases
+
+import (
+    "github.com/sprungknoedl/dagobert/components/utils"
+    "github.com/sprungknoedl/dagobert/valid"
+)
+
+templ ReportList(env utils.Env, cid int64, list []string) {
+    @utils.Modal("max-w-xl") {
+        <form action={templ.SafeURL(env.Routes("generate-report", cid))}>
+        @utils.ModalHeader() { Select report template }
+
+        @utils.ModalBody() {
+            @utils.SelectInput("Template", "tpl", "", list, false, valid.Condition{})
+        }
+
+        @utils.ModalFooter() {
+            @utils.PrimaryButton(templ.Attributes{"type": "submit", "_": "on click trigger closeModal"}) { Generate }
+            @utils.SecondaryButton(templ.Attributes{"_": "on click trigger closeModal"}) { Cancel }
+        }
+        </form>
+    }
+}

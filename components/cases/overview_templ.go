@@ -72,7 +72,7 @@ func Overview(env utils.Env, obj model.Case) templ.Component {
 					}
 					return templ_7745c5c3_Err
 				})
-				templ_7745c5c3_Err = utils.GroupedLink(templ.Attributes{"href": env.Routes("generate-report", obj.ID), "target": "blank"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = utils.GroupedButton(templ.Attributes{"hx-get": env.Routes("choose-report", obj.ID), "hx-target": "#modal"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var4), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
