@@ -88,7 +88,6 @@ func main() {
 	e.GET("/cases/export", handler.ExportCases).Name = "export-cases"
 	e.GET("/cases/import", handler.ImportCases).Name = "import-cases"
 	e.POST("/cases/import", handler.ImportCases).Name = "import-cases"
-	e.GET("/cases/:cid/select", handler.SelectCase).Name = "select-case"
 	e.GET("/cases/:cid/show", handler.ShowCase).Name = "show-case"
 	e.GET("/cases/:cid", handler.ViewCase).Name = "view-case"
 	e.POST("/cases/:cid", handler.SaveCase).Name = "save-case"

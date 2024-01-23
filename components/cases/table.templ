@@ -16,7 +16,6 @@ templ List(env utils.Env, list []model.Case) {
         Add: env.Routes("view-case", 0),
     }) {
         @utils.TableHead() {
-            @utils.TH(env, "", templ.Attributes{"style": "width: 8rem"}) { }
             @utils.TH(env, "id", templ.Attributes{"style": "width: 8rem"}) { ID  }
             @utils.TH(env, "name", templ.Attributes{"style": "width: auto"}) { Name  }
             @utils.TH(env, "classification", templ.Attributes{"style": "width: auto"}) { Classification  }
@@ -28,15 +27,8 @@ templ List(env utils.Env, list []model.Case) {
         @utils.TableBody() {
             for _, obj := range list {
             @utils.TR() {
-                @utils.TD() {
-                    if env.ActiveCase.ID == obj.ID {
-                        <span class="text-green-500">▶ Selected</span>
-                    } else {
-                        <a class="cursor-pointer text-slate-400 hover:text-slate-200 hover:underline" hx-get={env.Routes("select-case", obj.ID)} hx-swap="none">Switch</a>
-                    }
-                }
-                @utils.TD() {{ fmt.Sprintf("#%d", obj.ID) }}
-                @utils.TD() {{ obj.Name }}
+                @utils.TD() { <a class="hover:text-slate-200 hover:underline" href={templ.SafeURL(env.Routes("show-case", obj.ID))}>{ fmt.Sprintf("#%d", obj.ID) }</a> }
+                @utils.TD() { <a class="hover:text-slate-200 hover:underline" href={templ.SafeURL(env.Routes("show-case", obj.ID))}>{ obj.Name }</a> }
                 @utils.TD() {{ obj.Classification }}
                 @utils.TD() {{ obj.Severity }}
                 @utils.TD() {{ obj.Outcome }}

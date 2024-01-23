@@ -88,39 +88,6 @@ func ImportCases(c echo.Context) error {
 	})
 }
 
-func SelectCase(c echo.Context) error {
-	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
-	if err != nil || cid == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	obj, err := model.GetCase(cid)
-	if err != nil {
-		return err
-	}
-
-	// store active case in session
-	sess, _ := session.Get(SessionName, c)
-	sess.Options = &sessions.Options{
-		Path:     "/",
-		MaxAge:   86400 * 7,
-		HttpOnly: true,
-	}
-
-	sess.Values["activeCase"] = utils.CaseDTO{
-		ID:   obj.ID,
-		Name: obj.Name,
-	}
-
-	err = sess.Save(c.Request(), c.Response())
-	if err != nil {
-		return err
-	}
-
-	c.Response().Header().Add("HX-Refresh", "true")
-	return c.NoContent(http.StatusOK)
-}
-
 func ShowCase(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {

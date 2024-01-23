@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/sprungknoedl/dagobert/components/utils"
+	"github.com/sprungknoedl/dagobert/model"
 )
 
 const SessionName = "default"
@@ -51,9 +53,20 @@ func getUser(c echo.Context) string {
 }
 
 func getCase(c echo.Context) utils.CaseDTO {
-	sess, _ := session.Get(SessionName, c)
-	kase, _ := sess.Values["activeCase"].(utils.CaseDTO)
-	return kase
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return utils.CaseDTO{}
+	}
+
+	obj, err := model.GetCase(cid)
+	if err != nil {
+		return utils.CaseDTO{}
+	}
+
+	return utils.CaseDTO{
+		ID:   obj.ID,
+		Name: obj.Name,
+	}
 }
 
 func ctx(c echo.Context) utils.Env {

@@ -43,14 +43,6 @@ func List(env utils.Env, list []model.Case) templ.Component {
 					templ_7745c5c3_Buffer = templ.GetBuffer()
 					defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 				}
-				templ_7745c5c3_Err = utils.TH(env, "", templ.Attributes{"style": "width: 8rem"}).Render(ctx, templ_7745c5c3_Buffer)
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" ")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
 				templ_7745c5c3_Var4 := templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 					templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 					if !templ_7745c5c3_IsBuffer {
@@ -207,42 +199,31 @@ func List(env utils.Env, list []model.Case) templ.Component {
 								templ_7745c5c3_Buffer = templ.GetBuffer()
 								defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 							}
-							if env.ActiveCase.ID == obj.ID {
-								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<span class=\"text-green-500\">")
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								templ_7745c5c3_Var17 := `▶ Selected`
-								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span>")
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-							} else {
-								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<a class=\"cursor-pointer text-slate-400 hover:text-slate-200 hover:underline\" hx-get=\"")
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(env.Routes("select-case", obj.ID)))
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\" hx-swap=\"none\">")
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								templ_7745c5c3_Var18 := `Switch`
-								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
-								_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</a>")
-								if templ_7745c5c3_Err != nil {
-									return templ_7745c5c3_Err
-								}
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<a class=\"hover:text-slate-200 hover:underline\" href=\"")
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
+							}
+							var templ_7745c5c3_Var17 templ.SafeURL = templ.SafeURL(env.Routes("show-case", obj.ID))
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(string(templ_7745c5c3_Var17)))
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
+							}
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\">")
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
+							}
+							var templ_7745c5c3_Var18 string
+							templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("#%d", obj.ID))
+							if templ_7745c5c3_Err != nil {
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/cases/table.templ`, Line: 29, Col: 160}
+							}
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
+							}
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</a>")
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
 							}
 							if !templ_7745c5c3_IsBuffer {
 								_, templ_7745c5c3_Err = io.Copy(templ_7745c5c3_W, templ_7745c5c3_Buffer)
@@ -263,12 +244,29 @@ func List(env utils.Env, list []model.Case) templ.Component {
 								templ_7745c5c3_Buffer = templ.GetBuffer()
 								defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 							}
-							var templ_7745c5c3_Var20 string
-							templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("#%d", obj.ID))
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<a class=\"hover:text-slate-200 hover:underline\" href=\"")
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/cases/table.templ`, Line: 37, Col: 57}
+								return templ_7745c5c3_Err
 							}
-							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
+							var templ_7745c5c3_Var20 templ.SafeURL = templ.SafeURL(env.Routes("show-case", obj.ID))
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(string(templ_7745c5c3_Var20)))
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
+							}
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\">")
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
+							}
+							var templ_7745c5c3_Var21 string
+							templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Name)
+							if templ_7745c5c3_Err != nil {
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/cases/table.templ`, Line: 30, Col: 142}
+							}
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
+							if templ_7745c5c3_Err != nil {
+								return templ_7745c5c3_Err
+							}
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</a>")
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
@@ -285,18 +283,18 @@ func List(env utils.Env, list []model.Case) templ.Component {
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Var21 := templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
+						templ_7745c5c3_Var22 := templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 							if !templ_7745c5c3_IsBuffer {
 								templ_7745c5c3_Buffer = templ.GetBuffer()
 								defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 							}
-							var templ_7745c5c3_Var22 string
-							templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Name)
+							var templ_7745c5c3_Var23 string
+							templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Classification)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/cases/table.templ`, Line: 38, Col: 39}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/cases/table.templ`, Line: 31, Col: 49}
 							}
-							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
@@ -305,7 +303,7 @@ func List(env utils.Env, list []model.Case) templ.Component {
 							}
 							return templ_7745c5c3_Err
 						})
-						templ_7745c5c3_Err = utils.TD().Render(templ.WithChildren(ctx, templ_7745c5c3_Var21), templ_7745c5c3_Buffer)
+						templ_7745c5c3_Err = utils.TD().Render(templ.WithChildren(ctx, templ_7745c5c3_Var22), templ_7745c5c3_Buffer)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -313,18 +311,18 @@ func List(env utils.Env, list []model.Case) templ.Component {
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Var23 := templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
+						templ_7745c5c3_Var24 := templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 							if !templ_7745c5c3_IsBuffer {
 								templ_7745c5c3_Buffer = templ.GetBuffer()
 								defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 							}
-							var templ_7745c5c3_Var24 string
-							templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Classification)
+							var templ_7745c5c3_Var25 string
+							templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Severity)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/cases/table.templ`, Line: 39, Col: 49}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/cases/table.templ`, Line: 32, Col: 43}
 							}
-							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
@@ -333,7 +331,7 @@ func List(env utils.Env, list []model.Case) templ.Component {
 							}
 							return templ_7745c5c3_Err
 						})
-						templ_7745c5c3_Err = utils.TD().Render(templ.WithChildren(ctx, templ_7745c5c3_Var23), templ_7745c5c3_Buffer)
+						templ_7745c5c3_Err = utils.TD().Render(templ.WithChildren(ctx, templ_7745c5c3_Var24), templ_7745c5c3_Buffer)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -341,18 +339,18 @@ func List(env utils.Env, list []model.Case) templ.Component {
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Var25 := templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
+						templ_7745c5c3_Var26 := templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 							if !templ_7745c5c3_IsBuffer {
 								templ_7745c5c3_Buffer = templ.GetBuffer()
 								defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 							}
-							var templ_7745c5c3_Var26 string
-							templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Severity)
+							var templ_7745c5c3_Var27 string
+							templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Outcome)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/cases/table.templ`, Line: 40, Col: 43}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/cases/table.templ`, Line: 33, Col: 42}
 							}
-							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
+							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 							if templ_7745c5c3_Err != nil {
 								return templ_7745c5c3_Err
 							}
@@ -361,35 +359,7 @@ func List(env utils.Env, list []model.Case) templ.Component {
 							}
 							return templ_7745c5c3_Err
 						})
-						templ_7745c5c3_Err = utils.TD().Render(templ.WithChildren(ctx, templ_7745c5c3_Var25), templ_7745c5c3_Buffer)
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" ")
-						if templ_7745c5c3_Err != nil {
-							return templ_7745c5c3_Err
-						}
-						templ_7745c5c3_Var27 := templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
-							templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
-							if !templ_7745c5c3_IsBuffer {
-								templ_7745c5c3_Buffer = templ.GetBuffer()
-								defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
-							}
-							var templ_7745c5c3_Var28 string
-							templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Outcome)
-							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `components/cases/table.templ`, Line: 41, Col: 42}
-							}
-							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
-							if templ_7745c5c3_Err != nil {
-								return templ_7745c5c3_Err
-							}
-							if !templ_7745c5c3_IsBuffer {
-								_, templ_7745c5c3_Err = io.Copy(templ_7745c5c3_W, templ_7745c5c3_Buffer)
-							}
-							return templ_7745c5c3_Err
-						})
-						templ_7745c5c3_Err = utils.TD().Render(templ.WithChildren(ctx, templ_7745c5c3_Var27), templ_7745c5c3_Buffer)
+						templ_7745c5c3_Err = utils.TD().Render(templ.WithChildren(ctx, templ_7745c5c3_Var26), templ_7745c5c3_Buffer)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
