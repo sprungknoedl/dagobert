@@ -38,7 +38,7 @@ templ List(env utils.Env, cid int64, list []model.Asset) {
         }
 
         if len(list) == 0 {
-            @utils.EmptyCaption(env.Routes("view-asset", cid)) {}
+            @utils.EmptyCaption(env.Routes("view-asset", cid, 0)) {}
         }
     }
 }

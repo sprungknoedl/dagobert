@@ -397,7 +397,7 @@ func List(env utils.Env, cid int64, list []model.Asset) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(list) == 0 {
-				templ_7745c5c3_Err = utils.EmptyCaption(env.Routes("view-asset", cid)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = utils.EmptyCaption(env.Routes("view-asset", cid, 0)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
