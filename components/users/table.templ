@@ -8,7 +8,7 @@ import (
 
 templ List(env utils.Env, cid int64, list []model.User) {
     @base.TableView(env, "Users", base.CrudUrls{
-        List: env.Routes("list-users", 0),
+        List: env.Routes("list-users", cid),
         Import: env.Routes("import-users", cid),
         Export: env.Routes("export-users", cid),
         Add: env.Routes("view-user", cid, 0),

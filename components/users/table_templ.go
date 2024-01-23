@@ -422,7 +422,7 @@ func List(env utils.Env, cid int64, list []model.User) templ.Component {
 			return templ_7745c5c3_Err
 		})
 		templ_7745c5c3_Err = base.TableView(env, "Users", base.CrudUrls{
-			List:   env.Routes("list-users", 0),
+			List:   env.Routes("list-users", cid),
 			Import: env.Routes("import-users", cid),
 			Export: env.Routes("export-users", cid),
 			Add:    env.Routes("view-user", cid, 0),
