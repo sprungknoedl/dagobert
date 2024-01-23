@@ -489,7 +489,7 @@ func ListUsers(cid int64) ([]User, error) {
 
 func FindUsers(cid int64, search string, sort string) ([]User, error) {
 	var list []User
-	query := db.Order("name asc").
+	query := db.
 		Where("case_id = ?", cid).
 		Where(db.
 			Where("instr(name, ?) > 0", search).
