@@ -1,8 +1,13 @@
 package handler
 
 import (
+	"crypto/sha1"
 	"encoding/csv"
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -113,9 +118,6 @@ func ViewEvidence(c echo.Context) error {
 		Type:        obj.Type,
 		Name:        obj.Name,
 		Description: obj.Description,
-		Size:        obj.Size,
-		Hash:        obj.Hash,
-		Location:    obj.Location,
 	}, valid.Result{}))
 }
 
@@ -135,8 +137,62 @@ func SaveEvidence(c echo.Context) error {
 		return err
 	}
 
+	dto.Name = filepath.Base(dto.Name) // sanitize name
 	if vr := ValidateEvidence(dto); !vr.Valid() {
 		return render(c, evidences.Form(ctx(c), dto, vr))
+	}
+
+	// get handle to form file
+	fh, err := c.FormFile("file")
+	if err != nil && err != http.ErrMissingFile {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+
+	// default values
+	size := int64(0)
+	hash := ""
+	location := ""
+
+	// process file if present
+	if fh != nil && fh.Size > 0 {
+		fr, err := fh.Open()
+		if err != nil {
+			return err
+		}
+
+		// prepare location for evidence storage
+		location = filepath.Join("./files/evidences", strconv.FormatInt(cid, 10), dto.Name)
+		err = os.MkdirAll(filepath.Dir(location), 0755)
+		if err != nil {
+			return err
+		}
+
+		// create file
+		fw, err := os.Create(location)
+		if err != nil {
+			return err
+		}
+
+		// write and file and simultanously calculate sha1 hash
+		hasher := sha1.New()
+		mw := io.MultiWriter(fw, hasher)
+		_, err = io.Copy(mw, fr)
+		if err != nil {
+			return err
+		}
+
+		size = fh.Size
+		hash = fmt.Sprintf("%x", hasher.Sum(nil))
+	} else if id != 0 {
+		// keep metadata for existing evidences that did not change
+		obj, err := model.GetEvidence(cid, id)
+		if err != nil {
+			return err
+		}
+
+		size = obj.Size
+		hash = obj.Hash
+		location = obj.Location
 	}
 
 	now := time.Now()
@@ -147,9 +203,9 @@ func SaveEvidence(c echo.Context) error {
 		Type:         dto.Type,
 		Name:         dto.Name,
 		Description:  dto.Description,
-		Size:         dto.Size,
-		Hash:         dto.Hash,
-		Location:     dto.Location,
+		Size:         size,
+		Hash:         hash,
+		Location:     location,
 		DateAdded:    now,
 		UserAdded:    usr,
 		DateModified: now,

@@ -82,7 +82,7 @@ func TextInput(label string, name string, value string, required bool, vr valid.
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var5 = []any{validationColors(vr, "border text-sm rounded-lg block w-full p-2.5")}
+		var templ_7745c5c3_Var5 = []any{Validation(vr, "border text-sm rounded-lg block w-full p-2.5")}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var5...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -190,7 +190,7 @@ func TextareaInput(label string, name string, value string, required bool, vr va
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var10 = []any{validationColors(vr, "block p-2.5 w-full text-sm rounded-lg border")}
+		var templ_7745c5c3_Var10 = []any{Validation(vr, "block p-2.5 w-full text-sm rounded-lg border")}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var10...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -397,7 +397,7 @@ func SelectInput(label string, name string, value string, options []string, requ
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var19 = []any{validationColors(vr, "border text-sm rounded-lg block w-full p-2.5")}
+		var templ_7745c5c3_Var19 = []any{Validation(vr, "border text-sm rounded-lg block w-full p-2.5")}
 		templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var19...)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -554,7 +554,7 @@ func Sort(env Env) templ.Component {
 	})
 }
 
-func validationColors(vr valid.Condition, css string) string {
+func Validation(vr valid.Condition, css string) string {
 	if vr.Missing || vr.Invalid {
 		return css + " bg-slate-700 border-red-600 placeholder-red-400 text-red-400 focus:ring-red-500 focus:border-red-500"
 	} else {

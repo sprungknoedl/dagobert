@@ -18,8 +18,7 @@ templ List(env utils.Env, cid int64, list []model.Evidence) {
             @utils.TH(env, "type", templ.Attributes{"style": "width: 15rem"}) { Type }
             @utils.TH(env, "name", templ.Attributes{"style": "width: auto"})  { Name }
             @utils.TH(env, "desc", templ.Attributes{"style": "width: auto"})  { Description }
-            @utils.TH(env, "hash", templ.Attributes{"style": "width: auto"})  { Hash }
-            @utils.TH(env, "location", templ.Attributes{"style": "width: auto"})  { Location }
+            @utils.TH(env, "hash", templ.Attributes{"style": "width: 25rem"})  { Hash }
             @utils.TH(env, "", templ.Attributes{"style": "width: 7rem"})  { }
         }
 
@@ -30,7 +29,6 @@ templ List(env utils.Env, cid int64, list []model.Evidence) {
                 @utils.TD() {{ obj.Name }}
                 @utils.TD() {{ obj.Description }}
                 @utils.TD() {{ obj.Hash }}
-                @utils.TD() {{ obj.Location }}
                 @utils.DefaultTableButtons(env.Routes("view-evidence", cid, obj.ID), env.Routes("delete-evidence", cid, obj.ID)) {}
             }}
         }

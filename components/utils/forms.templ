@@ -16,7 +16,7 @@ templ TextInput(label string, name string, value string, required bool, vr valid
             }
         </label>
 
-        <input name={name} value={value} type="text" class={validationColors(vr, "border text-sm rounded-lg block w-full p-2.5")} />
+        <input name={name} value={value} type="text" class={Validation(vr, "border text-sm rounded-lg block w-full p-2.5")} />
     </div>
 }
 
@@ -32,7 +32,7 @@ templ TextareaInput(label string, name string, value string, required bool, vr v
             }
         </label>
 
-        <textarea name={name} rows="5" class={validationColors(vr, "block p-2.5 w-full text-sm rounded-lg border")}>
+        <textarea name={name} rows="5" class={Validation(vr, "block p-2.5 w-full text-sm rounded-lg border")}>
         { value }
         </textarea>
 
@@ -63,7 +63,7 @@ templ SelectInput(label string, name string, value string, options []string, req
             }
         </label>
 
-        <select name={name} class={validationColors(vr, "border text-sm rounded-lg block w-full p-2.5")}>
+        <select name={name} class={Validation(vr, "border text-sm rounded-lg block w-full p-2.5")}>
             <option disabled value="" selected?={value == ""}>Select an option</option>
             for _, opt := range options {
                 <option selected?={value == opt}>{opt}</option>
@@ -89,7 +89,7 @@ templ Sort(env Env) {
     <input name="sort" value={env.Sort} x-model="sort_by" x-init="$watch('sort_by', () => { $dispatch('sort'); } )" class="hidden" />
 }
 
-func validationColors(vr valid.Condition, css string) string {
+func Validation(vr valid.Condition, css string) string {
     if vr.Missing || vr.Invalid {
         return css + " bg-slate-700 border-red-600 placeholder-red-400 text-red-400 focus:ring-red-500 focus:border-red-500"
     } else {

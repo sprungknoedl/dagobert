@@ -1,6 +1,8 @@
 package evidences
 
 import (
+    "fmt"
+
 	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
     "github.com/sprungknoedl/dagobert/valid"
@@ -12,14 +14,12 @@ type EvidenceDTO struct {
 	Type        string `form:"type"`
 	Name        string `form:"name"`
 	Description string `form:"description"`
-	Size        int64  `form:"size"`
-	Hash        string `form:"hash"`
-	Location    string `form:"location"`
 }
 
 templ Form(env utils.Env, obj EvidenceDTO, vr valid.Result) {
     @utils.Modal("max-w-4xl") {
-        <form hx-post={env.Routes("save-evidence", obj.CaseID, obj.ID)} hx-target="#modal">
+        <form id='form' hx-post={env.Routes("save-evidence", obj.CaseID, obj.ID)} hx-target="#modal" hx-encoding="multipart/form-data"
+        x-data={fmt.Sprintf("{ filename: %q }", obj.Name)}>
         @utils.ModalHeader() {
             if obj.ID == 0 {
                 Add evidence
@@ -29,11 +29,40 @@ templ Form(env utils.Env, obj EvidenceDTO, vr valid.Result) {
         }
                 
         @utils.ModalBody() {
+            <div class="mb-5">
+                <label class="block mb-2 text-sm font-medium text-white">
+                    File
+                </label>
+
+                <input name="file" type="file" @change="filename = Object.values($event.target.files).map(file => file.name).join(', ')" class="block w-full text-sm border rounded-lg cursor-pointer text-slate-400 focus:outline-none bg-slate-700 border-slate-600 placeholder-slate-400" />
+            </div>
+
+            <div class="mb-5">
+                <label class="block mb-2 text-sm font-medium text-white">
+                    Name <span class="font-bold text-rose-500">*</span>
+                    if vr["Name"].Missing || vr["Name"].Invalid{
+                        <span class="ml-2 text-sm text-red-500">{ vr["Name"].String() }</span>
+                    }
+                </label>
+
+                <input x-model="filename" name="name" value={obj.Name} type="text" class={ utils.Validation(vr["Name"], "border text-sm rounded-lg block w-full p-2.5") } />
+            </div>
+
             @utils.SelectInput("Type", "type", obj.Type, model.EvidenceTypes, true, vr["Type"])
-            @utils.TextInput("Name", "name", obj.Name, true, vr["Name"])
-            @utils.TextInput("Hash", "hash", obj.Hash, false, vr["Hash"])
-            @utils.TextInput("Location", "location", obj.Location, false, vr["Location"])
             @utils.TextareaInput("Description", "description", obj.Description, false, vr["Description"])
+
+            <div class="mb-5">
+                <div class="w-full rounded-full h-1.5 mt-5 mb-4 bg-slate-700">
+                    <div id="progress" class="h-1.5 rounded-full bg-pink-500" style="width: 0%"></div>
+                </div>
+
+                <script>
+                    htmx.on('#form', 'htmx:xhr:progress', function(evt) {
+                    htmx.find('#progress').setAttribute('style', 'width: ' + (evt.detail.loaded/evt.detail.total * 100) + '%')
+                    });
+                </script>
+            </div>
+
         }
 
         @utils.DefaultCrudFooter() {}
