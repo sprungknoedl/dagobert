@@ -33,7 +33,7 @@ type Case struct {
 	Users      []User      `json:"-"`
 }
 
-var EvidenceTypes = []string{"File", "Log", "Artifacts Collection", "System Image", "Memory Dump", "Other"}
+var EvidenceTypes = []string{"File", "Logs", "Artifacts Collection", "System Image", "Memory Dump", "Other"}
 
 type Evidence struct {
 	ID  int64  `json:"id" gorm:"primaryKey"`
@@ -100,7 +100,24 @@ type Indicator struct {
 	UserModified string    `json:"userModified"`
 }
 
-var EventTypes = []string{"Event Log", "File", "Human", "Lateral Movement", "Exfiltration", "Malware", "C2", "DFIR", "Other"}
+var EventTypes = []string{
+	"Reconnaissance",
+	"Resource Development",
+	"Initial Access",
+	"Execution",
+	"Persistence",
+	"Privilege Escalation",
+	"Defense Evasion",
+	"Credential Access",
+	"Discovery",
+	"Lateral Movement",
+	"Collection",
+	"C2",
+	"Exfiltration",
+	"Impact",
+	"DFIR",
+	"Other",
+}
 var EventDirections = []string{"", "→", "←"}
 
 type Event struct {

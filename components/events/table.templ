@@ -39,10 +39,10 @@ templ List(env utils.Env, cid int64, list []model.Event, indicators []model.Indi
             }
 
             @utils.TR() {
-                @utils.TD() { { obj.Time.Format("2006-01-02 15:04:05.000") }<span class="text-slate-500">{ obj.Time.Format("Z07:00") }</span> }
+                @utils.TD() {{ obj.Time.Format("2006-01-02 15:04:05.000") } <span class="text-slate-500">{ obj.Time.Format("Z07:00") }</span> }
                 @utils.TD() { @typeIndicator(obj.Type) }
-                @utils.TD() { obj.AssetA }
-                @utils.TD() { obj.Direction + " " + obj.AssetB }
+                @utils.TD() {{ obj.AssetA }}
+                @utils.TD() {{ obj.Direction + " " + obj.AssetB }}
                 @utils.TD() { @highlightIndicators(obj.Event, indicators) }
                 @utils.DefaultTableButtons(env.Routes("view-event", cid, obj.ID), env.Routes("delete-event", cid, obj.ID)) {
                     if obj.KeyEvent {
@@ -60,20 +60,34 @@ templ List(env utils.Env, cid int64, list []model.Event, indicators []model.Indi
 
 templ typeIndicator(typ string) {
     switch typ {
-    case "Event Log": 
+    case "Reconnaissance": 
         <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-slate-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "File":
+    case "Resource Development": 
         <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-slate-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "Human":
+    case "Initial Access": 
+        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-yellow-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+    case "Execution":
         <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-indigo-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+    case "Persistence":
+        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-indigo-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+    case "Privilege Escalation":
+        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-yellow-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+    case "Defense Evasion":
+        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-indigo-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+    case "Credential Access":
+        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-cyan-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+    case "Discovery": 
+        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-slate-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
     case "Lateral Movement":
         <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-cyan-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "Exfiltration":
+    case "Collection":
         <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-red-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "Malware":
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-yellow-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
     case "C2":
         <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-fuchsia-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+    case "Exfiltration":
+        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-red-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+    case "Impact":
+        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-red-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
     case "DFIR":
         <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-green-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
     case "Other":

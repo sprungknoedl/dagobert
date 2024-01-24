@@ -348,7 +348,7 @@ func renderType(value string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-		case "Log":
+		case "Logs":
 			templ_7745c5c3_Err = icons.DocumentText("inline-block w-6 h-6 mr-2").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
