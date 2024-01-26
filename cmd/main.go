@@ -154,6 +154,7 @@ func main() {
 	e.GET("/cases/:cid/evidences/import", handler.ImportEvidences).Name = "import-evidences"
 	e.POST("/cases/:cid/evidences/import", handler.ImportEvidences).Name = "import-evidences"
 	e.GET("/cases/:cid/evidences/:id", handler.ViewEvidence).Name = "view-evidence"
+	e.GET("/cases/:cid/evidences/:id/download", handler.DownloadEvidence).Name = "download-evidence"
 	e.POST("/cases/:cid/evidences/:id", handler.SaveEvidence).Name = "save-evidence"
 	e.DELETE("/cases/:cid/evidences/:id", handler.DeleteEvidence).Name = "delete-evidence"
 

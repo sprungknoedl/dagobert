@@ -47,3 +47,9 @@ templ GroupedLink(attr templ.Attributes) {
         { children... }
     </a>
 }
+
+templ InlineLink(attr templ.Attributes) {
+    <a { attr... } class="p-2 text-slate-400 bg-transparent rounded-lg text-sm inline-flex justify-center items-center hover:bg-slate-900 hover:text-white">
+        { children... }
+    </a>
+}

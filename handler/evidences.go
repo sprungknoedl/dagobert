@@ -121,6 +121,27 @@ func ViewEvidence(c echo.Context) error {
 	}, valid.Result{}))
 }
 
+func DownloadEvidence(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || id == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")
+	}
+
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	obj, err := model.GetEvidence(cid, id)
+	if err != nil {
+		return err
+	}
+
+	c.Response().Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", obj.Name))
+	c.Response().WriteHeader(http.StatusOK)
+	return c.File(obj.Location)
+}
+
 func SaveEvidence(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context

@@ -29,7 +29,13 @@ templ List(env utils.Env, cid int64, list []model.Evidence) {
                 @utils.TD() {{ obj.Name }}
                 @utils.TD() {{ obj.Description }}
                 @utils.TD() {{ obj.Hash }}
-                @utils.DefaultTableButtons(env.Routes("view-evidence", cid, obj.ID), env.Routes("delete-evidence", cid, obj.ID)) {}
+                @utils.DefaultTableButtons(env.Routes("view-evidence", cid, obj.ID), env.Routes("delete-evidence", cid, obj.ID)) {
+                    @utils.InlineLink(templ.Attributes{
+                        "href": env.Routes("download-evidence", cid, obj.ID),
+                        "target": "blank",
+                    }) {
+                        @icons.ArrowDownTray("w-4 h-4") }
+                    }
             }}
         }
 
