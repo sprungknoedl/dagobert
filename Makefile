@@ -1,4 +1,9 @@
+.PHONY: build run
+
 build:
-	tailwindcss -i css/index.css -o dist/dagobert.css
+	tailwindcss -i web/_build.css -o web/dagobert.css
 	templ generate
 	go build -o dagobert ./cmd
+
+run:
+	source configs/dagobert.env && air -c configs/air.toml

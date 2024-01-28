@@ -1,6 +1,5 @@
 tmp
 dagobert
-dagobert.db
 *.env
 .DS_Store
 files

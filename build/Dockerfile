@@ -8,7 +8,7 @@ COPY go.mod .
 RUN go mod download
 
 COPY . .
-RUN make
+RUN make build
 
 # ---------------------------------
 

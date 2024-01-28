@@ -30,10 +30,10 @@ type Configuration struct {
 
 func main() {
 	cfg := Configuration{
-		AssetsFolder:   getEnv("ASSETS_FOLDER", "./dist"),
+		AssetsFolder:   getEnv("ASSETS_FOLDER", "./web"),
 		EvidenceFolder: getEnv("EVIDENCE_FOLDER", "./files/evidences"),
 
-		Database: getEnv("DB_URL", "./dagobert.db"),
+		Database: getEnv("DB_URL", "./files/dagobert.db"),
 
 		ClientId:     getEnv("CLIENT_ID", ""),
 		ClientSecret: getEnv("CLIENT_SECRET", ""),
@@ -180,7 +180,7 @@ func main() {
 	// Assets
 	// --------------------------------------
 	e.File("/favicon.ico", "dist/favicon.svg")
-	e.Static("/dist", cfg.AssetsFolder)
+	e.Static("/web", cfg.AssetsFolder)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
