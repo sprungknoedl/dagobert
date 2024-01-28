@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/sprungknoedl/dagobert/components/indicators"
-	"github.com/sprungknoedl/dagobert/components/utils"
+	"github.com/sprungknoedl/dagobert/internal/templ"
+	"github.com/sprungknoedl/dagobert/internal/templ/utils"
 	"github.com/sprungknoedl/dagobert/model"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -26,7 +26,7 @@ func ListIndicators(c echo.Context) error {
 		return err
 	}
 
-	return render(c, indicators.List(ctx(c), cid, list))
+	return render(c, templ.IndicatorList(ctx(c), cid, list))
 }
 
 func ExportIndicators(c echo.Context) error {
@@ -40,7 +40,7 @@ func ExportIndicators(c echo.Context) error {
 		return err
 	}
 
-	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"indicators.csv\"")
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"templ.csv\"")
 	c.Response().WriteHeader(http.StatusOK)
 
 	w := csv.NewWriter(c.Response().Writer)
@@ -101,7 +101,7 @@ func ViewIndicator(c echo.Context) error {
 		}
 	}
 
-	return render(c, indicators.Form(ctx(c), indicators.IndicatorDTO{
+	return render(c, templ.IndicatorForm(ctx(c), templ.IndicatorDTO{
 		ID:          id,
 		CaseID:      cid,
 		Type:        obj.Type,
@@ -123,13 +123,13 @@ func SaveIndicator(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	dto := indicators.IndicatorDTO{ID: id, CaseID: cid}
+	dto := templ.IndicatorDTO{ID: id, CaseID: cid}
 	if err = c.Bind(&dto); err != nil {
 		return err
 	}
 
 	if vr := ValidateIndicator(dto); !vr.Valid() {
-		return render(c, indicators.Form(ctx(c), dto, vr))
+		return render(c, templ.IndicatorForm(ctx(c), dto, vr))
 	}
 
 	now := time.Now()

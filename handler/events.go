@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/sprungknoedl/dagobert/components/events"
-	"github.com/sprungknoedl/dagobert/components/utils"
+	"github.com/sprungknoedl/dagobert/internal/templ"
+	"github.com/sprungknoedl/dagobert/internal/templ/utils"
 	"github.com/sprungknoedl/dagobert/model"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -31,7 +31,7 @@ func ListEvents(c echo.Context) error {
 		return err
 	}
 
-	return render(c, events.List(ctx(c), cid, list, indicators))
+	return render(c, templ.EventList(ctx(c), cid, list, indicators))
 }
 
 func ExportEvents(c echo.Context) error {
@@ -133,7 +133,7 @@ func ViewEvent(c echo.Context) error {
 		return err
 	}
 
-	return render(c, events.Form(ctx(c), events.EventDTO{
+	return render(c, templ.EventForm(ctx(c), templ.EventDTO{
 		ID:        obj.ID,
 		CaseID:    obj.CaseID,
 		Time:      formatNonZero(time.RFC3339, obj.Time),
@@ -158,7 +158,7 @@ func SaveEvent(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	dto := events.EventDTO{ID: id, CaseID: cid}
+	dto := templ.EventDTO{ID: id, CaseID: cid}
 	if err = c.Bind(&dto); err != nil {
 		return err
 	}
@@ -169,7 +169,7 @@ func SaveEvent(c echo.Context) error {
 			return err
 		}
 
-		return render(c, events.Form(ctx(c), dto, assets, vr))
+		return render(c, templ.EventForm(ctx(c), dto, assets, vr))
 	}
 
 	t, err := time.Parse(time.RFC3339, dto.Time)

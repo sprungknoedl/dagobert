@@ -5,22 +5,14 @@ import (
 	"slices"
 	"time"
 
-	"github.com/sprungknoedl/dagobert/components/assets"
-	"github.com/sprungknoedl/dagobert/components/cases"
-	"github.com/sprungknoedl/dagobert/components/events"
-	"github.com/sprungknoedl/dagobert/components/evidences"
-	"github.com/sprungknoedl/dagobert/components/indicators"
-	"github.com/sprungknoedl/dagobert/components/malware"
-	"github.com/sprungknoedl/dagobert/components/notes"
-	"github.com/sprungknoedl/dagobert/components/tasks"
-	"github.com/sprungknoedl/dagobert/components/users"
+	"github.com/sprungknoedl/dagobert/internal/templ"
 	"github.com/sprungknoedl/dagobert/model"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 var regexIP = regexp.MustCompile(`^$|^(?:\d{1,3}\.){3}\d{1,3}$`)
 
-func ValidateAsset(dto assets.AssetDTO) valid.Result {
+func ValidateAsset(dto templ.AssetDTO) valid.Result {
 	return valid.Check([]valid.Condition{
 		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !slices.Contains(model.AssetTypes, dto.Type)},
 		{Name: "Name", Missing: dto.Name == ""},
@@ -29,7 +21,7 @@ func ValidateAsset(dto assets.AssetDTO) valid.Result {
 	})
 }
 
-func ValidateCase(dto cases.CaseDTO) valid.Result {
+func ValidateCase(dto templ.CaseDTO) valid.Result {
 	return valid.Check([]valid.Condition{
 		{Name: "Name", Missing: dto.Name == ""},
 		{Name: "Classification", Missing: dto.Classification == ""},
@@ -38,7 +30,7 @@ func ValidateCase(dto cases.CaseDTO) valid.Result {
 	})
 }
 
-func ValidateEvent(dto events.EventDTO) valid.Result {
+func ValidateEvent(dto templ.EventDTO) valid.Result {
 	_, terr := time.Parse(time.RFC3339, dto.Time)
 	return valid.Check([]valid.Condition{
 		{Name: "Time", Message: "Invalid format, expected e.g. '2006-01-02T15:04:05Z'.", Missing: dto.Time == "", Invalid: terr != nil},
@@ -50,14 +42,14 @@ func ValidateEvent(dto events.EventDTO) valid.Result {
 	})
 }
 
-func ValidateEvidence(dto evidences.EvidenceDTO) valid.Result {
+func ValidateEvidence(dto templ.EvidenceDTO) valid.Result {
 	return valid.Check([]valid.Condition{
 		{Name: "Name", Message: "Invalid name.", Missing: dto.Name == "", Invalid: dto.Name == "."},
 		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !slices.Contains(model.EvidenceTypes, dto.Type)},
 	})
 }
 
-func ValidateIndicator(dto indicators.IndicatorDTO) valid.Result {
+func ValidateIndicator(dto templ.IndicatorDTO) valid.Result {
 	return valid.Check([]valid.Condition{
 		{Name: "Value", Missing: dto.Value == ""},
 		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !slices.Contains(model.IndicatorTypes, dto.Type)},
@@ -65,7 +57,7 @@ func ValidateIndicator(dto indicators.IndicatorDTO) valid.Result {
 	})
 }
 
-func ValidateMalware(dto malware.MalwareDTO) valid.Result {
+func ValidateMalware(dto templ.MalwareDTO) valid.Result {
 	_, cerr := time.Parse(time.RFC3339, dto.CDate)
 	_, merr := time.Parse(time.RFC3339, dto.MDate)
 	return valid.Check([]valid.Condition{
@@ -76,14 +68,14 @@ func ValidateMalware(dto malware.MalwareDTO) valid.Result {
 	})
 }
 
-func ValidateNote(dto notes.NoteDTO) valid.Result {
+func ValidateNote(dto templ.NoteDTO) valid.Result {
 	return valid.Check([]valid.Condition{
 		{Name: "Title", Missing: dto.Title == ""},
 		{Name: "Description", Missing: dto.Description == ""},
 	})
 }
 
-func ValidateTask(dto tasks.TaskDTO) valid.Result {
+func ValidateTask(dto templ.TaskDTO) valid.Result {
 	_, terr := time.Parse("2006-01-02", dto.DateDue)
 	return valid.Check([]valid.Condition{
 		{Name: "Task", Missing: dto.Task == ""},
@@ -92,7 +84,7 @@ func ValidateTask(dto tasks.TaskDTO) valid.Result {
 	})
 }
 
-func ValidateUser(dto users.UserDTO) valid.Result {
+func ValidateUser(dto templ.UserDTO) valid.Result {
 	return valid.Check([]valid.Condition{
 		{Name: "Name", Missing: dto.Name == ""},
 	})

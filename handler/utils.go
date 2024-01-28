@@ -11,7 +11,7 @@ import (
 	"github.com/a-h/templ"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
-	"github.com/sprungknoedl/dagobert/components/utils"
+	"github.com/sprungknoedl/dagobert/internal/templ/utils"
 	"github.com/sprungknoedl/dagobert/model"
 )
 

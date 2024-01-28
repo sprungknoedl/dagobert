@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/sprungknoedl/dagobert/components/tasks"
-	"github.com/sprungknoedl/dagobert/components/utils"
+	"github.com/sprungknoedl/dagobert/internal/templ"
+	"github.com/sprungknoedl/dagobert/internal/templ/utils"
 	"github.com/sprungknoedl/dagobert/model"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -26,7 +26,7 @@ func ListTasks(c echo.Context) error {
 		return err
 	}
 
-	return render(c, tasks.List(ctx(c), cid, list))
+	return render(c, templ.TaskList(ctx(c), cid, list))
 }
 
 func ExportTasks(c echo.Context) error {
@@ -40,7 +40,7 @@ func ExportTasks(c echo.Context) error {
 		return err
 	}
 
-	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"tasks.csv\"")
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"templ.csv\"")
 	c.Response().WriteHeader(http.StatusOK)
 
 	w := csv.NewWriter(c.Response().Writer)
@@ -111,7 +111,7 @@ func ViewTask(c echo.Context) error {
 		}
 	}
 
-	return render(c, tasks.Form(ctx(c), tasks.TaskDTO{
+	return render(c, templ.TaskForm(ctx(c), templ.TaskDTO{
 		ID:      id,
 		CaseID:  cid,
 		Type:    obj.Type,
@@ -133,13 +133,13 @@ func SaveTask(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	dto := tasks.TaskDTO{ID: id, CaseID: cid}
+	dto := templ.TaskDTO{ID: id, CaseID: cid}
 	if err = c.Bind(&dto); err != nil {
 		return err
 	}
 
 	if vr := ValidateTask(dto); !vr.Valid() {
-		return render(c, tasks.Form(ctx(c), dto, vr))
+		return render(c, templ.TaskForm(ctx(c), dto, vr))
 	}
 
 	dateDue, err := time.Parse("2006-01-02", dto.DateDue)

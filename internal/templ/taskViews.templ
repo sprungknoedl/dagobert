@@ -1,0 +1,100 @@
+package templ
+
+import (
+	"github.com/sprungknoedl/dagobert/internal/templ/utils"
+    "github.com/sprungknoedl/dagobert/internal/templ/icons"
+    "github.com/sprungknoedl/dagobert/model"
+    "github.com/sprungknoedl/dagobert/pkg/valid"
+)
+
+type TaskDTO struct {
+	ID      int64
+	CaseID  int64
+	Type    string `form:"type"`
+	Task    string `form:"task"`
+	Done    bool   `form:"done"`
+	Owner   string `form:"owner"`
+	DateDue string `form:"dateDue"`
+}
+
+templ TaskForm(env utils.Env, obj TaskDTO, vr valid.Result) {
+    @utils.Modal("max-w-4xl") {
+        <form hx-post={env.Routes("save-task", obj.CaseID, obj.ID)} hx-target="#modal">
+        @utils.ModalHeader() {
+                if obj.ID == 0 {
+                    Add task
+                } else {
+                    Edit task
+                }
+        }
+                
+        @utils.ModalBody() {
+            @utils.SelectInput("Type", "type", obj.Type, model.TaskTypes, true, vr["Type"])
+            @utils.TextInput("Task", "task", obj.Task, true, vr["Task"])
+            @utils.TextInput("Owner", "owner", obj.Owner, false, vr["Owner"])
+            @utils.TextInput("Due Date", "dueDate", obj.DateDue, false, vr["DateDue"])
+            @utils.BooleanInput("Done", "done", obj.Done, vr["Done"])
+        }
+
+        @utils.DefaultCrudFooter() {}
+        </form>
+    }
+}
+
+templ TaskList(env utils.Env, cid int64, list []model.Task) {
+    @TableView(env, "Tasks", CrudUrls{
+        List: env.Routes("list-tasks", cid),
+        Import: env.Routes("import-tasks", cid),
+        Export: env.Routes("export-tasks", cid),
+        Add: env.Routes("view-task", cid, 0),
+    }) {
+        @utils.TableHead() {
+            @utils.TH(env, "due", templ.Attributes{"style": "width: 8rem"}) { Date due  }
+            @utils.TH(env, "type", templ.Attributes{"style": "width: auto"}) { Type }
+            @utils.TH(env, "task", templ.Attributes{"style": "width: auto"}) { Task }
+            @utils.TH(env, "owner", templ.Attributes{"style": "width: auto"}) { Owner }
+            @utils.TH(env, "done", templ.Attributes{"style": "width: auto"}) { Done }
+            @utils.TH(env, "", templ.Attributes{"style": "width: 7rem"}) { }
+        }
+                
+        @utils.TableBody() {
+            for _, obj := range list {
+            @utils.TR() {
+                @utils.TD() {{ obj.DateDue.Format("2006-01-02") }}
+                @utils.TD() {@renderTaskType(obj.Type)}
+                @utils.TD() {{ obj.Task }}
+                @utils.TD() {{ obj.Owner }}
+                @utils.TD() {@renderTaskDone(obj.Done)}
+                @utils.DefaultTableButtons(env.Routes("view-task", cid, obj.ID), env.Routes("delete-task", cid, obj.ID)) {}
+            }}
+        }
+
+        if len(list) == 0 {
+            @utils.EmptyCaption(env.Routes("view-task", cid, 0)) {}
+        }
+    }
+}
+
+templ renderTaskType(value string) {
+    switch value {
+    case "Information request":
+        @icons.QuestionMarkCircle("inline-block w-6 h-6 mr-2")
+    case "Analysis":
+        @icons.MagnifyingGlass("inline-block w-6 h-6 mr-2")
+    case "Deliverable":
+        @icons.DocumentText("inline-block w-6 h-6 mr-2")
+    case "Checkpoint":
+        @icons.ClipboardCheck("inline-block w-6 h-6 mr-2")
+    default:
+        @icons.QuestionMarkCircle("inline-block w-6 h-6 mr-2")
+    }
+    {value}
+}
+
+templ renderTaskDone(value bool) {
+    if value {
+        @icons.CheckCircle("w-6 h-6 text-green-500")
+    } else {
+        @icons.XCircle("w-6 h-6 text-red-500")
+    }
+}

@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/sprungknoedl/dagobert/components/assets"
-	"github.com/sprungknoedl/dagobert/components/utils"
+	"github.com/sprungknoedl/dagobert/internal/templ"
+	"github.com/sprungknoedl/dagobert/internal/templ/utils"
 	"github.com/sprungknoedl/dagobert/model"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -26,7 +26,7 @@ func ListAssets(c echo.Context) error {
 		return err
 	}
 
-	return render(c, assets.List(ctx(c), cid, list))
+	return render(c, templ.AssetList(ctx(c), cid, list))
 }
 
 func ExportAssets(c echo.Context) error {
@@ -107,7 +107,7 @@ func ViewAsset(c echo.Context) error {
 		}
 	}
 
-	return render(c, assets.Form(ctx(c), assets.AssetDTO{
+	return render(c, templ.AssetForm(ctx(c), templ.AssetDTO{
 		ID:          id,
 		CaseID:      cid,
 		Type:        obj.Type,
@@ -130,13 +130,13 @@ func SaveAsset(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	dto := assets.AssetDTO{ID: id, CaseID: cid}
+	dto := templ.AssetDTO{ID: id, CaseID: cid}
 	if err = c.Bind(&dto); err != nil {
 		return err
 	}
 
 	if vr := ValidateAsset(dto); !vr.Valid() {
-		return render(c, assets.Form(ctx(c), dto, vr))
+		return render(c, templ.AssetForm(ctx(c), dto, vr))
 	}
 
 	now := time.Now()

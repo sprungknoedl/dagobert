@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/sprungknoedl/dagobert/components/evidences"
-	"github.com/sprungknoedl/dagobert/components/utils"
+	"github.com/sprungknoedl/dagobert/internal/templ"
+	"github.com/sprungknoedl/dagobert/internal/templ/utils"
 	"github.com/sprungknoedl/dagobert/model"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -31,7 +31,7 @@ func ListEvidences(c echo.Context) error {
 		return err
 	}
 
-	return render(c, evidences.List(ctx(c), cid, list))
+	return render(c, templ.EvidenceList(ctx(c), cid, list))
 }
 
 func ExportEvidences(c echo.Context) error {
@@ -45,7 +45,7 @@ func ExportEvidences(c echo.Context) error {
 		return err
 	}
 
-	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"evidences.csv\"")
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"templ.csv\"")
 	c.Response().WriteHeader(http.StatusOK)
 
 	w := csv.NewWriter(c.Response().Writer)
@@ -112,7 +112,7 @@ func ViewEvidence(c echo.Context) error {
 		}
 	}
 
-	return render(c, evidences.Form(ctx(c), evidences.EvidenceDTO{
+	return render(c, templ.EvidenceForm(ctx(c), templ.EvidenceDTO{
 		ID:          id,
 		CaseID:      cid,
 		Type:        obj.Type,
@@ -153,14 +153,14 @@ func SaveEvidence(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	dto := evidences.EvidenceDTO{ID: id, CaseID: cid}
+	dto := templ.EvidenceDTO{ID: id, CaseID: cid}
 	if err = c.Bind(&dto); err != nil {
 		return err
 	}
 
 	dto.Name = filepath.Base(dto.Name) // sanitize name
 	if vr := ValidateEvidence(dto); !vr.Valid() {
-		return render(c, evidences.Form(ctx(c), dto, vr))
+		return render(c, templ.EvidenceForm(ctx(c), dto, vr))
 	}
 
 	// get handle to form file

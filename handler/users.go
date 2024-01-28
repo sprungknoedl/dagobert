@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/sprungknoedl/dagobert/components/users"
-	"github.com/sprungknoedl/dagobert/components/utils"
+	"github.com/sprungknoedl/dagobert/internal/templ"
+	"github.com/sprungknoedl/dagobert/internal/templ/utils"
 	"github.com/sprungknoedl/dagobert/model"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -26,7 +26,7 @@ func ListUsers(c echo.Context) error {
 		return err
 	}
 
-	return render(c, users.List(ctx(c), cid, list))
+	return render(c, templ.UserList(ctx(c), cid, list))
 }
 
 func ExportUsers(c echo.Context) error {
@@ -40,7 +40,7 @@ func ExportUsers(c echo.Context) error {
 		return err
 	}
 
-	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"users.csv\"")
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"templ.csv\"")
 	c.Response().WriteHeader(http.StatusOK)
 
 	w := csv.NewWriter(c.Response().Writer)
@@ -102,7 +102,7 @@ func ViewUser(c echo.Context) error {
 		}
 	}
 
-	return render(c, users.Form(ctx(c), users.UserDTO{
+	return render(c, templ.UserForm(ctx(c), templ.UserDTO{
 		ID:      id,
 		CaseID:  cid,
 		Name:    obj.Name,
@@ -125,13 +125,13 @@ func SaveUser(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	dto := users.UserDTO{ID: id, CaseID: cid}
+	dto := templ.UserDTO{ID: id, CaseID: cid}
 	if err = c.Bind(&dto); err != nil {
 		return err
 	}
 
 	if vr := ValidateUser(dto); !vr.Valid() {
-		return render(c, users.Form(ctx(c), dto, vr))
+		return render(c, templ.UserForm(ctx(c), dto, vr))
 	}
 
 	now := time.Now()

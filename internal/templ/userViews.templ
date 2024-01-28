@@ -1,0 +1,79 @@
+package templ
+
+import (
+	"github.com/sprungknoedl/dagobert/internal/templ/utils"
+    "github.com/sprungknoedl/dagobert/model"
+    "github.com/sprungknoedl/dagobert/pkg/valid"
+)
+
+type UserDTO struct {
+	ID      int64
+	CaseID  int64
+	Name    string `form:"name"`
+	Company string `form:"company"`
+	Role    string `form:"role"`
+	Email   string `form:"email"`
+	Phone   string `form:"phone"`
+	Notes   string `form:"notes"`
+}
+
+templ UserForm(env utils.Env, obj UserDTO, vr valid.Result) {
+    @utils.Modal("max-w-4xl") {
+        <form hx-post={env.Routes("save-user", obj.CaseID, obj.ID)} hx-target="#modal">
+        @utils.ModalHeader() {
+            if obj.ID == 0 {
+                Add user
+            } else {
+                Edit user
+            }
+        }
+                
+        @utils.ModalBody() {
+            @utils.TextInput("Name", "name", obj.Name, true, vr["Name"])
+            @utils.TextInput("Company", "company", obj.Company, false, vr["Company"])
+            @utils.TextInput("Role", "role", obj.Role, false, vr["Role"])
+            @utils.TextInput("Email", "email", obj.Email, false, vr["Email"])
+            @utils.TextInput("Phone", "phone", obj.Phone, false, vr["Phone"])
+            @utils.TextareaInput("Notes", "notes", obj.Notes, false, vr["Notes"])
+        }
+            
+        @utils.DefaultCrudFooter() {}
+        </form>
+    }
+}
+
+templ UserList(env utils.Env, cid int64, list []model.User) {
+    @TableView(env, "Users", CrudUrls{
+        List: env.Routes("list-users", cid),
+        Import: env.Routes("import-users", cid),
+        Export: env.Routes("export-users", cid),
+        Add: env.Routes("view-user", cid, 0),
+    }) {
+        @utils.TableHead() {
+            @utils.TH(env, "name", templ.Attributes{"style": "width: auto"}) { Name }
+            @utils.TH(env, "company", templ.Attributes{"style": "width: auto"}) { Company }
+            @utils.TH(env, "role", templ.Attributes{"style": "width: auto"}) { Role }
+            @utils.TH(env, "email", templ.Attributes{"style": "width: auto"}) { Email }
+            @utils.TH(env, "phone", templ.Attributes{"style": "width: auto"}) { Phone }
+            @utils.TH(env, "notes", templ.Attributes{"style": "width: auto"}) { Notes }
+            @utils.TH(env, "", templ.Attributes{"style": "width: 7rem"}) { }
+        }
+                
+        @utils.TableBody() {
+            for _, obj := range list {
+            @utils.TR() {
+                @utils.TD() {{ obj.Name }}
+                @utils.TD() {{ obj.Company }}
+                @utils.TD() {{ obj.Role }}
+                @utils.TD() {{ obj.Email }}
+                @utils.TD() {{ obj.Phone }}
+                @utils.TD() {{ obj.Notes }}
+                @utils.DefaultTableButtons(env.Routes("view-user", cid, obj.ID), env.Routes("delete-user", cid, obj.ID)) {}
+            }}
+        }
+
+        if len(list) == 0 {
+            @utils.EmptyCaption(env.Routes("view-user", cid, 0)) {}
+        }
+    }
+}

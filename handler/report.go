@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/sprungknoedl/dagobert/components/cases"
+	"github.com/sprungknoedl/dagobert/internal/templ"
 	"github.com/sprungknoedl/dagobert/model"
 	"github.com/sprungknoedl/dagobert/pkg/doct"
 )
@@ -52,7 +52,7 @@ func ListTemplates(c echo.Context) error {
 		list = append(list, value.Name())
 	}
 
-	return render(c, cases.ReportList(ctx(c), cid, list))
+	return render(c, templ.ReportList(ctx(c), cid, list))
 }
 
 func ApplyTemplate(c echo.Context) error {

@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/sprungknoedl/dagobert/components/notes"
-	"github.com/sprungknoedl/dagobert/components/utils"
+	"github.com/sprungknoedl/dagobert/internal/templ"
+	"github.com/sprungknoedl/dagobert/internal/templ/utils"
 	"github.com/sprungknoedl/dagobert/model"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -27,7 +27,7 @@ func ListNotes(c echo.Context) error {
 		return err
 	}
 
-	return render(c, notes.List(ctx(c), cid, list))
+	return render(c, templ.NoteList(ctx(c), cid, list))
 }
 
 func ExportNotes(c echo.Context) error {
@@ -41,7 +41,7 @@ func ExportNotes(c echo.Context) error {
 		return err
 	}
 
-	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"notes.csv\"")
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"templ.csv\"")
 	c.Response().WriteHeader(http.StatusOK)
 
 	w := csv.NewWriter(c.Response().Writer)
@@ -100,7 +100,7 @@ func ViewNote(c echo.Context) error {
 		}
 	}
 
-	return render(c, notes.Form(ctx(c), notes.NoteDTO{
+	return render(c, templ.NoteForm(ctx(c), templ.NoteDTO{
 		ID:          id,
 		CaseID:      cid,
 		Title:       obj.Title,
@@ -120,13 +120,13 @@ func SaveNote(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	dto := notes.NoteDTO{ID: id, CaseID: cid}
+	dto := templ.NoteDTO{ID: id, CaseID: cid}
 	if err = c.Bind(&dto); err != nil {
 		return err
 	}
 
 	if vr := ValidateNote(dto); !vr.Valid() {
-		return render(c, notes.Form(ctx(c), dto, vr))
+		return render(c, templ.NoteForm(ctx(c), dto, vr))
 	}
 
 	now := time.Now()

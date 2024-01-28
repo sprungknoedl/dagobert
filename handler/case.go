@@ -9,8 +9,8 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
-	"github.com/sprungknoedl/dagobert/components/cases"
-	"github.com/sprungknoedl/dagobert/components/utils"
+	"github.com/sprungknoedl/dagobert/internal/templ"
+	"github.com/sprungknoedl/dagobert/internal/templ/utils"
 	"github.com/sprungknoedl/dagobert/model"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -23,7 +23,7 @@ func ListCases(c echo.Context) error {
 		return err
 	}
 
-	return render(c, cases.List(ctx(c), list))
+	return render(c, templ.CaseList(ctx(c), list))
 }
 
 func ExportCases(c echo.Context) error {
@@ -99,7 +99,7 @@ func ShowCase(c echo.Context) error {
 		return err
 	}
 
-	return render(c, cases.Overview(ctx(c), obj))
+	return render(c, templ.CaseOverview(ctx(c), obj))
 }
 
 func ViewCase(c echo.Context) error {
@@ -117,7 +117,7 @@ func ViewCase(c echo.Context) error {
 	}
 
 	vr := valid.Result{}
-	return render(c, cases.Form(ctx(c), cases.CaseDTO{
+	return render(c, templ.CaseForm(ctx(c), templ.CaseDTO{
 		ID:             obj.ID,
 		Name:           obj.Name,
 		Closed:         obj.Closed,
@@ -134,13 +134,13 @@ func SaveCase(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	dto := cases.CaseDTO{ID: cid}
+	dto := templ.CaseDTO{ID: cid}
 	if err = c.Bind(&dto); err != nil {
 		return err
 	}
 
 	if vr := ValidateCase(dto); !vr.Valid() {
-		return render(c, cases.Form(ctx(c), dto, vr))
+		return render(c, templ.CaseForm(ctx(c), dto, vr))
 	}
 
 	now := time.Now()
