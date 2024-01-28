@@ -15,7 +15,7 @@ import (
 	"github.com/sprungknoedl/dagobert/components/tasks"
 	"github.com/sprungknoedl/dagobert/components/users"
 	"github.com/sprungknoedl/dagobert/model"
-	"github.com/sprungknoedl/dagobert/valid"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 var regexIP = regexp.MustCompile(`^$|^(?:\d{1,3}\.){3}\d{1,3}$`)

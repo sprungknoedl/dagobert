@@ -12,7 +12,7 @@ import "bytes"
 
 import (
 	"github.com/sprungknoedl/dagobert/components/utils"
-	"github.com/sprungknoedl/dagobert/valid"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 func ReportList(env utils.Env, cid int64, list []string) templ.Component {

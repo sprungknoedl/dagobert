@@ -10,7 +10,7 @@ import (
 	"github.com/sprungknoedl/dagobert/components/indicators"
 	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
-	"github.com/sprungknoedl/dagobert/valid"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 func ListIndicators(c echo.Context) error {

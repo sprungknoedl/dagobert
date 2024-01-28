@@ -10,7 +10,7 @@ import (
 	"github.com/sprungknoedl/dagobert/components/events"
 	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
-	"github.com/sprungknoedl/dagobert/valid"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 func ListEvents(c echo.Context) error {

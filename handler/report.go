@@ -12,8 +12,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/sprungknoedl/dagobert/components/cases"
-	"github.com/sprungknoedl/dagobert/doct"
 	"github.com/sprungknoedl/dagobert/model"
+	"github.com/sprungknoedl/dagobert/pkg/doct"
 )
 
 var templates = map[string]doct.Template{}

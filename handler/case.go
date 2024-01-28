@@ -12,7 +12,7 @@ import (
 	"github.com/sprungknoedl/dagobert/components/cases"
 	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
-	"github.com/sprungknoedl/dagobert/valid"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 func ListCases(c echo.Context) error {

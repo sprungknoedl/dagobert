@@ -10,7 +10,7 @@ import (
 	"github.com/sprungknoedl/dagobert/components/assets"
 	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
-	"github.com/sprungknoedl/dagobert/valid"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 func ListAssets(c echo.Context) error {

@@ -11,7 +11,7 @@ import "io"
 import "bytes"
 
 import (
-	"github.com/sprungknoedl/dagobert/valid"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 func TextInput(label string, name string, value string, required bool, vr valid.Condition) templ.Component {
