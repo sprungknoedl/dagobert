@@ -10,6 +10,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sprungknoedl/dagobert/handler"
 	"github.com/sprungknoedl/dagobert/model"
+	"github.com/sprungknoedl/dagobert/pkg/oidc"
 )
 
 type Configuration struct {
@@ -60,7 +61,8 @@ func main() {
 	// --------------------------------------
 	issuer, _ := url.Parse(cfg.Issuer)
 	clientUrl, _ := url.Parse(cfg.ClientUrl)
-	e.Use(OIDC(e, InitParams{
+	e.Use(oidc.Middleware(e, oidc.Config{
+		SessionName:   "default",
 		ClientId:      cfg.ClientId,
 		ClientSecret:  cfg.ClientSecret,
 		Issuer:        *issuer,
