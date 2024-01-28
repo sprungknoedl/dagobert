@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/gob"
 	"net/url"
 	"os"
 
@@ -9,7 +8,6 @@ import (
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/handler"
 	"github.com/sprungknoedl/dagobert/model"
 )
@@ -56,7 +54,6 @@ func main() {
 	// --------------------------------------
 	store := sessions.NewCookieStore([]byte(cfg.SessionSecret))
 	e.Use(session.Middleware(store))
-	gob.Register(utils.CaseDTO{})
 
 	// --------------------------------------
 	// OIDC Authentication
