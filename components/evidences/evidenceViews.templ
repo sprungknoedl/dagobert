@@ -3,8 +3,10 @@ package evidences
 import (
     "fmt"
 
+	"github.com/sprungknoedl/dagobert/components/base"
 	"github.com/sprungknoedl/dagobert/components/utils"
 	"github.com/sprungknoedl/dagobert/model"
+    "github.com/sprungknoedl/dagobert/components/icons"
     "github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
@@ -68,4 +70,60 @@ templ Form(env utils.Env, obj EvidenceDTO, vr valid.Result) {
         @utils.DefaultCrudFooter() {}
         </form>
     }
+}
+
+templ List(env utils.Env, cid int64, list []model.Evidence) {
+    @base.TableView(env, "Evidences", base.CrudUrls{
+        List: env.Routes("list-evidences", cid),
+        Import: env.Routes("import-evidences", cid),
+        Export: env.Routes("export-evidences", cid),
+        Add: env.Routes("view-evidence", cid, 0),
+    }) {
+        @utils.TableHead() {
+            @utils.TH(env, "type", templ.Attributes{"style": "width: 15rem"}) { Type }
+            @utils.TH(env, "name", templ.Attributes{"style": "width: auto"})  { Name }
+            @utils.TH(env, "desc", templ.Attributes{"style": "width: auto"})  { Description }
+            @utils.TH(env, "hash", templ.Attributes{"style": "width: 25rem"})  { Hash }
+            @utils.TH(env, "", templ.Attributes{"style": "width: 7rem"})  { }
+        }
+
+        @utils.TableBody() {
+            for _, obj := range list {
+            @utils.TR() {
+                @utils.TD() {@renderType(obj.Type)}
+                @utils.TD() {{ obj.Name }}
+                @utils.TD() {{ obj.Description }}
+                @utils.TD() {{ obj.Hash }}
+                @utils.DefaultTableButtons(env.Routes("view-evidence", cid, obj.ID), env.Routes("delete-evidence", cid, obj.ID)) {
+                    @utils.InlineLink(templ.Attributes{
+                        "href": env.Routes("download-evidence", cid, obj.ID),
+                        "target": "blank",
+                    }) {
+                        @icons.ArrowDownTray("w-4 h-4") }
+                    }
+            }}
+        }
+
+        if len(list) == 0 {
+            @utils.EmptyCaption(env.Routes("view-evidence", cid, 0)) {}
+        }
+    }
+}
+
+templ renderType(value string) {
+    switch value {
+    case "File":
+        @icons.FolderOpen("inline-block w-6 h-6 mr-2")
+    case "Logs":
+        @icons.DocumentText("inline-block w-6 h-6 mr-2")
+    case "Artifacts Collection":
+        @icons.ArchivBox("inline-block w-6 h-6 mr-2")
+    case "System Image":
+        @icons.Server("inline-block w-6 h-6 mr-2")
+    case "Memory Dump":
+        @icons.CpuChip("inline-block w-6 h-6 mr-2")
+    default:
+        @icons.QuestionMarkCircle("inline-block w-6 h-6 mr-2")
+    }
+    {value}
 }

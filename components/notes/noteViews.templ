@@ -4,7 +4,38 @@ import (
 	"github.com/sprungknoedl/dagobert/components/base"
 	"github.com/sprungknoedl/dagobert/components/utils"
     "github.com/sprungknoedl/dagobert/model"
+    "github.com/sprungknoedl/dagobert/pkg/valid"
 )
+
+type NoteDTO struct {
+	ID          int64
+	CaseID      int64
+	Title       string `form:"title"`
+	Category    string `form:"category"`
+	Description string `form:"description"`
+}
+
+templ Form(env utils.Env, obj NoteDTO, vr valid.Result) {
+    @utils.Modal("max-w-4xl") {
+        <form hx-post={env.Routes("save-note", obj.CaseID, obj.ID)} hx-target="#modal">
+        @utils.ModalHeader() {
+            if obj.ID == 0 {
+                Add note
+            } else {
+                Edit note
+            }
+        }
+                
+        @utils.ModalBody() {
+            @utils.TextInput("Category", "category", obj.Category, true, vr["Category"])
+            @utils.TextInput("Title", "title", obj.Title, true, vr["Title"])
+            @utils.TextareaInput("Description", "description", obj.Description, false, vr["Description"])
+        }
+
+        @utils.DefaultCrudFooter() {}
+        </form>
+    }
+}
 
 templ List(env utils.Env, cid int64, list []model.Note) {
     @base.TableView(env, "Notes", base.CrudUrls{

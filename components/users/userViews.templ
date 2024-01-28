@@ -4,7 +4,44 @@ import (
 	"github.com/sprungknoedl/dagobert/components/base"
 	"github.com/sprungknoedl/dagobert/components/utils"
     "github.com/sprungknoedl/dagobert/model"
+    "github.com/sprungknoedl/dagobert/pkg/valid"
 )
+
+type UserDTO struct {
+	ID      int64
+	CaseID  int64
+	Name    string `form:"name"`
+	Company string `form:"company"`
+	Role    string `form:"role"`
+	Email   string `form:"email"`
+	Phone   string `form:"phone"`
+	Notes   string `form:"notes"`
+}
+
+templ Form(env utils.Env, obj UserDTO, vr valid.Result) {
+    @utils.Modal("max-w-4xl") {
+        <form hx-post={env.Routes("save-user", obj.CaseID, obj.ID)} hx-target="#modal">
+        @utils.ModalHeader() {
+            if obj.ID == 0 {
+                Add user
+            } else {
+                Edit user
+            }
+        }
+                
+        @utils.ModalBody() {
+            @utils.TextInput("Name", "name", obj.Name, true, vr["Name"])
+            @utils.TextInput("Company", "company", obj.Company, false, vr["Company"])
+            @utils.TextInput("Role", "role", obj.Role, false, vr["Role"])
+            @utils.TextInput("Email", "email", obj.Email, false, vr["Email"])
+            @utils.TextInput("Phone", "phone", obj.Phone, false, vr["Phone"])
+            @utils.TextareaInput("Notes", "notes", obj.Notes, false, vr["Notes"])
+        }
+            
+        @utils.DefaultCrudFooter() {}
+        </form>
+    }
+}
 
 templ List(env utils.Env, cid int64, list []model.User) {
     @base.TableView(env, "Users", base.CrudUrls{
