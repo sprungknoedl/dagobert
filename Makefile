@@ -1,7 +1,7 @@
 .PHONY: build run
 
 build:
-	tailwindcss -i web/_build.css -o web/dagobert.css
+	tailwindcss -c configs/tailwind.config.js -i web/_build.css -o web/dagobert.css
 	templ generate
 	go build -o dagobert ./cmd
 

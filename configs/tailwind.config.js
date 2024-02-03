@@ -1,11 +1,9 @@
 module.exports = {
-    content: [
-      './components/**/*.templ',
-    ],
+  content: ["./internal/**/*.templ"],
 
-    darkMode: true, // or 'media' or 'class'
-    theme: {
-      extend: {},
-    },
-    plugins: [],
-  }
+  darkMode: true, // or 'media' or 'class'
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};

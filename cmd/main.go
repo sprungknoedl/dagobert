@@ -179,7 +179,7 @@ func main() {
 	// Assets
 	// --------------------------------------
 	e.File("/favicon.ico", "dist/favicon.svg")
-	e.Static("/web", cfg.AssetsFolder)
+	e.Static("/dist", cfg.AssetsFolder)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
