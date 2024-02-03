@@ -8,7 +8,7 @@ import (
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/sprungknoedl/dagobert/handler"
+	"github.com/sprungknoedl/dagobert/internal/handler"
 	"github.com/sprungknoedl/dagobert/model"
 	"github.com/sprungknoedl/dagobert/pkg/oidc"
 )
