@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gorilla/sessions"
-	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/sprungknoedl/dagobert/internal/templ"
 	"github.com/sprungknoedl/dagobert/internal/templ/utils"
@@ -189,18 +187,6 @@ func DeleteCase(c echo.Context) error {
 
 	if err := model.DeleteCase(cid); err != nil {
 		return err
-	}
-
-	kase := getCase(c)
-	if cid == kase.ID {
-		sess, _ := session.Get(SessionName, c)
-		sess.Options = &sessions.Options{Path: "/", MaxAge: 86400 * 7, HttpOnly: true}
-		delete(sess.Values, "activeCase")
-
-		err = sess.Save(c.Request(), c.Response())
-		if err != nil {
-			return err
-		}
 	}
 
 	return refresh(c)
