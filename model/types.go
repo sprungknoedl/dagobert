@@ -8,96 +8,96 @@ var CaseSeverities = []string{"Low", "Medium", "High"}
 var CaseOutcomes = []string{"", "False positive", "True positive", "Benign positive"}
 
 type Case struct {
-	ID  int64  `json:"id" gorm:"primaryKey"`
-	CRC string `json:"-" gorm:"unique"`
+	ID  int64  `gorm:"primaryKey"`
+	CRC string `gorm:"unique"`
 
-	Name           string `json:"name"`
-	Closed         bool   `json:"closed"`
-	Classification string `json:"classification"`
-	Severity       string `json:"severity"`
-	Outcome        string `json:"outcome"`
-	Summary        string `json:"summary"`
+	Name           string
+	Closed         bool
+	Classification string
+	Severity       string
+	Outcome        string
+	Summary        string
 
-	DateAdded    time.Time `json:"dateAdded" gorm:"<-:create"`
-	DateModified time.Time `json:"dateModified" gorm:"<-:create"`
-	UserAdded    string    `json:"userAdded"`
-	UserModified string    `json:"userModified"`
+	DateAdded    time.Time
+	DateModified time.Time
+	UserAdded    string
+	UserModified string
 
-	Assets     []Asset     `json:"-"`
-	Evidences  []Evidence  `json:"-"`
-	Indicators []Indicator `json:"-"`
-	Events     []Event     `json:"-"`
-	Malware    []Malware   `json:"-"`
-	Notes      []Note      `json:"-"`
-	Tasks      []Task      `json:"-"`
-	Users      []User      `json:"-"`
+	Assets     []Asset
+	Evidences  []Evidence
+	Indicators []Indicator
+	Events     []Event
+	Malware    []Malware
+	Notes      []Note
+	Tasks      []Task
+	Users      []User
 }
 
 var EvidenceTypes = []string{"File", "Logs", "Artifacts Collection", "System Image", "Memory Dump", "Other"}
 
 type Evidence struct {
-	ID  int64  `json:"id" gorm:"primaryKey"`
-	CRC string `json:"-" gorm:"unique"`
+	ID  int64  `gorm:"primaryKey"`
+	CRC string `gorm:"unique"`
 
-	Type        string `json:"type"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Size        int64  `json:"size"`
-	Hash        string `json:"hash"`
-	Location    string `json:"location"`
+	Type        string
+	Name        string
+	Description string
+	Size        int64
+	Hash        string
+	Location    string
 
-	CaseID int64 `json:"caseId"`
-	Case   Case  `json:"-"`
+	CaseID int64
+	Case   Case
 
-	DateAdded    time.Time `json:"dateAdded" gorm:"<-:create"`
-	DateModified time.Time `json:"dateModified" gorm:"<-:create"`
-	UserAdded    string    `json:"userAdded"`
-	UserModified string    `json:"userModified"`
+	DateAdded    time.Time
+	DateModified time.Time
+	UserAdded    string
+	UserModified string
 }
 
 var AssetTypes = []string{"Account", "Desktop", "Server", "Other"}
 var AssetCompromised = []string{"Compromised", "Not compromised", "Unknown"}
 
 type Asset struct {
-	ID  int64  `json:"id" gorm:"primaryKey"`
-	CRC string `json:"-" gorm:"unique"`
+	ID  int64  `gorm:"primaryKey"`
+	CRC string `gorm:"unique"`
 
-	Type        string `json:"type"`
-	Name        string `json:"name"`
-	IP          string `json:"ip"`
-	Description string `json:"description"`
-	Compromised string `json:"compromised"`
-	Analysed    bool   `json:"analysed"`
+	Type        string
+	Name        string
+	IP          string
+	Description string
+	Compromised string
+	Analysed    bool
 
-	CaseID int64 `json:"caseId"`
-	Case   Case  `json:"-"`
+	CaseID int64
+	Case   Case
 
-	DateAdded    time.Time `json:"dateAdded" gorm:"<-:create"`
-	DateModified time.Time `json:"dateModified" gorm:"<-:create"`
-	UserAdded    string    `json:"userAdded"`
-	UserModified string    `json:"userModified"`
+	DateAdded    time.Time
+	DateModified time.Time
+	UserAdded    string
+	UserModified string
 }
 
 var IndicatorTypes = []string{"IP", "Domain", "URL", "Path", "Hash", "Service", "Other"}
 var IndicatorTLPs = []string{"TLP:RED", "TLP:AMBER", "TLP:GREEN", "TLP:CLEAR"}
 
 type Indicator struct {
-	ID  int64  `json:"id" gorm:"primaryKey"`
-	CRC string `json:"-" gorm:"unique"`
+	ID  int64  `gorm:"primaryKey"`
+	CRC string `gorm:"unique"`
 
-	Type        string `json:"type"`
-	Value       string `json:"value"`
-	TLP         string `json:"tlp"`
-	Description string `json:"description"`
-	Source      string `json:"source"`
+	Type        string
+	Value       string
+	TLP         string
+	Description string
+	Source      string
 
-	CaseID int64 `json:"caseId"`
-	Case   Case  `json:"-"`
+	CaseID int64
+	Case   Case
 
-	DateAdded    time.Time `json:"dateAdded" gorm:"<-:create"`
-	DateModified time.Time `json:"dateModified" gorm:"<-:create"`
-	UserAdded    string    `json:"userAdded"`
-	UserModified string    `json:"userModified"`
+	DateAdded    time.Time
+	DateModified time.Time
+	UserAdded    string
+	UserModified string
 }
 
 var EventTypes = []string{
@@ -121,102 +121,102 @@ var EventTypes = []string{
 var EventDirections = []string{"", "→", "←"}
 
 type Event struct {
-	ID  int64  `json:"id" gorm:"primaryKey"`
-	CRC string `json:"-" gorm:"unique"`
+	ID  int64  `gorm:"primaryKey"`
+	CRC string `gorm:"unique"`
 
-	Time      time.Time `json:"time"`
-	Type      string    `json:"type"`
-	AssetA    string    `json:"assetA"`
-	AssetB    string    `json:"assetB"`
-	Direction string    `json:"direction"`
-	Event     string    `json:"event"`
-	Raw       string    `json:"raw"`
-	KeyEvent  bool      `json:"keyevent"`
+	Time      time.Time
+	Type      string
+	AssetA    string
+	AssetB    string
+	Direction string
+	Event     string
+	Raw       string
+	KeyEvent  bool
 
-	CaseID int64 `json:"caseId"`
-	Case   Case  `json:"-"`
+	CaseID int64
+	Case   Case
 
-	DateAdded    time.Time `json:"dateAdded" gorm:"<-:create"`
-	DateModified time.Time `json:"dateModified" gorm:"<-:create"`
-	UserAdded    string    `json:"userAdded"`
-	UserModified string    `json:"userModified"`
+	DateAdded    time.Time
+	DateModified time.Time
+	UserAdded    string
+	UserModified string
 }
 
 type Malware struct {
-	ID  int64  `json:"id" gorm:"primaryKey"`
-	CRC string `json:"-" gorm:"unique"`
+	ID  int64  `gorm:"primaryKey"`
+	CRC string `gorm:"unique"`
 
-	Filename string    `json:"filename"`
-	Filepath string    `json:"filepath"`
-	CDate    time.Time `json:"cDate"`
-	MDate    time.Time `json:"mDate"`
-	System   string    `json:"system"`
-	Hash     string    `json:"hash"`
-	Notes    string    `json:"notes"`
+	Filename string
+	Filepath string
+	CDate    time.Time
+	MDate    time.Time
+	System   string
+	Hash     string
+	Notes    string
 
-	CaseID int64 `json:"caseId"`
-	Case   Case  `json:"-"`
+	CaseID int64
+	Case   Case
 
-	DateAdded    time.Time `json:"dateAdded" gorm:"<-:create"`
-	DateModified time.Time `json:"dateModified" gorm:"<-:create"`
-	UserAdded    string    `json:"userAdded"`
-	UserModified string    `json:"userModified"`
+	DateAdded    time.Time
+	DateModified time.Time
+	UserAdded    string
+	UserModified string
 }
 
 type Note struct {
-	ID  int64  `json:"id" gorm:"primaryKey"`
-	CRC string `json:"-" gorm:"unique"`
+	ID  int64  `gorm:"primaryKey"`
+	CRC string `gorm:"unique"`
 
-	Title       string `json:"title"`
-	Category    string `json:"category"`
-	Description string `json:"description"`
+	Title       string
+	Category    string
+	Description string
 
-	CaseID int64 `json:"caseId"`
-	Case   Case  `json:"-"`
+	CaseID int64
+	Case   Case
 
-	DateAdded    time.Time `json:"dateAdded" gorm:"<-:create"`
-	DateModified time.Time `json:"dateModified" gorm:"<-:create"`
-	UserAdded    string    `json:"userAdded"`
-	UserModified string    `json:"userModified"`
+	DateAdded    time.Time
+	DateModified time.Time
+	UserAdded    string
+	UserModified string
 }
 
 var TaskTypes = []string{"Information request", "Analysis", "Deliverable", "Checkpoint", "Other"}
 
 type Task struct {
-	ID  int64  `json:"id" gorm:"primaryKey"`
-	CRC string `json:"-" gorm:"unique"`
+	ID  int64  `gorm:"primaryKey"`
+	CRC string `gorm:"unique"`
 
-	Type    string    `json:"type"`
-	Task    string    `json:"task"`
-	Done    bool      `json:"done"`
-	Owner   string    `json:"owner"`
-	DateDue time.Time `json:"dateDue,omitempty"`
+	Type    string
+	Task    string
+	Done    bool
+	Owner   string
+	DateDue time.Time
 
-	CaseID int64 `json:"caseId"`
-	Case   Case  `json:"-"`
+	CaseID int64
+	Case   Case
 
-	DateAdded    time.Time `json:"dateAdded,omitempty"`
-	DateModified time.Time `json:"dateModified" gorm:"<-:create"`
-	UserAdded    string    `json:"userAdded"`
-	UserModified string    `json:"userModified"`
+	DateAdded    time.Time
+	DateModified time.Time
+	UserAdded    string
+	UserModified string
 }
 
 type User struct {
-	ID  int64  `json:"id" gorm:"primaryKey"`
-	CRC string `json:"-" gorm:"unique"`
+	ID  int64  `gorm:"primaryKey"`
+	CRC string `gorm:"unique"`
 
-	Name    string `json:"name"`
-	Company string `json:"company"`
-	Role    string `json:"role"`
-	Email   string `json:"email"`
-	Phone   string `json:"phone"`
-	Notes   string `json:"notes"`
+	Name    string
+	Company string
+	Role    string
+	Email   string
+	Phone   string
+	Notes   string
 
-	CaseID int64 `json:"caseId"`
-	Case   Case  `json:"-"`
+	CaseID int64
+	Case   Case
 
-	DateAdded    time.Time `json:"dateAdded" gorm:"<-:create"`
-	DateModified time.Time `json:"dateModified" gorm:"<-:create"`
-	UserAdded    string    `json:"userAdded"`
-	UserModified string    `json:"userModified"`
+	DateAdded    time.Time
+	DateModified time.Time
+	UserAdded    string
+	UserModified string
 }
