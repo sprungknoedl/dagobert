@@ -74,7 +74,7 @@ func main() {
 	// --------------------------------------
 	// Reports
 	// --------------------------------------
-	err := handler.LoadTemplates("./templates/")
+	err := handler.LoadTemplates("./files/templates/")
 	if err != nil {
 		e.Logger.Fatalf("failed to load report: %v", err)
 	}
