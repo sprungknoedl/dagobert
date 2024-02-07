@@ -48,18 +48,15 @@ templ Navigation(env utils.Env) {
 
         <h3 class="mt-4 mb-1 font-bold">Overview</h3>
         @navLink(env, templ.URL("/")) { @icons.Identification(icons.Inline) Cases }
+
+        if env.ActiveCase.ID != 0 {
         @navLink(env, templ.URL("/#")) {
             @icons.Identification(icons.Inline)
             <span>Active Case:<br />
-            if env.ActiveCase.ID != 0 {
             <span class="font-bold text-green-500">{ fmt.Sprintf("#%d - %s", env.ActiveCase.ID, env.ActiveCase.Name) }</span>
-            } else {
-            <span class="font-bold text-red-500">No case selected</span>    
-            }
             </span>
         }
 
-        if env.ActiveCase.ID != 0 {
         <h3 class="mt-4 mb-1 font-bold">Investigation</h3>
         @navLink(env, templ.URL(env.Routes("show-case", env.ActiveCase.ID)))       { @icons.Briefcase(icons.Inline) Overview }
         @navLink(env, templ.URL(env.Routes("list-events", env.ActiveCase.ID)))     { @icons.Clock(icons.Inline) Timeline }
