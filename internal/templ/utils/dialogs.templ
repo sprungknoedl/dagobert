@@ -36,13 +36,12 @@ templ WarningNotification(err *echo.HTTPError) {
 
 templ Modal(w string) {
     <!-- Main modal -->
-    <aside _="on closeModal transition opacity to 0 over 100ms then remove me" class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full flex backdrop-blur-lg backdrop-brightness-50">
-    <div class={"relative p-4 w-full max-h-full " + w}>
+    <aside _="on closeModal transition opacity to 0 over 100ms then remove me
+              on keyup[key is 'Escape'] transition opacity to 0 over 100ms then remove me
+              on load focus() the next input"
+        class="fixed top-0 right-0 z-40 h-screen overflow-y-auto w-1/3 bg-gray-800 border-l border-gray-600 shadow-xl">
         <!-- Modal content -->
-        <div class="relative rounded-lg shadow bg-slate-800">
             { children... }
-        </div>
-    </div>
     </aside>
 }
 
