@@ -664,7 +664,7 @@ func TableView(env utils.Env, title string, urls CrudUrls) templ.Component {
 				templ_7745c5c3_Err = utils.GroupedButton(templ.Attributes{
 					"hx-get":    urls.Import,
 					"hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false",
-					"_": "on keydown(ctrlKey)[key is 'i'] from window call me.click()",
+					"_": "on keydown[key is 'i' and ctrlKey is true] from window call me.click()",
 				}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var39), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -699,7 +699,7 @@ func TableView(env utils.Env, title string, urls CrudUrls) templ.Component {
 				})
 				templ_7745c5c3_Err = utils.GroupedLink(templ.Attributes{
 					"href": urls.Export,
-					"_":    "on keydown(ctrlKey)[key is 'e'] from window call me.click()",
+					"_":    "on keydown[key is 'e' and ctrlKey is true] from window call me.click()",
 				}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var41), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -734,7 +734,7 @@ func TableView(env utils.Env, title string, urls CrudUrls) templ.Component {
 				})
 				templ_7745c5c3_Err = utils.GroupedButton(templ.Attributes{
 					"@click": "$dispatch('sort')",
-					"_":      "on keydown(ctrlKey)[key is 'r'] from window call me.click()",
+					"_":      "on keydown[key is 'r' and ctrlKey is true] from window call me.click()",
 				}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var43), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -770,7 +770,7 @@ func TableView(env utils.Env, title string, urls CrudUrls) templ.Component {
 				templ_7745c5c3_Err = utils.GroupedButton(templ.Attributes{
 					"hx-get":    urls.Add,
 					"hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false",
-					"_": "on keydown(ctrlKey)[key is 'a'] from window call me.click()",
+					"_": "on keydown[key is 'a' and ctrlKey is true] from window call me.click()",
 				}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var45), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

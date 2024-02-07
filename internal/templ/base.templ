@@ -103,21 +103,21 @@ templ TableView(env utils.Env, title string, urls CrudUrls) {
                 @utils.GroupedButton(templ.Attributes{
                     "hx-get": urls.Import, 
                     "hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false",
-                    "_": "on keydown(ctrlKey)[key is 'i'] from window call me.click()",
+                    "_": "on keydown[key is 'i' and ctrlKey is true] from window call me.click()",
                 }) {
                     @icons.ArrowUpTray("inline-block mr-1 w-5 h-5")
                     Import CSV
                 }
                 @utils.GroupedLink(templ.Attributes{
                     "href": urls.Export,
-                    "_": "on keydown(ctrlKey)[key is 'e'] from window call me.click()",
+                    "_": "on keydown[key is 'e' and ctrlKey is true] from window call me.click()",
                 }) {
                     @icons.ArrowDownTray("inline-block mr-1 w-5 h-5")
                     Export CSV
                 }
                 @utils.GroupedButton(templ.Attributes{
                     "@click": "$dispatch('sort')",
-                    "_": "on keydown(ctrlKey)[key is 'r'] from window call me.click()",
+                    "_": "on keydown[key is 'r' and ctrlKey is true] from window call me.click()",
                 }) {
                     @icons.ArrowPath("inline-block mr-1 w-5 h-5")
                     Refresh
@@ -125,7 +125,7 @@ templ TableView(env utils.Env, title string, urls CrudUrls) {
                 @utils.GroupedButton(templ.Attributes{
                     "hx-get": urls.Add, 
                     "hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false",
-                    "_": "on keydown(ctrlKey)[key is 'a'] from window call me.click()",
+                    "_": "on keydown[key is 'a' and ctrlKey is true] from window call me.click()",
                 }) {
                     @icons.Plus("inline-block mr-1 w-5 h-5")
                     Add
