@@ -147,7 +147,7 @@ func Modal(w string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("--><aside _=\"on closeModal transition opacity to 0 over 100ms then remove me\n              on keyup[key is &#39;Escape&#39;] transition opacity to 0 over 100ms then remove me\n              on load focus() the next input\" class=\"fixed top-0 right-0 z-40 h-screen overflow-y-auto w-1/3 bg-gray-800 border-l border-gray-600 shadow-xl\"><!--")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("--><aside _=\"on closeModal transition opacity to 0 over 100ms then remove me\n              on keydown[key is &#39;Escape&#39;] from window transition opacity to 0 over 100ms then remove me\n              on load set i to the first &lt;input/&gt; in me then call i.focus()\" class=\"fixed top-0 right-0 z-40 h-screen overflow-y-auto w-1/3 bg-gray-800 border-l border-gray-600 shadow-xl\"><!--")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
