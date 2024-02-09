@@ -345,7 +345,7 @@ func TaskList(env utils.Env, cid int64, list []model.Task) templ.Component {
 							var templ_7745c5c3_Var23 string
 							templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(obj.DateDue.Format("2006-01-02"))
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/taskViews.templ`, Line: 62, Col: 63}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/taskViews.templ`, Line: 62, Col: 51}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 							if templ_7745c5c3_Err != nil {
@@ -396,7 +396,7 @@ func TaskList(env utils.Env, cid int64, list []model.Task) templ.Component {
 							var templ_7745c5c3_Var26 string
 							templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Task)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/taskViews.templ`, Line: 64, Col: 39}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/taskViews.templ`, Line: 64, Col: 27}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 							if templ_7745c5c3_Err != nil {
@@ -424,7 +424,7 @@ func TaskList(env utils.Env, cid int64, list []model.Task) templ.Component {
 							var templ_7745c5c3_Var28 string
 							templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Owner)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/taskViews.templ`, Line: 65, Col: 40}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/taskViews.templ`, Line: 65, Col: 28}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 							if templ_7745c5c3_Err != nil {
@@ -563,7 +563,7 @@ func renderTaskType(value string) templ.Component {
 		var templ_7745c5c3_Var31 string
 		templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/taskViews.templ`, Line: 90, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/taskViews.templ`, Line: 90, Col: 7}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 		if templ_7745c5c3_Err != nil {

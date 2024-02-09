@@ -2,8 +2,8 @@ package templ
 
 import (
 	"github.com/sprungknoedl/dagobert/internal/templ/utils"
-    "github.com/sprungknoedl/dagobert/model"
-    "github.com/sprungknoedl/dagobert/pkg/valid"
+	"github.com/sprungknoedl/dagobert/model"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type NoteDTO struct {
@@ -15,53 +15,53 @@ type NoteDTO struct {
 }
 
 templ NoteForm(env utils.Env, obj NoteDTO, vr valid.Result) {
-    @utils.Modal("max-w-4xl") {
-        <form hx-post={env.Routes("save-note", obj.CaseID, obj.ID)} hx-target="#modal">
-        @utils.ModalHeader() {
-            if obj.ID == 0 {
-                Add note
-            } else {
-                Edit note
-            }
-        }
-                
-        @utils.ModalBody() {
-            @utils.TextInput("Category", "category", obj.Category, true, vr["Category"])
-            @utils.TextInput("Title", "title", obj.Title, true, vr["Title"])
-            @utils.TextareaInput("Description", "description", obj.Description, false, vr["Description"])
-        }
+	@utils.Modal("max-w-4xl") {
+		<form hx-post={env.Routes("save-note", obj.CaseID, obj.ID)} hx-target="#modal">
+		@utils.ModalHeader() {
+			if obj.ID == 0 {
+				Add note
+			} else {
+				Edit note
+			}
+		}
 
-        @utils.DefaultCrudFooter() {}
-        </form>
-    }
+		@utils.ModalBody() {
+			@utils.TextInput("Category", "category", obj.Category, true, vr["Category"])
+			@utils.TextInput("Title", "title", obj.Title, true, vr["Title"])
+			@utils.TextareaInput("Description", "description", obj.Description, false, vr["Description"])
+		}
+
+		@utils.DefaultCrudFooter() {}
+		</form>
+	}
 }
 
 templ NoteList(env utils.Env, cid int64, list []model.Note) {
-    @TableView(env, "Notes", CrudUrls{
-        List: env.Routes("list-notes", cid),
-        Import: env.Routes("import-notes", cid),
-        Export: env.Routes("export-notes", cid),
-        Add: env.Routes("view-note", cid, 0),
-    }) {
-        @utils.TableHead() {
-            @utils.TH(env, "category", templ.Attributes{"style": "width: 15rem"}) { Category }
-            @utils.TH(env, "title", templ.Attributes{"style": "width: 15rem"}) { Title  }
-            @utils.TH(env, "desc", templ.Attributes{"style": "width: auto"})  { Description  }
-            @utils.TH(env, "", templ.Attributes{"style": "width: 7rem"})  { }
-        }
-        
-        @utils.TableBody() {
-            for _, obj := range list {
-            @utils.TR() {
-                @utils.TD() {{ obj.Category }}
-                @utils.TD() {{ obj.Title }}
-                @utils.TD() {{ obj.Description }}
-                @utils.DefaultTableButtons(env.Routes("view-note", cid, obj.ID), env.Routes("delete-note", cid, obj.ID)) {}
-            }}
-        }
+	@TableView(env, "Notes", CrudUrls{
+		List: env.Routes("list-notes", cid),
+		Import: env.Routes("import-notes", cid),
+		Export: env.Routes("export-notes", cid),
+		Add: env.Routes("view-note", cid, 0),
+	}) {
+		@utils.TableHead() {
+			@utils.TH(env, "category", templ.Attributes{"style": "width: 15rem"}) { Category }
+			@utils.TH(env, "title", templ.Attributes{"style": "width: 15rem"}) { Title  }
+			@utils.TH(env, "desc", templ.Attributes{"style": "width: auto"})  { Description  }
+			@utils.TH(env, "", templ.Attributes{"style": "width: 7rem"})  { }
+		}
 
-        if len(list) == 0 {
-            @utils.EmptyCaption(env.Routes("view-note", cid, 0)) {}
-        }
-    }
+		@utils.TableBody() {
+			for _, obj := range list {
+			@utils.TR() {
+				@utils.TD() {{ obj.Category }}
+				@utils.TD() {{ obj.Title }}
+				@utils.TD() {{ obj.Description }}
+				@utils.DefaultTableButtons(env.Routes("view-note", cid, obj.ID), env.Routes("delete-note", cid, obj.ID)) {}
+			}}
+		}
+
+		if len(list) == 0 {
+			@utils.EmptyCaption(env.Routes("view-note", cid, 0)) {}
+		}
+	}
 }

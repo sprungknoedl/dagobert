@@ -139,7 +139,7 @@ func EvidenceForm(env utils.Env, obj EvidenceDTO, vr valid.Result) templ.Compone
 					var templ_7745c5c3_Var10 string
 					templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(vr["Name"].String())
 					if templ_7745c5c3_Err != nil {
-						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/evidenceViews.templ`, Line: 44, Col: 85}
+						return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/evidenceViews.templ`, Line: 44, Col: 67}
 					}
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 					if templ_7745c5c3_Err != nil {
@@ -196,10 +196,10 @@ func EvidenceForm(env utils.Env, obj EvidenceDTO, vr valid.Result) templ.Compone
 					return templ_7745c5c3_Err
 				}
 				templ_7745c5c3_Var12 := `
-                    htmx.on('#form', 'htmx:xhr:progress', function(evt) {
-                    htmx.find('#progress').setAttribute('style', 'width: ' + (evt.detail.loaded/evt.detail.total * 100) + '%')
-                    });
-                `
+					htmx.on('#form', 'htmx:xhr:progress', function(evt) {
+					htmx.find('#progress').setAttribute('style', 'width: ' + (evt.detail.loaded/evt.detail.total * 100) + '%')
+					});
+				`
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
@@ -424,7 +424,7 @@ func EvidenceList(env utils.Env, cid int64, list []model.Evidence) templ.Compone
 							var templ_7745c5c3_Var28 string
 							templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Name)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/evidenceViews.templ`, Line: 92, Col: 39}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/evidenceViews.templ`, Line: 92, Col: 27}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var28))
 							if templ_7745c5c3_Err != nil {
@@ -452,7 +452,7 @@ func EvidenceList(env utils.Env, cid int64, list []model.Evidence) templ.Compone
 							var templ_7745c5c3_Var30 string
 							templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Description)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/evidenceViews.templ`, Line: 93, Col: 46}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/evidenceViews.templ`, Line: 93, Col: 34}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var30))
 							if templ_7745c5c3_Err != nil {
@@ -480,7 +480,7 @@ func EvidenceList(env utils.Env, cid int64, list []model.Evidence) templ.Compone
 							var templ_7745c5c3_Var32 string
 							templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Hash)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/evidenceViews.templ`, Line: 94, Col: 39}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/evidenceViews.templ`, Line: 94, Col: 27}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 							if templ_7745c5c3_Err != nil {
@@ -634,7 +634,7 @@ func renderEvidenceType(value string) templ.Component {
 		var templ_7745c5c3_Var36 string
 		templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(value)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/evidenceViews.templ`, Line: 126, Col: 10}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/evidenceViews.templ`, Line: 126, Col: 7}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 		if templ_7745c5c3_Err != nil {

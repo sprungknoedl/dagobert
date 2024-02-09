@@ -1,15 +1,15 @@
 package templ
 
 import (
-    "fmt"
-    "math"
-    "time"
-    "strings"
+	"fmt"
+	"math"
+	"time"
+	"strings"
 
 	"github.com/sprungknoedl/dagobert/internal/templ/utils"
-    "github.com/sprungknoedl/dagobert/internal/templ/icons"
-    "github.com/sprungknoedl/dagobert/model"
-    "github.com/sprungknoedl/dagobert/pkg/valid"
+	"github.com/sprungknoedl/dagobert/internal/templ/icons"
+	"github.com/sprungknoedl/dagobert/model"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type EventDTO struct {
@@ -26,127 +26,127 @@ type EventDTO struct {
 }
 
 templ EventForm(env utils.Env, obj EventDTO, assets []string, vr valid.Result) {
-    @utils.Modal("max-w-4xl") {
-        <form hx-post={env.Routes("save-event", obj.CaseID, obj.ID)} hx-target="#modal">
-        @utils.ModalHeader() {
-            if obj.ID == 0 {
-                Add event
-            } else {
-                Edit event
-            }
-        }
-                
-        @utils.ModalBody() {
-            @utils.TextInput("Date / Time", "time", obj.Time, true, vr["Time"])
-            @utils.SelectInput("Type", "type", obj.Type, model.EventTypes, true, vr["Type"])
-            @utils.SelectInput("Event System", "assetA", obj.AssetA, assets, true, vr["Event System"])
-            @utils.SelectInput("Direction", "direction", obj.Direction, model.EventDirections, false, vr["Direction"])
-            @utils.SelectInput("Remote System", "assetB", obj.AssetB, optional(assets), false, vr["Remote System"])
-            @utils.TextareaInput("Event", "event", obj.Event, true, vr["Event"])
-            @utils.TextareaInput("Raw", "raw", obj.Raw, false, vr["Raw"])
-            @utils.BooleanInput("Key Event", "keyevent", obj.KeyEvent, vr["Key Event"])
-        }
+	@utils.Modal("max-w-4xl") {
+		<form hx-post={env.Routes("save-event", obj.CaseID, obj.ID)} hx-target="#modal">
+		@utils.ModalHeader() {
+			if obj.ID == 0 {
+				Add event
+			} else {
+				Edit event
+			}
+		}
 
-        @utils.DefaultCrudFooter() {}
-        </form>
-    }
+		@utils.ModalBody() {
+			@utils.TextInput("Date / Time", "time", obj.Time, true, vr["Time"])
+			@utils.SelectInput("Type", "type", obj.Type, model.EventTypes, true, vr["Type"])
+			@utils.SelectInput("Event System", "assetA", obj.AssetA, assets, true, vr["Event System"])
+			@utils.SelectInput("Direction", "direction", obj.Direction, model.EventDirections, false, vr["Direction"])
+			@utils.SelectInput("Remote System", "assetB", obj.AssetB, optional(assets), false, vr["Remote System"])
+			@utils.TextareaInput("Event", "event", obj.Event, true, vr["Event"])
+			@utils.TextareaInput("Raw", "raw", obj.Raw, false, vr["Raw"])
+			@utils.BooleanInput("Key Event", "keyevent", obj.KeyEvent, vr["Key Event"])
+		}
+
+		@utils.DefaultCrudFooter() {}
+		</form>
+	}
 }
 
 templ EventList(env utils.Env, cid int64, list []model.Event, indicators []model.Indicator) {
-    @TableView(env, "Timeline", CrudUrls{
-        List: env.Routes("list-events", cid),
-        Import: env.Routes("import-events", cid),
-        Export: env.Routes("export-events", cid),
-        Add: env.Routes("view-event", cid, 0),
-    }) {
-        @utils.TableHead() {
-            @utils.TH(env, "time", templ.Attributes{"style": "width: 20rem"}) { Date / Time  }
-            @utils.TH(env, "type", templ.Attributes{"style": "width: 15rem"}) { Type  }
-            @utils.TH(env, "src", templ.Attributes{"style": "width: 15rem"}) { Event System  }
-            @utils.TH(env, "dst", templ.Attributes{"style": "width: 15rem"}) { Remote System  }
-            @utils.TH(env, "event", templ.Attributes{"style": "width: auto"})  { Event  }
-            @utils.TH(env, "", templ.Attributes{"style": "width: 7rem"})  { }
-        }
+	@TableView(env, "Timeline", CrudUrls{
+		List: env.Routes("list-events", cid),
+		Import: env.Routes("import-events", cid),
+		Export: env.Routes("export-events", cid),
+		Add: env.Routes("view-event", cid, 0),
+	}) {
+		@utils.TableHead() {
+			@utils.TH(env, "time", templ.Attributes{"style": "width: 20rem"}) { Date / Time  }
+			@utils.TH(env, "type", templ.Attributes{"style": "width: 15rem"}) { Type  }
+			@utils.TH(env, "src", templ.Attributes{"style": "width: 15rem"}) { Event System  }
+			@utils.TH(env, "dst", templ.Attributes{"style": "width: 15rem"}) { Remote System  }
+			@utils.TH(env, "event", templ.Attributes{"style": "width: auto"})  { Event  }
+			@utils.TH(env, "", templ.Attributes{"style": "width: 7rem"})  { }
+		}
 
-        @utils.TableBody() {
-            for i, obj := range list {
-            if b, d := hasTimeGap(list, i); b {
-                <tr class="border-b bg-slate-800 border-slate-700">
-                    <td class="text-center p-8" colspan="6">
-                    <span class="rounded-full py-4 px-8 mr-2 bg-slate-900">Mind the gap: { d }</span>
-                    </td>
-                </tr>
-            }
+		@utils.TableBody() {
+			for i, obj := range list {
+			if b, d := hasTimeGap(list, i); b {
+				<tr class="border-b bg-slate-800 border-slate-700">
+					<td class="text-center p-8" colspan="6">
+					<span class="rounded-full py-4 px-8 mr-2 bg-slate-900">Mind the gap: { d }</span>
+					</td>
+				</tr>
+			}
 
-            @utils.TR() {
-                @utils.TD() {{ obj.Time.Format("2006-01-02 15:04:05.000") } <span class="text-slate-500">{ obj.Time.Format("Z07:00") }</span> }
-                @utils.TD() { @renderEventType(obj.Type) }
-                @utils.TD() {{ obj.AssetA }}
-                @utils.TD() {{ obj.Direction + " " + obj.AssetB }}
-                @utils.TD() { @highlightIndicators(obj.Event, indicators) }
-                @utils.DefaultTableButtons(env.Routes("view-event", cid, obj.ID), env.Routes("delete-event", cid, obj.ID)) {
-                    if obj.KeyEvent {
-                        @icons.SolidStar(icons.Inline + " text-yellow-500")
-                    }
-                }
-            }}
-        }
+			@utils.TR() {
+				@utils.TD() {{ obj.Time.Format("2006-01-02 15:04:05.000") } <span class="text-slate-500">{ obj.Time.Format("Z07:00") }</span> }
+				@utils.TD() { @renderEventType(obj.Type) }
+				@utils.TD() {{ obj.AssetA }}
+				@utils.TD() {{ obj.Direction + " " + obj.AssetB }}
+				@utils.TD() { @highlightIndicators(obj.Event, indicators) }
+				@utils.DefaultTableButtons(env.Routes("view-event", cid, obj.ID), env.Routes("delete-event", cid, obj.ID)) {
+					if obj.KeyEvent {
+						@icons.SolidStar(icons.Inline + " text-yellow-500")
+					}
+				}
+			}}
+		}
 
-        if len(list) == 0 {
-            @utils.EmptyCaption(env.Routes("view-event", cid, 0)) {}
-        }
-    }
+		if len(list) == 0 {
+			@utils.EmptyCaption(env.Routes("view-event", cid, 0)) {}
+		}
+	}
 }
 
 templ renderEventType(typ string) {
-    switch typ {
-    case "Reconnaissance": 
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-slate-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "Resource Development": 
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-slate-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "Initial Access": 
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-yellow-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "Execution":
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-indigo-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "Persistence":
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-indigo-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "Privilege Escalation":
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-yellow-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "Defense Evasion":
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-indigo-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "Credential Access":
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-cyan-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "Discovery": 
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-slate-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "Lateral Movement":
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-cyan-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "Collection":
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-red-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "C2":
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-fuchsia-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "Exfiltration":
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-red-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "Impact":
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-red-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "DFIR":
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-green-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    case "Other":
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-slate-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
-    default:
-        <span class="flex items-center gap-2 text-sm font-medium text-white me-3">{typ}</span>
-    }
+	switch typ {
+	case "Reconnaissance":
+		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-slate-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+	case "Resource Development":
+		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-slate-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+	case "Initial Access":
+		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-yellow-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+	case "Execution":
+		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-indigo-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+	case "Persistence":
+		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-indigo-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+	case "Privilege Escalation":
+		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-yellow-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+	case "Defense Evasion":
+		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-indigo-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+	case "Credential Access":
+		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-cyan-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+	case "Discovery":
+		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-slate-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+	case "Lateral Movement":
+		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-cyan-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+	case "Collection":
+		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-red-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+	case "C2":
+		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-fuchsia-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+	case "Exfiltration":
+		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-red-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+	case "Impact":
+		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-red-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+	case "DFIR":
+		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-green-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+	case "Other":
+		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-slate-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+	default:
+		<span class="flex items-center gap-2 text-sm font-medium text-white me-3">{typ}</span>
+	}
 }
 
 func hasTimeGap(list []model.Event, i int) (bool, string) {
-    if i > 0 {
-        prev := list[i-1].Time
-        curr := list[i].Time
-        if d := curr.Sub(prev); d > 2 * 24 * time.Hour {
-            return true, humanizeDuration(d)
-        }
-    }
+	if i > 0 {
+		prev := list[i-1].Time
+		curr := list[i].Time
+		if d := curr.Sub(prev); d > 2 * 24 * time.Hour {
+			return true, humanizeDuration(d)
+		}
+	}
 
-    return false, ""
+	return false, ""
 }
 
 func humanizeDuration(duration time.Duration) string {
@@ -157,7 +157,7 @@ func humanizeDuration(duration time.Duration) string {
 
 	chunks := []struct {
 		singularName string
-		amount       int64
+		amount	   int64
 	}{
 		{"day", days},
 		{"hour", hours},
@@ -182,13 +182,13 @@ func humanizeDuration(duration time.Duration) string {
 }
 
 func highlightIndicators(event string, indicators []model.Indicator) templ.Component {
-    event = templ.EscapeString(event)
-    for _, ioc := range indicators {
-        event = strings.ReplaceAll(event, ioc.Value, "<span title=\"Indicator: " + templ.EscapeString(ioc.Description) + "\" class=\"text-red-400 underline\">" + templ.EscapeString(ioc.Value) + "</span>")
-    }
-    return templ.Raw(event)
+	event = templ.EscapeString(event)
+	for _, ioc := range indicators {
+		event = strings.ReplaceAll(event, ioc.Value, "<span title=\"Indicator: " + templ.EscapeString(ioc.Description) + "\" class=\"text-red-400 underline\">" + templ.EscapeString(ioc.Value) + "</span>")
+	}
+	return templ.Raw(event)
 }
 
 func optional(slice []string) []string {
-    return append([]string{""}, slice...)
+	return append([]string{""}, slice...)
 }

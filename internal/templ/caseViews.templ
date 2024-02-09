@@ -1,12 +1,12 @@
 package templ
 
 import (
-    "fmt"
+	"fmt"
 
 	"github.com/sprungknoedl/dagobert/internal/templ/utils"
-    "github.com/sprungknoedl/dagobert/internal/templ/icons"
-    "github.com/sprungknoedl/dagobert/model"
-    "github.com/sprungknoedl/dagobert/pkg/valid"
+	"github.com/sprungknoedl/dagobert/internal/templ/icons"
+	"github.com/sprungknoedl/dagobert/model"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type CaseDTO struct {
@@ -20,147 +20,147 @@ type CaseDTO struct {
 }
 
 templ CaseForm(env utils.Env, obj CaseDTO, vr valid.Result) {
-    @utils.Modal("max-w-4xl") {
-        <form hx-post={env.Routes("save-case", obj.ID)} hx-target="#modal">
-        @utils.ModalHeader() {
-            if obj.ID == 0 {
-                Add case
-            } else {
-                Edit case
-            }
-        }
+	@utils.Modal("max-w-4xl") {
+		<form hx-post={env.Routes("save-case", obj.ID)} hx-target="#modal">
+		@utils.ModalHeader() {
+			if obj.ID == 0 {
+				Add case
+			} else {
+				Edit case
+			}
+		}
 
-        @utils.ModalBody() {
-            @utils.TextInput("Name", "name", obj.Name, true, vr["Name"])
-            @utils.TextInput("Classification", "classification", obj.Classification, true, vr["Classification"])
-            @utils.SelectInput("Severity", "severity", obj.Severity, model.CaseSeverities, true, vr["Severity"])
-            @utils.SelectInput("Outcome", "outcome", obj.Outcome, model.CaseOutcomes, false, vr["Outcome"])
-            @utils.TextareaInput("Summary", "summary", obj.Summary, false, vr["Summary"])
-            @utils.BooleanInput("Case closed", "closed", obj.Closed, vr["Closed"])
-        }
+		@utils.ModalBody() {
+			@utils.TextInput("Name", "name", obj.Name, true, vr["Name"])
+			@utils.TextInput("Classification", "classification", obj.Classification, true, vr["Classification"])
+			@utils.SelectInput("Severity", "severity", obj.Severity, model.CaseSeverities, true, vr["Severity"])
+			@utils.SelectInput("Outcome", "outcome", obj.Outcome, model.CaseOutcomes, false, vr["Outcome"])
+			@utils.TextareaInput("Summary", "summary", obj.Summary, false, vr["Summary"])
+			@utils.BooleanInput("Case closed", "closed", obj.Closed, vr["Closed"])
+		}
 
-        @utils.DefaultCrudFooter() {}
-        </form>
-    }
+		@utils.DefaultCrudFooter() {}
+		</form>
+	}
 }
 
 templ CaseList(env utils.Env, list []model.Case) {
-    @TableView(env, "Cases", CrudUrls{
-        List: env.Routes("list-cases"),
-        Import: env.Routes("import-cases"),
-        Export: env.Routes("export-cases"),
-        Add: env.Routes("view-case", 0),
-    }) {
-        @utils.TableHead() {
-            @utils.TH(env, "id", templ.Attributes{"style": "width: 8rem"}) { ID  }
-            @utils.TH(env, "name", templ.Attributes{"style": "width: auto"}) { Name  }
-            @utils.TH(env, "classification", templ.Attributes{"style": "width: auto"}) { Classification  }
-            @utils.TH(env, "severity", templ.Attributes{"style": "width: auto"}) { Severity  }
-            @utils.TH(env, "outcome", templ.Attributes{"style": "width: auto"}) { Outcome  }
-            @utils.TH(env, "", templ.Attributes{"style": "width: 7rem"}) { }
-        }
+	@TableView(env, "Cases", CrudUrls{
+		List: env.Routes("list-cases"),
+		Import: env.Routes("import-cases"),
+		Export: env.Routes("export-cases"),
+		Add: env.Routes("view-case", 0),
+	}) {
+		@utils.TableHead() {
+			@utils.TH(env, "id", templ.Attributes{"style": "width: 8rem"}) { ID  }
+			@utils.TH(env, "name", templ.Attributes{"style": "width: auto"}) { Name  }
+			@utils.TH(env, "classification", templ.Attributes{"style": "width: auto"}) { Classification  }
+			@utils.TH(env, "severity", templ.Attributes{"style": "width: auto"}) { Severity  }
+			@utils.TH(env, "outcome", templ.Attributes{"style": "width: auto"}) { Outcome  }
+			@utils.TH(env, "", templ.Attributes{"style": "width: 7rem"}) { }
+		}
 
-        @utils.TableBody() {
-            for _, obj := range list {
-            @utils.TR() {
-                @utils.TD() { <a class="hover:text-slate-200 hover:underline" href={templ.SafeURL(env.Routes("show-case", obj.ID))}>{ fmt.Sprintf("#%d", obj.ID) }</a> }
-                @utils.TD() { <a class="hover:text-slate-200 hover:underline" href={templ.SafeURL(env.Routes("show-case", obj.ID))}>{ obj.Name }</a> }
-                @utils.TD() {{ obj.Classification }}
-                @utils.TD() {{ obj.Severity }}
-                @utils.TD() {{ obj.Outcome }}
-                @utils.DefaultTableButtons(env.Routes("view-case", obj.ID), env.Routes("delete-case", obj.ID)) {}
-            }}
-        }
+		@utils.TableBody() {
+			for _, obj := range list {
+			@utils.TR() {
+				@utils.TD() { <a class="hover:text-slate-200 hover:underline" href={templ.SafeURL(env.Routes("show-case", obj.ID))}>{ fmt.Sprintf("#%d", obj.ID) }</a> }
+				@utils.TD() { <a class="hover:text-slate-200 hover:underline" href={templ.SafeURL(env.Routes("show-case", obj.ID))}>{ obj.Name }</a> }
+				@utils.TD() {{ obj.Classification }}
+				@utils.TD() {{ obj.Severity }}
+				@utils.TD() {{ obj.Outcome }}
+				@utils.DefaultTableButtons(env.Routes("view-case", obj.ID), env.Routes("delete-case", obj.ID)) {}
+			}}
+		}
 
-        if len(list) == 0 {
-            @utils.EmptyCaption(env.Routes("view-case", 0)) {}
-        }
-    }
+		if len(list) == 0 {
+			@utils.EmptyCaption(env.Routes("view-case", 0)) {}
+		}
+	}
 }
 
 templ CaseOverview(env utils.Env, obj model.Case) {
-    @Layout(env) {
-        <main class="p-4 grow">
-            @Navbar(env, fmt.Sprintf("#%d - %s", obj.ID, obj.Name), false, false) {
-                @utils.GroupedButton(templ.Attributes{"hx-get": env.Routes("choose-report", obj.ID), "hx-target": "#modal"}) {
-                    @icons.DocumentArrowDown("inline-block mr-1 w-5 h-5")
-                    Generate report
-                }
-                @utils.GroupedButton(templ.Attributes{"hx-get": env.Routes("show-case", obj.ID), "hx-target": "section", "hx-select": "section", "hx-swap": "outerHTML"}) {
-                    @icons.ArrowPath("inline-block mr-1 w-5 h-5")
-                    Refresh
-                }
-                @utils.GroupedButton(templ.Attributes{"hx-get": env.Routes("view-case", obj.ID), "hx-target": "#modal"}) {
-                    @icons.Pencil("inline-block mr-1 w-5 h-5")
-                    Edit
-                }
-            }
-            
-            <section class="flex gap-4">
-                <div class="w-1/2 grid grid-cols-3 gap-4">
-                    @utils.Card("Opened", icons.Clock) {{ obj.DateAdded.Format("2006-01-02") }}
-                    @utils.Card("Classification", icons.ClipboardCheck) {{ obj.Classification }}
-                    @utils.Card("Severity", icons.Bolt) { @dlSeverity(obj.Severity) }
-                    @utils.Card("State", icons.Briefcase) { @dlClosed(obj.Closed) }
-                    @utils.Card("Outcome", icons.ViewfinderCircle) { @dlOutcome(obj.Outcome) }
-                </div>
+	@Layout(env) {
+		<main class="p-4 grow">
+			@Navbar(env, fmt.Sprintf("#%d - %s", obj.ID, obj.Name), false, false) {
+				@utils.GroupedButton(templ.Attributes{"hx-get": env.Routes("choose-report", obj.ID), "hx-target": "#modal"}) {
+					@icons.DocumentArrowDown("inline-block mr-1 w-5 h-5")
+					Generate report
+				}
+				@utils.GroupedButton(templ.Attributes{"hx-get": env.Routes("show-case", obj.ID), "hx-target": "section", "hx-select": "section", "hx-swap": "outerHTML"}) {
+					@icons.ArrowPath("inline-block mr-1 w-5 h-5")
+					Refresh
+				}
+				@utils.GroupedButton(templ.Attributes{"hx-get": env.Routes("view-case", obj.ID), "hx-target": "#modal"}) {
+					@icons.Pencil("inline-block mr-1 w-5 h-5")
+					Edit
+				}
+			}
 
-                <div class="bg-slate-700 p-4 w-1/2 sm:rounded-lg">
-                    <h4 class="font-bold text-xs text-slate-400 uppercase mb-4 pb-2 border-b border-b-slate-600">Summary</h4>
-                    <p>{obj.Summary}</p>
-                </div>
-            </section>
-        </main>
-    }
+			<section class="flex gap-4">
+				<div class="w-1/2 grid grid-cols-3 gap-4">
+					@utils.Card("Opened", icons.Clock) {{ obj.DateAdded.Format("2006-01-02") }}
+					@utils.Card("Classification", icons.ClipboardCheck) {{ obj.Classification }}
+					@utils.Card("Severity", icons.Bolt) { @dlSeverity(obj.Severity) }
+					@utils.Card("State", icons.Briefcase) { @dlClosed(obj.Closed) }
+					@utils.Card("Outcome", icons.ViewfinderCircle) { @dlOutcome(obj.Outcome) }
+				</div>
+
+				<div class="bg-slate-700 p-4 w-1/2 sm:rounded-lg">
+					<h4 class="font-bold text-xs text-slate-400 uppercase mb-4 pb-2 border-b border-b-slate-600">Summary</h4>
+					<p>{obj.Summary}</p>
+				</div>
+			</section>
+		</main>
+	}
 }
 
 templ dlClosed(closed bool) {
-    if closed { 
-        Closed
-    } else {
-        <span class="text-red-400"> Open </span>
-    }
+	if closed {
+		Closed
+	} else {
+		<span class="text-red-400"> Open </span>
+	}
 }
 
 templ dlSeverity(severity string) {
-    switch severity {
-    case "Low":    
-        <span class="text-yellow-400"> {severity} </span>
-    case "Medium": 
-        <span class="text-amber-400"> {severity} </span>
-    case "High":   
-        <span class="text-red-400"> {severity} </span>
-    default:
-        <span class="text-slate-400"> Unknown </span>
-    }
+	switch severity {
+	case "Low":
+		<span class="text-yellow-400"> {severity} </span>
+	case "Medium":
+		<span class="text-amber-400"> {severity} </span>
+	case "High":
+		<span class="text-red-400"> {severity} </span>
+	default:
+		<span class="text-slate-400"> Unknown </span>
+	}
 }
 
 templ dlOutcome(outcome string) {
-    switch outcome {
-    case "False positive" : 
-        <span class="text-green-400"> {outcome} </span>
-    case "True positive"  :
-        <span class="text-red-400"> {outcome} </span>
-    case "Benign positive":
-        <span class="text-slate-400"> {outcome} </span>
-    default:
-        <span class="text-slate-400"> Unknown </span>
-    }
+	switch outcome {
+	case "False positive" :
+		<span class="text-green-400"> {outcome} </span>
+	case "True positive"  :
+		<span class="text-red-400"> {outcome} </span>
+	case "Benign positive":
+		<span class="text-slate-400"> {outcome} </span>
+	default:
+		<span class="text-slate-400"> Unknown </span>
+	}
 }
 
 templ ReportList(env utils.Env, cid int64, list []string) {
-    @utils.Modal("max-w-xl") {
-        <form action={templ.SafeURL(env.Routes("generate-report", cid))}>
-        @utils.ModalHeader() { Select report template }
+	@utils.Modal("max-w-xl") {
+		<form action={templ.SafeURL(env.Routes("generate-report", cid))}>
+		@utils.ModalHeader() { Select report template }
 
-        @utils.ModalBody() {
-            @utils.SelectInput("Template", "tpl", "", list, false, valid.Condition{})
-        }
+		@utils.ModalBody() {
+			@utils.SelectInput("Template", "tpl", "", list, false, valid.Condition{})
+		}
 
-        @utils.ModalFooter() {
-            @utils.PrimaryButton(templ.Attributes{"type": "submit", "_": "on click trigger closeModal"}) { Generate }
-            @utils.SecondaryButton(templ.Attributes{"_": "on click trigger closeModal"}) { Cancel }
-        }
-        </form>
-    }
+		@utils.ModalFooter() {
+			@utils.PrimaryButton(templ.Attributes{"type": "submit", "_": "on click trigger closeModal"}) { Generate }
+			@utils.SecondaryButton(templ.Attributes{"_": "on click trigger closeModal"}) { Cancel }
+		}
+		</form>
+	}
 }

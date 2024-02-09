@@ -1,154 +1,154 @@
 package templ
 
 import (
-    "fmt"
+	"fmt"
 
-    "github.com/sprungknoedl/dagobert/internal/templ/icons"
+	"github.com/sprungknoedl/dagobert/internal/templ/icons"
 	"github.com/sprungknoedl/dagobert/internal/templ/utils"
 )
 
 type CrudUrls struct {
-	List string
+	List   string
 	Import string
 	Export string
-	Add string
+	Add    string
 }
 
 templ Layout(env utils.Env) {
-    <!DOCTYPE html>
-    <html lang="en" dir="ltr">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>Dagobert</title>
-        <link href="/dist/flowbite.min.css" rel="stylesheet" />
-        <link href="/dist/dagobert.css" rel="stylesheet" />
+	<!DOCTYPE html>
+	<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Dagobert</title>
+		<link href="/dist/flowbite.min.css" rel="stylesheet" />
+		<link href="/dist/dagobert.css" rel="stylesheet" />
 
-        <!-- <script src="/dist/flowbite.min.js" defer></script> -->
-        <script src="/dist/alpine.min.js" defer></script>
-        <script src="/dist/hyperscript.min.js" defer></script>
-        <script src="/dist/htmx.min.js" defer></script>
-    </head>
-    <body class="flex bg-slate-800 text-white">
-        @Navigation(env)
-        { children... }
+		<!-- <script src="/dist/flowbite.min.js" defer></script> -->
+		<script src="/dist/alpine.min.js" defer></script>
+		<script src="/dist/hyperscript.min.js" defer></script>
+		<script src="/dist/htmx.min.js" defer></script>
+	</head>
+	<body class="flex bg-slate-800 text-white">
+		@Navigation(env)
+		{ children... }
 
-        <div id="modal" hx-swap-oob="true"></div>
-        <div id="errors" class="fixed bottom-0 right-0 z-50"></div>
+		<div id="modal" hx-swap-oob="true"></div>
+		<div id="errors" class="fixed bottom-0 right-0 z-50"></div>
 
-    </body>
-    </html> 
+	</body>
+	</html>
 }
 
 templ Navigation(env utils.Env) {
-    <aside class="h-screen w-64 min-w-64 p-4">
-        <div class="w-12 h-12 mt-4 mb-8 mx-auto bg-pink-500 text-slate-800 rounded-lg p-3">
-            @icons.Dagobert("")
-        </div>
+	<aside class="h-screen w-64 min-w-64 p-4">
+		<div class="w-12 h-12 mt-4 mb-8 mx-auto bg-pink-500 text-slate-800 rounded-lg p-3">
+			@icons.Dagobert("")
+		</div>
 
-        <h3 class="mt-4 mb-1 font-bold">Overview</h3>
-        @navLink(env, templ.URL("/")) { @icons.Identification(icons.Inline) Cases }
+		<h3 class="mt-4 mb-1 font-bold">Overview</h3>
+		@navLink(env, templ.URL("/")) { @icons.Identification(icons.Inline) Cases }
 
-        if env.ActiveCase.ID != 0 {
-        @navLink(env, templ.URL("/#")) {
-            @icons.Identification(icons.Inline)
-            <span>Active Case:<br />
-            <span class="font-bold text-green-500">{ fmt.Sprintf("#%d - %s", env.ActiveCase.ID, env.ActiveCase.Name) }</span>
-            </span>
-        }
+		if env.ActiveCase.ID != 0 {
+		@navLink(env, templ.URL("/#")) {
+			@icons.Identification(icons.Inline)
+			<span>Active Case:<br />
+			<span class="font-bold text-green-500">{ fmt.Sprintf("#%d - %s", env.ActiveCase.ID, env.ActiveCase.Name) }</span>
+			</span>
+		}
 
-        <h3 class="mt-4 mb-1 font-bold">Investigation</h3>
-        @navLink(env, templ.URL(env.Routes("show-case", env.ActiveCase.ID)))       { @icons.Briefcase(icons.Inline) Overview }
-        @navLink(env, templ.URL(env.Routes("list-events", env.ActiveCase.ID)))     { @icons.Clock(icons.Inline) Timeline }
-        @navLink(env, templ.URL(env.Routes("list-assets", env.ActiveCase.ID)))     { @icons.Desktop(icons.Inline) Assets }
-        @navLink(env, templ.URL(env.Routes("list-indicators", env.ActiveCase.ID))) { @icons.GlobeEurope(icons.Inline) Indicators }
-        @navLink(env, templ.URL(env.Routes("list-malware", env.ActiveCase.ID)))    { @icons.Bug(icons.Inline) Malware/Tools }
-        @navLink(env, templ.URL(env.Routes("list-evidences", env.ActiveCase.ID))) { @icons.Cube(icons.Inline) Evidence }
+		<h3 class="mt-4 mb-1 font-bold">Investigation</h3>
+		@navLink(env, templ.URL(env.Routes("show-case", env.ActiveCase.ID)))       { @icons.Briefcase(icons.Inline) Overview }
+		@navLink(env, templ.URL(env.Routes("list-events", env.ActiveCase.ID)))     { @icons.Clock(icons.Inline) Timeline }
+		@navLink(env, templ.URL(env.Routes("list-assets", env.ActiveCase.ID)))     { @icons.Desktop(icons.Inline) Assets }
+		@navLink(env, templ.URL(env.Routes("list-indicators", env.ActiveCase.ID))) { @icons.GlobeEurope(icons.Inline) Indicators }
+		@navLink(env, templ.URL(env.Routes("list-malware", env.ActiveCase.ID)))    { @icons.Bug(icons.Inline) Malware/Tools }
+		@navLink(env, templ.URL(env.Routes("list-evidences", env.ActiveCase.ID)))  { @icons.Cube(icons.Inline) Evidence }
 
-        <h3 class="mt-4 mb-1 font-bold">Case Management</h3>
-        @navLink(env, templ.URL(env.Routes("list-users", env.ActiveCase.ID)))     { @icons.Users(icons.Inline) Users }
-        @navLink(env, templ.URL(env.Routes("list-tasks", env.ActiveCase.ID)))     { @icons.ClipboardCheck(icons.Inline) Tasks }
-        @navLink(env, templ.URL(env.Routes("list-notes", env.ActiveCase.ID)))     { @icons.ChatBubble(icons.Inline) Notes }
-        }
-    </aside>
+		<h3 class="mt-4 mb-1 font-bold">Case Management</h3>
+		@navLink(env, templ.URL(env.Routes("list-users", env.ActiveCase.ID)))      { @icons.Users(icons.Inline) Users }
+		@navLink(env, templ.URL(env.Routes("list-tasks", env.ActiveCase.ID)))      { @icons.ClipboardCheck(icons.Inline) Tasks }
+		@navLink(env, templ.URL(env.Routes("list-notes", env.ActiveCase.ID)))      { @icons.ChatBubble(icons.Inline) Notes }
+		}
+	</aside>
 }
 
 templ Navbar(env utils.Env, title string, search bool, sort bool) {
-    <nav class="flex items-center justify-between mb-4">
-        <h3 class="font-bold text-2xl ml-2">{ title }</h3>
-        
-        <div class="flex gap-5 items-center">
-            if search { 
-                @utils.Search(env)
-            }
-            if sort {
-                @utils.Sort(env)
-            }
-            
-            <div class="inline-flex rounded-md shadow-sm" role="group">
-                { children... }
-            </div>
-        </div>
-    </nav>
+	<nav class="flex items-center justify-between mb-4">
+		<h3 class="font-bold text-2xl ml-2">{ title }</h3>
+
+		<div class="flex gap-5 items-center">
+			if search {
+				@utils.Search(env)
+			}
+			if sort {
+				@utils.Sort(env)
+			}
+
+			<div class="inline-flex rounded-md shadow-sm" role="group">
+				{ children... }
+			</div>
+		</div>
+	</nav>
 }
 
 templ TableView(env utils.Env, title string, urls CrudUrls) {
-    @Layout(env) {
-        <main class="p-4 grow">
-        <form hx-get={urls.List} hx-trigger="input delay:500ms, sort"
-            hx-target="#list" hx-select="#list" hx-swap="outerHTML" hx-push-url="true"
-            x-data={fmt.Sprintf("{ sort_by: '%s' }", env.Sort)}>
+	@Layout(env) {
+		<main class="p-4 grow">
+		<form hx-get={urls.List} hx-trigger="input delay:500ms, sort"
+			hx-target="#list" hx-select="#list" hx-swap="outerHTML" hx-push-url="true"
+			x-data={fmt.Sprintf("{ sort_by: '%s' }", env.Sort)}>
 
-            @Navbar(env, title, true, true) {
-                @utils.GroupedButton(templ.Attributes{
-                    "hx-get": urls.Import, 
-                    "hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false",
-                    "_": "on keydown[key is 'i' and ctrlKey is true] from window call me.click()",
-                }) {
-                    @icons.ArrowUpTray("inline-block mr-1 w-5 h-5")
-                    Import CSV
-                }
-                @utils.GroupedLink(templ.Attributes{
-                    "href": urls.Export,
-                    "_": "on keydown[key is 'e' and ctrlKey is true] from window call me.click()",
-                }) {
-                    @icons.ArrowDownTray("inline-block mr-1 w-5 h-5")
-                    Export CSV
-                }
-                @utils.GroupedButton(templ.Attributes{
-                    "@click": "$dispatch('sort')",
-                    "_": "on keydown[key is 'r' and ctrlKey is true] from window call me.click()",
-                }) {
-                    @icons.ArrowPath("inline-block mr-1 w-5 h-5")
-                    Refresh
-                }
-                @utils.GroupedButton(templ.Attributes{
-                    "hx-get": urls.Add, 
-                    "hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false",
-                    "_": "on keydown[key is 'a' and ctrlKey is true] from window call me.click()",
-                }) {
-                    @icons.Plus("inline-block mr-1 w-5 h-5")
-                    Add
-                }
-            }
+			@Navbar(env, title, true, true) {
+				@utils.GroupedButton(templ.Attributes{
+					"hx-get": urls.Import,
+					"hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false",
+					"_": "on keydown[key is 'i' and ctrlKey is true] from window call me.click()",
+				}) {
+					@icons.ArrowUpTray("inline-block mr-1 w-5 h-5")
+					Import CSV
+				}
+				@utils.GroupedLink(templ.Attributes{
+					"href": urls.Export,
+					"_": "on keydown[key is 'e' and ctrlKey is true] from window call me.click()",
+				}) {
+					@icons.ArrowDownTray("inline-block mr-1 w-5 h-5")
+					Export CSV
+				}
+				@utils.GroupedButton(templ.Attributes{
+					"@click": "$dispatch('sort')",
+					"_": "on keydown[key is 'r' and ctrlKey is true] from window call me.click()",
+				}) {
+					@icons.ArrowPath("inline-block mr-1 w-5 h-5")
+					Refresh
+				}
+				@utils.GroupedButton(templ.Attributes{
+					"hx-get": urls.Add,
+					"hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false",
+					"_": "on keydown[key is 'a' and ctrlKey is true] from window call me.click()",
+				}) {
+					@icons.Plus("inline-block mr-1 w-5 h-5")
+					Add
+				}
+			}
 
-            @utils.Table() {
+			@utils.Table() {
 				{ children... }
-            }
+			}
 
-        </form>
-        </main>
-    }
+		</form>
+		</main>
+	}
 }
 
 templ navLink(env utils.Env, href templ.SafeURL) {
-    if string(href) == env.ActiveRoute {
-    <a href={ href } class="flex items-center gap-2 p-2 pl-4 border-l-2 border-pink-500 text-pink-500 font-bold hover:text-white hover:border-slate-100">
-        { children... }
-    </a>
-    } else {
-    <a href={ href } class="flex items-center gap-3 p-2 pl-4 border-l-2 border-slate-600 text-slate-400 hover:text-white hover:border-slate-100">
-        { children... }
-    </a>
-    }
+	if string(href) == env.ActiveRoute {
+	<a href={ href } class="flex items-center gap-2 p-2 pl-4 border-l-2 border-pink-500 text-pink-500 font-bold hover:text-white hover:border-slate-100">
+		{ children... }
+	</a>
+	} else {
+	<a href={ href } class="flex items-center gap-3 p-2 pl-4 border-l-2 border-slate-600 text-slate-400 hover:text-white hover:border-slate-100">
+		{ children... }
+	</a>
+	}
 }

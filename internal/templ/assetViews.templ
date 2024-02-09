@@ -2,14 +2,14 @@ package templ
 
 import (
 	"github.com/sprungknoedl/dagobert/internal/templ/utils"
-    "github.com/sprungknoedl/dagobert/internal/templ/icons"
-    "github.com/sprungknoedl/dagobert/model"
-    "github.com/sprungknoedl/dagobert/pkg/valid"
+	"github.com/sprungknoedl/dagobert/internal/templ/icons"
+	"github.com/sprungknoedl/dagobert/model"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type AssetDTO struct {
-    ID          int64
-    CaseID      int64
+	ID          int64
+	CaseID      int64
 	Type        string `form:"type"`
 	Name        string `form:"name"`
 	IP          string `form:"ip"`
@@ -19,97 +19,97 @@ type AssetDTO struct {
 }
 
 templ AssetForm(env utils.Env, obj AssetDTO, vr valid.Result) {
-    @utils.Modal("max-w-4xl") {
-        <form hx-post={env.Routes("save-asset", obj.CaseID, obj.ID)} hx-target="#modal">
-        @utils.ModalHeader() {
-            if obj.ID == 0 {
-                Add asset
-            } else {
-                Edit asset
-            }
-        }
+	@utils.Modal("max-w-4xl") {
+		<form hx-post={env.Routes("save-asset", obj.CaseID, obj.ID)} hx-target="#modal">
+		@utils.ModalHeader() {
+			if obj.ID == 0 {
+				Add asset
+			} else {
+				Edit asset
+			}
+		}
 
-        @utils.ModalBody() {
-            @utils.SelectInput("Type", "type", obj.Type, model.AssetTypes, true, vr["Type"])
-            @utils.TextInput("Name", "name", obj.Name, true, vr["Name"])
-            @utils.TextInput("IP", "ip", obj.IP, false, vr["IP"])
-            @utils.TextareaInput("Description", "description", obj.Description, false, vr["Description"])
-            @utils.SelectInput("Compromised", "compromised", obj.Compromised, model.AssetCompromised, true, vr["Compromised"])
-            @utils.BooleanInput("Analysed", "analysed", obj.Analysed, vr["Analysed"])
-        }
+		@utils.ModalBody() {
+			@utils.SelectInput("Type", "type", obj.Type, model.AssetTypes, true, vr["Type"])
+			@utils.TextInput("Name", "name", obj.Name, true, vr["Name"])
+			@utils.TextInput("IP", "ip", obj.IP, false, vr["IP"])
+			@utils.TextareaInput("Description", "description", obj.Description, false, vr["Description"])
+			@utils.SelectInput("Compromised", "compromised", obj.Compromised, model.AssetCompromised, true, vr["Compromised"])
+			@utils.BooleanInput("Analysed", "analysed", obj.Analysed, vr["Analysed"])
+		}
 
-        @utils.DefaultCrudFooter() {}
-        </form>
-    }
+		@utils.DefaultCrudFooter() {}
+		</form>
+	}
 }
 
 templ AssetList(env utils.Env, cid int64, list []model.Asset) {
-    @TableView(env, "Assets", CrudUrls{
-        List: env.Routes("list-assets", cid),
-        Import: env.Routes("import-assets", cid),
-        Export: env.Routes("export-assets", cid),
-        Add: env.Routes("view-asset", cid, 0),
-    }) {
-        @utils.TableHead() {
-            @utils.TH(env, "type", templ.Attributes{"style": "width: 10rem"}) { Type  }
-            @utils.TH(env, "name", templ.Attributes{"style": "width: auto"})  { Name  }
-            @utils.TH(env, "ip", templ.Attributes{"style": "width: 10rem"}) { IP  }
-            @utils.TH(env, "desc", templ.Attributes{"style": "width: auto"})  { Description  }
-            @utils.TH(env, "compromised", templ.Attributes{"style": "width: 10rem"})  { Compromised  }
-            @utils.TH(env, "analysed", templ.Attributes{"style": "width: 8rem"})  { Analysed  }
-            @utils.TH(env, "", templ.Attributes{"style": "width: 7rem"})  { }
-        }
+	@TableView(env, "Assets", CrudUrls{
+		List: env.Routes("list-assets", cid),
+		Import: env.Routes("import-assets", cid),
+		Export: env.Routes("export-assets", cid),
+		Add: env.Routes("view-asset", cid, 0),
+	}) {
+		@utils.TableHead() {
+			@utils.TH(env, "type", templ.Attributes{"style": "width: 10rem"}) { Type  }
+			@utils.TH(env, "name", templ.Attributes{"style": "width: auto"})  { Name  }
+			@utils.TH(env, "ip", templ.Attributes{"style": "width: 10rem"}) { IP  }
+			@utils.TH(env, "desc", templ.Attributes{"style": "width: auto"})  { Description  }
+			@utils.TH(env, "compromised", templ.Attributes{"style": "width: 10rem"})  { Compromised  }
+			@utils.TH(env, "analysed", templ.Attributes{"style": "width: 8rem"})  { Analysed  }
+			@utils.TH(env, "", templ.Attributes{"style": "width: 7rem"})  { }
+		}
 
-        @utils.TableBody() {
-            for _, obj := range list {
-            @utils.TR() {
-                @utils.TD() {@renderAssetType(obj.Type)}
-                @utils.TD() {{ obj.Name }}
-                @utils.TD() {{ obj.IP }}
-                @utils.TD() {{ obj.Description }}
-                @utils.TD() {@renderAssetCompromised(obj.Compromised)}
-                @utils.TD() {@renderAssetAnalysed(obj.Analysed)}
-                @utils.DefaultTableButtons(env.Routes("view-asset", cid, obj.ID), env.Routes("delete-asset", cid, obj.ID)) {}
-            }}
-        }
+		@utils.TableBody() {
+			for _, obj := range list {
+			@utils.TR() {
+				@utils.TD() {@renderAssetType(obj.Type)}
+				@utils.TD() {{ obj.Name }}
+				@utils.TD() {{ obj.IP }}
+				@utils.TD() {{ obj.Description }}
+				@utils.TD() {@renderAssetCompromised(obj.Compromised)}
+				@utils.TD() {@renderAssetAnalysed(obj.Analysed)}
+				@utils.DefaultTableButtons(env.Routes("view-asset", cid, obj.ID), env.Routes("delete-asset", cid, obj.ID)) {}
+			}}
+		}
 
-        if len(list) == 0 {
-            @utils.EmptyCaption(env.Routes("view-asset", cid, 0)) {}
-        }
-    }
+		if len(list) == 0 {
+			@utils.EmptyCaption(env.Routes("view-asset", cid, 0)) {}
+		}
+	}
 }
 
 templ renderAssetType(value string) {
-    switch value {
-    case "Account": 
-        @icons.User("inline-block w-6 h-6 mr-2")
-    case "Desktop":
-        @icons.Desktop("inline-block w-6 h-6 mr-2")
-    case "Server":
-        @icons.Server("inline-block w-6 h-6 mr-2")
-    default :
-         @icons.QuestionMarkCircle("inline-block w-6 h-6 mr-2")    
-    }
-    {value}
+	switch value {
+	case "Account":
+		@icons.User("inline-block w-6 h-6 mr-2")
+	case "Desktop":
+		@icons.Desktop("inline-block w-6 h-6 mr-2")
+	case "Server":
+		@icons.Server("inline-block w-6 h-6 mr-2")
+	default :
+		 @icons.QuestionMarkCircle("inline-block w-6 h-6 mr-2")
+	}
+	{value}
 }
 
 templ renderAssetCompromised(value string) {
-    switch value {
-    case "Compromised":
-        <span class="text-red-500"> @icons.Bug("inline-block w-6 h-6 mr-2") Yes </span>
-    case "Not compromised":
-        No
-    case "Unknown":
-        Unknown
-    default:
-        {value}
-    }
+	switch value {
+	case "Compromised":
+		<span class="text-red-500"> @icons.Bug("inline-block w-6 h-6 mr-2") Yes </span>
+	case "Not compromised":
+		No
+	case "Unknown":
+		Unknown
+	default:
+		{value}
+	}
 }
 
 templ renderAssetAnalysed(value bool) {
-    if value {
-        @icons.CheckCircle("w-6 h-6 text-green-500")
-    } else {
-        @icons.XCircle("w-6 h-6 text-red-500")
-    }
+	if value {
+		@icons.CheckCircle("w-6 h-6 text-green-500")
+	} else {
+		@icons.XCircle("w-6 h-6 text-red-500")
+	}
 }

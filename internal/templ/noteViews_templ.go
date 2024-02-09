@@ -278,7 +278,7 @@ func NoteList(env utils.Env, cid int64, list []model.Note) templ.Component {
 							var templ_7745c5c3_Var19 string
 							templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Category)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/noteViews.templ`, Line: 55, Col: 43}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/noteViews.templ`, Line: 55, Col: 31}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 							if templ_7745c5c3_Err != nil {
@@ -306,7 +306,7 @@ func NoteList(env utils.Env, cid int64, list []model.Note) templ.Component {
 							var templ_7745c5c3_Var21 string
 							templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Title)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/noteViews.templ`, Line: 56, Col: 40}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/noteViews.templ`, Line: 56, Col: 28}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 							if templ_7745c5c3_Err != nil {
@@ -334,7 +334,7 @@ func NoteList(env utils.Env, cid int64, list []model.Note) templ.Component {
 							var templ_7745c5c3_Var23 string
 							templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Description)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/noteViews.templ`, Line: 57, Col: 46}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/noteViews.templ`, Line: 57, Col: 34}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 							if templ_7745c5c3_Err != nil {

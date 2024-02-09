@@ -54,7 +54,7 @@ func ErrorNotification(err error) templ.Component {
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%v", err.Error()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/utils/dialogs.templ`, Line: 17, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/utils/dialogs.templ`, Line: 17, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -84,7 +84,7 @@ func WarningNotification(err *echo.HTTPError) templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"flex items-center w-[42rem] p-4 rounded-lg shadow text-slate-400 bg-slate-700 m-8\" role=\"alert\" _=\"on click transition opacity to 0 over 100ms then remove me\n           on load wait 5s then transition opacity to 0 over 250ms then remove me\"><div class=\"inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg bg-amber-700 text-orange-200\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"flex items-center w-[42rem] p-4 rounded-lg shadow text-slate-400 bg-slate-700 m-8\" role=\"alert\" _=\"on click transition opacity to 0 over 100ms then remove me\n		   on load wait 5s then transition opacity to 0 over 250ms then remove me\"><div class=\"inline-flex items-center justify-center flex-shrink-0 w-8 h-8 rounded-lg bg-amber-700 text-orange-200\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -108,7 +108,7 @@ func WarningNotification(err *echo.HTTPError) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%v", err.Message))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/utils/dialogs.templ`, Line: 31, Col: 44}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/utils/dialogs.templ`, Line: 31, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -147,7 +147,7 @@ func Modal(w string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("--><aside _=\"on closeModal transition opacity to 0 over 100ms then remove me\n              on keydown[key is &#39;Escape&#39;] from window transition opacity to 0 over 100ms then remove me\n              on load set i to the first &lt;input/&gt; in me then call i.focus()\" class=\"fixed top-0 right-0 z-40 h-screen overflow-y-auto w-1/3 bg-gray-800 border-l border-gray-600 shadow-xl\"><!--")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("--><aside _=\"on closeModal transition opacity to 0 over 100ms then remove me\n			  on keydown[key is &#39;Escape&#39;] from window transition opacity to 0 over 100ms then remove me\n			  on load set i to the first &lt;input/&gt; in me then call i.focus()\" class=\"fixed top-0 right-0 z-40 h-screen overflow-y-auto w-1/3 bg-gray-800 border-l border-gray-600 shadow-xl\"><!--")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
