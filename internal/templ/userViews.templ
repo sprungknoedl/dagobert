@@ -61,7 +61,7 @@ templ UserList(env utils.Env, cid int64, list []model.User) {
 
 		@utils.TableBody() {
 			for _, obj := range list {
-			@utils.TR() {
+			@utils.TR(nil) {
 				@utils.TD() {{ obj.Name }}
 				@utils.TD() {{ obj.Company }}
 				@utils.TD() {{ obj.Role }}

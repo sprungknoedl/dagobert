@@ -104,6 +104,7 @@ func main() {
 	e.GET("/cases/:cid/events/export", handler.ExportEvents).Name = "export-events"
 	e.GET("/cases/:cid/events/import", handler.ImportEvents).Name = "import-events"
 	e.POST("/cases/:cid/events/import", handler.ImportEvents).Name = "import-events"
+	e.GET("/cases/:cid/events/:id/show", handler.ShowEvent).Name = "show-event"
 	e.GET("/cases/:cid/events/:id", handler.ViewEvent).Name = "view-event"
 	e.POST("/cases/:cid/events/:id", handler.SaveEvent).Name = "save-event"
 	e.DELETE("/cases/:cid/events/:id", handler.DeleteEvent).Name = "delete-event"

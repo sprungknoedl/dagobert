@@ -88,7 +88,7 @@ templ EvidenceList(env utils.Env, cid int64, list []model.Evidence) {
 
 		@utils.TableBody() {
 			for _, obj := range list {
-			@utils.TR() {
+			@utils.TR(nil) {
 				@utils.TD() {@renderEvidenceType(obj.Type)}
 				@utils.TD() {{ obj.Name }}
 				@utils.TD() {{ obj.Description }}

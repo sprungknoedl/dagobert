@@ -59,7 +59,7 @@ templ TaskList(env utils.Env, cid int64, list []model.Task) {
 
 		@utils.TableBody() {
 			for _, obj := range list {
-			@utils.TR() {
+			@utils.TR(nil) {
 				@utils.TD() {{ obj.DateDue.Format("2006-01-02") }}
 				@utils.TD() {@renderTaskType(obj.Type)}
 				@utils.TD() {{ obj.Task }}

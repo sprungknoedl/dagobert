@@ -59,7 +59,7 @@ templ IndicatorList(env utils.Env, cid int64, list []model.Indicator) {
 
 		@utils.TableBody() {
 			for _, obj := range list {
-			@utils.TR() {
+			@utils.TR(nil) {
 				@utils.TD() {@renderIndicatorType(obj.Type)}
 				@utils.TD() {{ obj.Value }}
 				@utils.TD() {{ obj.Description }}

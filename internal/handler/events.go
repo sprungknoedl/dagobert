@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -107,6 +108,61 @@ func ImportEvents(c echo.Context) error {
 		_, err = model.SaveEvent(cid, obj)
 		return err
 	})
+}
+
+func ShowEvent(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || id == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")
+	}
+
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	}
+
+	obj, err := model.GetEvent(cid, id)
+	if err != nil {
+		return err
+	}
+
+	indicators, err := model.ListIndicators(cid)
+	if err != nil {
+		return err
+	}
+
+	search := obj.Event + obj.Raw
+	relatedIndicators := []templ.IndicatorDTO{}
+	for _, x := range indicators {
+		if strings.Contains(search, x.Value) {
+			relatedIndicators = append(relatedIndicators, templ.IndicatorDTO{
+				ID:          x.ID,
+				CaseID:      x.ID,
+				Type:        x.Type,
+				Value:       x.Value,
+				TLP:         x.TLP,
+				Description: x.Description,
+				Source:      x.Source,
+			})
+		}
+	}
+
+	return render(c, templ.EventDetailsView(ctx(c), templ.EventFull{
+		ID:           obj.ID,
+		CaseID:       obj.CaseID,
+		Time:         formatNonZero(time.RFC3339, obj.Time),
+		Type:         obj.Type,
+		AssetA:       obj.AssetA,
+		AssetB:       obj.AssetB,
+		Direction:    obj.Direction,
+		Event:        obj.Event,
+		Raw:          obj.Raw,
+		KeyEvent:     obj.KeyEvent,
+		DateAdded:    formatNonZero(time.RFC3339, obj.DateAdded),
+		UserAdded:    obj.UserAdded,
+		DateModified: formatNonZero(time.RFC3339, obj.DateModified),
+		UserModified: obj.UserModified,
+	}, relatedIndicators))
 }
 
 func ViewEvent(c echo.Context) error {

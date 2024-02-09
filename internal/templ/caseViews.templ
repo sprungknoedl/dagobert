@@ -62,7 +62,7 @@ templ CaseList(env utils.Env, list []model.Case) {
 
 		@utils.TableBody() {
 			for _, obj := range list {
-			@utils.TR() {
+			@utils.TR(nil) {
 				@utils.TD() { <a class="hover:text-slate-200 hover:underline" href={templ.SafeURL(env.Routes("show-case", obj.ID))}>{ fmt.Sprintf("#%d", obj.ID) }</a> }
 				@utils.TD() { <a class="hover:text-slate-200 hover:underline" href={templ.SafeURL(env.Routes("show-case", obj.ID))}>{ obj.Name }</a> }
 				@utils.TD() {{ obj.Classification }}

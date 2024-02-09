@@ -52,7 +52,7 @@ templ NoteList(env utils.Env, cid int64, list []model.Note) {
 
 		@utils.TableBody() {
 			for _, obj := range list {
-			@utils.TR() {
+			@utils.TR(nil) {
 				@utils.TD() {{ obj.Category }}
 				@utils.TD() {{ obj.Title }}
 				@utils.TD() {{ obj.Description }}
