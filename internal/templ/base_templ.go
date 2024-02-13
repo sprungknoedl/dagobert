@@ -770,7 +770,7 @@ func TableView(env utils.Env, title string, urls CrudUrls) templ.Component {
 				templ_7745c5c3_Err = utils.GroupedButton(templ.Attributes{
 					"hx-get":    urls.Add,
 					"hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false",
-					"_": "on keydown[key is 'a' and ctrlKey is true] from window call me.click()",
+					"_": "on keydown[key is 'n' and ctrlKey is true] from window call me.click()",
 				}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var45), templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err

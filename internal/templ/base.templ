@@ -125,7 +125,7 @@ templ TableView(env utils.Env, title string, urls CrudUrls) {
 				@utils.GroupedButton(templ.Attributes{
 					"hx-get": urls.Add,
 					"hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false",
-					"_": "on keydown[key is 'a' and ctrlKey is true] from window call me.click()",
+					"_": "on keydown[key is 'n' and ctrlKey is true] from window call me.click()",
 				}) {
 					@icons.Plus("inline-block mr-1 w-5 h-5")
 					Add
