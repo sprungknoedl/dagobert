@@ -126,43 +126,41 @@ func ShowEvent(c echo.Context) error {
 		return err
 	}
 
+	// related assets
+	relatedAssets := []model.Asset{}
+	if obj.AssetA != "" {
+		x, err := model.GetAssetByName(cid, obj.AssetA)
+		if err != nil {
+			return err
+		}
+
+		relatedAssets = append(relatedAssets, x)
+	}
+
+	if obj.AssetB != "" && obj.AssetB != obj.AssetA {
+		x, err := model.GetAssetByName(cid, obj.AssetB)
+		if err != nil {
+			return err
+		}
+
+		relatedAssets = append(relatedAssets, x)
+	}
+
+	// related indicators
 	indicators, err := model.ListIndicators(cid)
 	if err != nil {
 		return err
 	}
 
 	search := obj.Event + obj.Raw
-	relatedIndicators := []templ.IndicatorDTO{}
+	relatedIndicators := []model.Indicator{}
 	for _, x := range indicators {
 		if strings.Contains(search, x.Value) {
-			relatedIndicators = append(relatedIndicators, templ.IndicatorDTO{
-				ID:          x.ID,
-				CaseID:      x.ID,
-				Type:        x.Type,
-				Value:       x.Value,
-				TLP:         x.TLP,
-				Description: x.Description,
-				Source:      x.Source,
-			})
+			relatedIndicators = append(relatedIndicators, x)
 		}
 	}
 
-	return render(c, templ.EventDetailsView(ctx(c), templ.EventFull{
-		ID:           obj.ID,
-		CaseID:       obj.CaseID,
-		Time:         formatNonZero(time.RFC3339, obj.Time),
-		Type:         obj.Type,
-		AssetA:       obj.AssetA,
-		AssetB:       obj.AssetB,
-		Direction:    obj.Direction,
-		Event:        obj.Event,
-		Raw:          obj.Raw,
-		KeyEvent:     obj.KeyEvent,
-		DateAdded:    formatNonZero(time.RFC3339, obj.DateAdded),
-		UserAdded:    obj.UserAdded,
-		DateModified: formatNonZero(time.RFC3339, obj.DateModified),
-		UserModified: obj.UserModified,
-	}, relatedIndicators))
+	return render(c, templ.EventDetailsView(ctx(c), obj, relatedAssets, relatedIndicators))
 }
 
 func ViewEvent(c echo.Context) error {

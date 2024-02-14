@@ -285,6 +285,14 @@ func GetAsset(cid int64, id int64) (Asset, error) {
 	return x, result.Error
 }
 
+func GetAssetByName(cid int64, name string) (Asset, error) {
+	x := Asset{}
+	result := db.
+		Where("case_id = ?", cid).
+		First(&x, "name = ?", name)
+	return x, result.Error
+}
+
 func SaveAsset(cid int64, x Asset) (Asset, error) {
 	x.CRC = HashFields(
 		x.CaseID,

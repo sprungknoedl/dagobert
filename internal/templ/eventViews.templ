@@ -25,24 +25,6 @@ type EventDTO struct {
 	KeyEvent  bool   `form:"keyevent"`
 }
 
-type EventFull struct {
-	ID        int64
-	CaseID    int64
-	Time      string
-	Type      string
-	AssetA    string
-	AssetB    string
-	Direction string
-	Event     string
-	Raw       string
-	KeyEvent  bool
-
-	DateAdded    string
-	DateModified string
-	UserAdded    string
-	UserModified string
-}
-
 templ EventForm(env utils.Env, obj EventDTO, assets []string, vr valid.Result) {
 	@utils.Modal("max-w-4xl") {
 		<form hx-post={env.Routes("save-event", obj.CaseID, obj.ID)} hx-target="#modal">
@@ -70,14 +52,15 @@ templ EventForm(env utils.Env, obj EventDTO, assets []string, vr valid.Result) {
 	}
 }
 
-templ EventDetailsView(env utils.Env, obj EventFull, indicators []IndicatorDTO) {
+templ EventDetailsView(env utils.Env, obj model.Event, assets []model.Asset, indicators []model.Indicator) {
 	@utils.Modal("max-w-4xl") {
 		@utils.ModalHeader() {{ fmt.Sprintf("Event #%d", obj.ID) }}
 
+		<!-- event details -->
 		@utils.ModalBody() {
 			<div class="mb-5">
 				<label class="block text-xs uppercase font-medium text-gray-500"> Date / Time </label>
-				<span class="text-sm block w-full py-2 text-white"> {obj.Time} </span>
+				<span class="text-sm block w-full py-2 text-white"> @renderTime(obj.Time) </span>
 			</div>
 			<div class="mb-5">
 				<label class="block text-xs uppercase font-medium text-gray-500"> Type </label>
@@ -113,11 +96,12 @@ templ EventDetailsView(env utils.Env, obj EventFull, indicators []IndicatorDTO) 
 			</div>
 		}
 
+		<!-- event metadata -->
 		@utils.ModalBody() {
 			<div class="mb-5 flex">
 				<div class="flex-1">
 					<label class="block text-xs uppercase font-medium text-gray-500"> Event added </label>
-					<span class="text-sm block w-full py-2 text-white"> {obj.DateAdded} </span>
+					<span class="text-sm block w-full py-2 text-white"> @renderTime(obj.DateAdded) </span>
 				</div>
 				<div class="flex-1">
 					<label class="block text-xs uppercase font-medium text-gray-500"> by </label>
@@ -128,7 +112,7 @@ templ EventDetailsView(env utils.Env, obj EventFull, indicators []IndicatorDTO) 
 			<div class="mb-5 flex">
 				<div class="flex-1">
 					<label class="block text-xs uppercase font-medium text-gray-500"> Event modified </label>
-					<span class="text-sm block w-full py-2 text-white"> {obj.DateModified} </span>
+					<span class="text-sm block w-full py-2 text-white"> @renderTime(obj.DateModified) </span>
 				</div>
 				<div class="flex-1">
 					<label class="block text-xs uppercase font-medium text-gray-500"> by </label>
@@ -137,16 +121,43 @@ templ EventDetailsView(env utils.Env, obj EventFull, indicators []IndicatorDTO) 
 			</div>
 		}
 
+		<!-- related assets -->
+		if len(assets) > 0 {
+		@utils.ModalBody() {
+			<div class="mb-5">
+				<label class="mb-2 block text-xs uppercase font-medium text-gray-500"> Related Assets </label>
+				@utils.Table() {
+					@utils.TableHead() {
+						@utils.TH(env, "", nil) { Type }
+						@utils.TH(env, "", nil) { Name }
+						@utils.TH(env, "", nil) { IP }
+						@utils.TH(env, "", nil) { Description }
+					}
+
+					@utils.TableBody() {
+						for _, obj := range assets {
+						@utils.TR(nil) {
+							@utils.TD() {@renderAssetType(obj.Type)}
+							@utils.TD() {{ obj.Name }}
+							@utils.TD() {{ obj.IP }}
+							@utils.TD() {{ obj.Description }}
+						}}
+					}
+				}
+			</div>
+		}}
+
+		<!-- related indicators -->
 		if len(indicators) > 0 {
 		@utils.ModalBody() {
 			<div class="mb-5">
 				<label class="mb-2 block text-xs uppercase font-medium text-gray-500"> Related Indicators </label>
 				@utils.Table() {
 					@utils.TableHead() {
-						@utils.TH(env, "", nil) { Type  }
-						@utils.TH(env, "", nil) { Value  }
-						@utils.TH(env, "", nil) { Description  }
-						@utils.TH(env, "", nil) { TLP  }
+						@utils.TH(env, "", nil) { Type }
+						@utils.TH(env, "", nil) { Value }
+						@utils.TH(env, "", nil) { Description }
+						@utils.TH(env, "", nil) { TLP }
 					}
 
 					@utils.TableBody() {
@@ -191,7 +202,7 @@ templ EventList(env utils.Env, cid int64, list []model.Event, indicators []model
 			}
 
 			@utils.TR(templ.Attributes{"hx-trigger": "click target:td", "hx-get": env.Routes("show-event", cid, obj.ID), "hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "aside", "hx-push-url": "false"}) {
-				@utils.TD() {{ obj.Time.Format("2006-01-02 15:04:05.000") } <span class="text-slate-500">{ obj.Time.Format("Z07:00") }</span> }
+				@utils.TD() { @renderTime(obj.Time) }
 				@utils.TD() { @renderEventType(obj.Type) }
 				@utils.TD() {{ obj.AssetA }}
 				@utils.TD() {{ obj.Direction + " " + obj.AssetB }}
@@ -208,6 +219,10 @@ templ EventList(env utils.Env, cid int64, list []model.Event, indicators []model
 			@utils.EmptyCaption(env.Routes("view-event", cid, 0)) {}
 		}
 	}
+}
+
+templ renderTime(t time.Time) {
+	{ t.Format("2006-01-02 15:04:05.000") } <span class="text-slate-500">{ t.Format("Z07:00") }</span>
 }
 
 templ renderEventType(typ string) {
