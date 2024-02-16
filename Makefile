@@ -5,5 +5,8 @@ build:
 	templ generate
 	go build -o dagobert ./cmd
 
+docker:
+	docker build . -f build/Dockerfile -t sprungknoedl/dagobert
+
 run:
 	source configs/dagobert.env && air -c configs/air.toml
