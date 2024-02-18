@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"net/url"
 	"os"
 
@@ -29,17 +30,14 @@ type Configuration struct {
 
 func main() {
 	cfg := Configuration{
-		AssetsFolder:   getEnv("ASSETS_FOLDER", "./web"),
-		EvidenceFolder: getEnv("EVIDENCE_FOLDER", "./files/evidences"),
-
-		Database: getEnv("DB_URL", "./files/dagobert.db"),
-
-		ClientId:     getEnv("CLIENT_ID", ""),
-		ClientSecret: getEnv("CLIENT_SECRET", ""),
-		ClientUrl:    getEnv("CLIENT_URL", ""),
-		Issuer:       getEnv("ISSUER", ""),
-
-		SessionSecret: getEnv("SESSION_SECRET", ""),
+		AssetsFolder:   cmp.Or(os.Getenv("ASSETS_FOLDER"), "./web"),
+		EvidenceFolder: cmp.Or(os.Getenv("EVIDENCE_FOLDER"), "./files/evidences"),
+		Database:       cmp.Or(os.Getenv("DB_URL"), "./files/dagobert.db"),
+		ClientId:       os.Getenv("CLIENT_ID"),
+		ClientSecret:   os.Getenv("CLIENT_SECRET"),
+		ClientUrl:      os.Getenv("CLIENT_URL"),
+		Issuer:         os.Getenv("ISSUER"),
+		SessionSecret:  os.Getenv("SESSION_SECRET"),
 	}
 
 	model.InitDatabase(cfg.Database)
@@ -183,11 +181,4 @@ func main() {
 	e.Static("/dist", cfg.AssetsFolder)
 
 	e.Logger.Fatal(e.Start(":8080"))
-}
-
-func getEnv(key string, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return fallback
 }
