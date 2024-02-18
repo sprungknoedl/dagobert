@@ -104,37 +104,37 @@ func callbackHandler(cfg Config, verifier *oidc.IDTokenVerifier, config *oauth2.
 		serverSession, _ := session.Get(cfg.SessionName, c)
 
 		state, ok := (serverSession.Values["oidcState"]).(string)
-		if handleOk(c, cfg, ok, "failed to parse state") {
+		if !ok {
 			return errors.New("get 'state' param didn't match local 'state' value")
 		}
 
-		if handleOk(c, cfg, c.QueryParam("state") == state, "get 'state' param didn't match local 'state' value") {
+		if c.QueryParam("state") != state {
 			return errors.New("get 'state' param didn't match local 'state' value")
 		}
 
 		oauth2Token, err := config.Exchange(ctx, c.QueryParam("code"))
-		if handleError(c, cfg, err, "failed to exchange token") {
+		if err != nil {
 			return err
 		}
 
 		rawIDToken, ok := oauth2Token.Extra("id_token").(string)
-		if handleOk(c, cfg, ok, "no id_token field in oauth2 token") {
+		if !ok {
 			return errors.New("no id_token field in oauth2 token")
 		}
 
 		idToken, err := verifier.Verify(ctx, rawIDToken)
-		if handleError(c, cfg, err, "failed to verify id token") {
+		if err != nil {
 			return err
 		}
 
 		var claims map[string]interface{}
 		err = idToken.Claims(&claims)
-		if handleError(c, cfg, err, "failed to parse id token") {
+		if err != nil {
 			return err
 		}
 
 		originalRequestUrl, ok := (serverSession.Values["oidcOriginalRequestUrl"]).(string)
-		if handleOk(c, cfg, ok, "failed to parse originalRequestUrl") {
+		if !ok {
 			return errors.New("failed to parse originalRequestUrl")
 		}
 
@@ -144,23 +144,12 @@ func callbackHandler(cfg Config, verifier *oidc.IDTokenVerifier, config *oauth2.
 		serverSession.Values["oidcClaims"] = claims
 
 		err = serverSession.Save(c.Request(), c.Response())
-		if handleError(c, cfg, err, "failed save sessions.") {
+		if err != nil {
 			return err
 		}
 
 		return c.Redirect(http.StatusFound, originalRequestUrl)
 	}
-}
-
-func handleError(c echo.Context, i Config, err error, message string) bool {
-	return err != nil
-}
-
-func handleOk(c echo.Context, i Config, ok bool, message string) bool {
-	if ok {
-		return false
-	}
-	return handleError(c, i, errors.New("not ok"), message)
 }
 
 // random string
