@@ -70,17 +70,17 @@ func (ctrl UserCtrl) AuthMiddleware(e *echo.Echo) func(echo.HandlerFunc) echo.Ha
 
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			serverSession, _ := session.Get(ctrl.openidConfig.SessionName, c)
-			authorized := serverSession.Values["oidcAuthorized"]
+			sess, _ := session.Get(ctrl.openidConfig.SessionName, c)
+			authorized := sess.Values["oidcAuthorized"]
 			if (authorized != nil && authorized.(bool)) || c.Request().URL.Path == "/oidc-callback" {
 				return next(c)
 			}
 
 			state := RandomString(16)
-			serverSession.Values["oidcAuthorized"] = false
-			serverSession.Values["oidcState"] = state
-			serverSession.Values["oidcOriginalRequestUrl"] = c.Request().URL.String()
-			err := serverSession.Save(c.Request(), c.Response())
+			sess.Values["oidcAuthorized"] = false
+			sess.Values["oidcState"] = state
+			sess.Values["oidcOriginalRequestUrl"] = c.Request().URL.String()
+			err := sess.Save(c.Request(), c.Response())
 			if err != nil {
 				log.Fatal("failed save sessions. error: " + err.Error()) // todo handle more gracefully
 			}
@@ -91,14 +91,13 @@ func (ctrl UserCtrl) AuthMiddleware(e *echo.Echo) func(echo.HandlerFunc) echo.Ha
 }
 
 func (ctrl UserCtrl) Logout(c echo.Context) error {
-	serverSession, _ := session.Get(ctrl.openidConfig.SessionName, c)
+	sess, _ := session.Get(ctrl.openidConfig.SessionName, c)
+	sess.Values["oidcAuthorized"] = false
+	sess.Values["oidcClaims"] = nil
+	sess.Values["oidcState"] = nil
+	sess.Values["oidcOriginalRequestUrl"] = nil
 
-	serverSession.Values["oidcAuthorized"] = false
-	serverSession.Values["oidcClaims"] = nil
-	serverSession.Values["oidcState"] = nil
-	serverSession.Values["oidcOriginalRequestUrl"] = nil
-
-	err := serverSession.Save(c.Request(), c.Response())
+	err := sess.Save(c.Request(), c.Response())
 	if err != nil {
 		return err
 	}
@@ -111,9 +110,9 @@ func (ctrl UserCtrl) Logout(c echo.Context) error {
 
 func (ctrl UserCtrl) Callback(c echo.Context) error {
 	ctx := c.Request().Context()
-	serverSession, _ := session.Get(ctrl.openidConfig.SessionName, c)
+	sess, _ := session.Get(ctrl.openidConfig.SessionName, c)
 
-	state, ok := (serverSession.Values["oidcState"]).(string)
+	state, ok := (sess.Values["oidcState"]).(string)
 	if !ok {
 		return errors.New("get 'state' param didn't match local 'state' value")
 	}
@@ -143,17 +142,17 @@ func (ctrl UserCtrl) Callback(c echo.Context) error {
 		return err
 	}
 
-	originalRequestUrl, ok := (serverSession.Values["oidcOriginalRequestUrl"]).(string)
+	originalRequestUrl, ok := (sess.Values["oidcOriginalRequestUrl"]).(string)
 	if !ok {
 		return errors.New("failed to parse originalRequestUrl")
 	}
 
-	serverSession.Values["oidcAuthorized"] = true
-	serverSession.Values["oidcState"] = nil
-	serverSession.Values["oidcOriginalRequestUrl"] = nil
-	serverSession.Values["oidcClaims"] = claims
+	sess.Values["oidcAuthorized"] = true
+	sess.Values["oidcState"] = nil
+	sess.Values["oidcOriginalRequestUrl"] = nil
+	sess.Values["oidcClaims"] = claims
 
-	err = serverSession.Save(c.Request(), c.Response())
+	err = sess.Save(c.Request(), c.Response())
 	if err != nil {
 		return err
 	}
