@@ -169,7 +169,7 @@ func UserForm(env utils.Env, obj UserDTO, vr valid.Result) templ.Component {
 	})
 }
 
-func UserList(env utils.Env, cid int64, list []model.User) templ.Component {
+func UserList(env utils.Env, list []model.User) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -377,7 +377,7 @@ func UserList(env utils.Env, cid int64, list []model.User) templ.Component {
 							var templ_7745c5c3_Var25 string
 							templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Name)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/userViews.templ`, Line: 64, Col: 27}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/userViews.templ`, Line: 62, Col: 27}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 							if templ_7745c5c3_Err != nil {
@@ -405,7 +405,7 @@ func UserList(env utils.Env, cid int64, list []model.User) templ.Component {
 							var templ_7745c5c3_Var27 string
 							templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Company)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/userViews.templ`, Line: 65, Col: 30}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/userViews.templ`, Line: 63, Col: 30}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 							if templ_7745c5c3_Err != nil {
@@ -433,7 +433,7 @@ func UserList(env utils.Env, cid int64, list []model.User) templ.Component {
 							var templ_7745c5c3_Var29 string
 							templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Role)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/userViews.templ`, Line: 66, Col: 27}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/userViews.templ`, Line: 64, Col: 27}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 							if templ_7745c5c3_Err != nil {
@@ -461,7 +461,7 @@ func UserList(env utils.Env, cid int64, list []model.User) templ.Component {
 							var templ_7745c5c3_Var31 string
 							templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Email)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/userViews.templ`, Line: 67, Col: 28}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/userViews.templ`, Line: 65, Col: 28}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 							if templ_7745c5c3_Err != nil {
@@ -489,7 +489,7 @@ func UserList(env utils.Env, cid int64, list []model.User) templ.Component {
 							var templ_7745c5c3_Var33 string
 							templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Phone)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/userViews.templ`, Line: 68, Col: 28}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/userViews.templ`, Line: 66, Col: 28}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 							if templ_7745c5c3_Err != nil {
@@ -517,7 +517,7 @@ func UserList(env utils.Env, cid int64, list []model.User) templ.Component {
 							var templ_7745c5c3_Var35 string
 							templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Notes)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/userViews.templ`, Line: 69, Col: 28}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/userViews.templ`, Line: 67, Col: 28}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 							if templ_7745c5c3_Err != nil {
@@ -536,7 +536,7 @@ func UserList(env utils.Env, cid int64, list []model.User) templ.Component {
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
-						templ_7745c5c3_Err = utils.DefaultTableButtons(env.Routes("view-user", cid, obj.ID), env.Routes("delete-user", cid, obj.ID)).Render(ctx, templ_7745c5c3_Buffer)
+						templ_7745c5c3_Err = utils.DefaultTableButtons(env.Routes("view-user", obj.ID), env.Routes("delete-user", obj.ID)).Render(ctx, templ_7745c5c3_Buffer)
 						if templ_7745c5c3_Err != nil {
 							return templ_7745c5c3_Err
 						}
@@ -564,7 +564,7 @@ func UserList(env utils.Env, cid int64, list []model.User) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(list) == 0 {
-				templ_7745c5c3_Err = utils.EmptyCaption(env.Routes("view-user", cid, 0)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = utils.EmptyCaption(env.Routes("view-user", 0)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -575,10 +575,8 @@ func UserList(env utils.Env, cid int64, list []model.User) templ.Component {
 			return templ_7745c5c3_Err
 		})
 		templ_7745c5c3_Err = TableView(env, "Users", CrudUrls{
-			List:   env.Routes("list-users", cid),
-			Import: env.Routes("import-users", cid),
-			Export: env.Routes("export-users", cid),
-			Add:    env.Routes("view-user", cid, 0),
+			List: env.Routes("list-users"),
+			Add:  env.Routes("view-user", 0),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

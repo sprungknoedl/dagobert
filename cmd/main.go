@@ -145,13 +145,10 @@ func main() {
 	// --------------------------------------
 	// users
 	userCtrl := handler.NewUserCtrl()
-	e.GET("/cases/:cid/users", userCtrl.ListUsers).Name = "list-users"
-	e.GET("/cases/:cid/users/export", userCtrl.ExportUsers).Name = "export-users"
-	e.GET("/cases/:cid/users/import", userCtrl.ImportUsers).Name = "import-users"
-	e.POST("/cases/:cid/users/import", userCtrl.ImportUsers).Name = "import-users"
-	e.GET("/cases/:cid/users/:id", userCtrl.ViewUser).Name = "view-user"
-	e.POST("/cases/:cid/users/:id", userCtrl.SaveUser).Name = "save-user"
-	e.DELETE("/cases/:cid/users/:id", userCtrl.DeleteUser).Name = "delete-user"
+	e.GET("/users", userCtrl.ListUsers).Name = "list-users"
+	e.GET("/users/:id", userCtrl.ViewUser).Name = "view-user"
+	e.POST("/users/:id", userCtrl.SaveUser).Name = "save-user"
+	e.DELETE("/users/:id", userCtrl.DeleteUser).Name = "delete-user"
 
 	// evidence
 	evidenceCtrl := handler.NewEvidenceCtrl()

@@ -486,26 +486,23 @@ func DeleteIndicator(cid int64, id int64) error {
 // --------------------------------------
 // Users
 // --------------------------------------
-func ListUsers(cid int64) ([]User, error) {
+func ListUsers() ([]User, error) {
 	var list []User
 	result := db.
-		Where("case_id = ?", cid).
 		Order("name asc").
 		Find(&list)
 	return list, result.Error
 }
 
-func FindUsers(cid int64, search string, sort string) ([]User, error) {
+func FindUsers(search string, sort string) ([]User, error) {
 	var list []User
-	query := db.
-		Where("case_id = ?", cid).
-		Where(db.
-			Where("instr(name, ?) > 0", search).
-			Or("instr(company, ?) > 0", search).
-			Or("instr(role, ?) > 0", search).
-			Or("instr(email, ?) > 0", search).
-			Or("instr(phone, ?) > 0", search).
-			Or("instr(notes, ?) > 0", search))
+	query := db.Where(db.
+		Where("instr(name, ?) > 0", search).
+		Or("instr(company, ?) > 0", search).
+		Or("instr(role, ?) > 0", search).
+		Or("instr(email, ?) > 0", search).
+		Or("instr(phone, ?) > 0", search).
+		Or("instr(notes, ?) > 0", search))
 
 	switch sort {
 	case "notes":
@@ -538,15 +535,14 @@ func FindUsers(cid int64, search string, sort string) ([]User, error) {
 	return list, result.Error
 }
 
-func GetUser(cid int64, id int64) (User, error) {
+func GetUser(id int64) (User, error) {
 	x := User{}
 	result := db.
-		Where("case_id = ?", cid).
 		First(&x, id)
 	return x, result.Error
 }
 
-func SaveUser(cid int64, x User) (User, error) {
+func SaveUser(x User) (User, error) {
 	x.CRC = HashFields(
 		x.CaseID,
 		x.Name,
@@ -558,16 +554,14 @@ func SaveUser(cid int64, x User) (User, error) {
 	)
 
 	result := db.
-		Where("case_id = ?", cid).
 		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "crc"}}, DoNothing: true}).
 		Save(&x)
 	return x, result.Error
 }
 
-func DeleteUser(cid int64, id int64) error {
+func DeleteUser(id int64) error {
 	x := User{}
 	return db.
-		Where("case_id = ?", cid).
 		Delete(&x, id).Error
 }
 

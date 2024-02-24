@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"encoding/csv"
 	"net/http"
 	"strconv"
 	"time"
@@ -18,73 +17,14 @@ type UserCtrl struct{}
 func NewUserCtrl() *UserCtrl { return &UserCtrl{} }
 
 func (ctrl UserCtrl) ListUsers(c echo.Context) error {
-	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
-	if err != nil || cid == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
 	sort := c.QueryParam("sort")
 	search := c.QueryParam("search")
-	list, err := model.FindUsers(cid, search, sort)
+	list, err := model.FindUsers(search, sort)
 	if err != nil {
 		return err
 	}
 
-	return render(c, templ.UserList(ctx(c), cid, list))
-}
-
-func (ctrl UserCtrl) ExportUsers(c echo.Context) error {
-	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
-	if err != nil || cid == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	list, err := model.ListUsers(cid)
-	if err != nil {
-		return err
-	}
-
-	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"templ.csv\"")
-	c.Response().WriteHeader(http.StatusOK)
-
-	w := csv.NewWriter(c.Response().Writer)
-	w.Write([]string{"Name", "Company", "Role", "Email", "Phone", "Notes"})
-	for _, e := range list {
-		w.Write([]string{e.Name, e.Company, e.Role, e.Email, e.Phone, e.Notes})
-	}
-
-	w.Flush()
-	return nil
-}
-
-func (ctrl UserCtrl) ImportUsers(c echo.Context) error {
-	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
-	if err != nil || cid == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	uri := c.Echo().Reverse("import-users", cid)
-	now := time.Now()
-	usr := getUser(c)
-
-	return importHelper(c, uri, 6, func(c echo.Context, rec []string) error {
-		obj := model.User{
-			CaseID:       cid,
-			Name:         rec[0],
-			Company:      rec[1],
-			Role:         rec[2],
-			Email:        rec[3],
-			Phone:        rec[4],
-			Notes:        rec[5],
-			DateAdded:    now,
-			UserAdded:    usr,
-			DateModified: now,
-			UserModified: usr,
-		}
-
-		_, err = model.SaveUser(cid, obj)
-		return err
-	})
+	return render(c, templ.UserList(ctx(c), list))
 }
 
 func (ctrl UserCtrl) ViewUser(c echo.Context) error {
@@ -93,14 +33,9 @@ func (ctrl UserCtrl) ViewUser(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid user id")
 	}
 
-	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
-	if err != nil || cid == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	obj := model.User{CaseID: cid}
+	obj := model.User{}
 	if id != 0 {
-		obj, err = model.GetUser(cid, id)
+		obj, err = model.GetUser(id)
 		if err != nil {
 			return err
 		}
@@ -108,7 +43,6 @@ func (ctrl UserCtrl) ViewUser(c echo.Context) error {
 
 	return render(c, templ.UserForm(ctx(c), templ.UserDTO{
 		ID:      id,
-		CaseID:  cid,
 		Name:    obj.Name,
 		Company: obj.Company,
 		Role:    obj.Role,
@@ -124,12 +58,7 @@ func (ctrl UserCtrl) SaveUser(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid user id")
 	}
 
-	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
-	if err != nil || cid == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	dto := templ.UserDTO{ID: id, CaseID: cid}
+	dto := templ.UserDTO{ID: id}
 	if err = c.Bind(&dto); err != nil {
 		return err
 	}
@@ -142,7 +71,6 @@ func (ctrl UserCtrl) SaveUser(c echo.Context) error {
 	usr := getUser(c)
 	obj := model.User{
 		ID:           id,
-		CaseID:       cid,
 		Name:         dto.Name,
 		Company:      dto.Company,
 		Role:         dto.Role,
@@ -156,7 +84,7 @@ func (ctrl UserCtrl) SaveUser(c echo.Context) error {
 	}
 
 	if id != 0 {
-		src, err := model.GetUser(cid, id)
+		src, err := model.GetUser(id)
 		if err != nil {
 			return err
 		}
@@ -165,7 +93,7 @@ func (ctrl UserCtrl) SaveUser(c echo.Context) error {
 		obj.UserAdded = src.UserAdded
 	}
 
-	if _, err := model.SaveUser(cid, obj); err != nil {
+	if _, err := model.SaveUser(obj); err != nil {
 		return err
 	}
 
@@ -178,17 +106,12 @@ func (ctrl UserCtrl) DeleteUser(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid User id")
 	}
 
-	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
-	if err != nil || cid == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
 	if c.QueryParam("confirm") != "yes" {
-		uri := c.Echo().Reverse("delete-user", cid, id) + "?confirm=yes"
+		uri := c.Echo().Reverse("delete-user", id) + "?confirm=yes"
 		return render(c, utils.Confirm(ctx(c), uri))
 	}
 
-	err = model.DeleteUser(cid, id)
+	err = model.DeleteUser(id)
 	if err != nil {
 		return err
 	}

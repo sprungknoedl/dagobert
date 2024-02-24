@@ -42,12 +42,10 @@ templ UserForm(env utils.Env, obj UserDTO, vr valid.Result) {
 	}
 }
 
-templ UserList(env utils.Env, cid int64, list []model.User) {
+templ UserList(env utils.Env, list []model.User) {
 	@TableView(env, "Users", CrudUrls{
-		List: env.Routes("list-users", cid),
-		Import: env.Routes("import-users", cid),
-		Export: env.Routes("export-users", cid),
-		Add: env.Routes("view-user", cid, 0),
+		List: env.Routes("list-users"),
+		Add: env.Routes("view-user", 0),
 	}) {
 		@utils.TableHead() {
 			@utils.TH(env, "name", templ.Attributes{"style": "width: auto"}) { Name }
@@ -68,12 +66,12 @@ templ UserList(env utils.Env, cid int64, list []model.User) {
 				@utils.TD() {{ obj.Email }}
 				@utils.TD() {{ obj.Phone }}
 				@utils.TD() {{ obj.Notes }}
-				@utils.DefaultTableButtons(env.Routes("view-user", cid, obj.ID), env.Routes("delete-user", cid, obj.ID)) {}
+				@utils.DefaultTableButtons(env.Routes("view-user", obj.ID), env.Routes("delete-user", obj.ID)) {}
 			}}
 		}
 
 		if len(list) == 0 {
-			@utils.EmptyCaption(env.Routes("view-user", cid, 0)) {}
+			@utils.EmptyCaption(env.Routes("view-user", 0)) {}
 		}
 	}
 }
