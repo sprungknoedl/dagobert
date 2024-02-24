@@ -11,7 +11,6 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sprungknoedl/dagobert/internal/handler"
 	"github.com/sprungknoedl/dagobert/model"
-	"github.com/sprungknoedl/dagobert/pkg/oidc"
 )
 
 type Configuration struct {
@@ -59,7 +58,7 @@ func main() {
 	// --------------------------------------
 	issuer, _ := url.Parse(cfg.Issuer)
 	clientUrl, _ := url.Parse(cfg.ClientUrl)
-	e.Use(oidc.Middleware(e, oidc.Config{
+	userCtrl := handler.NewUserCtrl(handler.OpenIDConfig{
 		SessionName:   "default",
 		ClientId:      cfg.ClientId,
 		ClientSecret:  cfg.ClientSecret,
@@ -67,7 +66,8 @@ func main() {
 		ClientUrl:     *clientUrl,
 		Scopes:        []string{"openid", "profile", "email"},
 		PostLogoutUrl: *clientUrl,
-	}))
+	})
+	e.Use(userCtrl.AuthMiddleware(e))
 
 	// --------------------------------------
 	// Reports
@@ -143,13 +143,6 @@ func main() {
 	// --------------------------------------
 	// Case Management
 	// --------------------------------------
-	// users
-	userCtrl := handler.NewUserCtrl()
-	e.GET("/users", userCtrl.ListUsers).Name = "list-users"
-	e.GET("/users/:id", userCtrl.ViewUser).Name = "view-user"
-	e.POST("/users/:id", userCtrl.SaveUser).Name = "save-user"
-	e.DELETE("/users/:id", userCtrl.DeleteUser).Name = "delete-user"
-
 	// evidence
 	evidenceCtrl := handler.NewEvidenceCtrl()
 	e.GET("/cases/:cid/evidences", evidenceCtrl.ListEvidences).Name = "list-evidences"
@@ -180,6 +173,15 @@ func main() {
 	e.GET("/cases/:cid/notes/:id", noteCtrl.ViewNote).Name = "view-note"
 	e.POST("/cases/:cid/notes/:id", noteCtrl.SaveNote).Name = "save-note"
 	e.DELETE("/cases/:cid/notes/:id", noteCtrl.DeleteNote).Name = "delete-note"
+
+	// --------------------------------------
+	// Settings
+	// --------------------------------------
+	// users
+	e.GET("/users", userCtrl.ListUsers).Name = "list-users"
+	e.GET("/users/:id", userCtrl.ViewUser).Name = "view-user"
+	e.POST("/users/:id", userCtrl.SaveUser).Name = "save-user"
+	e.DELETE("/users/:id", userCtrl.DeleteUser).Name = "delete-user"
 
 	// --------------------------------------
 	// Assets
