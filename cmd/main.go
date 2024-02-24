@@ -81,98 +81,108 @@ func main() {
 	// Home
 	// --------------------------------------
 	// cases
-	e.GET("/", handler.ListCases).Name = "list-cases"
-	e.GET("/cases/export", handler.ExportCases).Name = "export-cases"
-	e.GET("/cases/import", handler.ImportCases).Name = "import-cases"
-	e.POST("/cases/import", handler.ImportCases).Name = "import-cases"
-	e.GET("/cases/:cid/show", handler.ShowCase).Name = "show-case"
-	e.GET("/cases/:cid", handler.ViewCase).Name = "view-case"
-	e.POST("/cases/:cid", handler.SaveCase).Name = "save-case"
-	e.DELETE("/cases/:cid", handler.DeleteCase).Name = "delete-case"
+	caseCtrl := handler.NewCaseCtrl()
+	e.GET("/", caseCtrl.ListCases).Name = "list-cases"
+	e.GET("/cases/export", caseCtrl.ExportCases).Name = "export-cases"
+	e.GET("/cases/import", caseCtrl.ImportCases).Name = "import-cases"
+	e.POST("/cases/import", caseCtrl.ImportCases).Name = "import-cases"
+	e.GET("/cases/:cid/show", caseCtrl.ShowCase).Name = "show-case"
+	e.GET("/cases/:cid", caseCtrl.ViewCase).Name = "view-case"
+	e.POST("/cases/:cid", caseCtrl.SaveCase).Name = "save-case"
+	e.DELETE("/cases/:cid", caseCtrl.DeleteCase).Name = "delete-case"
 
 	// templates
-	e.GET("/cases/:cid/reports", handler.ListTemplates).Name = "choose-report"
-	e.GET("/cases/:cid/render", handler.ApplyTemplate).Name = "generate-report"
+	reportCtrl := handler.NewReportCtrl()
+	e.GET("/cases/:cid/reports", reportCtrl.ListTemplates).Name = "choose-report"
+	e.GET("/cases/:cid/render", reportCtrl.ApplyTemplate).Name = "generate-report"
 
 	// --------------------------------------
 	// Investigation
 	// --------------------------------------
 	// events
-	e.GET("/cases/:cid/events", handler.ListEvents).Name = "list-events"
-	e.GET("/cases/:cid/events/export", handler.ExportEvents).Name = "export-events"
-	e.GET("/cases/:cid/events/import", handler.ImportEvents).Name = "import-events"
-	e.POST("/cases/:cid/events/import", handler.ImportEvents).Name = "import-events"
-	e.GET("/cases/:cid/events/:id/show", handler.ShowEvent).Name = "show-event"
-	e.GET("/cases/:cid/events/:id", handler.ViewEvent).Name = "view-event"
-	e.POST("/cases/:cid/events/:id", handler.SaveEvent).Name = "save-event"
-	e.DELETE("/cases/:cid/events/:id", handler.DeleteEvent).Name = "delete-event"
+	eventCtrl := handler.NewEventCtrl()
+	e.GET("/cases/:cid/events", eventCtrl.ListEvents).Name = "list-events"
+	e.GET("/cases/:cid/events/export", eventCtrl.ExportEvents).Name = "export-events"
+	e.GET("/cases/:cid/events/import", eventCtrl.ImportEvents).Name = "import-events"
+	e.POST("/cases/:cid/events/import", eventCtrl.ImportEvents).Name = "import-events"
+	e.GET("/cases/:cid/events/:id/show", eventCtrl.ShowEvent).Name = "show-event"
+	e.GET("/cases/:cid/events/:id", eventCtrl.ViewEvent).Name = "view-event"
+	e.POST("/cases/:cid/events/:id", eventCtrl.SaveEvent).Name = "save-event"
+	e.DELETE("/cases/:cid/events/:id", eventCtrl.DeleteEvent).Name = "delete-event"
 
 	// assets
-	e.GET("/cases/:cid/assets", handler.ListAssets).Name = "list-assets"
-	e.GET("/cases/:cid/assets/export", handler.ExportAssets).Name = "export-assets"
-	e.GET("/cases/:cid/assets/import", handler.ImportAssets).Name = "import-assets"
-	e.POST("/cases/:cid/assets/import", handler.ImportAssets).Name = "import-assets"
-	e.GET("/cases/:cid/assets/:id", handler.ViewAsset).Name = "view-asset"
-	e.POST("/cases/:cid/assets/:id", handler.SaveAsset).Name = "save-asset"
-	e.DELETE("/cases/:cid/assets/:id", handler.DeleteAsset).Name = "delete-asset"
+	assetCtrl := handler.NewAssetCtrl()
+	e.GET("/cases/:cid/assets", assetCtrl.ListAssets).Name = "list-assets"
+	e.GET("/cases/:cid/assets/export", assetCtrl.ExportAssets).Name = "export-assets"
+	e.GET("/cases/:cid/assets/import", assetCtrl.ImportAssets).Name = "import-assets"
+	e.POST("/cases/:cid/assets/import", assetCtrl.ImportAssets).Name = "import-assets"
+	e.GET("/cases/:cid/assets/:id", assetCtrl.ViewAsset).Name = "view-asset"
+	e.POST("/cases/:cid/assets/:id", assetCtrl.SaveAsset).Name = "save-asset"
+	e.DELETE("/cases/:cid/assets/:id", assetCtrl.DeleteAsset).Name = "delete-asset"
 
 	// malware
-	e.GET("/cases/:cid/malware", handler.ListMalware).Name = "list-malware"
-	e.GET("/cases/:cid/malware.csv", handler.ExportMalware).Name = "export-malware"
-	e.GET("/cases/:cid/malware/import", handler.ImportMalware).Name = "import-malware"
-	e.POST("/cases/:cid/malware/import", handler.ImportMalware).Name = "import-malware"
-	e.GET("/cases/:cid/malware/:id", handler.ViewMalware).Name = "view-malware"
-	e.POST("/cases/:cid/malware/:id", handler.SaveMalware).Name = "save-malware"
-	e.DELETE("/cases/:cid/malware/:id", handler.DeleteMalware).Name = "delete-malware"
+	malwareCtrl := handler.NewMalwareCtrl()
+	e.GET("/cases/:cid/malware", malwareCtrl.ListMalware).Name = "list-malware"
+	e.GET("/cases/:cid/malware.csv", malwareCtrl.ExportMalware).Name = "export-malware"
+	e.GET("/cases/:cid/malware/import", malwareCtrl.ImportMalware).Name = "import-malware"
+	e.POST("/cases/:cid/malware/import", malwareCtrl.ImportMalware).Name = "import-malware"
+	e.GET("/cases/:cid/malware/:id", malwareCtrl.ViewMalware).Name = "view-malware"
+	e.POST("/cases/:cid/malware/:id", malwareCtrl.SaveMalware).Name = "save-malware"
+	e.DELETE("/cases/:cid/malware/:id", malwareCtrl.DeleteMalware).Name = "delete-malware"
 
 	// indicators
-	e.GET("/cases/:cid/indicators", handler.ListIndicators).Name = "list-indicators"
-	e.GET("/cases/:cid/indicators.csv", handler.ExportIndicators).Name = "export-indicators"
-	e.GET("/cases/:cid/indicators/import", handler.ImportIndicators).Name = "import-indicators"
-	e.POST("/cases/:cid/indicators/import", handler.ImportIndicators).Name = "import-indicators"
-	e.GET("/cases/:cid/indicators/:id", handler.ViewIndicator).Name = "view-indicator"
-	e.POST("/cases/:cid/indicators/:id", handler.SaveIndicator).Name = "save-indicator"
-	e.DELETE("/cases/:cid/indicators/:id", handler.DeleteIndicator).Name = "delete-indicator"
+	indicatorCtrl := handler.NewIndicatorCtrl()
+	e.GET("/cases/:cid/indicators", indicatorCtrl.ListIndicators).Name = "list-indicators"
+	e.GET("/cases/:cid/indicators.csv", indicatorCtrl.ExportIndicators).Name = "export-indicators"
+	e.GET("/cases/:cid/indicators/import", indicatorCtrl.ImportIndicators).Name = "import-indicators"
+	e.POST("/cases/:cid/indicators/import", indicatorCtrl.ImportIndicators).Name = "import-indicators"
+	e.GET("/cases/:cid/indicators/:id", indicatorCtrl.ViewIndicator).Name = "view-indicator"
+	e.POST("/cases/:cid/indicators/:id", indicatorCtrl.SaveIndicator).Name = "save-indicator"
+	e.DELETE("/cases/:cid/indicators/:id", indicatorCtrl.DeleteIndicator).Name = "delete-indicator"
 
 	// --------------------------------------
 	// Case Management
 	// --------------------------------------
 	// users
-	e.GET("/cases/:cid/users", handler.ListUsers).Name = "list-users"
-	e.GET("/cases/:cid/users/export", handler.ExportUsers).Name = "export-users"
-	e.GET("/cases/:cid/users/import", handler.ImportUsers).Name = "import-users"
-	e.POST("/cases/:cid/users/import", handler.ImportUsers).Name = "import-users"
-	e.GET("/cases/:cid/users/:id", handler.ViewUser).Name = "view-user"
-	e.POST("/cases/:cid/users/:id", handler.SaveUser).Name = "save-user"
-	e.DELETE("/cases/:cid/users/:id", handler.DeleteUser).Name = "delete-user"
+	userCtrl := handler.NewUserCtrl()
+	e.GET("/cases/:cid/users", userCtrl.ListUsers).Name = "list-users"
+	e.GET("/cases/:cid/users/export", userCtrl.ExportUsers).Name = "export-users"
+	e.GET("/cases/:cid/users/import", userCtrl.ImportUsers).Name = "import-users"
+	e.POST("/cases/:cid/users/import", userCtrl.ImportUsers).Name = "import-users"
+	e.GET("/cases/:cid/users/:id", userCtrl.ViewUser).Name = "view-user"
+	e.POST("/cases/:cid/users/:id", userCtrl.SaveUser).Name = "save-user"
+	e.DELETE("/cases/:cid/users/:id", userCtrl.DeleteUser).Name = "delete-user"
 
 	// evidence
-	e.GET("/cases/:cid/evidences", handler.ListEvidences).Name = "list-evidences"
-	e.GET("/cases/:cid/evidences/export", handler.ExportEvidences).Name = "export-evidences"
-	e.GET("/cases/:cid/evidences/import", handler.ImportEvidences).Name = "import-evidences"
-	e.POST("/cases/:cid/evidences/import", handler.ImportEvidences).Name = "import-evidences"
-	e.GET("/cases/:cid/evidences/:id", handler.ViewEvidence).Name = "view-evidence"
-	e.GET("/cases/:cid/evidences/:id/download", handler.DownloadEvidence).Name = "download-evidence"
-	e.POST("/cases/:cid/evidences/:id", handler.SaveEvidence).Name = "save-evidence"
-	e.DELETE("/cases/:cid/evidences/:id", handler.DeleteEvidence).Name = "delete-evidence"
+	evidenceCtrl := handler.NewEvidenceCtrl()
+	e.GET("/cases/:cid/evidences", evidenceCtrl.ListEvidences).Name = "list-evidences"
+	e.GET("/cases/:cid/evidences/export", evidenceCtrl.ExportEvidences).Name = "export-evidences"
+	e.GET("/cases/:cid/evidences/import", evidenceCtrl.ImportEvidences).Name = "import-evidences"
+	e.POST("/cases/:cid/evidences/import", evidenceCtrl.ImportEvidences).Name = "import-evidences"
+	e.GET("/cases/:cid/evidences/:id", evidenceCtrl.ViewEvidence).Name = "view-evidence"
+	e.GET("/cases/:cid/evidences/:id/download", evidenceCtrl.DownloadEvidence).Name = "download-evidence"
+	e.POST("/cases/:cid/evidences/:id", evidenceCtrl.SaveEvidence).Name = "save-evidence"
+	e.DELETE("/cases/:cid/evidences/:id", evidenceCtrl.DeleteEvidence).Name = "delete-evidence"
 
 	// tasks
-	e.GET("/cases/:cid/tasks", handler.ListTasks).Name = "list-tasks"
-	e.GET("/cases/:cid/tasks/export", handler.ExportTasks).Name = "export-tasks"
-	e.GET("/cases/:cid/tasks/import", handler.ImportTasks).Name = "import-tasks"
-	e.POST("/cases/:cid/tasks/import", handler.ImportTasks).Name = "import-tasks"
-	e.GET("/cases/:cid/tasks/:id", handler.ViewTask).Name = "view-task"
-	e.POST("/cases/:cid/tasks/:id", handler.SaveTask).Name = "save-task"
-	e.DELETE("/cases/:cid/tasks/:id", handler.DeleteTask).Name = "delete-task"
+	taskCtrl := handler.NewTaskCtrl()
+	e.GET("/cases/:cid/tasks", taskCtrl.ListTasks).Name = "list-tasks"
+	e.GET("/cases/:cid/tasks/export", taskCtrl.ExportTasks).Name = "export-tasks"
+	e.GET("/cases/:cid/tasks/import", taskCtrl.ImportTasks).Name = "import-tasks"
+	e.POST("/cases/:cid/tasks/import", taskCtrl.ImportTasks).Name = "import-tasks"
+	e.GET("/cases/:cid/tasks/:id", taskCtrl.ViewTask).Name = "view-task"
+	e.POST("/cases/:cid/tasks/:id", taskCtrl.SaveTask).Name = "save-task"
+	e.DELETE("/cases/:cid/tasks/:id", taskCtrl.DeleteTask).Name = "delete-task"
 
 	// notes
-	e.GET("/cases/:cid/notes", handler.ListNotes).Name = "list-notes"
-	e.GET("/cases/:cid/notes/export", handler.ExportNotes).Name = "export-notes"
-	e.GET("/cases/:cid/notes/import", handler.ImportNotes).Name = "import-notes"
-	e.POST("/cases/:cid/notes/import", handler.ImportNotes).Name = "import-notes"
-	e.GET("/cases/:cid/notes/:id", handler.ViewNote).Name = "view-note"
-	e.POST("/cases/:cid/notes/:id", handler.SaveNote).Name = "save-note"
-	e.DELETE("/cases/:cid/notes/:id", handler.DeleteNote).Name = "delete-note"
+	noteCtrl := handler.NewNoteCtrl()
+	e.GET("/cases/:cid/notes", noteCtrl.ListNotes).Name = "list-notes"
+	e.GET("/cases/:cid/notes/export", noteCtrl.ExportNotes).Name = "export-notes"
+	e.GET("/cases/:cid/notes/import", noteCtrl.ImportNotes).Name = "import-notes"
+	e.POST("/cases/:cid/notes/import", noteCtrl.ImportNotes).Name = "import-notes"
+	e.GET("/cases/:cid/notes/:id", noteCtrl.ViewNote).Name = "view-note"
+	e.POST("/cases/:cid/notes/:id", noteCtrl.SaveNote).Name = "save-note"
+	e.DELETE("/cases/:cid/notes/:id", noteCtrl.DeleteNote).Name = "delete-note"
 
 	// --------------------------------------
 	// Assets

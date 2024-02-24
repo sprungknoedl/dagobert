@@ -13,7 +13,11 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-func ListUsers(c echo.Context) error {
+type UserCtrl struct{}
+
+func NewUserCtrl() *UserCtrl { return &UserCtrl{} }
+
+func (ctrl UserCtrl) ListUsers(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -29,7 +33,7 @@ func ListUsers(c echo.Context) error {
 	return render(c, templ.UserList(ctx(c), cid, list))
 }
 
-func ExportUsers(c echo.Context) error {
+func (ctrl UserCtrl) ExportUsers(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -53,7 +57,7 @@ func ExportUsers(c echo.Context) error {
 	return nil
 }
 
-func ImportUsers(c echo.Context) error {
+func (ctrl UserCtrl) ImportUsers(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -83,7 +87,7 @@ func ImportUsers(c echo.Context) error {
 	})
 }
 
-func ViewUser(c echo.Context) error {
+func (ctrl UserCtrl) ViewUser(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid user id")
@@ -114,7 +118,7 @@ func ViewUser(c echo.Context) error {
 	}, valid.Result{}))
 }
 
-func SaveUser(c echo.Context) error {
+func (ctrl UserCtrl) SaveUser(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid user id")
@@ -168,7 +172,7 @@ func SaveUser(c echo.Context) error {
 	return refresh(c)
 }
 
-func DeleteUser(c echo.Context) error {
+func (ctrl UserCtrl) DeleteUser(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid User id")

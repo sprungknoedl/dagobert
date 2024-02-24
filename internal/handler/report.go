@@ -18,6 +18,10 @@ import (
 
 var templates = map[string]doct.Template{}
 
+type ReportCtrl struct{}
+
+func NewReportCtrl() *ReportCtrl { return &ReportCtrl{} }
+
 func LoadTemplates(root string) error {
 	return filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		switch filepath.Ext(path) {
@@ -41,7 +45,7 @@ func LoadTemplates(root string) error {
 	})
 }
 
-func ListTemplates(c echo.Context) error {
+func (ctrl ReportCtrl) ListTemplates(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -55,7 +59,7 @@ func ListTemplates(c echo.Context) error {
 	return render(c, templ.ReportList(ctx(c), cid, list))
 }
 
-func ApplyTemplate(c echo.Context) error {
+func (ctrl ReportCtrl) ApplyTemplate(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")

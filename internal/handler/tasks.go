@@ -13,7 +13,11 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-func ListTasks(c echo.Context) error {
+type TaskCtrl struct{}
+
+func NewTaskCtrl() *TaskCtrl { return &TaskCtrl{} }
+
+func (ctrl TaskCtrl) ListTasks(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -29,7 +33,7 @@ func ListTasks(c echo.Context) error {
 	return render(c, templ.TaskList(ctx(c), cid, list))
 }
 
-func ExportTasks(c echo.Context) error {
+func (ctrl TaskCtrl) ExportTasks(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -53,7 +57,7 @@ func ExportTasks(c echo.Context) error {
 	return nil
 }
 
-func ImportTasks(c echo.Context) error {
+func (ctrl TaskCtrl) ImportTasks(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -92,7 +96,7 @@ func ImportTasks(c echo.Context) error {
 	})
 }
 
-func ViewTask(c echo.Context) error {
+func (ctrl TaskCtrl) ViewTask(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid task id")
@@ -122,7 +126,7 @@ func ViewTask(c echo.Context) error {
 	}, valid.Result{}))
 }
 
-func SaveTask(c echo.Context) error {
+func (ctrl TaskCtrl) SaveTask(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid task id")
@@ -180,7 +184,7 @@ func SaveTask(c echo.Context) error {
 	return refresh(c)
 }
 
-func DeleteTask(c echo.Context) error {
+func (ctrl TaskCtrl) DeleteTask(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid task id")

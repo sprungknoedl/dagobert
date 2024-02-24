@@ -18,7 +18,11 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-func ListEvidences(c echo.Context) error {
+type EvidenceCtrl struct{}
+
+func NewEvidenceCtrl() *EvidenceCtrl { return &EvidenceCtrl{} }
+
+func (ctrl EvidenceCtrl) ListEvidences(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -34,7 +38,7 @@ func ListEvidences(c echo.Context) error {
 	return render(c, templ.EvidenceList(ctx(c), cid, list))
 }
 
-func ExportEvidences(c echo.Context) error {
+func (ctrl EvidenceCtrl) ExportEvidences(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -58,7 +62,7 @@ func ExportEvidences(c echo.Context) error {
 	return nil
 }
 
-func ImportEvidences(c echo.Context) error {
+func (ctrl EvidenceCtrl) ImportEvidences(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -93,7 +97,7 @@ func ImportEvidences(c echo.Context) error {
 	})
 }
 
-func ViewEvidence(c echo.Context) error {
+func (ctrl EvidenceCtrl) ViewEvidence(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")
@@ -121,7 +125,7 @@ func ViewEvidence(c echo.Context) error {
 	}, valid.Result{}))
 }
 
-func DownloadEvidence(c echo.Context) error {
+func (ctrl EvidenceCtrl) DownloadEvidence(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")
@@ -142,7 +146,7 @@ func DownloadEvidence(c echo.Context) error {
 	return c.File(obj.Location)
 }
 
-func SaveEvidence(c echo.Context) error {
+func (ctrl EvidenceCtrl) SaveEvidence(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")
@@ -250,7 +254,7 @@ func SaveEvidence(c echo.Context) error {
 	return refresh(c)
 }
 
-func DeleteEvidence(c echo.Context) error {
+func (ctrl EvidenceCtrl) DeleteEvidence(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")

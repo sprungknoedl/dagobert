@@ -13,7 +13,11 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-func ListCases(c echo.Context) error {
+type CaseCtrl struct{}
+
+func NewCaseCtrl() *CaseCtrl { return &CaseCtrl{} }
+
+func (ctrl CaseCtrl) ListCases(c echo.Context) error {
 	sort := c.QueryParam("sort")
 	search := c.QueryParam("search")
 	list, err := model.FindCases(search, sort)
@@ -24,7 +28,7 @@ func ListCases(c echo.Context) error {
 	return render(c, templ.CaseList(ctx(c), list))
 }
 
-func ExportCases(c echo.Context) error {
+func (ctrl CaseCtrl) ExportCases(c echo.Context) error {
 	list, err := model.ListCases()
 	if err != nil {
 		return err
@@ -51,7 +55,7 @@ func ExportCases(c echo.Context) error {
 	return nil
 }
 
-func ImportCases(c echo.Context) error {
+func (ctrl CaseCtrl) ImportCases(c echo.Context) error {
 	uri := c.Echo().Reverse("import-cases")
 	now := time.Now()
 	usr := getUser(c)
@@ -86,7 +90,7 @@ func ImportCases(c echo.Context) error {
 	})
 }
 
-func ShowCase(c echo.Context) error {
+func (ctrl CaseCtrl) ShowCase(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -100,7 +104,7 @@ func ShowCase(c echo.Context) error {
 	return render(c, templ.CaseOverview(ctx(c), obj))
 }
 
-func ViewCase(c echo.Context) error {
+func (ctrl CaseCtrl) ViewCase(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -126,7 +130,7 @@ func ViewCase(c echo.Context) error {
 	}, vr))
 }
 
-func SaveCase(c echo.Context) error {
+func (ctrl CaseCtrl) SaveCase(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -174,7 +178,7 @@ func SaveCase(c echo.Context) error {
 	return refresh(c)
 }
 
-func DeleteCase(c echo.Context) error {
+func (ctrl CaseCtrl) DeleteCase(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")

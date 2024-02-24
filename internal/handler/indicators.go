@@ -13,7 +13,11 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-func ListIndicators(c echo.Context) error {
+type IndicatorCtrl struct{}
+
+func NewIndicatorCtrl() *IndicatorCtrl { return &IndicatorCtrl{} }
+
+func (ctrl IndicatorCtrl) ListIndicators(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -29,7 +33,7 @@ func ListIndicators(c echo.Context) error {
 	return render(c, templ.IndicatorList(ctx(c), cid, list))
 }
 
-func ExportIndicators(c echo.Context) error {
+func (ctrl IndicatorCtrl) ExportIndicators(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -53,7 +57,7 @@ func ExportIndicators(c echo.Context) error {
 	return nil
 }
 
-func ImportIndicators(c echo.Context) error {
+func (ctrl IndicatorCtrl) ImportIndicators(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -82,7 +86,7 @@ func ImportIndicators(c echo.Context) error {
 	})
 }
 
-func ViewIndicator(c echo.Context) error {
+func (ctrl IndicatorCtrl) ViewIndicator(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid indicator id")
@@ -112,7 +116,7 @@ func ViewIndicator(c echo.Context) error {
 	}, valid.Result{}))
 }
 
-func SaveIndicator(c echo.Context) error {
+func (ctrl IndicatorCtrl) SaveIndicator(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid indicator id")
@@ -165,7 +169,7 @@ func SaveIndicator(c echo.Context) error {
 	return refresh(c)
 }
 
-func DeleteIndicator(c echo.Context) error {
+func (ctrl IndicatorCtrl) DeleteIndicator(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid indicator id")

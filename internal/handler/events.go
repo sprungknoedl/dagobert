@@ -14,7 +14,11 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-func ListEvents(c echo.Context) error {
+type EventCtrl struct{}
+
+func NewEventCtrl() *EventCtrl { return &EventCtrl{} }
+
+func (ctrl EventCtrl) ListEvents(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -35,7 +39,7 @@ func ListEvents(c echo.Context) error {
 	return render(c, templ.EventList(ctx(c), cid, list, indicators))
 }
 
-func ExportEvents(c echo.Context) error {
+func (ctrl EventCtrl) ExportEvents(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -68,7 +72,7 @@ func ExportEvents(c echo.Context) error {
 	return nil
 }
 
-func ImportEvents(c echo.Context) error {
+func (ctrl EventCtrl) ImportEvents(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -110,7 +114,7 @@ func ImportEvents(c echo.Context) error {
 	})
 }
 
-func ShowEvent(c echo.Context) error {
+func (ctrl EventCtrl) ShowEvent(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")
@@ -163,7 +167,7 @@ func ShowEvent(c echo.Context) error {
 	return render(c, templ.EventDetailsView(ctx(c), obj, relatedAssets, relatedIndicators))
 }
 
-func ViewEvent(c echo.Context) error {
+func (ctrl EventCtrl) ViewEvent(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")
@@ -201,7 +205,7 @@ func ViewEvent(c echo.Context) error {
 	}, assets, valid.Result{}))
 }
 
-func SaveEvent(c echo.Context) error {
+func (ctrl EventCtrl) SaveEvent(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")
@@ -267,7 +271,7 @@ func SaveEvent(c echo.Context) error {
 	return refresh(c)
 }
 
-func DeleteEvent(c echo.Context) error {
+func (ctrl EventCtrl) DeleteEvent(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid asset id")

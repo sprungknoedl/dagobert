@@ -14,7 +14,11 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-func ListNotes(c echo.Context) error {
+type NoteCtrl struct{}
+
+func NewNoteCtrl() *NoteCtrl { return &NoteCtrl{} }
+
+func (ctrl NoteCtrl) ListNotes(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -30,7 +34,7 @@ func ListNotes(c echo.Context) error {
 	return render(c, templ.NoteList(ctx(c), cid, list))
 }
 
-func ExportNotes(c echo.Context) error {
+func (ctrl NoteCtrl) ExportNotes(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -54,7 +58,7 @@ func ExportNotes(c echo.Context) error {
 	return nil
 }
 
-func ImportNotes(c echo.Context) error {
+func (ctrl NoteCtrl) ImportNotes(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -81,7 +85,7 @@ func ImportNotes(c echo.Context) error {
 	})
 }
 
-func ViewNote(c echo.Context) error {
+func (ctrl NoteCtrl) ViewNote(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid note id")
@@ -109,7 +113,7 @@ func ViewNote(c echo.Context) error {
 	}, valid.Result{}))
 }
 
-func SaveNote(c echo.Context) error {
+func (ctrl NoteCtrl) SaveNote(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid note id")
@@ -160,7 +164,7 @@ func SaveNote(c echo.Context) error {
 	return refresh(c)
 }
 
-func DeleteNote(c echo.Context) error {
+func (ctrl NoteCtrl) DeleteNote(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid note id")
