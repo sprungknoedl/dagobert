@@ -179,9 +179,6 @@ func main() {
 	// --------------------------------------
 	// users
 	e.GET("/users", userCtrl.ListUsers).Name = "list-users"
-	e.GET("/users/:id", userCtrl.ViewUser).Name = "view-user"
-	e.POST("/users/:id", userCtrl.SaveUser).Name = "save-user"
-	e.DELETE("/users/:id", userCtrl.DeleteUser).Name = "delete-user"
 
 	// --------------------------------------
 	// Assets

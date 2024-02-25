@@ -498,33 +498,18 @@ func FindUsers(search string, sort string) ([]User, error) {
 	var list []User
 	query := db.Where(db.
 		Where("instr(name, ?) > 0", search).
-		Or("instr(company, ?) > 0", search).
-		Or("instr(role, ?) > 0", search).
-		Or("instr(email, ?) > 0", search).
-		Or("instr(phone, ?) > 0", search).
-		Or("instr(notes, ?) > 0", search))
+		Or("instr(upn, ?) > 0", search).
+		Or("instr(email, ?) > 0", search))
 
 	switch sort {
-	case "notes":
-		query = query.Order("notes asc, name asc")
-	case "-notes":
-		query = query.Order("notes desc, name asc")
-	case "phone":
-		query = query.Order("phone asc, name asc")
-	case "-phone":
-		query = query.Order("phone desc, name asc")
 	case "email":
 		query = query.Order("email asc, name asc")
 	case "-email":
 		query = query.Order("email desc, name asc")
-	case "role":
-		query = query.Order("role asc, name asc")
-	case "-role":
-		query = query.Order("role desc, name asc")
-	case "company":
-		query = query.Order("company asc, name asc")
-	case "-company":
-		query = query.Order("company desc, name asc")
+	case "upn":
+		query = query.Order("upn asc, name asc")
+	case "-upn":
+		query = query.Order("upn desc, name asc")
 	case "-name":
 		query = query.Order("name desc")
 	default: // case "name"
@@ -543,18 +528,15 @@ func GetUser(id int64) (User, error) {
 }
 
 func SaveUser(x User) (User, error) {
-	x.CRC = HashFields(
-		x.CaseID,
-		x.Name,
-		x.Company,
-		x.Role,
-		x.Email,
-		x.Phone,
-		x.Notes,
-	)
-
 	result := db.
-		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "crc"}}, DoNothing: true}).
+		Clauses(clause.OnConflict{
+			Columns: []clause.Column{{Name: "id"}},
+			DoUpdates: clause.Set{
+				clause.Assignment{Column: clause.Column{Name: "name"}, Value: x.Name},
+				clause.Assignment{Column: clause.Column{Name: "upn"}, Value: x.UPN},
+				clause.Assignment{Column: clause.Column{Name: "email"}, Value: x.Email},
+			},
+		}).
 		Save(&x)
 	return x, result.Error
 }

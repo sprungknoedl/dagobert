@@ -30,7 +30,6 @@ type Case struct {
 	Malware    []Malware
 	Notes      []Note
 	Tasks      []Task
-	Users      []User
 }
 
 var EvidenceTypes = []string{"File", "Logs", "Artifacts Collection", "System Image", "Memory Dump", "Other"}
@@ -202,21 +201,8 @@ type Task struct {
 }
 
 type User struct {
-	ID  int64  `gorm:"primaryKey"`
-	CRC string `gorm:"unique"`
-
-	Name    string
-	Company string
-	Role    string
-	Email   string
-	Phone   string
-	Notes   string
-
-	CaseID int64
-	Case   Case
-
-	DateAdded    time.Time
-	DateModified time.Time
-	UserAdded    string
-	UserModified string
+	ID    string `gorm:"primaryKey"`
+	Name  string
+	UPN   string
+	Email string
 }

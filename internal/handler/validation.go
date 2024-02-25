@@ -83,9 +83,3 @@ func ValidateTask(dto templ.TaskDTO) valid.Result {
 		{Name: "DateDue", Message: "Invalid format, expected e.g. '2006-01-02'.", Invalid: dto.DateDue != "" && terr != nil},
 	})
 }
-
-func ValidateUser(dto templ.UserDTO) valid.Result {
-	return valid.Check([]valid.Condition{
-		{Name: "Name", Missing: dto.Name == ""},
-	})
-}

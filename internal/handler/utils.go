@@ -46,8 +46,8 @@ func refresh(c echo.Context) error {
 func getUser(c echo.Context) string {
 	sess, _ := session.Get(SessionName, c)
 	claims, _ := sess.Values["oidcClaims"].(map[string]interface{})
-	if email, ok := claims["email"].(string); ok {
-		return email
+	if sub, ok := claims["sub"].(string); ok {
+		return sub
 	}
 
 	return "unknown"
