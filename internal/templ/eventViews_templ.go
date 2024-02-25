@@ -1524,7 +1524,7 @@ func EventList(env utils.Env, cid int64, list []model.Event, indicators []model.
 								defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 							}
 							if obj.KeyEvent {
-								templ_7745c5c3_Err = icons.SolidStar(icons.Inline+" text-yellow-500").Render(ctx, templ_7745c5c3_Buffer)
+								templ_7745c5c3_Err = icons.SolidStar(icons.Inline+" m-2 text-yellow-500").Render(ctx, templ_7745c5c3_Buffer)
 								if templ_7745c5c3_Err != nil {
 									return templ_7745c5c3_Err
 								}

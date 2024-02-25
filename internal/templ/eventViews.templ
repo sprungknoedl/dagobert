@@ -209,7 +209,7 @@ templ EventList(env utils.Env, cid int64, list []model.Event, indicators []model
 				@utils.TD() { @highlightIndicators(obj.Event, indicators) }
 				@utils.DefaultTableButtons(env.Routes("view-event", cid, obj.ID), env.Routes("delete-event", cid, obj.ID)) {
 					if obj.KeyEvent {
-						@icons.SolidStar(icons.Inline + " text-yellow-500")
+						@icons.SolidStar(icons.Inline + " m-2 text-yellow-500")
 					}
 				}
 			}}
