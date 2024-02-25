@@ -93,8 +93,8 @@ func main() {
 
 	// templates
 	reportCtrl := handler.NewReportCtrl()
-	e.GET("/cases/:cid/reports", reportCtrl.ListTemplates).Name = "choose-report"
-	e.GET("/cases/:cid/render", reportCtrl.ApplyTemplate).Name = "generate-report"
+	e.GET("/cases/:cid/reports", reportCtrl.List).Name = "choose-report"
+	e.GET("/cases/:cid/render", reportCtrl.Generate).Name = "generate-report"
 
 	// --------------------------------------
 	// Investigation

@@ -159,3 +159,13 @@ func apply[A any, B any](in []A, fn func(A) B) []B {
 	}
 	return out
 }
+
+func apply2[A any, B any, C comparable](in map[C]A, fn func(A) B) []B {
+	out := make([]B, len(in))
+	i := 0
+	for _, a := range in {
+		out[i] = fn(a)
+		i = i + 1
+	}
+	return out
+}

@@ -3,27 +3,23 @@ package doct
 import (
 	"archive/zip"
 	"bytes"
-	"html/template"
 	"io"
 	"os"
 	"path/filepath"
+	"text/template"
 
 	"go.arsenm.dev/pcre"
 )
 
-const odtMainFile = "content.xml"
+const odfMainFile = "content.xml"
 
-type OdtTemplate struct {
+type OdfTemplate struct {
 	name string
 	src  io.ReaderAt
 	len  int64
 }
 
-type OdpTemplate struct{}
-
-type OdsTemplate struct{}
-
-func LoadOdtTemplate(path string) (Template, error) {
+func LoadOdfTemplate(path string) (Template, error) {
 	buf := new(bytes.Buffer)
 
 	stat, err := os.Stat(path)
@@ -37,9 +33,9 @@ func LoadOdtTemplate(path string) (Template, error) {
 	}
 
 	err = processZip(fh, stat.Size(), buf, func(header *zip.FileHeader, r io.Reader, w io.Writer) error {
-		if header.Name == odtMainFile {
+		if header.Name == odfMainFile {
 			// preprocess xml to transform it into a valid text/template AND docx document
-			err = preprocessOdtContent(w, r)
+			err = preprocessOdfContent(w, r)
 			return err
 		} else {
 			// just copy all other files
@@ -51,16 +47,16 @@ func LoadOdtTemplate(path string) (Template, error) {
 		return nil, err
 	}
 
-	return OdtTemplate{
+	return OdfTemplate{
 		name: filepath.Base(path),
 		src:  bytes.NewReader(buf.Bytes()),
 		len:  int64(buf.Len()),
 	}, nil
 }
 
-func preprocessOdtContent(w io.Writer, r io.Reader) error {
-	var pRegexp = pcre.MustCompile(`<text:p[^>]*?>{{p (.+?)}}<\/text:p>`)
-	var trRegexp = pcre.MustCompile(`<table:table-row[^>]*>(?:(?!<table:table-row).)*{{tr (.+?)}}.*?<\/table:table-row>`)
+func preprocessOdfContent(w io.Writer, r io.Reader) error {
+	var pRegexp = pcre.MustCompile(`<text:p[^>]*?>(?:(?!<text:p[ >]).)*{{p (.+?)}}.*?<\/text:p>`)
+	var trRegexp = pcre.MustCompile(`<table:table-row[^>]*>(?:(?!<table:table-row[ >]).)*{{tr (.+?)}}.*?<\/table:table-row>`)
 	var expRegexp = pcre.MustCompile(`{{([^}]+)}}`)
 
 	// replace {<something>{ by {{   ( works with {{ }} {% and %} {# and #})
@@ -109,22 +105,22 @@ func preprocessOdtContent(w io.Writer, r io.Reader) error {
 	return err
 }
 
-func (tpl OdtTemplate) Name() string {
+func (tpl OdfTemplate) Name() string {
 	return tpl.name
 }
 
-func (tpl OdtTemplate) Type() string {
+func (tpl OdfTemplate) Type() string {
 	return "application/vnd.oasis.opendocument.text"
 }
 
-func (tpl OdtTemplate) Ext() string {
-	return "odt"
+func (tpl OdfTemplate) Ext() string {
+	return filepath.Ext(tpl.name)
 }
 
-func (tpl OdtTemplate) Render(w io.Writer, data interface{}) error {
-	err := processZip(tpl.src, tpl.len, w, func(header *zip.FileHeader, r2 io.Reader, w2 io.Writer) error {
-		if header.Name == odtMainFile {
-			b, err := io.ReadAll(r2)
+func (tpl OdfTemplate) Render(dst io.Writer, data interface{}) error {
+	err := processZip(tpl.src, tpl.len, dst, func(header *zip.FileHeader, r io.Reader, w io.Writer) error {
+		if header.Name == odfMainFile {
+			b, err := io.ReadAll(r)
 			if err != nil {
 				return err
 			}
@@ -135,11 +131,11 @@ func (tpl OdtTemplate) Render(w io.Writer, data interface{}) error {
 				return err
 			}
 
-			err = tpl.Execute(w2, data)
+			err = tpl.Execute(w, data)
 			return err
 		} else {
 			// just copy all other files
-			_, err := io.Copy(w2, r2)
+			_, err := io.Copy(w, r)
 			return err
 		}
 	})

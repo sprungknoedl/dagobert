@@ -25,8 +25,12 @@ func NewReportCtrl() *ReportCtrl { return &ReportCtrl{} }
 func LoadTemplates(root string) error {
 	return filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 		switch filepath.Ext(path) {
+		case ".ods":
+			fallthrough
+		case ".odp":
+			fallthrough
 		case ".odt":
-			tpl, err := doct.LoadOdtTemplate(path)
+			tpl, err := doct.LoadOdfTemplate(path)
 			if err != nil {
 				return err
 			}
@@ -34,7 +38,7 @@ func LoadTemplates(root string) error {
 			templates[tpl.Name()] = tpl
 
 		case ".docx":
-			tpl, err := doct.LoadDocxTemplate(path)
+			tpl, err := doct.LoadOxmlTemplate(path)
 			if err != nil {
 				return err
 			}
@@ -45,21 +49,17 @@ func LoadTemplates(root string) error {
 	})
 }
 
-func (ctrl ReportCtrl) ListTemplates(c echo.Context) error {
+func (ctrl ReportCtrl) List(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	list := []string{}
-	for _, value := range templates {
-		list = append(list, value.Name())
-	}
-
+	list := apply2(templates, func(x doct.Template) string { return x.Name() })
 	return render(c, templ.ReportList(ctx(c), cid, list))
 }
 
-func (ctrl ReportCtrl) ApplyTemplate(c echo.Context) error {
+func (ctrl ReportCtrl) Generate(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -85,7 +85,7 @@ func (ctrl ReportCtrl) ApplyTemplate(c echo.Context) error {
 		return err
 	}
 
-	filename := fmt.Sprintf("%s - %s.%s", time.Now().Format("20060102"), obj.Name, tpl.Ext())
+	filename := fmt.Sprintf("%s - %s%s", time.Now().Format("20060102"), obj.Name, tpl.Ext())
 	c.Response().Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	c.Response().Header().Set("Content-Type", tpl.Type())
 	c.Response().Header().Set("Content-Length", strconv.Itoa(buf.Len()))

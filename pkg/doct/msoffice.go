@@ -3,29 +3,24 @@ package doct
 import (
 	"archive/zip"
 	"bytes"
-	"html/template"
 	"io"
 	"os"
 	"path/filepath"
+	"text/template"
 
 	"go.arsenm.dev/pcre"
 )
 
-const docxMainFile = "document.xml"
+const oxmlMainFile = "word/document.xml"
 
-type DocxTemplate struct {
+type OxmlTemplate struct {
 	name string
 	src  io.ReaderAt
 	len  int64
 }
 
-type PpptTemplate struct{}
-
-type XlsxTemplate struct{}
-
-func LoadDocxTemplate(path string) (Template, error) {
+func LoadOxmlTemplate(path string) (Template, error) {
 	buf := new(bytes.Buffer)
-
 	stat, err := os.Stat(path)
 	if err != nil {
 		return nil, err
@@ -37,9 +32,9 @@ func LoadDocxTemplate(path string) (Template, error) {
 	}
 
 	err = processZip(fh, stat.Size(), buf, func(header *zip.FileHeader, r io.Reader, w io.Writer) error {
-		if header.Name == docxMainFile {
+		if header.Name == oxmlMainFile {
 			// preprocess xml to transform it into a valid text/template AND docx document
-			err = preprocessDocxContent(w, r)
+			err = preprocessOxmlContent(w, r)
 			return err
 		} else {
 			// just copy all other files
@@ -51,16 +46,16 @@ func LoadDocxTemplate(path string) (Template, error) {
 		return nil, err
 	}
 
-	return DocxTemplate{
+	return OxmlTemplate{
 		name: filepath.Base(path),
 		src:  bytes.NewReader(buf.Bytes()),
 		len:  int64(buf.Len()),
 	}, nil
 }
 
-func preprocessDocxContent(w io.Writer, r io.Reader) error {
-	var pRegexp = pcre.MustCompile(`<w:p[^>]*?>{{p (.+?)}}<\/w:p>`)
-	var trRegexp = pcre.MustCompile(`<w:tr[^>]*>(?:(?!<table:table-row).)*{{tr (.+?)}}.*?<\/w:tr>`)
+func preprocessOxmlContent(w io.Writer, r io.Reader) error {
+	var pRegexp = pcre.MustCompile(`<w:p[^>]*?>(?:(?!<w:p[ >]).)*{{p (.+?)}}.*?<\/w:p>`)
+	var trRegexp = pcre.MustCompile(`<w:tr[^>]*>(?:(?!<w:tr[ >]).)*{{tr (.+?)}}.*?<\/w:tr>`)
 	var expRegexp = pcre.MustCompile(`{{([^}]+)}}`)
 
 	// replace {<something>{ by {{   ( works with {{ }} {% and %} {# and #})
@@ -109,22 +104,22 @@ func preprocessDocxContent(w io.Writer, r io.Reader) error {
 	return err
 }
 
-func (tpl DocxTemplate) Name() string {
+func (tpl OxmlTemplate) Name() string {
 	return tpl.name
 }
 
-func (tpl DocxTemplate) Type() string {
+func (tpl OxmlTemplate) Type() string {
 	return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 }
 
-func (tpl DocxTemplate) Ext() string {
-	return "docx"
+func (tpl OxmlTemplate) Ext() string {
+	return filepath.Ext(tpl.name)
 }
 
-func (tpl DocxTemplate) Render(w io.Writer, data interface{}) error {
-	err := processZip(tpl.src, tpl.len, w, func(header *zip.FileHeader, r2 io.Reader, w2 io.Writer) error {
-		if header.Name == "document.xml" {
-			b, err := io.ReadAll(r2)
+func (tpl OxmlTemplate) Render(dst io.Writer, data interface{}) error {
+	err := processZip(tpl.src, tpl.len, dst, func(header *zip.FileHeader, r io.Reader, w io.Writer) error {
+		if header.Name == oxmlMainFile {
+			b, err := io.ReadAll(r)
 			if err != nil {
 				return err
 			}
@@ -135,11 +130,11 @@ func (tpl DocxTemplate) Render(w io.Writer, data interface{}) error {
 				return err
 			}
 
-			err = tpl.Execute(w2, data)
+			err = tpl.Execute(w, data)
 			return err
 		} else {
 			// just copy all other files
-			_, err := io.Copy(w2, r2)
+			_, err := io.Copy(w, r)
 			return err
 		}
 	})
