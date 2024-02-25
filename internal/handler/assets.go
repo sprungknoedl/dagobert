@@ -17,7 +17,7 @@ type AssetCtrl struct{}
 
 func NewAssetCtrl() *AssetCtrl { return &AssetCtrl{} }
 
-func (ctrl AssetCtrl) ListAssets(c echo.Context) error {
+func (ctrl AssetCtrl) List(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -33,7 +33,7 @@ func (ctrl AssetCtrl) ListAssets(c echo.Context) error {
 	return render(c, templ.AssetList(ctx(c), cid, list))
 }
 
-func (ctrl AssetCtrl) ExportAssets(c echo.Context) error {
+func (ctrl AssetCtrl) Export(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -57,7 +57,7 @@ func (ctrl AssetCtrl) ExportAssets(c echo.Context) error {
 	return nil
 }
 
-func (ctrl AssetCtrl) ImportAssets(c echo.Context) error {
+func (ctrl AssetCtrl) Import(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -92,7 +92,7 @@ func (ctrl AssetCtrl) ImportAssets(c echo.Context) error {
 	})
 }
 
-func (ctrl AssetCtrl) ViewAsset(c echo.Context) error {
+func (ctrl AssetCtrl) Edit(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid asset id")
@@ -123,7 +123,7 @@ func (ctrl AssetCtrl) ViewAsset(c echo.Context) error {
 	}, valid.Result{}))
 }
 
-func (ctrl AssetCtrl) SaveAsset(c echo.Context) error {
+func (ctrl AssetCtrl) Save(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid asset id")
@@ -177,7 +177,7 @@ func (ctrl AssetCtrl) SaveAsset(c echo.Context) error {
 	return refresh(c)
 }
 
-func (ctrl AssetCtrl) DeleteAsset(c echo.Context) error {
+func (ctrl AssetCtrl) Delete(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid asset id")

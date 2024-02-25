@@ -18,7 +18,7 @@ type EventCtrl struct{}
 
 func NewEventCtrl() *EventCtrl { return &EventCtrl{} }
 
-func (ctrl EventCtrl) ListEvents(c echo.Context) error {
+func (ctrl EventCtrl) List(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -39,7 +39,7 @@ func (ctrl EventCtrl) ListEvents(c echo.Context) error {
 	return render(c, templ.EventList(ctx(c), cid, list, indicators))
 }
 
-func (ctrl EventCtrl) ExportEvents(c echo.Context) error {
+func (ctrl EventCtrl) Export(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -72,7 +72,7 @@ func (ctrl EventCtrl) ExportEvents(c echo.Context) error {
 	return nil
 }
 
-func (ctrl EventCtrl) ImportEvents(c echo.Context) error {
+func (ctrl EventCtrl) Import(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -114,7 +114,7 @@ func (ctrl EventCtrl) ImportEvents(c echo.Context) error {
 	})
 }
 
-func (ctrl EventCtrl) ShowEvent(c echo.Context) error {
+func (ctrl EventCtrl) Show(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")
@@ -167,7 +167,7 @@ func (ctrl EventCtrl) ShowEvent(c echo.Context) error {
 	return render(c, templ.EventDetailsView(ctx(c), obj, relatedAssets, relatedIndicators))
 }
 
-func (ctrl EventCtrl) ViewEvent(c echo.Context) error {
+func (ctrl EventCtrl) Edit(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")
@@ -186,11 +186,12 @@ func (ctrl EventCtrl) ViewEvent(c echo.Context) error {
 		}
 	}
 
-	assets, err := listAssets(cid)
+	assets, err := model.ListAssets(cid)
 	if err != nil {
 		return err
 	}
 
+	names := apply(assets, func(x model.Asset) string { return x.Name })
 	return render(c, templ.EventForm(ctx(c), templ.EventDTO{
 		ID:        obj.ID,
 		CaseID:    obj.CaseID,
@@ -202,10 +203,10 @@ func (ctrl EventCtrl) ViewEvent(c echo.Context) error {
 		Event:     obj.Event,
 		Raw:       obj.Raw,
 		KeyEvent:  obj.KeyEvent,
-	}, assets, valid.Result{}))
+	}, names, valid.Result{}))
 }
 
-func (ctrl EventCtrl) SaveEvent(c echo.Context) error {
+func (ctrl EventCtrl) Save(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")
@@ -222,12 +223,13 @@ func (ctrl EventCtrl) SaveEvent(c echo.Context) error {
 	}
 
 	if vr := ValidateEvent(dto); !vr.Valid() {
-		assets, err := listAssets(cid)
+		assets, err := model.ListAssets(cid)
 		if err != nil {
 			return err
 		}
 
-		return render(c, templ.EventForm(ctx(c), dto, assets, vr))
+		names := apply(assets, func(x model.Asset) string { return x.Name })
+		return render(c, templ.EventForm(ctx(c), dto, names, vr))
 	}
 
 	t, err := time.Parse(time.RFC3339, dto.Time)
@@ -271,7 +273,7 @@ func (ctrl EventCtrl) SaveEvent(c echo.Context) error {
 	return refresh(c)
 }
 
-func (ctrl EventCtrl) DeleteEvent(c echo.Context) error {
+func (ctrl EventCtrl) Delete(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid asset id")
@@ -293,18 +295,4 @@ func (ctrl EventCtrl) DeleteEvent(c echo.Context) error {
 	}
 
 	return refresh(c)
-}
-
-func listAssets(cid int64) ([]string, error) {
-	ret := []string{}
-	assets, err := model.ListAssets(cid)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, x := range assets {
-		ret = append(ret, x.Name)
-	}
-
-	return ret, nil
 }

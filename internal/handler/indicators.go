@@ -17,7 +17,7 @@ type IndicatorCtrl struct{}
 
 func NewIndicatorCtrl() *IndicatorCtrl { return &IndicatorCtrl{} }
 
-func (ctrl IndicatorCtrl) ListIndicators(c echo.Context) error {
+func (ctrl IndicatorCtrl) List(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -33,7 +33,7 @@ func (ctrl IndicatorCtrl) ListIndicators(c echo.Context) error {
 	return render(c, templ.IndicatorList(ctx(c), cid, list))
 }
 
-func (ctrl IndicatorCtrl) ExportIndicators(c echo.Context) error {
+func (ctrl IndicatorCtrl) Export(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -57,7 +57,7 @@ func (ctrl IndicatorCtrl) ExportIndicators(c echo.Context) error {
 	return nil
 }
 
-func (ctrl IndicatorCtrl) ImportIndicators(c echo.Context) error {
+func (ctrl IndicatorCtrl) Import(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -86,7 +86,7 @@ func (ctrl IndicatorCtrl) ImportIndicators(c echo.Context) error {
 	})
 }
 
-func (ctrl IndicatorCtrl) ViewIndicator(c echo.Context) error {
+func (ctrl IndicatorCtrl) Edit(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid indicator id")
@@ -116,7 +116,7 @@ func (ctrl IndicatorCtrl) ViewIndicator(c echo.Context) error {
 	}, valid.Result{}))
 }
 
-func (ctrl IndicatorCtrl) SaveIndicator(c echo.Context) error {
+func (ctrl IndicatorCtrl) Save(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid indicator id")
@@ -169,7 +169,7 @@ func (ctrl IndicatorCtrl) SaveIndicator(c echo.Context) error {
 	return refresh(c)
 }
 
-func (ctrl IndicatorCtrl) DeleteIndicator(c echo.Context) error {
+func (ctrl IndicatorCtrl) Delete(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid indicator id")

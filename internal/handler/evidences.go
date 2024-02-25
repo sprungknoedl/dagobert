@@ -22,7 +22,7 @@ type EvidenceCtrl struct{}
 
 func NewEvidenceCtrl() *EvidenceCtrl { return &EvidenceCtrl{} }
 
-func (ctrl EvidenceCtrl) ListEvidences(c echo.Context) error {
+func (ctrl EvidenceCtrl) List(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -38,7 +38,7 @@ func (ctrl EvidenceCtrl) ListEvidences(c echo.Context) error {
 	return render(c, templ.EvidenceList(ctx(c), cid, list))
 }
 
-func (ctrl EvidenceCtrl) ExportEvidences(c echo.Context) error {
+func (ctrl EvidenceCtrl) Export(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -62,7 +62,7 @@ func (ctrl EvidenceCtrl) ExportEvidences(c echo.Context) error {
 	return nil
 }
 
-func (ctrl EvidenceCtrl) ImportEvidences(c echo.Context) error {
+func (ctrl EvidenceCtrl) Import(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -97,7 +97,7 @@ func (ctrl EvidenceCtrl) ImportEvidences(c echo.Context) error {
 	})
 }
 
-func (ctrl EvidenceCtrl) ViewEvidence(c echo.Context) error {
+func (ctrl EvidenceCtrl) Edit(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")
@@ -125,7 +125,7 @@ func (ctrl EvidenceCtrl) ViewEvidence(c echo.Context) error {
 	}, valid.Result{}))
 }
 
-func (ctrl EvidenceCtrl) DownloadEvidence(c echo.Context) error {
+func (ctrl EvidenceCtrl) Download(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")
@@ -146,7 +146,7 @@ func (ctrl EvidenceCtrl) DownloadEvidence(c echo.Context) error {
 	return c.File(obj.Location)
 }
 
-func (ctrl EvidenceCtrl) SaveEvidence(c echo.Context) error {
+func (ctrl EvidenceCtrl) Save(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")
@@ -254,7 +254,7 @@ func (ctrl EvidenceCtrl) SaveEvidence(c echo.Context) error {
 	return refresh(c)
 }
 
-func (ctrl EvidenceCtrl) DeleteEvidence(c echo.Context) error {
+func (ctrl EvidenceCtrl) Delete(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")

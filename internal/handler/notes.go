@@ -18,7 +18,7 @@ type NoteCtrl struct{}
 
 func NewNoteCtrl() *NoteCtrl { return &NoteCtrl{} }
 
-func (ctrl NoteCtrl) ListNotes(c echo.Context) error {
+func (ctrl NoteCtrl) List(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -34,7 +34,7 @@ func (ctrl NoteCtrl) ListNotes(c echo.Context) error {
 	return render(c, templ.NoteList(ctx(c), cid, list))
 }
 
-func (ctrl NoteCtrl) ExportNotes(c echo.Context) error {
+func (ctrl NoteCtrl) Export(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -58,7 +58,7 @@ func (ctrl NoteCtrl) ExportNotes(c echo.Context) error {
 	return nil
 }
 
-func (ctrl NoteCtrl) ImportNotes(c echo.Context) error {
+func (ctrl NoteCtrl) Import(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -85,7 +85,7 @@ func (ctrl NoteCtrl) ImportNotes(c echo.Context) error {
 	})
 }
 
-func (ctrl NoteCtrl) ViewNote(c echo.Context) error {
+func (ctrl NoteCtrl) View(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid note id")
@@ -113,7 +113,7 @@ func (ctrl NoteCtrl) ViewNote(c echo.Context) error {
 	}, valid.Result{}))
 }
 
-func (ctrl NoteCtrl) SaveNote(c echo.Context) error {
+func (ctrl NoteCtrl) Save(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil { // id == 0 is valid in this context
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid note id")
@@ -164,7 +164,7 @@ func (ctrl NoteCtrl) SaveNote(c echo.Context) error {
 	return refresh(c)
 }
 
-func (ctrl NoteCtrl) DeleteNote(c echo.Context) error {
+func (ctrl NoteCtrl) Delete(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid note id")

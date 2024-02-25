@@ -59,7 +59,7 @@ func NewUserCtrl(cfg OpenIDConfig) *UserCtrl {
 	}
 }
 
-func (ctrl UserCtrl) AuthMiddleware(e *echo.Echo) func(echo.HandlerFunc) echo.HandlerFunc {
+func (ctrl UserCtrl) Protect(e *echo.Echo) func(echo.HandlerFunc) echo.HandlerFunc {
 	gob.Register(map[string]interface{}{})
 	e.GET("/logout", ctrl.Logout).Name = "logout"
 	e.Any("/oidc-callback", ctrl.Callback)
@@ -72,7 +72,7 @@ func (ctrl UserCtrl) AuthMiddleware(e *echo.Echo) func(echo.HandlerFunc) echo.Ha
 				return next(c)
 			}
 
-			state := RandomString(16)
+			state := random(16)
 			sess.Values["oidcAuthorized"] = false
 			sess.Values["oidcState"] = state
 			sess.Values["oidcOriginalRequestUrl"] = c.Request().URL.String()
@@ -167,7 +167,7 @@ func (ctrl UserCtrl) Callback(c echo.Context) error {
 	return c.Redirect(http.StatusFound, originalRequestUrl)
 }
 
-func (ctrl UserCtrl) ListUsers(c echo.Context) error {
+func (ctrl UserCtrl) List(c echo.Context) error {
 	sort := c.QueryParam("sort")
 	search := c.QueryParam("search")
 	list, err := model.FindUsers(search, sort)

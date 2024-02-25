@@ -17,7 +17,7 @@ type CaseCtrl struct{}
 
 func NewCaseCtrl() *CaseCtrl { return &CaseCtrl{} }
 
-func (ctrl CaseCtrl) ListCases(c echo.Context) error {
+func (ctrl CaseCtrl) List(c echo.Context) error {
 	sort := c.QueryParam("sort")
 	search := c.QueryParam("search")
 	list, err := model.FindCases(search, sort)
@@ -28,7 +28,7 @@ func (ctrl CaseCtrl) ListCases(c echo.Context) error {
 	return render(c, templ.CaseList(ctx(c), list))
 }
 
-func (ctrl CaseCtrl) ExportCases(c echo.Context) error {
+func (ctrl CaseCtrl) Export(c echo.Context) error {
 	list, err := model.ListCases()
 	if err != nil {
 		return err
@@ -90,7 +90,7 @@ func (ctrl CaseCtrl) ImportCases(c echo.Context) error {
 	})
 }
 
-func (ctrl CaseCtrl) ShowCase(c echo.Context) error {
+func (ctrl CaseCtrl) Show(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil || cid == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -104,7 +104,7 @@ func (ctrl CaseCtrl) ShowCase(c echo.Context) error {
 	return render(c, templ.CaseOverview(ctx(c), obj))
 }
 
-func (ctrl CaseCtrl) ViewCase(c echo.Context) error {
+func (ctrl CaseCtrl) Edit(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -130,7 +130,7 @@ func (ctrl CaseCtrl) ViewCase(c echo.Context) error {
 	}, vr))
 }
 
-func (ctrl CaseCtrl) SaveCase(c echo.Context) error {
+func (ctrl CaseCtrl) Save(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
@@ -178,7 +178,7 @@ func (ctrl CaseCtrl) SaveCase(c echo.Context) error {
 	return refresh(c)
 }
 
-func (ctrl CaseCtrl) DeleteCase(c echo.Context) error {
+func (ctrl CaseCtrl) Delete(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
