@@ -700,7 +700,7 @@ func CaseOverview(env utils.Env, obj model.Case) templ.Component {
 				}
 				return templ_7745c5c3_Err
 			})
-			templ_7745c5c3_Err = Navbar(env, fmt.Sprintf("#%d - %s", obj.ID, obj.Name), false, false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var36), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = Navbar(env, "Overview", false, false).Render(templ.WithChildren(ctx, templ_7745c5c3_Var36), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
