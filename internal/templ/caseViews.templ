@@ -80,7 +80,7 @@ templ CaseList(env utils.Env, list []model.Case) {
 
 templ CaseOverview(env utils.Env, obj model.Case) {
 	@Layout(env) {
-		<main class="p-4 grow">
+		<main class="p-8 grow">
 			@Navbar(env, fmt.Sprintf("#%d - %s", obj.ID, obj.Name), false, false) {
 				@utils.GroupedButton(templ.Attributes{"hx-get": env.Routes("choose-report", obj.ID), "hx-target": "#modal"}) {
 					@icons.DocumentArrowDown("inline-block mr-1 w-5 h-5")

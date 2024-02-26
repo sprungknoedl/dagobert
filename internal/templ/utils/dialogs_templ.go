@@ -147,7 +147,7 @@ func Modal(w string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("--><aside _=\"on closeModal transition opacity to 0 over 100ms then remove me\n			  on keydown[key is &#39;Escape&#39;] from window transition opacity to 0 over 100ms then remove me\n			  on load set i to the first &lt;input/&gt; in me then if i call i.focus()\" class=\"fixed top-0 right-0 z-40 h-screen overflow-y-auto w-1/3 bg-gray-800 border-l border-gray-600 shadow-xl\"><!--")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("--><aside _=\"on closeModal transition opacity to 0 over 100ms then remove me\n			  on keydown[key is &#39;Escape&#39;] from window transition opacity to 0 over 100ms then remove me\n			  on load set i to the first &lt;input/&gt; in me then if i call i.focus()\" class=\"fixed top-0 right-0 z-40 h-screen overflow-y-auto w-1/3 bg-slate-900 border-l border-slate-700 shadow-xl\"><!--")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -287,7 +287,7 @@ func ModalBody() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("--><div class=\"p-4 md:p-5 space-y-4 border-t border-slate-600\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("--><div class=\"p-4 md:p-5 space-y-4 border-t border-slate-700\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -328,7 +328,7 @@ func ModalFooter() templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("--><div class=\"flex items-center p-4 md:p-5 border-t border-slate-600\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("--><div class=\"flex items-center p-4 md:p-5 border-t border-slate-700\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
