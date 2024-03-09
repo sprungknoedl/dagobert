@@ -3,7 +3,7 @@ module github.com/sprungknoedl/dagobert
 go 1.22
 
 require (
-	github.com/a-h/templ v0.2.501
+	github.com/a-h/templ v0.2.598
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/gorilla/sessions v1.2.1
 	github.com/labstack/echo-contrib v0.15.0
