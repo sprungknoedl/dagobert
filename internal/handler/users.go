@@ -19,9 +19,10 @@ import (
 type OpenIDConfig struct {
 	ClientId      string   //id from the authorization service (OIDC provider)
 	ClientSecret  string   //secret from the authorization service (OIDC provider)
-	Issuer        url.URL  //the URL identifier for the authorization service. for example: "https://accounts.google.com" - try adding "/.well-known/openid-configuration" to the path to make sure it's correct
 	ClientUrl     url.URL  //your website's/service's URL for example: "http://localhost:8081/" or "https://mydomain.com/
+	Issuer        url.URL  //the URL identifier for the authorization service. for example: "https://accounts.google.com" - try adding "/.well-known/openid-configuration" to the path to make sure it's correct
 	Scopes        []string //OAuth scopes. If you're unsure go with: []string{oidc.ScopeOpenID, "profile", "email"}
+	Identifier    string   // name of the openid claim used to securely identify a user (e.g. "sub").
 	PostLogoutUrl url.URL  //user will be redirected to this URL after he logs out (i.e. accesses the '/logout' endpoint added in 'Init()')
 	SessionName   string
 }
@@ -154,7 +155,7 @@ func (ctrl UserCtrl) Callback(c echo.Context) error {
 	}
 
 	user := model.User{
-		ID:    claims["sub"].(string),
+		ID:    claims[ctrl.openidConfig.Identifier].(string),
 		Name:  claims["name"].(string),
 		UPN:   claims["preferred_username"].(string),
 		Email: claims["email"].(string),

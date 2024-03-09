@@ -2,6 +2,7 @@ package main
 
 import (
 	"cmp"
+	"log"
 	"net/url"
 	"os"
 
@@ -19,27 +20,35 @@ type Configuration struct {
 
 	Database string
 
-	ClientId     string
-	ClientSecret string
-	Issuer       string
-	ClientUrl    string
+	ClientId      string
+	ClientSecret  string
+	ClientUrl     string
+	Issuer        string
+	IdentityClaim string
 
 	SessionSecret string
+
+	Superadmin string
 }
 
 func main() {
 	cfg := Configuration{
-		AssetsFolder:   cmp.Or(os.Getenv("ASSETS_FOLDER"), "./web"),
-		EvidenceFolder: cmp.Or(os.Getenv("EVIDENCE_FOLDER"), "./files/evidences"),
+		AssetsFolder:   cmp.Or(os.Getenv("FS_ASSETS_FOLDER"), "./web"),
+		EvidenceFolder: cmp.Or(os.Getenv("FS_EVIDENCE_FOLDER"), "./files/evidences"),
 		Database:       cmp.Or(os.Getenv("DB_URL"), "./files/dagobert.db"),
-		ClientId:       os.Getenv("CLIENT_ID"),
-		ClientSecret:   os.Getenv("CLIENT_SECRET"),
-		ClientUrl:      os.Getenv("CLIENT_URL"),
-		Issuer:         os.Getenv("ISSUER"),
-		SessionSecret:  os.Getenv("SESSION_SECRET"),
+		ClientId:       os.Getenv("OIDC_CLIENT_ID"),
+		ClientSecret:   os.Getenv("OIDC_CLIENT_SECRET"),
+		ClientUrl:      os.Getenv("OIDC_CLIENT_URL"),
+		Issuer:         os.Getenv("OIDC_ISSUER"),
+		IdentityClaim:  cmp.Or(os.Getenv("OIDC_ID_CLAIM"), "sub"),
+		SessionSecret:  os.Getenv("WEB_SESSION_SECRET"),
+		Superadmin:     os.Getenv("DAGOBERT_ADMIN"),
 	}
 
-	model.InitDatabase(cfg.Database)
+	err := InitializeDagobert(cfg)
+	if err != nil {
+		log.Fatalf("Failed to initialize dagobert: %v", err)
+	}
 
 	e := echo.New()
 	e.HTTPErrorHandler = handler.ErrorHandler
@@ -64,6 +73,7 @@ func main() {
 		ClientSecret:  cfg.ClientSecret,
 		Issuer:        *issuer,
 		ClientUrl:     *clientUrl,
+		Identifier:    cfg.IdentityClaim,
 		Scopes:        []string{"openid", "profile", "email"},
 		PostLogoutUrl: *clientUrl,
 	})
@@ -72,7 +82,7 @@ func main() {
 	// --------------------------------------
 	// Reports
 	// --------------------------------------
-	err := handler.LoadTemplates("./files/templates/")
+	err = handler.LoadTemplates("./files/templates/")
 	if err != nil {
 		e.Logger.Fatalf("failed to load report: %v", err)
 	}
@@ -187,4 +197,26 @@ func main() {
 	e.Static("/dist", cfg.AssetsFolder)
 
 	e.Logger.Fatal(e.Start(":8080"))
+}
+
+func InitializeDagobert(cfg Configuration) error {
+	model.InitDatabase(cfg.Database)
+
+	users, err := model.ListUsers()
+	if err != nil {
+		return err
+	}
+
+	if len(users) == 0 && cfg.Superadmin != "" {
+		// initialize super user
+		log.Printf("Initializing super user ...")
+		_, err = model.SaveUser(model.User{
+			ID: cfg.Superadmin,
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
