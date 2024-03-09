@@ -1,4 +1,4 @@
-FROM golang:1.21 AS build
+FROM golang:1.22 AS build
 WORKDIR /src
 
 RUN curl -sL -o /usr/bin/tailwindcss https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64 && chmod +x /usr/bin/tailwindcss
@@ -12,7 +12,7 @@ RUN make build
 
 # ---------------------------------
 
-FROM golang:1.21
+FROM golang:1.22
 WORKDIR /app
 
 RUN mkdir -p /app/files
