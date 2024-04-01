@@ -1,7 +1,7 @@
 package sqlite
 
 import (
-	"github.com/sprungknoedl/dagobert/model"
+	"github.com/sprungknoedl/dagobert/pkg/model"
 	"gorm.io/gorm/clause"
 )
 
