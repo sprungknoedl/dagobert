@@ -14,9 +14,13 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-type NoteCtrl struct{}
+type NoteCtrl struct {
+	store model.NoteStore
+}
 
-func NewNoteCtrl() *NoteCtrl { return &NoteCtrl{} }
+func NewNoteCtrl(store model.NoteStore) *NoteCtrl {
+	return &NoteCtrl{store}
+}
 
 func (ctrl NoteCtrl) List(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
@@ -26,7 +30,7 @@ func (ctrl NoteCtrl) List(c echo.Context) error {
 
 	sort := c.QueryParam("sort")
 	search := c.QueryParam("search")
-	list, err := model.FindNotes(cid, search, sort)
+	list, err := ctrl.store.FindNotes(cid, search, sort)
 	if err != nil {
 		return err
 	}
@@ -40,7 +44,7 @@ func (ctrl NoteCtrl) Export(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	list, err := model.ListNotes(cid)
+	list, err := ctrl.store.ListNotes(cid)
 	if err != nil {
 		return err
 	}
@@ -66,7 +70,7 @@ func (ctrl NoteCtrl) Import(c echo.Context) error {
 
 	uri := c.Echo().Reverse("import-notes", cid)
 	now := time.Now()
-	usr := getUser(c)
+	usr := c.Get("user").(string)
 
 	return importHelper(c, uri, 3, func(c echo.Context, rec []string) error {
 		obj := model.Note{
@@ -80,7 +84,7 @@ func (ctrl NoteCtrl) Import(c echo.Context) error {
 			UserModified: usr,
 		}
 
-		_, err = model.SaveNote(cid, obj)
+		_, err = ctrl.store.SaveNote(cid, obj)
 		return err
 	})
 }
@@ -98,7 +102,7 @@ func (ctrl NoteCtrl) View(c echo.Context) error {
 
 	obj := model.Note{CaseID: cid}
 	if id != 0 {
-		obj, err = model.GetNote(cid, id)
+		obj, err = ctrl.store.GetNote(cid, id)
 		if err != nil {
 			return err
 		}
@@ -134,7 +138,7 @@ func (ctrl NoteCtrl) Save(c echo.Context) error {
 	}
 
 	now := time.Now()
-	usr := getUser(c)
+	usr := c.Get("user").(string)
 	obj := model.Note{
 		ID:           id,
 		CaseID:       cid,
@@ -148,7 +152,7 @@ func (ctrl NoteCtrl) Save(c echo.Context) error {
 	}
 
 	if id != 0 {
-		src, err := model.GetNote(cid, id)
+		src, err := ctrl.store.GetNote(cid, id)
 		if err != nil {
 			return err
 		}
@@ -157,7 +161,7 @@ func (ctrl NoteCtrl) Save(c echo.Context) error {
 		obj.UserAdded = src.UserAdded
 	}
 
-	if _, err := model.SaveNote(cid, obj); err != nil {
+	if _, err := ctrl.store.SaveNote(cid, obj); err != nil {
 		return err
 	}
 
@@ -181,7 +185,7 @@ func (ctrl NoteCtrl) Delete(c echo.Context) error {
 		return render(c, utils.Confirm(ctx(c), uri))
 	}
 
-	err = model.DeleteNote(cid, id)
+	err = ctrl.store.DeleteNote(cid, id)
 	if err != nil {
 		return err
 	}

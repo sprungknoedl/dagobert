@@ -18,9 +18,13 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-type EvidenceCtrl struct{}
+type EvidenceCtrl struct {
+	store model.EvidenceStore
+}
 
-func NewEvidenceCtrl() *EvidenceCtrl { return &EvidenceCtrl{} }
+func NewEvidenceCtrl(store model.EvidenceStore) *EvidenceCtrl {
+	return &EvidenceCtrl{store}
+}
 
 func (ctrl EvidenceCtrl) List(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
@@ -30,7 +34,7 @@ func (ctrl EvidenceCtrl) List(c echo.Context) error {
 
 	sort := c.QueryParam("sort")
 	search := c.QueryParam("search")
-	list, err := model.FindEvidences(cid, search, sort)
+	list, err := ctrl.store.FindEvidences(cid, search, sort)
 	if err != nil {
 		return err
 	}
@@ -44,7 +48,7 @@ func (ctrl EvidenceCtrl) Export(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	list, err := model.ListEvidences(cid)
+	list, err := ctrl.store.ListEvidences(cid)
 	if err != nil {
 		return err
 	}
@@ -70,7 +74,7 @@ func (ctrl EvidenceCtrl) Import(c echo.Context) error {
 
 	uri := c.Echo().Reverse("import-evidences", cid)
 	now := time.Now()
-	usr := getUser(c)
+	usr := c.Get("user").(string)
 
 	return importHelper(c, uri, 6, func(c echo.Context, rec []string) error {
 		size, err := strconv.ParseInt(rec[3], 10, 64)
@@ -92,7 +96,7 @@ func (ctrl EvidenceCtrl) Import(c echo.Context) error {
 			UserModified: usr,
 		}
 
-		_, err = model.SaveEvidence(cid, obj)
+		_, err = ctrl.store.SaveEvidence(cid, obj)
 		return err
 	})
 }
@@ -110,7 +114,7 @@ func (ctrl EvidenceCtrl) Edit(c echo.Context) error {
 
 	obj := model.Evidence{CaseID: cid}
 	if id != 0 {
-		obj, err = model.GetEvidence(cid, id)
+		obj, err = ctrl.store.GetEvidence(cid, id)
 		if err != nil {
 			return err
 		}
@@ -136,7 +140,7 @@ func (ctrl EvidenceCtrl) Download(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	obj, err := model.GetEvidence(cid, id)
+	obj, err := ctrl.store.GetEvidence(cid, id)
 	if err != nil {
 		return err
 	}
@@ -210,7 +214,7 @@ func (ctrl EvidenceCtrl) Save(c echo.Context) error {
 		hash = fmt.Sprintf("%x", hasher.Sum(nil))
 	} else if id != 0 {
 		// keep metadata for existing evidences that did not change
-		obj, err := model.GetEvidence(cid, id)
+		obj, err := ctrl.store.GetEvidence(cid, id)
 		if err != nil {
 			return err
 		}
@@ -221,7 +225,7 @@ func (ctrl EvidenceCtrl) Save(c echo.Context) error {
 	}
 
 	now := time.Now()
-	usr := getUser(c)
+	usr := c.Get("user").(string)
 	obj := model.Evidence{
 		ID:           id,
 		CaseID:       cid,
@@ -238,7 +242,7 @@ func (ctrl EvidenceCtrl) Save(c echo.Context) error {
 	}
 
 	if id != 0 {
-		src, err := model.GetEvidence(cid, id)
+		src, err := ctrl.store.GetEvidence(cid, id)
 		if err != nil {
 			return err
 		}
@@ -247,7 +251,7 @@ func (ctrl EvidenceCtrl) Save(c echo.Context) error {
 		obj.UserAdded = src.UserAdded
 	}
 
-	if _, err := model.SaveEvidence(cid, obj); err != nil {
+	if _, err := ctrl.store.SaveEvidence(cid, obj); err != nil {
 		return err
 	}
 
@@ -270,7 +274,7 @@ func (ctrl EvidenceCtrl) Delete(c echo.Context) error {
 		return render(c, utils.Confirm(ctx(c), uri))
 	}
 
-	err = model.DeleteEvidence(cid, id)
+	err = ctrl.store.DeleteEvidence(cid, id)
 	if err != nil {
 		return err
 	}

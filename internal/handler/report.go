@@ -18,9 +18,13 @@ import (
 
 var templates = map[string]doct.Template{}
 
-type ReportCtrl struct{}
+type ReportCtrl struct {
+	store model.CaseStore
+}
 
-func NewReportCtrl() *ReportCtrl { return &ReportCtrl{} }
+func NewReportCtrl(store model.CaseStore) *ReportCtrl {
+	return &ReportCtrl{store}
+}
 
 func LoadTemplates(root string) error {
 	return filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
@@ -65,7 +69,7 @@ func (ctrl ReportCtrl) Generate(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	obj, err := model.GetCaseFull(cid)
+	obj, err := ctrl.store.GetCaseFull(cid)
 	if err != nil {
 		return err
 	}

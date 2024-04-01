@@ -31,9 +31,10 @@ type UserCtrl struct {
 	openidConfig OpenIDConfig
 	oauthConfig  *oauth2.Config
 	verifier     *oidc.IDTokenVerifier
+	store        model.UserStore
 }
 
-func NewUserCtrl(cfg OpenIDConfig) *UserCtrl {
+func NewUserCtrl(store model.UserStore, cfg OpenIDConfig) *UserCtrl {
 	providerCtx := context.Background()
 	provider, err := oidc.NewProvider(providerCtx, cfg.Issuer.String())
 	if err != nil {
@@ -57,6 +58,7 @@ func NewUserCtrl(cfg OpenIDConfig) *UserCtrl {
 		openidConfig: cfg,
 		oauthConfig:  config,
 		verifier:     verifier,
+		store:        store,
 	}
 }
 
@@ -160,7 +162,7 @@ func (ctrl UserCtrl) Callback(c echo.Context) error {
 		UPN:   claims["preferred_username"].(string),
 		Email: claims["email"].(string),
 	}
-	_, err = model.SaveUser(user)
+	_, err = ctrl.store.SaveUser(user)
 	if err != nil {
 		return err
 	}
@@ -171,7 +173,7 @@ func (ctrl UserCtrl) Callback(c echo.Context) error {
 func (ctrl UserCtrl) List(c echo.Context) error {
 	sort := c.QueryParam("sort")
 	search := c.QueryParam("search")
-	list, err := model.FindUsers(search, sort)
+	list, err := ctrl.store.FindUsers(search, sort)
 	if err != nil {
 		return err
 	}

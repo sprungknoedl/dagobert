@@ -6,17 +6,12 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/a-h/templ"
-	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/sprungknoedl/dagobert/internal/templ/utils"
-	"github.com/sprungknoedl/dagobert/model"
 )
-
-const SessionName = "default"
 
 func ErrorHandler(err error, c echo.Context) {
 	if c.Response().Committed {
@@ -43,39 +38,12 @@ func refresh(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
-func getUser(c echo.Context) string {
-	sess, _ := session.Get(SessionName, c)
-	claims, _ := sess.Values["oidcClaims"].(map[string]interface{})
-	if sub, ok := claims["sub"].(string); ok {
-		return sub
-	}
-
-	return "unknown"
-}
-
-func getCase(c echo.Context) utils.CaseDTO {
-	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
-	if err != nil || cid == 0 {
-		return utils.CaseDTO{}
-	}
-
-	obj, err := model.GetCase(cid)
-	if err != nil {
-		return utils.CaseDTO{}
-	}
-
-	return utils.CaseDTO{
-		ID:   obj.ID,
-		Name: obj.Name,
-	}
-}
-
 func ctx(c echo.Context) utils.Env {
 	return utils.Env{
 		Routes:      c.Echo().Reverse,
-		Username:    getUser(c),
+		Username:    c.Get("user").(string),
 		ActiveRoute: c.Request().RequestURI,
-		ActiveCase:  getCase(c),
+		ActiveCase:  c.Get("case").(utils.CaseDTO),
 		Search:      c.QueryParam("search"),
 		Sort:        c.QueryParam("sort"),
 	}

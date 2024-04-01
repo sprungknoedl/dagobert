@@ -13,9 +13,13 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-type TaskCtrl struct{}
+type TaskCtrl struct {
+	store model.TaskStore
+}
 
-func NewTaskCtrl() *TaskCtrl { return &TaskCtrl{} }
+func NewTaskCtrl(store model.TaskStore) *TaskCtrl {
+	return &TaskCtrl{store}
+}
 
 func (ctrl TaskCtrl) List(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
@@ -25,7 +29,7 @@ func (ctrl TaskCtrl) List(c echo.Context) error {
 
 	sort := c.QueryParam("sort")
 	search := c.QueryParam("search")
-	list, err := model.FindTasks(cid, search, sort)
+	list, err := ctrl.store.FindTasks(cid, search, sort)
 	if err != nil {
 		return err
 	}
@@ -39,7 +43,7 @@ func (ctrl TaskCtrl) Export(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	list, err := model.ListTasks(cid)
+	list, err := ctrl.store.ListTasks(cid)
 	if err != nil {
 		return err
 	}
@@ -65,7 +69,7 @@ func (ctrl TaskCtrl) Import(c echo.Context) error {
 
 	uri := c.Echo().Reverse("import-tasks", cid)
 	now := time.Now()
-	usr := getUser(c)
+	usr := c.Get("user").(string)
 
 	return importHelper(c, uri, 5, func(c echo.Context, rec []string) error {
 		done, err := strconv.ParseBool(rec[2])
@@ -91,7 +95,7 @@ func (ctrl TaskCtrl) Import(c echo.Context) error {
 			UserModified: usr,
 		}
 
-		_, err = model.SaveTask(cid, obj)
+		_, err = ctrl.store.SaveTask(cid, obj)
 		return err
 	})
 }
@@ -109,7 +113,7 @@ func (ctrl TaskCtrl) Edit(c echo.Context) error {
 
 	obj := model.Task{CaseID: cid}
 	if id != 0 {
-		obj, err = model.GetTask(cid, id)
+		obj, err = ctrl.store.GetTask(cid, id)
 		if err != nil {
 			return err
 		}
@@ -152,7 +156,7 @@ func (ctrl TaskCtrl) Save(c echo.Context) error {
 	}
 
 	now := time.Now()
-	usr := getUser(c)
+	usr := c.Get("user").(string)
 	obj := model.Task{
 		ID:           id,
 		CaseID:       cid,
@@ -168,7 +172,7 @@ func (ctrl TaskCtrl) Save(c echo.Context) error {
 	}
 
 	if id != 0 {
-		src, err := model.GetTask(cid, id)
+		src, err := ctrl.store.GetTask(cid, id)
 		if err != nil {
 			return err
 		}
@@ -177,7 +181,7 @@ func (ctrl TaskCtrl) Save(c echo.Context) error {
 		obj.UserAdded = src.UserAdded
 	}
 
-	if _, err := model.SaveTask(cid, obj); err != nil {
+	if _, err := ctrl.store.SaveTask(cid, obj); err != nil {
 		return err
 	}
 
@@ -200,7 +204,7 @@ func (ctrl TaskCtrl) Delete(c echo.Context) error {
 		return render(c, utils.Confirm(ctx(c), uri))
 	}
 
-	err = model.DeleteTask(cid, id)
+	err = ctrl.store.DeleteTask(cid, id)
 	if err != nil {
 		return err
 	}

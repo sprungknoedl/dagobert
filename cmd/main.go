@@ -5,14 +5,19 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"strconv"
 
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/sprungknoedl/dagobert/internal/handler"
+	"github.com/sprungknoedl/dagobert/internal/sqlite"
+	"github.com/sprungknoedl/dagobert/internal/templ/utils"
 	"github.com/sprungknoedl/dagobert/model"
 )
+
+const SessionName = "default"
 
 type Configuration struct {
 	AssetsFolder   string
@@ -45,7 +50,12 @@ func main() {
 		Superadmin:     os.Getenv("DAGOBERT_ADMIN"),
 	}
 
-	err := InitializeDagobert(cfg)
+	db, err := sqlite.Connect(cfg.Database)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	err = InitializeDagobert(db, cfg)
 	if err != nil {
 		log.Fatalf("Failed to initialize dagobert: %v", err)
 	}
@@ -59,16 +69,16 @@ func main() {
 	// --------------------------------------
 	// Session Store
 	// --------------------------------------
-	store := sessions.NewCookieStore([]byte(cfg.SessionSecret))
-	e.Use(session.Middleware(store))
+	e.Use(session.Middleware(
+		sessions.NewCookieStore([]byte(cfg.SessionSecret))))
 
 	// --------------------------------------
-	// OIDC Authentication
+	// Authentication
 	// --------------------------------------
 	issuer, _ := url.Parse(cfg.Issuer)
 	clientUrl, _ := url.Parse(cfg.ClientUrl)
-	userCtrl := handler.NewUserCtrl(handler.OpenIDConfig{
-		SessionName:   "default",
+	userCtrl := handler.NewUserCtrl(db, handler.OpenIDConfig{
+		SessionName:   SessionName,
 		ClientId:      cfg.ClientId,
 		ClientSecret:  cfg.ClientSecret,
 		Issuer:        *issuer,
@@ -78,6 +88,9 @@ func main() {
 		PostLogoutUrl: *clientUrl,
 	})
 	e.Use(userCtrl.Protect(e))
+
+	e.Use(InjectCase(db))
+	e.Use(InjectUser(SessionName))
 
 	// --------------------------------------
 	// Reports
@@ -91,7 +104,7 @@ func main() {
 	// Home
 	// --------------------------------------
 	// cases
-	caseCtrl := handler.NewCaseCtrl()
+	caseCtrl := handler.NewCaseCtrl(db)
 	e.GET("/", caseCtrl.List).Name = "list-cases"
 	e.GET("/cases/export", caseCtrl.Export).Name = "export-cases"
 	e.GET("/cases/import", caseCtrl.ImportCases).Name = "import-cases"
@@ -102,7 +115,7 @@ func main() {
 	e.DELETE("/cases/:cid", caseCtrl.Delete).Name = "delete-case"
 
 	// templates
-	reportCtrl := handler.NewReportCtrl()
+	reportCtrl := handler.NewReportCtrl(db)
 	e.GET("/cases/:cid/reports", reportCtrl.List).Name = "choose-report"
 	e.GET("/cases/:cid/render", reportCtrl.Generate).Name = "generate-report"
 
@@ -110,7 +123,7 @@ func main() {
 	// Investigation
 	// --------------------------------------
 	// events
-	eventCtrl := handler.NewEventCtrl()
+	eventCtrl := handler.NewEventCtrl(db, db, db)
 	e.GET("/cases/:cid/events", eventCtrl.List).Name = "list-events"
 	e.GET("/cases/:cid/events/export", eventCtrl.Export).Name = "export-events"
 	e.GET("/cases/:cid/events/import", eventCtrl.Import).Name = "import-events"
@@ -121,7 +134,7 @@ func main() {
 	e.DELETE("/cases/:cid/events/:id", eventCtrl.Delete).Name = "delete-event"
 
 	// assets
-	assetCtrl := handler.NewAssetCtrl()
+	assetCtrl := handler.NewAssetCtrl(db)
 	e.GET("/cases/:cid/assets", assetCtrl.List).Name = "list-assets"
 	e.GET("/cases/:cid/assets/export", assetCtrl.Export).Name = "export-assets"
 	e.GET("/cases/:cid/assets/import", assetCtrl.Import).Name = "import-assets"
@@ -131,7 +144,7 @@ func main() {
 	e.DELETE("/cases/:cid/assets/:id", assetCtrl.Delete).Name = "delete-asset"
 
 	// malware
-	malwareCtrl := handler.NewMalwareCtrl()
+	malwareCtrl := handler.NewMalwareCtrl(db)
 	e.GET("/cases/:cid/malware", malwareCtrl.List).Name = "list-malware"
 	e.GET("/cases/:cid/malware.csv", malwareCtrl.Export).Name = "export-malware"
 	e.GET("/cases/:cid/malware/import", malwareCtrl.Import).Name = "import-malware"
@@ -141,7 +154,7 @@ func main() {
 	e.DELETE("/cases/:cid/malware/:id", malwareCtrl.Delete).Name = "delete-malware"
 
 	// indicators
-	indicatorCtrl := handler.NewIndicatorCtrl()
+	indicatorCtrl := handler.NewIndicatorCtrl(db)
 	e.GET("/cases/:cid/indicators", indicatorCtrl.List).Name = "list-indicators"
 	e.GET("/cases/:cid/indicators.csv", indicatorCtrl.Export).Name = "export-indicators"
 	e.GET("/cases/:cid/indicators/import", indicatorCtrl.Import).Name = "import-indicators"
@@ -154,7 +167,7 @@ func main() {
 	// Case Management
 	// --------------------------------------
 	// evidence
-	evidenceCtrl := handler.NewEvidenceCtrl()
+	evidenceCtrl := handler.NewEvidenceCtrl(db)
 	e.GET("/cases/:cid/evidences", evidenceCtrl.List).Name = "list-evidences"
 	e.GET("/cases/:cid/evidences/export", evidenceCtrl.Export).Name = "export-evidences"
 	e.GET("/cases/:cid/evidences/import", evidenceCtrl.Import).Name = "import-evidences"
@@ -165,7 +178,7 @@ func main() {
 	e.DELETE("/cases/:cid/evidences/:id", evidenceCtrl.Delete).Name = "delete-evidence"
 
 	// tasks
-	taskCtrl := handler.NewTaskCtrl()
+	taskCtrl := handler.NewTaskCtrl(db)
 	e.GET("/cases/:cid/tasks", taskCtrl.List).Name = "list-tasks"
 	e.GET("/cases/:cid/tasks/export", taskCtrl.Export).Name = "export-tasks"
 	e.GET("/cases/:cid/tasks/import", taskCtrl.Import).Name = "import-tasks"
@@ -175,7 +188,7 @@ func main() {
 	e.DELETE("/cases/:cid/tasks/:id", taskCtrl.Delete).Name = "delete-task"
 
 	// notes
-	noteCtrl := handler.NewNoteCtrl()
+	noteCtrl := handler.NewNoteCtrl(db)
 	e.GET("/cases/:cid/notes", noteCtrl.List).Name = "list-notes"
 	e.GET("/cases/:cid/notes/export", noteCtrl.Export).Name = "export-notes"
 	e.GET("/cases/:cid/notes/import", noteCtrl.Import).Name = "import-notes"
@@ -199,10 +212,8 @@ func main() {
 	e.Logger.Fatal(e.Start(":8080"))
 }
 
-func InitializeDagobert(cfg Configuration) error {
-	model.InitDatabase(cfg.Database)
-
-	users, err := model.ListUsers()
+func InitializeDagobert(store model.UserStore, cfg Configuration) error {
+	users, err := store.ListUsers()
 	if err != nil {
 		return err
 	}
@@ -210,7 +221,7 @@ func InitializeDagobert(cfg Configuration) error {
 	if len(users) == 0 && cfg.Superadmin != "" {
 		// initialize super user
 		log.Printf("Initializing super user ...")
-		_, err = model.SaveUser(model.User{
+		_, err = store.SaveUser(model.User{
 			ID: cfg.Superadmin,
 		})
 		if err != nil {
@@ -219,4 +230,47 @@ func InitializeDagobert(cfg Configuration) error {
 	}
 
 	return nil
+}
+
+func GetActiveCase(store model.CaseStore, c echo.Context) (model.Case, error) {
+	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	if err != nil || cid == 0 {
+		return model.Case{}, err
+	}
+
+	obj, err := store.GetCase(cid)
+	return obj, err
+}
+
+func InjectCase(store model.CaseStore) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Set("case", utils.CaseDTO{})
+			obj, err := GetActiveCase(store, c)
+			if err == nil {
+				c.Set("case", utils.CaseDTO{
+					ID:   obj.ID,
+					Name: obj.Name,
+				})
+			}
+
+			return next(c)
+		}
+	}
+}
+
+func InjectUser(sessionName string) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Set("user", "unknown")
+
+			sess, _ := session.Get(sessionName, c)
+			claims, _ := sess.Values["oidcClaims"].(map[string]interface{})
+			if sub, ok := claims["sub"].(string); ok {
+				c.Set("user", sub)
+			}
+
+			return next(c)
+		}
+	}
 }

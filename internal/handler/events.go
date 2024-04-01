@@ -14,9 +14,19 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-type EventCtrl struct{}
+type EventCtrl struct {
+	eventStore     model.EventStore
+	assetStore     model.AssetStore
+	indicatorStore model.IndicatorStore
+}
 
-func NewEventCtrl() *EventCtrl { return &EventCtrl{} }
+func NewEventCtrl(assetStore model.AssetStore, eventStore model.EventStore, indicatorStore model.IndicatorStore) *EventCtrl {
+	return &EventCtrl{
+		eventStore:     eventStore,
+		assetStore:     assetStore,
+		indicatorStore: indicatorStore,
+	}
+}
 
 func (ctrl EventCtrl) List(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
@@ -26,12 +36,12 @@ func (ctrl EventCtrl) List(c echo.Context) error {
 
 	sort := c.QueryParam("sort")
 	search := c.QueryParam("search")
-	list, err := model.FindEvents(cid, search, sort)
+	list, err := ctrl.eventStore.FindEvents(cid, search, sort)
 	if err != nil {
 		return err
 	}
 
-	indicators, err := model.ListIndicators(cid)
+	indicators, err := ctrl.indicatorStore.ListIndicators(cid)
 	if err != nil {
 		return err
 	}
@@ -45,7 +55,7 @@ func (ctrl EventCtrl) Export(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	list, err := model.ListEvents(cid)
+	list, err := ctrl.eventStore.ListEvents(cid)
 	if err != nil {
 		return err
 	}
@@ -80,7 +90,7 @@ func (ctrl EventCtrl) Import(c echo.Context) error {
 
 	uri := c.Echo().Reverse("import-events", cid)
 	now := time.Now()
-	usr := getUser(c)
+	usr := c.Get("user").(string)
 
 	return importHelper(c, uri, 8, func(c echo.Context, rec []string) error {
 		t, err := time.Parse(time.RFC3339, rec[0])
@@ -109,7 +119,7 @@ func (ctrl EventCtrl) Import(c echo.Context) error {
 			UserModified: usr,
 		}
 
-		_, err = model.SaveEvent(cid, obj)
+		_, err = ctrl.eventStore.SaveEvent(cid, obj)
 		return err
 	})
 }
@@ -125,7 +135,7 @@ func (ctrl EventCtrl) Show(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	obj, err := model.GetEvent(cid, id)
+	obj, err := ctrl.eventStore.GetEvent(cid, id)
 	if err != nil {
 		return err
 	}
@@ -133,7 +143,7 @@ func (ctrl EventCtrl) Show(c echo.Context) error {
 	// related assets
 	relatedAssets := []model.Asset{}
 	if obj.AssetA != "" {
-		x, err := model.GetAssetByName(cid, obj.AssetA)
+		x, err := ctrl.assetStore.GetAssetByName(cid, obj.AssetA)
 		if err != nil {
 			return err
 		}
@@ -142,7 +152,7 @@ func (ctrl EventCtrl) Show(c echo.Context) error {
 	}
 
 	if obj.AssetB != "" && obj.AssetB != obj.AssetA {
-		x, err := model.GetAssetByName(cid, obj.AssetB)
+		x, err := ctrl.assetStore.GetAssetByName(cid, obj.AssetB)
 		if err != nil {
 			return err
 		}
@@ -151,7 +161,7 @@ func (ctrl EventCtrl) Show(c echo.Context) error {
 	}
 
 	// related indicators
-	indicators, err := model.ListIndicators(cid)
+	indicators, err := ctrl.indicatorStore.ListIndicators(cid)
 	if err != nil {
 		return err
 	}
@@ -180,13 +190,13 @@ func (ctrl EventCtrl) Edit(c echo.Context) error {
 
 	obj := model.Event{CaseID: cid}
 	if id != 0 {
-		obj, err = model.GetEvent(cid, id)
+		obj, err = ctrl.eventStore.GetEvent(cid, id)
 		if err != nil {
 			return err
 		}
 	}
 
-	assets, err := model.ListAssets(cid)
+	assets, err := ctrl.assetStore.ListAssets(cid)
 	if err != nil {
 		return err
 	}
@@ -223,7 +233,7 @@ func (ctrl EventCtrl) Save(c echo.Context) error {
 	}
 
 	if vr := ValidateEvent(dto); !vr.Valid() {
-		assets, err := model.ListAssets(cid)
+		assets, err := ctrl.assetStore.ListAssets(cid)
 		if err != nil {
 			return err
 		}
@@ -238,7 +248,7 @@ func (ctrl EventCtrl) Save(c echo.Context) error {
 	}
 
 	now := time.Now()
-	usr := getUser(c)
+	usr := c.Get("user").(string)
 	obj := model.Event{
 		ID:           id,
 		CaseID:       cid,
@@ -257,7 +267,7 @@ func (ctrl EventCtrl) Save(c echo.Context) error {
 	}
 
 	if id != 0 {
-		src, err := model.GetEvent(cid, id)
+		src, err := ctrl.eventStore.GetEvent(cid, id)
 		if err != nil {
 			return err
 		}
@@ -266,7 +276,7 @@ func (ctrl EventCtrl) Save(c echo.Context) error {
 		obj.UserAdded = src.UserAdded
 	}
 
-	if _, err := model.SaveEvent(cid, obj); err != nil {
+	if _, err := ctrl.eventStore.SaveEvent(cid, obj); err != nil {
 		return err
 	}
 
@@ -289,7 +299,7 @@ func (ctrl EventCtrl) Delete(c echo.Context) error {
 		return render(c, utils.Confirm(ctx(c), uri))
 	}
 
-	err = model.DeleteEvent(cid, id)
+	err = ctrl.eventStore.DeleteEvent(cid, id)
 	if err != nil {
 		return err
 	}

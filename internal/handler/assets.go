@@ -13,9 +13,13 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-type AssetCtrl struct{}
+type AssetCtrl struct {
+	store model.AssetStore
+}
 
-func NewAssetCtrl() *AssetCtrl { return &AssetCtrl{} }
+func NewAssetCtrl(store model.AssetStore) *AssetCtrl {
+	return &AssetCtrl{store}
+}
 
 func (ctrl AssetCtrl) List(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
@@ -25,7 +29,7 @@ func (ctrl AssetCtrl) List(c echo.Context) error {
 
 	sort := c.QueryParam("sort")
 	search := c.QueryParam("search")
-	list, err := model.FindAssets(cid, search, sort)
+	list, err := ctrl.store.FindAssets(cid, search, sort)
 	if err != nil {
 		return err
 	}
@@ -39,7 +43,7 @@ func (ctrl AssetCtrl) Export(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	list, err := model.ListAssets(cid)
+	list, err := ctrl.store.ListAssets(cid)
 	if err != nil {
 		return err
 	}
@@ -65,7 +69,7 @@ func (ctrl AssetCtrl) Import(c echo.Context) error {
 
 	uri := c.Echo().Reverse("import-assets", cid)
 	now := time.Now()
-	usr := getUser(c)
+	usr := c.Get("user").(string)
 
 	return importHelper(c, uri, 6, func(c echo.Context, rec []string) error {
 		analysed, err := strconv.ParseBool(rec[5])
@@ -87,7 +91,7 @@ func (ctrl AssetCtrl) Import(c echo.Context) error {
 			UserModified: usr,
 		}
 
-		_, err = model.SaveAsset(cid, obj)
+		_, err = ctrl.store.SaveAsset(cid, obj)
 		return err
 	})
 }
@@ -105,7 +109,7 @@ func (ctrl AssetCtrl) Edit(c echo.Context) error {
 
 	obj := model.Asset{CaseID: cid}
 	if id != 0 {
-		obj, err = model.GetAsset(cid, id)
+		obj, err = ctrl.store.GetAsset(cid, id)
 		if err != nil {
 			return err
 		}
@@ -144,7 +148,7 @@ func (ctrl AssetCtrl) Save(c echo.Context) error {
 	}
 
 	now := time.Now()
-	usr := getUser(c)
+	usr := c.Get("user").(string)
 	obj := model.Asset{
 		ID:           id,
 		CaseID:       cid,
@@ -161,7 +165,7 @@ func (ctrl AssetCtrl) Save(c echo.Context) error {
 	}
 
 	if id != 0 {
-		src, err := model.GetAsset(cid, id)
+		src, err := ctrl.store.GetAsset(cid, id)
 		if err != nil {
 			return err
 		}
@@ -170,7 +174,7 @@ func (ctrl AssetCtrl) Save(c echo.Context) error {
 		obj.UserAdded = src.UserAdded
 	}
 
-	if _, err := model.SaveAsset(cid, obj); err != nil {
+	if _, err := ctrl.store.SaveAsset(cid, obj); err != nil {
 		return err
 	}
 
@@ -193,7 +197,7 @@ func (ctrl AssetCtrl) Delete(c echo.Context) error {
 		return render(c, utils.Confirm(ctx(c), uri))
 	}
 
-	err = model.DeleteAsset(cid, id)
+	err = ctrl.store.DeleteAsset(cid, id)
 	if err != nil {
 		return err
 	}

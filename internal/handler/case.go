@@ -13,14 +13,18 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-type CaseCtrl struct{}
+type CaseCtrl struct {
+	store model.CaseStore
+}
 
-func NewCaseCtrl() *CaseCtrl { return &CaseCtrl{} }
+func NewCaseCtrl(store model.CaseStore) *CaseCtrl {
+	return &CaseCtrl{store}
+}
 
 func (ctrl CaseCtrl) List(c echo.Context) error {
 	sort := c.QueryParam("sort")
 	search := c.QueryParam("search")
-	list, err := model.FindCases(search, sort)
+	list, err := ctrl.store.FindCases(search, sort)
 	if err != nil {
 		return err
 	}
@@ -29,7 +33,7 @@ func (ctrl CaseCtrl) List(c echo.Context) error {
 }
 
 func (ctrl CaseCtrl) Export(c echo.Context) error {
-	list, err := model.ListCases()
+	list, err := ctrl.store.ListCases()
 	if err != nil {
 		return err
 	}
@@ -58,7 +62,7 @@ func (ctrl CaseCtrl) Export(c echo.Context) error {
 func (ctrl CaseCtrl) ImportCases(c echo.Context) error {
 	uri := c.Echo().Reverse("import-cases")
 	now := time.Now()
-	usr := getUser(c)
+	usr := c.Get("user").(string)
 
 	return importHelper(c, uri, 7, func(c echo.Context, rec []string) error {
 		id, err := strconv.ParseInt(rec[0], 10, 64)
@@ -85,7 +89,7 @@ func (ctrl CaseCtrl) ImportCases(c echo.Context) error {
 			UserModified:   usr,
 		}
 
-		_, err = model.SaveCase(obj)
+		_, err = ctrl.store.SaveCase(obj)
 		return err
 	})
 }
@@ -96,7 +100,7 @@ func (ctrl CaseCtrl) Show(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	obj, err := model.GetCase(cid)
+	obj, err := ctrl.store.GetCase(cid)
 	if err != nil {
 		return err
 	}
@@ -112,7 +116,7 @@ func (ctrl CaseCtrl) Edit(c echo.Context) error {
 
 	var obj model.Case
 	if cid != 0 {
-		obj, err = model.GetCase(cid)
+		obj, err = ctrl.store.GetCase(cid)
 		if err != nil {
 			return err
 		}
@@ -146,7 +150,7 @@ func (ctrl CaseCtrl) Save(c echo.Context) error {
 	}
 
 	now := time.Now()
-	usr := getUser(c)
+	usr := c.Get("user").(string)
 	obj := model.Case{
 		ID:             cid,
 		Name:           dto.Name,
@@ -162,7 +166,7 @@ func (ctrl CaseCtrl) Save(c echo.Context) error {
 	}
 
 	if cid != 0 {
-		src, err := model.GetCase(cid)
+		src, err := ctrl.store.GetCase(cid)
 		if err != nil {
 			return err
 		}
@@ -171,7 +175,7 @@ func (ctrl CaseCtrl) Save(c echo.Context) error {
 		obj.UserAdded = src.UserAdded
 	}
 
-	if _, err := model.SaveCase(obj); err != nil {
+	if _, err := ctrl.store.SaveCase(obj); err != nil {
 		return err
 	}
 
@@ -189,7 +193,7 @@ func (ctrl CaseCtrl) Delete(c echo.Context) error {
 		return render(c, utils.Confirm(ctx(c), uri))
 	}
 
-	if err := model.DeleteCase(cid); err != nil {
+	if err := ctrl.store.DeleteCase(cid); err != nil {
 		return err
 	}
 
