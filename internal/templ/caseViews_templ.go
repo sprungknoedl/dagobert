@@ -573,11 +573,6 @@ func CaseList(env utils.Env, list []model.Case) templ.Component {
 	})
 }
 
-// @utils.GroupedButton(templ.Attributes{"hx-get": env.Routes("choose-report", obj.ID), "hx-target": "#modal"}) {
-// 	@icons.DocumentArrowDown("inline-block mr-1 w-5 h-5")
-// 	Generate report
-// }
-
 func ReportList(env utils.Env, cid int64, list []string) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)

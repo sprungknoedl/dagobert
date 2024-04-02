@@ -77,11 +77,6 @@ templ CaseList(env utils.Env, list []model.Case) {
 	}
 }
 
-// @utils.GroupedButton(templ.Attributes{"hx-get": env.Routes("choose-report", obj.ID), "hx-target": "#modal"}) {
-// 	@icons.DocumentArrowDown("inline-block mr-1 w-5 h-5")
-// 	Generate report
-// }
-
 templ ReportList(env utils.Env, cid int64, list []string) {
 	@utils.Modal("max-w-xl") {
 		<form action={templ.SafeURL(env.Routes("generate-report", cid))}>

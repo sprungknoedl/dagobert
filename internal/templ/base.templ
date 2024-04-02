@@ -45,37 +45,43 @@ templ Navigation(env utils.Env) {
 
 		<div class="divider"></div>
 		<ul class="menu gap-2">
-		@navLink(env, "Cases", templ.URL("/"))                      { @icons.Briefcase("w-6 h-6") }
-		@navLink(env, "Users", templ.URL(env.Routes("list-users"))) { @icons.Users("w-6 h-6") }
+		@navLink(env, "Cases", templ.URL("/"), nil)                      { @icons.Briefcase("w-6 h-6") }
+		@navLink(env, "Users", templ.URL(env.Routes("list-users")), nil) { @icons.Users("w-6 h-6") }
 		</ul>
 
 		if env.ActiveCase.ID != 0 {
 		<div class="divider"></div>
 		<ul class="menu gap-2">
-		@navLink(env, "Timeline", templ.URL(env.Routes("list-events", env.ActiveCase.ID)))       { @icons.Clock("w-6 h-6") }
-		@navLink(env, "Assets", templ.URL(env.Routes("list-assets", env.ActiveCase.ID)))         { @icons.Desktop("w-6 h-6") }
-		@navLink(env, "Indicators", templ.URL(env.Routes("list-indicators", env.ActiveCase.ID))) { @icons.GlobeEurope("w-6 h-6") }
-		@navLink(env, "Malware", templ.URL(env.Routes("list-malware", env.ActiveCase.ID)))       { @icons.Bug("w-6 h-6") }
-		@navLink(env, "Evidences", templ.URL(env.Routes("list-evidences", env.ActiveCase.ID)))   { @icons.Cube("w-6 h-6") }
-		@navLink(env, "Tasks", templ.URL(env.Routes("list-tasks", env.ActiveCase.ID)))           { @icons.ClipboardCheck("w-6 h-6") }
-		@navLink(env, "Notes", templ.URL(env.Routes("list-notes", env.ActiveCase.ID)))           { @icons.ChatBubble("w-6 h-6") }
+		@navLink(env, "Timeline", templ.URL(env.Routes("list-events", env.ActiveCase.ID)), nil)       { @icons.Clock("w-6 h-6") }
+		@navLink(env, "Assets", templ.URL(env.Routes("list-assets", env.ActiveCase.ID)), nil)         { @icons.Desktop("w-6 h-6") }
+		@navLink(env, "Indicators", templ.URL(env.Routes("list-indicators", env.ActiveCase.ID)), nil) { @icons.GlobeEurope("w-6 h-6") }
+		@navLink(env, "Malware", templ.URL(env.Routes("list-malware", env.ActiveCase.ID)), nil)       { @icons.Bug("w-6 h-6") }
+		@navLink(env, "Evidences", templ.URL(env.Routes("list-evidences", env.ActiveCase.ID)), nil)   { @icons.Cube("w-6 h-6") }
+		@navLink(env, "Tasks", templ.URL(env.Routes("list-tasks", env.ActiveCase.ID)), nil)           { @icons.ClipboardCheck("w-6 h-6") }
+		@navLink(env, "Notes", templ.URL(env.Routes("list-notes", env.ActiveCase.ID)), nil)           { @icons.ChatBubble("w-6 h-6") }
+		</ul>
+
+		<div class="divider"></div>
+		<ul class="menu gap-2">
+		@navLink(env, "Report", "#report", templ.Attributes{"hx-get": env.Routes("choose-report", env.ActiveCase.ID), "hx-target": "#modal"})       { @icons.DocumentArrowDown("w-6 h-6") }
 		</ul>
 		}
+
 
 		<div class="grow"></div>
 		<div class="divider"></div>
 		<ul class="menu gap-2">
-		@navLink(env, "Logout", templ.URL(env.Routes("logout"))) { @icons.Logout("w-6 h-6") }
+		@navLink(env, "Logout", templ.URL(env.Routes("logout")), nil) { @icons.Logout("w-6 h-6") }
 		</ul>
 	</aside>
 }
 
-templ navLink(env utils.Env, name string, href templ.SafeURL) {
+templ navLink(env utils.Env, name string, href templ.SafeURL, attrs templ.Attributes) {
 	<li>
 	if string(href) == env.ActiveRoute {
-		<a href={ href } data-tip={name} class="tooltip tooltip-right active"> { children... } </a>
+		<a href={ href } data-tip={name} class="tooltip tooltip-right active" { attrs... }> { children... } </a>
 	} else {
-		<a href={ href } data-tip={name} class="tooltip tooltip-right"> { children... } </a>
+		<a href={ href } data-tip={name} class="tooltip tooltip-right" { attrs... }> { children... } </a>
 	}
 	</li>
 }
