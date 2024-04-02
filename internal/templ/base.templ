@@ -16,43 +16,42 @@ type CrudUrls struct {
 
 templ Layout(env utils.Env) {
 	<!DOCTYPE html>
-	<html lang="en" dir="ltr">
+	<html lang="en" dir="ltr" data-theme="nord">
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>Dagobert</title>
-		<link href="/dist/flowbite.min.css" rel="stylesheet" />
 		<link href="/dist/dagobert.css" rel="stylesheet" />
 
-		<script src="/dist/flowbite.min.js" defer></script>
 		<script src="/dist/alpine.min.js" defer></script>
 		<script src="/dist/hyperscript.min.js" defer></script>
 		<script src="/dist/htmx.min.js" defer></script>
 	</head>
-	<body class="flex bg-slate-800 text-white">
+	<body class="flex">
 		@Navigation(env)
 		{ children... }
 
 		<div id="modal" hx-swap-oob="true"></div>
 		<div id="errors" class="fixed bottom-0 right-0 z-50"></div>
-
 	</body>
 	</html>
 }
 
 templ Navigation(env utils.Env) {
-	<aside class="flex flex-col w-20 min-w-20 h-screen bg-slate-900 overflow-x-hidden">
-		<div class="w-8 h-8 m-4 mx-auto bg-pink-500 text-slate-800 rounded-lg p-2">
+	<aside class="flex flex-col h-screen">
+		<div class="w-8 h-8 m-4 mx-auto bg-primary text-primary-content rounded-lg p-2">
 			@icons.Dagobert("")
 		</div>
 
-		<hr class="m-4 border-slate-700"></hr>
+		<div class="divider"></div>
+		<ul class="menu gap-2">
 		@navLink(env, "Cases", templ.URL("/"))                      { @icons.Briefcase("w-6 h-6") }
 		@navLink(env, "Users", templ.URL(env.Routes("list-users"))) { @icons.Users("w-6 h-6") }
+		</ul>
 
 		if env.ActiveCase.ID != 0 {
-		<hr class="m-4 border-slate-700"></hr>
-		@navLink(env, "Overview", templ.URL(env.Routes("show-case", env.ActiveCase.ID)))         { @icons.Identification("w-6 h-6") }
+		<div class="divider"></div>
+		<ul class="menu gap-2">
 		@navLink(env, "Timeline", templ.URL(env.Routes("list-events", env.ActiveCase.ID)))       { @icons.Clock("w-6 h-6") }
 		@navLink(env, "Assets", templ.URL(env.Routes("list-assets", env.ActiveCase.ID)))         { @icons.Desktop("w-6 h-6") }
 		@navLink(env, "Indicators", templ.URL(env.Routes("list-indicators", env.ActiveCase.ID))) { @icons.GlobeEurope("w-6 h-6") }
@@ -60,51 +59,40 @@ templ Navigation(env utils.Env) {
 		@navLink(env, "Evidences", templ.URL(env.Routes("list-evidences", env.ActiveCase.ID)))   { @icons.Cube("w-6 h-6") }
 		@navLink(env, "Tasks", templ.URL(env.Routes("list-tasks", env.ActiveCase.ID)))           { @icons.ClipboardCheck("w-6 h-6") }
 		@navLink(env, "Notes", templ.URL(env.Routes("list-notes", env.ActiveCase.ID)))           { @icons.ChatBubble("w-6 h-6") }
+		</ul>
 		}
 
 		<div class="grow"></div>
-		<hr class="m-4 border-slate-700"></hr>
+		<div class="divider"></div>
+		<ul class="menu gap-2">
 		@navLink(env, "Logout", templ.URL(env.Routes("logout"))) { @icons.Logout("w-6 h-6") }
+		</ul>
 	</aside>
 }
 
 templ navLink(env utils.Env, name string, href templ.SafeURL) {
+	<li>
 	if string(href) == env.ActiveRoute {
-	<a href={ href } data-tooltip-target={"tooltip-"+name} data-tooltip-placement="right"
-		class="flex justify-center items-center min-w-16 min-h-16 bg-slate-800 font-bold hover:text-white">
-		{ children... }
-	</a>
+		<a href={ href } data-tip={name} class="tooltip tooltip-right active"> { children... } </a>
 	} else {
-	<a href={ href } data-tooltip-target={"tooltip-"+name} data-tooltip-placement="right"
-		class="flex justify-center items-center min-w-16 min-h-16 text-slate-400 hover:text-white">
-		{ children... }
-	</a>
+		<a href={ href } data-tip={name} class="tooltip tooltip-right"> { children... } </a>
 	}
-
-	<div id={"tooltip-"+name} role="tooltip" class="absolute z-10 invisible inline-block px-4 py-3 text-sm font-medium text-white transition-opacity duration-300 bg-slate-900 rounded-lg shadow-sm opacity-0 tooltip">
-		{ name } 
-		<div class="tooltip-arrow" data-popper-arrow></div>
-	</div>
+	</li>
 }
 
 templ Navbar(env utils.Env, title string, search bool, sort bool) {
 	<nav class="flex items-center justify-between mb-4">
-		<ol class="inline-flex items-center space-x-1 font-bold text-2xl ml-2">
+		<div class="breadcrumbs font-bold text-2xl">
+		<ul>
 			if env.ActiveCase.ID != 0 {
-			<li class="inline-flex items-center gap-2 text-slate-400">
+			<li class="text-neutral inline-flex gap-2">
 				@icons.Briefcase(icons.Inline)
 				{ env.ActiveCase.Name }
 			</li>
 			}
-			<li class="inline-flex items-center gap-2">
-				if env.ActiveCase.ID != 0 {
-				<svg class="ml-4 w-3 h-3 text-slate-400 mx-1" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-          			<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
-        		</svg>
-				}
-				{ title }
-			</li>
-		</ol>
+			<li>{ title }</li>
+		</ul>
+		</div>
 	
 		<div class="flex gap-5 items-center">
 			if search {
@@ -114,7 +102,7 @@ templ Navbar(env utils.Env, title string, search bool, sort bool) {
 				@utils.Sort(env)
 			}
 
-			<div class="inline-flex rounded-md shadow-sm" role="group">
+			<div class="join" role="group">
 				{ children... }
 			</div>
 		</div>
@@ -132,7 +120,7 @@ templ TableView(env utils.Env, title string, urls CrudUrls) {
 				if urls.Import != "" {
 					@utils.GroupedButton(templ.Attributes{
 						"hx-get": urls.Import,
-						"hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false",
+						"hx-target": "#modal", "hx-select": "dialog", "hx-swap": "innerHTML", "hx-push-url": "false",
 						"_": "on keydown[key is 'i' and ctrlKey is true] from window call me.click()",
 					}) {
 						@icons.ArrowUpTray("inline-block mr-1 w-5 h-5")
@@ -158,7 +146,7 @@ templ TableView(env utils.Env, title string, urls CrudUrls) {
 				if urls.Add != "" {
 					@utils.GroupedButton(templ.Attributes{
 						"hx-get": urls.Add,
-						"hx-target": "#modal", "hx-select": "aside", "hx-swap": "innerHTML", "hx-push-url": "false",
+						"hx-target": "#modal", "hx-select": "dialog", "hx-swap": "innerHTML", "hx-push-url": "false",
 						"_": "on keydown[key is 'n' and ctrlKey is true] from window call me.click()",
 					}) {
 						@icons.Plus("inline-block mr-1 w-5 h-5")

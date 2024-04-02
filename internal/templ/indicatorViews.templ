@@ -98,11 +98,11 @@ templ renderIndicatorType(value string) {
 templ renderIndicatorTLP(value string) {
 	switch value {
 	case "TLP:RED":
-		<span class="text-red-500">{value}</span>
+		<span class="text-red-600">{value}</span>
 	case "TLP:AMBER":
-		<span class="text-amber-500">{value}</span>
+		<span class="text-amber-600">{value}</span>
 	case "TLP:GREEN":
-		<span class="text-green-500">{value}</span>
+		<span class="text-green-600">{value}</span>
 	default:
 		{value}
 	}

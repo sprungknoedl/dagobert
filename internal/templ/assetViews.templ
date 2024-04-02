@@ -96,7 +96,7 @@ templ renderAssetType(value string) {
 templ renderAssetCompromised(value string) {
 	switch value {
 	case "Compromised":
-		<span class="text-red-500"> @icons.Bug("inline-block w-6 h-6 mr-2") Yes </span>
+		<span class="text-error"> @icons.Bug("inline-block w-6 h-6 mr-2") Yes </span>
 	case "Not compromised":
 		No
 	case "Unknown":
@@ -108,8 +108,8 @@ templ renderAssetCompromised(value string) {
 
 templ renderAssetAnalysed(value bool) {
 	if value {
-		@icons.CheckCircle("w-6 h-6 text-green-500")
+		@icons.CheckCircle("w-6 h-6 text-success")
 	} else {
-		@icons.XCircle("w-6 h-6 text-red-500")
+		@icons.XCircle("w-6 h-6 text-error")
 	}
 }

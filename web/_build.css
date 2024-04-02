@@ -1,3 +1,11 @@
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
+
+.btn, .input, .select, .file-input, .badge {
+    @apply rounded-full;
+}
+
+.tooltip::before {
+    @apply z-50;
+  }

@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -122,59 +121,6 @@ func (ctrl EventCtrl) Import(c echo.Context) error {
 		_, err = ctrl.eventStore.SaveEvent(cid, obj)
 		return err
 	})
-}
-
-func (ctrl EventCtrl) Show(c echo.Context) error {
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil || id == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")
-	}
-
-	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
-	if err != nil || cid == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	obj, err := ctrl.eventStore.GetEvent(cid, id)
-	if err != nil {
-		return err
-	}
-
-	// related assets
-	relatedAssets := []model.Asset{}
-	if obj.AssetA != "" {
-		x, err := ctrl.assetStore.GetAssetByName(cid, obj.AssetA)
-		if err != nil {
-			return err
-		}
-
-		relatedAssets = append(relatedAssets, x)
-	}
-
-	if obj.AssetB != "" && obj.AssetB != obj.AssetA {
-		x, err := ctrl.assetStore.GetAssetByName(cid, obj.AssetB)
-		if err != nil {
-			return err
-		}
-
-		relatedAssets = append(relatedAssets, x)
-	}
-
-	// related indicators
-	indicators, err := ctrl.indicatorStore.ListIndicators(cid)
-	if err != nil {
-		return err
-	}
-
-	search := obj.Event + obj.Raw
-	relatedIndicators := []model.Indicator{}
-	for _, x := range indicators {
-		if strings.Contains(search, x.Value) {
-			relatedIndicators = append(relatedIndicators, x)
-		}
-	}
-
-	return render(c, templ.EventDetailsView(ctx(c), obj, relatedAssets, relatedIndicators))
 }
 
 func (ctrl EventCtrl) Edit(c echo.Context) error {

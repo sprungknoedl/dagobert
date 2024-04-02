@@ -94,20 +94,6 @@ func (ctrl CaseCtrl) ImportCases(c echo.Context) error {
 	})
 }
 
-func (ctrl CaseCtrl) Show(c echo.Context) error {
-	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
-	if err != nil || cid == 0 {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	obj, err := ctrl.store.GetCase(cid)
-	if err != nil {
-		return err
-	}
-
-	return render(c, templ.CaseOverview(ctx(c), obj))
-}
-
 func (ctrl CaseCtrl) Edit(c echo.Context) error {
 	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
 	if err != nil {

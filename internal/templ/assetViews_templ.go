@@ -642,7 +642,7 @@ func renderAssetCompromised(value string) templ.Component {
 		ctx = templ.ClearChildren(ctx)
 		switch value {
 		case "Compromised":
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<span class=\"text-red-500\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<span class=\"text-error\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -703,12 +703,12 @@ func renderAssetAnalysed(value bool) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		if value {
-			templ_7745c5c3_Err = icons.CheckCircle("w-6 h-6 text-green-500").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = icons.CheckCircle("w-6 h-6 text-success").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		} else {
-			templ_7745c5c3_Err = icons.XCircle("w-6 h-6 text-red-500").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = icons.XCircle("w-6 h-6 text-error").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

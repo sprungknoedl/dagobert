@@ -5,94 +5,81 @@ import (
 )
 
 templ TextInput(label string, name string, value string, required bool, vr valid.Condition) {
-	<div class="mb-5">
-		<label class="block mb-2 text-sm font-medium text-white">
+	<div class="form-control mb-2">
+		<label class="label justify-start gap-2">
 			{ label }
 			if required {
-				<span class="font-bold text-rose-500">*</span>
+				<span class="font-bold text-primary">*</span>
 			}
-			if vr.Missing || vr.Invalid{
-				<span class="ml-2 text-sm text-red-500">{ vr.String() }</span>
+			if vr.Missing || vr.Invalid {
+				<span class="ml-2 text-sm text-error">{ vr.String() }</span>
 			}
 		</label>
 
-		<input name={name} value={value} type="text" class={Validation(vr, "border text-sm rounded-lg block w-full p-2.5")} />
+		<input name={name} value={value} type="text" class="input input-bordered" />
 	</div>
 }
 
 templ TextareaInput(label string, name string, value string, required bool, vr valid.Condition) {
-	<div class="mb-5">
-		<label class="block mb-2 text-sm font-medium text-white">
+	<div class="form-control mb-2">
+		<label class="label justify-start gap-2">
 			{ label }
 			if required {
-				<span class="font-bold text-rose-500">*</span>
+				<span class="font-bold text-primary">*</span>
 			}
-			if vr.Missing || vr.Invalid{
-				<span class="ml-2 text-sm text-red-500">{ vr.String() }</span>
+			if vr.Missing || vr.Invalid {
+				<span class="ml-2 text-sm text-error">{ vr.String() }</span>
 			}
 		</label>
 
-		<textarea name={name} rows="5" class={Validation(vr, "block p-2.5 w-full text-sm rounded-lg border")}>
+		<textarea name={name} rows="5" class="textarea textarea-bordered">
 		{ value }
 		</textarea>
-
 	</div>
 }
 
 templ BooleanInput(label string, name string, value bool, vr valid.Condition) {
-	<div class="mb-5">
-		<div class="flex items-center">
-			<input id={name} name={name} value="true" checked?={value} type="checkbox" class="w-4 h-4 text-pink-600 rounded focus:ring-3 focus:ring-pink-600 ring-offset-slate-800 focus:ring-offset-slate-80 bg-slate-700 border border-slate-600" />
-			<label for={name} class="ms-2 text-sm font-medium text-slate-300">{label}</label>
+	<div class="form-control mb-2">
+		<label for={name} class="label cursor-pointer justify-start gap-2">
+			<input id={name} name={name} value="true" checked?={value} type="checkbox" class="checkbox" />
+			{label}
 			if vr.Missing || vr.Invalid {
-				<span class="mt-2 text-sm text-red-500">{ vr.String() }</span>
+				<span class="mt-2 text-sm text-error">{ vr.String() }</span>
 			}
-		</div>
+		</label>
 	</div>
 }
 
 templ SelectInput(label string, name string, value string, options []string, required bool, vr valid.Condition) {
-	<div class="mb-5">
-		<label class="block mb-2 text-sm font-medium text-white">
+	<div class="form-control mb-2">
+		<label class="label justify-start gap-2">
 			{ label }
 			if required {
-				<span class="font-bold text-rose-500">*</span>
+				<span class="font-bold text-primary">*</span>
 			}
 			if vr.Missing || vr.Invalid {
-				<span class="ml-2 text-sm text-red-500">{ vr.String() }</span>
+				<span class="ml-2 text-sm text-error">{ vr.String() }</span>
 			}
 		</label>
 
-		<select name={name} class={Validation(vr, "border text-sm rounded-lg block w-full p-2.5")}>
+		<select name={name} class="select select-bordered">
 			<option disabled value="" selected?={value == ""}>Select an option</option>
 			for _, opt := range options {
 				<option selected?={value == opt}>{opt}</option>
 			}
 		</select>
-
 	</div>
 }
 
 templ Search(env Env) {
-	<label for="default-search" class="mb-2 text-sm font-medium sr-only text-white">Search</label>
-	<div class="relative">
-		<div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-			<svg class="w-4 h-4 text-slate-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-				<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
-			</svg>
-		</div>
-		<input type="search" name="search" value={env.Search} style="width: 32rem" class="block w-full px-4 py-2 ps-10 text-sm border rounded-lg bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-pink-500 focus:border-pink-500" placeholder="Search ..." />
-	</div>
+	<label class="w-96 input input-bordered flex items-center gap-2">
+		<input type="search" name="search" value={env.Search} class="grow" placeholder="Search ..." />
+		<svg class="w-4 h-4 opacity-70" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+			<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+		</svg>
+	</label>
 }
 
 templ Sort(env Env) {
 	<input name="sort" value={env.Sort} x-model="sort_by" x-init="$watch('sort_by', () => { $dispatch('sort'); } )" class="hidden" />
-}
-
-func Validation(vr valid.Condition, css string) string {
-	if vr.Missing || vr.Invalid {
-		return css + " bg-slate-700 border-red-600 placeholder-red-400 text-red-400 focus:ring-red-500 focus:border-red-500"
-	} else {
-		return css + " bg-slate-700 border-slate-600 placeholder-slate-400 text-white focus:ring-pink-500 focus:border-pink-500"
-	}
 }

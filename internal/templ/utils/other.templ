@@ -2,9 +2,11 @@ package utils
 
 
 templ Card(title string, icon func(string) templ.Component) {
-	<div class="p-6 rounded-lg bg-slate-700 text-center">
-		@icon("w-7 h-7 text-slate-400 mb-3 mx-auto")
-		<h5 class="mb-2 text-2xl font-semibold tracking-tight text-white">{title}</h5>
-		<p class="mb-3 font-normal text-slate-400">{ children... }</p>
+	<div class="card bg-base-100 shadow-xl">
+		<div class="card-body">
+			@icon("w-7 h-7 text-primary mb-3 mx-auto")
+			<h5 class="card-title">{title}</h5>
+			<p>{ children... }</p>
+		</div>
 	</div>
 }

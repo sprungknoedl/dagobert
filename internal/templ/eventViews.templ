@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/sprungknoedl/dagobert/internal/templ/utils"
-	"github.com/sprungknoedl/dagobert/internal/templ/icons"
 	"github.com/sprungknoedl/dagobert/pkg/model"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -52,129 +51,6 @@ templ EventForm(env utils.Env, obj EventDTO, assets []string, vr valid.Result) {
 	}
 }
 
-templ EventDetailsView(env utils.Env, obj model.Event, assets []model.Asset, indicators []model.Indicator) {
-	@utils.Modal("max-w-4xl") {
-		@utils.ModalHeader() {{ fmt.Sprintf("Event #%d", obj.ID) }}
-
-		<!-- event details -->
-		@utils.ModalBody() {
-			<div class="mb-5">
-				<label class="block text-xs uppercase font-medium text-gray-500"> Date / Time </label>
-				<span class="text-sm block w-full py-2 text-white"> @renderTime(obj.Time) </span>
-			</div>
-			<div class="mb-5">
-				<label class="block text-xs uppercase font-medium text-gray-500"> Type </label>
-				<span class="text-sm block w-full py-2 text-white"> @renderEventType(obj.Type) </span>
-			</div>
-			<div class="mb-5 flex">
-				<div class="flex-1">
-					<label class="block text-xs uppercase font-medium text-gray-500"> Event System </label>
-					<span class="text-sm block w-full py-2 text-white"> {obj.AssetA} </span>
-				</div>
-
-				<div class="flex-initial w-24">
-					<label class="block text-xs uppercase font-medium text-gray-500"> &nbsp; </label>
-					<span class="text-sm block w-full py-2 text-white text-center"> {obj.Direction} </span>
-				</div>
-
-				<div class="flex-1">
-					<label class="block text-xs uppercase font-medium text-gray-500"> Remote System </label>
-					<span class="text-sm block w-full py-2 text-white"> {obj.AssetB} &nbsp; </span>
-				</div>
-			</div>
-			<div class="mb-5">
-				<label class="block text-xs uppercase font-medium text-gray-500"> Event </label>
-				<span class="text-sm block w-full py-2 text-white"> {obj.Event} </span>
-			</div>
-			<div class="mb-5">
-				<label class="block text-xs uppercase font-medium text-gray-500"> Raw </label>
-				<pre class="text-sm block w-full py-2 text-white"> {obj.Raw} &nbsp; </pre>
-			</div>
-			<div class="mb-5">
-				<label class="block text-xs uppercase font-medium text-gray-500"> Key Event </label>
-				<span class="text-sm block w-full py-2 text-white"> {fmt.Sprintf("%v", obj.KeyEvent)} </span>
-			</div>
-		}
-
-		<!-- event metadata -->
-		@utils.ModalBody() {
-			<div class="mb-5 flex">
-				<div class="flex-1">
-					<label class="block text-xs uppercase font-medium text-gray-500"> Event added </label>
-					<span class="text-sm block w-full py-2 text-white"> @renderTime(obj.DateAdded) </span>
-				</div>
-				<div class="flex-1">
-					<label class="block text-xs uppercase font-medium text-gray-500"> by </label>
-					<span class="text-sm block w-full py-2 text-white"> {obj.UserAdded} </span>
-				</div>
-			</div>
-
-			<div class="mb-5 flex">
-				<div class="flex-1">
-					<label class="block text-xs uppercase font-medium text-gray-500"> Event modified </label>
-					<span class="text-sm block w-full py-2 text-white"> @renderTime(obj.DateModified) </span>
-				</div>
-				<div class="flex-1">
-					<label class="block text-xs uppercase font-medium text-gray-500"> by </label>
-					<span class="text-sm block w-full py-2 text-white"> {obj.UserModified} </span>
-				</div>
-			</div>
-		}
-
-		<!-- related assets -->
-		if len(assets) > 0 {
-		@utils.ModalBody() {
-			<div class="mb-5">
-				<label class="mb-2 block text-xs uppercase font-medium text-gray-500"> Related Assets </label>
-				@utils.Table() {
-					@utils.TableHead() {
-						@utils.TH(env, "", nil) { Type }
-						@utils.TH(env, "", nil) { Name }
-						@utils.TH(env, "", nil) { IP }
-						@utils.TH(env, "", nil) { Description }
-					}
-
-					@utils.TableBody() {
-						for _, obj := range assets {
-						@utils.TR(nil) {
-							@utils.TD() {@renderAssetType(obj.Type)}
-							@utils.TD() {{ obj.Name }}
-							@utils.TD() {{ obj.IP }}
-							@utils.TD() {{ obj.Description }}
-						}}
-					}
-				}
-			</div>
-		}}
-
-		<!-- related indicators -->
-		if len(indicators) > 0 {
-		@utils.ModalBody() {
-			<div class="mb-5">
-				<label class="mb-2 block text-xs uppercase font-medium text-gray-500"> Related Indicators </label>
-				@utils.Table() {
-					@utils.TableHead() {
-						@utils.TH(env, "", nil) { Type }
-						@utils.TH(env, "", nil) { Value }
-						@utils.TH(env, "", nil) { Description }
-						@utils.TH(env, "", nil) { TLP }
-					}
-
-					@utils.TableBody() {
-						for _, obj := range indicators {
-						@utils.TR(nil) {
-							@utils.TD() {@renderIndicatorType(obj.Type)}
-							@utils.TD() {{ obj.Value }}
-							@utils.TD() {{ obj.Description }}
-							@utils.TD() {@renderIndicatorTLP(obj.TLP)}
-						}}
-					}
-				}
-			</div>
-		}}
-	}
-}
-
 templ EventList(env utils.Env, cid int64, list []model.Event, indicators []model.Indicator) {
 	@TableView(env, "Timeline", CrudUrls{
 		List: env.Routes("list-events", cid),
@@ -194,24 +70,20 @@ templ EventList(env utils.Env, cid int64, list []model.Event, indicators []model
 		@utils.TableBody() {
 			for i, obj := range list {
 			if b, d := hasTimeGap(list, i); b {
-				<tr class="border-b bg-slate-800 border-slate-700">
+				<tr>
 					<td class="text-center p-8" colspan="6">
-					<span class="rounded-full py-4 px-8 mr-2 bg-slate-900">Mind the gap: { d }</span>
+					<span class="badge badge-accent badge-lg p-4">Mind the gap: { d }</span>
 					</td>
 				</tr>
 			}
 
-			@utils.TR(templ.Attributes{"hx-trigger": "click target:td", "hx-get": env.Routes("show-event", cid, obj.ID), "hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "aside", "hx-push-url": "false"}) {
+			@utils.TR(nil) {
 				@utils.TD() { @renderTime(obj.Time) }
 				@utils.TD() { @renderEventType(obj.Type) }
 				@utils.TD() {{ obj.AssetA }}
 				@utils.TD() {{ obj.Direction + " " + obj.AssetB }}
 				@utils.TD() { @highlightIndicators(obj.Event, indicators) }
-				@utils.DefaultTableButtons(env.Routes("view-event", cid, obj.ID), env.Routes("delete-event", cid, obj.ID)) {
-					if obj.KeyEvent {
-						@icons.SolidStar(icons.Inline + " m-2 text-yellow-500")
-					}
-				}
+				@utils.DefaultTableButtons(env.Routes("view-event", cid, obj.ID), env.Routes("delete-event", cid, obj.ID)) {}
 			}}
 		}
 
@@ -222,46 +94,48 @@ templ EventList(env utils.Env, cid int64, list []model.Event, indicators []model
 }
 
 templ renderTime(t time.Time) {
-	{ t.Format("2006-01-02 15:04:05.000") } <span class="text-slate-500">{ t.Format("Z07:00") }</span>
+	{ t.Format("2006-01-02 15:04:05.000") } <span class="text-neutral">{ t.Format("Z07:00") }</span>
 }
 
 templ renderEventType(typ string) {
+	<span class="flex items-center gap-2 text-sm font-medium me-3">
 	switch typ {
 	case "Reconnaissance":
-		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-slate-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+		<span class="badge bg-slate-500"></span> {typ}
 	case "Resource Development":
-		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-slate-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+		<span class="badge bg-slate-500"></span> {typ}
 	case "Initial Access":
-		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-yellow-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+		<span class="badge bg-yellow-500"></span> {typ}
 	case "Execution":
-		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-indigo-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+		<span class="badge bg-indigo-500"></span> {typ}
 	case "Persistence":
-		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-indigo-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+		<span class="badge bg-indigo-500"></span> {typ}
 	case "Privilege Escalation":
-		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-yellow-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+		<span class="badge bg-yellow-500"></span> {typ}
 	case "Defense Evasion":
-		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-indigo-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+		<span class="badge bg-indigo-500"></span> {typ}
 	case "Credential Access":
-		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-cyan-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+		<span class="badge bg-cyan-500"></span> {typ}
 	case "Discovery":
-		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-slate-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+		<span class="badge bg-slate-500"></span> {typ}
 	case "Lateral Movement":
-		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-cyan-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+		<span class="badge bg-cyan-500"></span> {typ}
 	case "Collection":
-		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-red-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+		<span class="badge bg-red-500"></span> {typ}
 	case "C2":
-		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-fuchsia-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+		<span class="badge bg-fuchsia-500"></span> {typ}
 	case "Exfiltration":
-		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-red-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+		<span class="badge bg-red-500"></span> {typ}
 	case "Impact":
-		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-red-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+		<span class="badge bg-red-500"></span> {typ}
 	case "DFIR":
-		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-green-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+		<span class="badge bg-green-500"></span> {typ}
 	case "Other":
-		<span class="flex items-center gap-2 text-sm font-medium text-white me-3"><span class="flex w-2.5 h-2.5 bg-slate-500 rounded-full me-1.5 flex-shrink-0"></span>{typ}</span>
+		<span class="badge bg-slate-500"></span> {typ}
 	default:
-		<span class="flex items-center gap-2 text-sm font-medium text-white me-3">{typ}</span>
+		{typ}
 	}
+	</span>
 }
 
 func hasTimeGap(list []model.Event, i int) (bool, string) {
@@ -311,7 +185,7 @@ func humanizeDuration(duration time.Duration) string {
 func highlightIndicators(event string, indicators []model.Indicator) templ.Component {
 	event = templ.EscapeString(event)
 	for _, ioc := range indicators {
-		event = strings.ReplaceAll(event, ioc.Value, "<span title=\"Indicator: " + templ.EscapeString(ioc.Description) + "\" class=\"text-red-400 underline\">" + templ.EscapeString(ioc.Value) + "</span>")
+		event = strings.ReplaceAll(event, ioc.Value, "<span title=\"Indicator: " + templ.EscapeString(ioc.Description) + "\" class=\"text-primary underline\">" + templ.EscapeString(ioc.Value) + "</span>")
 	}
 	return templ.Raw(event)
 }

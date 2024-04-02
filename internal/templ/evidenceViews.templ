@@ -30,36 +30,32 @@ templ EvidenceForm(env utils.Env, obj EvidenceDTO, vr valid.Result) {
 		}
 
 		@utils.ModalBody() {
-			<div class="mb-5">
-				<label class="block mb-2 text-sm font-medium text-white">
-					File
-				</label>
-
-				<input name="file" type="file" @change="filename = Object.values($event.target.files).map(file => file.name).join(', ')" class="block w-full text-sm border rounded-lg cursor-pointer text-slate-400 focus:outline-none bg-slate-700 border-slate-600 placeholder-slate-400" />
+			<div class="form-control mb-2">
+				<label class="label"> File </label>
+				<input name="file" type="file" @change="filename = Object.values($event.target.files).map(file => file.name).join(', ')" 
+				class="file-input file-input-bordered w-full" />
 			</div>
 
-			<div class="mb-5">
-				<label class="block mb-2 text-sm font-medium text-white">
-					Name <span class="font-bold text-rose-500">*</span>
+			<div class="form-control mb-2">
+				<label class="label">
+					Name <span class="font-bold text-primary">*</span>
 					if vr["Name"].Missing || vr["Name"].Invalid{
-						<span class="ml-2 text-sm text-red-500">{ vr["Name"].String() }</span>
+						<span class="ml-2 text-sm text-error">{ vr["Name"].String() }</span>
 					}
 				</label>
 
-				<input x-model="filename" name="name" value={obj.Name} type="text" class={ utils.Validation(vr["Name"], "border text-sm rounded-lg block w-full p-2.5") } />
+				<input x-model="filename" name="name" value={obj.Name} type="text" class="input input-bordered" />
 			</div>
 
 			@utils.SelectInput("Type", "type", obj.Type, model.EvidenceTypes, true, vr["Type"])
 			@utils.TextareaInput("Description", "description", obj.Description, false, vr["Description"])
 
-			<div class="mb-5">
-				<div class="w-full rounded-full h-1.5 mt-5 mb-4 bg-slate-700">
-					<div id="progress" class="h-1.5 rounded-full bg-pink-500" style="width: 0%"></div>
-				</div>
+			<div class="form-control mb-2">
+				<progress id="progress" class="progress w-full" value="0" max="100"></progress>
 
 				<script>
 					htmx.on('#form', 'htmx:xhr:progress', function(evt) {
-					htmx.find('#progress').setAttribute('style', 'width: ' + (evt.detail.loaded/evt.detail.total * 100) + '%')
+					htmx.find('#progress').setAttribute('value', (evt.detail.loaded/evt.detail.total * 100))
 					});
 				</script>
 			</div>

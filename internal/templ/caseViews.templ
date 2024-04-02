@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/sprungknoedl/dagobert/internal/templ/utils"
-	"github.com/sprungknoedl/dagobert/internal/templ/icons"
 	"github.com/sprungknoedl/dagobert/pkg/model"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -63,8 +62,8 @@ templ CaseList(env utils.Env, list []model.Case) {
 		@utils.TableBody() {
 			for _, obj := range list {
 			@utils.TR(nil) {
-				@utils.TD() { <a class="hover:text-slate-200 hover:underline" href={templ.SafeURL(env.Routes("show-case", obj.ID))}>{ fmt.Sprintf("#%d", obj.ID) }</a> }
-				@utils.TD() { <a class="hover:text-slate-200 hover:underline" href={templ.SafeURL(env.Routes("show-case", obj.ID))}>{ obj.Name }</a> }
+				@utils.TD() { <a class="link" href={templ.SafeURL(env.Routes("list-events", obj.ID))}>{ fmt.Sprintf("#%d", obj.ID) }</a> }
+				@utils.TD() { <a class="link" href={templ.SafeURL(env.Routes("list-events", obj.ID))}>{ obj.Name }</a> }
 				@utils.TD() {{ obj.Classification }}
 				@utils.TD() {{ obj.Severity }}
 				@utils.TD() {{ obj.Outcome }}
@@ -78,75 +77,10 @@ templ CaseList(env utils.Env, list []model.Case) {
 	}
 }
 
-templ CaseOverview(env utils.Env, obj model.Case) {
-	@Layout(env) {
-		<main class="p-8 grow">
-			@Navbar(env, "Overview", false, false) {
-				@utils.GroupedButton(templ.Attributes{"hx-get": env.Routes("choose-report", obj.ID), "hx-target": "#modal"}) {
-					@icons.DocumentArrowDown("inline-block mr-1 w-5 h-5")
-					Generate report
-				}
-				@utils.GroupedButton(templ.Attributes{"hx-get": env.Routes("show-case", obj.ID), "hx-target": "section", "hx-select": "section", "hx-swap": "outerHTML"}) {
-					@icons.ArrowPath("inline-block mr-1 w-5 h-5")
-					Refresh
-				}
-				@utils.GroupedButton(templ.Attributes{"hx-get": env.Routes("view-case", obj.ID), "hx-target": "#modal"}) {
-					@icons.Pencil("inline-block mr-1 w-5 h-5")
-					Edit
-				}
-			}
-
-			<section class="flex gap-4">
-				<div class="w-1/2 grid grid-cols-3 gap-4">
-					@utils.Card("Opened", icons.Clock) {{ obj.DateAdded.Format("2006-01-02") }}
-					@utils.Card("Classification", icons.ClipboardCheck) {{ obj.Classification }}
-					@utils.Card("Severity", icons.Bolt) { @dlSeverity(obj.Severity) }
-					@utils.Card("State", icons.Briefcase) { @dlClosed(obj.Closed) }
-					@utils.Card("Outcome", icons.ViewfinderCircle) { @dlOutcome(obj.Outcome) }
-				</div>
-
-				<div class="bg-slate-700 p-4 w-1/2 sm:rounded-lg">
-					<h4 class="font-bold text-xs text-slate-400 uppercase mb-4 pb-2 border-b border-b-slate-600">Summary</h4>
-					<p>{obj.Summary}</p>
-				</div>
-			</section>
-		</main>
-	}
-}
-
-templ dlClosed(closed bool) {
-	if closed {
-		Closed
-	} else {
-		<span class="text-red-400"> Open </span>
-	}
-}
-
-templ dlSeverity(severity string) {
-	switch severity {
-	case "Low":
-		<span class="text-yellow-400"> {severity} </span>
-	case "Medium":
-		<span class="text-amber-400"> {severity} </span>
-	case "High":
-		<span class="text-red-400"> {severity} </span>
-	default:
-		<span class="text-slate-400"> Unknown </span>
-	}
-}
-
-templ dlOutcome(outcome string) {
-	switch outcome {
-	case "False positive" :
-		<span class="text-green-400"> {outcome} </span>
-	case "True positive"  :
-		<span class="text-red-400"> {outcome} </span>
-	case "Benign positive":
-		<span class="text-slate-400"> {outcome} </span>
-	default:
-		<span class="text-slate-400"> Unknown </span>
-	}
-}
+// @utils.GroupedButton(templ.Attributes{"hx-get": env.Routes("choose-report", obj.ID), "hx-target": "#modal"}) {
+// 	@icons.DocumentArrowDown("inline-block mr-1 w-5 h-5")
+// 	Generate report
+// }
 
 templ ReportList(env utils.Env, cid int64, list []string) {
 	@utils.Modal("max-w-xl") {
@@ -159,7 +93,7 @@ templ ReportList(env utils.Env, cid int64, list []string) {
 
 		@utils.ModalFooter() {
 			@utils.PrimaryButton(templ.Attributes{"type": "submit", "_": "on click trigger closeModal"}) { Generate }
-			@utils.SecondaryButton(templ.Attributes{"_": "on click trigger closeModal"}) { Cancel }
+			@utils.NeutralButton(templ.Attributes{"_": "on click trigger closeModal"}) { Cancel }
 		}
 		</form>
 	}

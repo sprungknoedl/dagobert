@@ -601,7 +601,7 @@ func renderIndicatorTLP(value string) templ.Component {
 		ctx = templ.ClearChildren(ctx)
 		switch value {
 		case "TLP:RED":
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<span class=\"text-red-500\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<span class=\"text-red-600\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -619,7 +619,7 @@ func renderIndicatorTLP(value string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		case "TLP:AMBER":
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<span class=\"text-amber-500\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<span class=\"text-amber-600\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -637,7 +637,7 @@ func renderIndicatorTLP(value string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		case "TLP:GREEN":
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<span class=\"text-green-500\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<span class=\"text-green-600\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

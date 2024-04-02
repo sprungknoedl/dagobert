@@ -29,7 +29,7 @@ func Table() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"relative overflow-x-auto sm:rounded-lg\"><table id=\"list\" class=\"w-full text-sm text-left rtl:text-right\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"relative overflow-x-auto\"><table id=\"list\" class=\"w-full table table-pin-cols\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -61,7 +61,7 @@ func TableHead() templ.Component {
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<thead class=\"text-xs uppercase bg-slate-700 text-slate-400\"><tr class=\"p-8\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<thead><tr>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -125,7 +125,7 @@ func TR(attrs templ.Attributes) templ.Component {
 			templ_7745c5c3_Var4 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<tr class=\"border-b border-slate-700 hover:bg-slate-600\"")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<tr class=\"hover\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -174,7 +174,7 @@ func TH(env Env, name string, attr templ.Attributes) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" scope=\"col\" class=\"px-6 py-3 cursor-pointer text-slate-400 hover:text-white hover:underline flex-inline gap-4 items-center\" x-data=\"")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" scope=\"col\" class=\"cursor-pointer\" x-data=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -214,7 +214,7 @@ func TH(env Env, name string, attr templ.Attributes) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" scope=\"col\" class=\"px-6 py-3 text-slate-400\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" scope=\"col\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -247,7 +247,7 @@ func TD() templ.Component {
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<td class=\"px-6 py-2\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<td>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -279,7 +279,7 @@ func DefaultTableButtons(editUrl string, deleteUrl string) templ.Component {
 			templ_7745c5c3_Var7 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<td class=\"px-6 py-2 flex gap-2 justify-end\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<td class=\"px-6 py-2 flex justify-end join\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -304,7 +304,7 @@ func DefaultTableButtons(editUrl string, deleteUrl string) templ.Component {
 		})
 		templ_7745c5c3_Err = InlineButton(templ.Attributes{
 			"hx-get":    editUrl,
-			"hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "aside", "hx-push-url": "false"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
+			"hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "dialog", "hx-push-url": "false"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -325,7 +325,7 @@ func DefaultTableButtons(editUrl string, deleteUrl string) templ.Component {
 		})
 		templ_7745c5c3_Err = InlineButton(templ.Attributes{
 			"hx-delete": deleteUrl,
-			"hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "aside", "hx-push-url": "false"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
+			"hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "dialog", "hx-push-url": "false"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -353,7 +353,7 @@ func EmptyCaption(addUrl string) templ.Component {
 			templ_7745c5c3_Var10 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<caption class=\"caption-bottom w-1/3 my-4 mx-auto\"><h3 class=\"mb-2 mt-4 text-xl text-slate-400\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<caption class=\"caption-bottom w-1/3 my-4 mx-auto\"><h3 class=\"mb-2 mt-4 text-xl text-primary\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -403,9 +403,9 @@ func EmptyCaption(addUrl string) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = PrimaryButton(templ.Attributes{
+		templ_7745c5c3_Err = AccentButton(templ.Attributes{
 			"hx-get":    addUrl,
-			"hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "aside", "hx-push-url": "false"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
+			"hx-target": "#modal", "hx-swap": "innerHTML", "hx-select": "dialog", "hx-push-url": "false"}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
