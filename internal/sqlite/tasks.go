@@ -1,13 +1,13 @@
 package sqlite
 
 import (
+	"github.com/oklog/ulid/v2"
 	"github.com/sprungknoedl/dagobert/pkg/model"
-	"gorm.io/gorm/clause"
 )
 
 var _ model.TaskStore = &Store{}
 
-func (store *Store) ListTasks(cid int64) ([]model.Task, error) {
+func (store *Store) ListTasks(cid ulid.ULID) ([]model.Task, error) {
 	var list []model.Task
 	result := store.db.
 		Where("case_id = ?", cid).
@@ -16,7 +16,7 @@ func (store *Store) ListTasks(cid int64) ([]model.Task, error) {
 	return list, result.Error
 }
 
-func (store *Store) FindTasks(cid int64, search string, sort string) ([]model.Task, error) {
+func (store *Store) FindTasks(cid ulid.ULID, search string, sort string) ([]model.Task, error) {
 	var list []model.Task
 	query := store.db.
 		Where("case_id = ?", cid).
@@ -48,32 +48,20 @@ func (store *Store) FindTasks(cid int64, search string, sort string) ([]model.Ta
 	return list, result.Error
 }
 
-func (store *Store) GetTask(cid int64, id int64) (model.Task, error) {
+func (store *Store) GetTask(cid ulid.ULID, id ulid.ULID) (model.Task, error) {
 	x := model.Task{}
 	result := store.db.
 		Where("case_id = ?", cid).
-		First(&x, id)
+		First(&x, "id = ?", id)
 	return x, result.Error
 }
 
-func (store *Store) SaveTask(cid int64, x model.Task) (model.Task, error) {
-	x.CRC = model.HashFields(
-		x.CaseID,
-		x.Type,
-		x.Task,
-		x.Done,
-		x.Owner,
-		x.DateDue,
-	)
-
-	result := store.db.
-		Where("case_id = ?", cid).
-		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "crc"}}, DoNothing: true}).
-		Save(&x)
+func (store *Store) SaveTask(cid ulid.ULID, x model.Task) (model.Task, error) {
+	result := store.db.Save(&x)
 	return x, result.Error
 }
 
-func (store *Store) DeleteTask(cid int64, id int64) error {
+func (store *Store) DeleteTask(cid ulid.ULID, id ulid.ULID) error {
 	x := model.Task{}
 	return store.db.
 		Where("case_id = ?", cid).

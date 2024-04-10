@@ -18,8 +18,8 @@ import (
 )
 
 type TaskDTO struct {
-	ID      int64
-	CaseID  int64
+	ID      string
+	CaseID  string
 	Type    string `form:"type"`
 	Task    string `form:"task"`
 	Done    bool   `form:"done"`
@@ -64,7 +64,7 @@ func TaskForm(env utils.Env, obj TaskDTO, vr valid.Result) templ.Component {
 					templ_7745c5c3_Buffer = templ.GetBuffer()
 					defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 				}
-				if obj.ID == 0 {
+				if obj.ID == ZeroID {
 					templ_7745c5c3_Var4 := `Add task`
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 					if templ_7745c5c3_Err != nil {
@@ -161,7 +161,7 @@ func TaskForm(env utils.Env, obj TaskDTO, vr valid.Result) templ.Component {
 	})
 }
 
-func TaskList(env utils.Env, cid int64, list []model.Task) templ.Component {
+func TaskList(env utils.Env, cid string, list []model.Task) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -494,7 +494,7 @@ func TaskList(env utils.Env, cid int64, list []model.Task) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(list) == 0 {
-				templ_7745c5c3_Err = utils.EmptyCaption(env.Routes("view-task", cid, 0)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = utils.EmptyCaption(env.Routes("view-task", cid, ZeroID)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -508,7 +508,7 @@ func TaskList(env utils.Env, cid int64, list []model.Task) templ.Component {
 			List:   env.Routes("list-tasks", cid),
 			Import: env.Routes("import-tasks", cid),
 			Export: env.Routes("export-tasks", cid),
-			Add:    env.Routes("view-task", cid, 0),
+			Add:    env.Routes("view-task", cid, ZeroID),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

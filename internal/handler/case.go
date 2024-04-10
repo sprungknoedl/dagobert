@@ -1,12 +1,14 @@
 package handler
 
 import (
+	"cmp"
 	"encoding/csv"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/oklog/ulid/v2"
 	"github.com/sprungknoedl/dagobert/internal/templ"
 	"github.com/sprungknoedl/dagobert/internal/templ/utils"
 	"github.com/sprungknoedl/dagobert/pkg/model"
@@ -45,7 +47,7 @@ func (ctrl CaseCtrl) Export(c echo.Context) error {
 	w.Write([]string{"ID", "Name", "Severity", "Classification", "Closed", "Outcome", "Summary"})
 	for _, e := range list {
 		w.Write([]string{
-			strconv.FormatInt(e.ID, 10),
+			e.ID.String(),
 			e.Name,
 			e.Severity,
 			e.Classification,
@@ -65,7 +67,7 @@ func (ctrl CaseCtrl) ImportCases(c echo.Context) error {
 	usr := c.Get("user").(string)
 
 	return importHelper(c, uri, 7, func(c echo.Context, rec []string) error {
-		id, err := strconv.ParseInt(rec[0], 10, 64)
+		id, err := ulid.Parse(rec[0])
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
@@ -95,13 +97,13 @@ func (ctrl CaseCtrl) ImportCases(c echo.Context) error {
 }
 
 func (ctrl CaseCtrl) Edit(c echo.Context) error {
-	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	cid, err := ulid.Parse(c.Param("cid"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
 	var obj model.Case
-	if cid != 0 {
+	if cid != ZeroID {
 		obj, err = ctrl.store.GetCase(cid)
 		if err != nil {
 			return err
@@ -110,7 +112,7 @@ func (ctrl CaseCtrl) Edit(c echo.Context) error {
 
 	vr := valid.Result{}
 	return render(c, templ.CaseForm(ctx(c), templ.CaseDTO{
-		ID:             obj.ID,
+		ID:             obj.ID.String(),
 		Name:           obj.Name,
 		Closed:         obj.Closed,
 		Classification: obj.Classification,
@@ -121,12 +123,12 @@ func (ctrl CaseCtrl) Edit(c echo.Context) error {
 }
 
 func (ctrl CaseCtrl) Save(c echo.Context) error {
-	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	cid, err := ulid.Parse(c.Param("cid"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
-	dto := templ.CaseDTO{ID: cid}
+	dto := templ.CaseDTO{ID: cid.String()}
 	if err = c.Bind(&dto); err != nil {
 		return err
 	}
@@ -138,7 +140,7 @@ func (ctrl CaseCtrl) Save(c echo.Context) error {
 	now := time.Now()
 	usr := c.Get("user").(string)
 	obj := model.Case{
-		ID:             cid,
+		ID:             cmp.Or(cid, ulid.Make()),
 		Name:           dto.Name,
 		Closed:         dto.Closed,
 		Classification: dto.Classification,
@@ -151,7 +153,7 @@ func (ctrl CaseCtrl) Save(c echo.Context) error {
 		UserModified:   usr,
 	}
 
-	if cid != 0 {
+	if cid != ZeroID {
 		src, err := ctrl.store.GetCase(cid)
 		if err != nil {
 			return err
@@ -169,7 +171,7 @@ func (ctrl CaseCtrl) Save(c echo.Context) error {
 }
 
 func (ctrl CaseCtrl) Delete(c echo.Context) error {
-	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
+	cid, err := ulid.Parse(c.Param("cid"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}

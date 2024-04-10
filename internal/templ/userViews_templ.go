@@ -238,7 +238,7 @@ func UserList(env utils.Env, list []model.User) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(list) == 0 {
-				templ_7745c5c3_Err = utils.EmptyCaption(env.Routes("view-user", 0)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = utils.EmptyCaption(env.Routes("view-user", ZeroID)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -250,7 +250,7 @@ func UserList(env utils.Env, list []model.User) templ.Component {
 		})
 		templ_7745c5c3_Err = TableView(env, "Users", CrudUrls{
 			List: env.Routes("list-users"),
-			Add:  env.Routes("view-user", 0),
+			Add:  env.Routes("view-user", ZeroID),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

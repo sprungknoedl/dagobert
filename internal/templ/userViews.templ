@@ -8,7 +8,7 @@ import (
 templ UserList(env utils.Env, list []model.User) {
 	@TableView(env, "Users", CrudUrls{
 		List: env.Routes("list-users"),
-		Add: env.Routes("view-user", 0),
+		Add: env.Routes("view-user", ZeroID),
 	}) {
 		@utils.TableHead() {
 			@utils.TH(env, "name", templ.Attributes{"style": "width: auto"}) { Name }
@@ -26,7 +26,7 @@ templ UserList(env utils.Env, list []model.User) {
 		}
 
 		if len(list) == 0 {
-			@utils.EmptyCaption(env.Routes("view-user", 0)) {}
+			@utils.EmptyCaption(env.Routes("view-user", ZeroID)) {}
 		}
 	}
 }

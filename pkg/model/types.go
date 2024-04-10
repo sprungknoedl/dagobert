@@ -2,15 +2,15 @@ package model
 
 import (
 	"time"
+
+	"github.com/oklog/ulid/v2"
 )
 
 var CaseSeverities = []string{"Low", "Medium", "High"}
 var CaseOutcomes = []string{"", "False positive", "True positive", "Benign positive"}
 
 type Case struct {
-	ID  int64  `gorm:"primaryKey"`
-	CRC string `gorm:"unique"`
-
+	ID             ulid.ULID `gorm:"primaryKey"`
 	Name           string
 	Closed         bool
 	Classification string
@@ -35,9 +35,7 @@ type Case struct {
 var EvidenceTypes = []string{"File", "Logs", "Artifacts Collection", "System Image", "Memory Dump", "Other"}
 
 type Evidence struct {
-	ID  int64  `gorm:"primaryKey"`
-	CRC string `gorm:"unique"`
-
+	ID          ulid.ULID `gorm:"primaryKey"`
 	Type        string
 	Name        string
 	Description string
@@ -45,7 +43,7 @@ type Evidence struct {
 	Hash        string
 	Location    string
 
-	CaseID int64
+	CaseID ulid.ULID
 	Case   Case
 
 	DateAdded    time.Time
@@ -58,9 +56,7 @@ var AssetTypes = []string{"Account", "Desktop", "Server", "Other"}
 var AssetCompromised = []string{"Compromised", "Not compromised", "Unknown"}
 
 type Asset struct {
-	ID  int64  `gorm:"primaryKey"`
-	CRC string `gorm:"unique"`
-
+	ID          ulid.ULID `gorm:"primaryKey"`
 	Type        string
 	Name        string
 	IP          string
@@ -68,7 +64,7 @@ type Asset struct {
 	Compromised string
 	Analysed    bool
 
-	CaseID int64
+	CaseID ulid.ULID
 	Case   Case
 
 	DateAdded    time.Time
@@ -81,16 +77,14 @@ var IndicatorTypes = []string{"IP", "Domain", "URL", "Path", "Hash", "Service", 
 var IndicatorTLPs = []string{"TLP:RED", "TLP:AMBER", "TLP:GREEN", "TLP:CLEAR"}
 
 type Indicator struct {
-	ID  int64  `gorm:"primaryKey"`
-	CRC string `gorm:"unique"`
-
+	ID          ulid.ULID `gorm:"primaryKey"`
 	Type        string
 	Value       string
 	TLP         string
 	Description string
 	Source      string
 
-	CaseID int64
+	CaseID ulid.ULID
 	Case   Case
 
 	DateAdded    time.Time
@@ -120,9 +114,7 @@ var EventTypes = []string{
 var EventDirections = []string{"", "→", "←"}
 
 type Event struct {
-	ID  int64  `gorm:"primaryKey"`
-	CRC string `gorm:"unique"`
-
+	ID        ulid.ULID `gorm:"primaryKey"`
 	Time      time.Time
 	Type      string
 	AssetA    string
@@ -132,7 +124,7 @@ type Event struct {
 	Raw       string
 	KeyEvent  bool
 
-	CaseID int64
+	CaseID ulid.ULID
 	Case   Case
 
 	DateAdded    time.Time
@@ -142,9 +134,7 @@ type Event struct {
 }
 
 type Malware struct {
-	ID  int64  `gorm:"primaryKey"`
-	CRC string `gorm:"unique"`
-
+	ID       ulid.ULID `gorm:"primaryKey"`
 	Filename string
 	Filepath string
 	CDate    time.Time
@@ -153,7 +143,7 @@ type Malware struct {
 	Hash     string
 	Notes    string
 
-	CaseID int64
+	CaseID ulid.ULID
 	Case   Case
 
 	DateAdded    time.Time
@@ -163,14 +153,12 @@ type Malware struct {
 }
 
 type Note struct {
-	ID  int64  `gorm:"primaryKey"`
-	CRC string `gorm:"unique"`
-
+	ID          ulid.ULID `gorm:"primaryKey"`
 	Title       string
 	Category    string
 	Description string
 
-	CaseID int64
+	CaseID ulid.ULID
 	Case   Case
 
 	DateAdded    time.Time
@@ -182,16 +170,14 @@ type Note struct {
 var TaskTypes = []string{"Information request", "Analysis", "Deliverable", "Checkpoint", "Other"}
 
 type Task struct {
-	ID  int64  `gorm:"primaryKey"`
-	CRC string `gorm:"unique"`
-
+	ID      ulid.ULID `gorm:"primaryKey"`
 	Type    string
 	Task    string
 	Done    bool
 	Owner   string
 	DateDue time.Time
 
-	CaseID int64
+	CaseID ulid.ULID
 	Case   Case
 
 	DateAdded    time.Time

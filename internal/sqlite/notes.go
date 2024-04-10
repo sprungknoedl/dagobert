@@ -1,13 +1,13 @@
 package sqlite
 
 import (
+	"github.com/oklog/ulid/v2"
 	"github.com/sprungknoedl/dagobert/pkg/model"
-	"gorm.io/gorm/clause"
 )
 
 var _ model.NoteStore = &Store{}
 
-func (store *Store) ListNotes(cid int64) ([]model.Note, error) {
+func (store *Store) ListNotes(cid ulid.ULID) ([]model.Note, error) {
 	var list []model.Note
 	result := store.db.
 		Where("case_id = ?", cid).
@@ -16,7 +16,7 @@ func (store *Store) ListNotes(cid int64) ([]model.Note, error) {
 	return list, result.Error
 }
 
-func (store *Store) FindNotes(cid int64, search string, sort string) ([]model.Note, error) {
+func (store *Store) FindNotes(cid ulid.ULID, search string, sort string) ([]model.Note, error) {
 	var list []model.Note
 	query := store.db.
 		Where("case_id = ?", cid).
@@ -44,30 +44,20 @@ func (store *Store) FindNotes(cid int64, search string, sort string) ([]model.No
 	return list, result.Error
 }
 
-func (store *Store) GetNote(cid int64, id int64) (model.Note, error) {
+func (store *Store) GetNote(cid ulid.ULID, id ulid.ULID) (model.Note, error) {
 	x := model.Note{}
 	result := store.db.
 		Where("case_id = ?", cid).
-		First(&x, id)
+		First(&x, "id = ?", id)
 	return x, result.Error
 }
 
-func (store *Store) SaveNote(cid int64, x model.Note) (model.Note, error) {
-	x.CRC = model.HashFields(
-		x.CaseID,
-		x.Title,
-		x.Category,
-		x.Description,
-	)
-
-	result := store.db.
-		Where("case_id = ?", cid).
-		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "crc"}}, DoNothing: true}).
-		Save(&x)
+func (store *Store) SaveNote(cid ulid.ULID, x model.Note) (model.Note, error) {
+	result := store.db.Save(&x)
 	return x, result.Error
 }
 
-func (store *Store) DeleteNote(cid int64, id int64) error {
+func (store *Store) DeleteNote(cid ulid.ULID, id ulid.ULID) error {
 	x := model.Note{}
 	return store.db.
 		Where("case_id = ?", cid).

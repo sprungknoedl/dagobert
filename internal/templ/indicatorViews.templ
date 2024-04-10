@@ -8,8 +8,8 @@ import (
 )
 
 type IndicatorDTO struct {
-	ID          int64
-	CaseID      int64
+	ID          string
+	CaseID      string
 	Type        string `form:"type"`
 	Value       string `form:"value"`
 	TLP         string `form:"tlp"`
@@ -21,7 +21,7 @@ templ IndicatorForm(env utils.Env, obj IndicatorDTO, vr valid.Result) {
 	@utils.Modal("max-w-4xl") {
 		<form hx-post={env.Routes("save-indicator", obj.CaseID, obj.ID)} hx-target="#modal">
 		@utils.ModalHeader() {
-			if obj.ID == 0 {
+			if obj.ID == ZeroID {
 				Add indicator
 			} else {
 				Edit indicator
@@ -41,12 +41,12 @@ templ IndicatorForm(env utils.Env, obj IndicatorDTO, vr valid.Result) {
 	}
 }
 
-templ IndicatorList(env utils.Env, cid int64, list []model.Indicator) {
+templ IndicatorList(env utils.Env, cid string, list []model.Indicator) {
 	@TableView(env, "Indicators", CrudUrls{
 		List: env.Routes("list-indicators", cid),
 		Import: env.Routes("import-indicators", cid),
 		Export: env.Routes("export-indicators", cid),
-		Add: env.Routes("view-indicator", cid, 0),
+		Add: env.Routes("view-indicator", cid, ZeroID),
 	}) {
 		@utils.TableHead() {
 			@utils.TH(env, "type", templ.Attributes{"style": "width: 10rem"}) { Type  }
@@ -70,7 +70,7 @@ templ IndicatorList(env utils.Env, cid int64, list []model.Indicator) {
 		}
 
 		if len(list) == 0 {
-			@utils.EmptyCaption(env.Routes("view-indicator", cid, 0)) {}
+			@utils.EmptyCaption(env.Routes("view-indicator", cid, ZeroID)) {}
 		}
 	}
 }

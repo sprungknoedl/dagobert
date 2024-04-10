@@ -1,8 +1,8 @@
 package sqlite
 
 import (
+	"github.com/oklog/ulid/v2"
 	"github.com/sprungknoedl/dagobert/pkg/model"
-	"gorm.io/gorm/clause"
 )
 
 var _ model.UserStore = &Store{}
@@ -41,28 +41,19 @@ func (store *Store) FindUsers(search string, sort string) ([]model.User, error) 
 	return list, result.Error
 }
 
-func (store *Store) GetUser(id int64) (model.User, error) {
+func (store *Store) GetUser(id ulid.ULID) (model.User, error) {
 	x := model.User{}
 	result := store.db.
-		First(&x, id)
+		First(&x, "id = ?", id)
 	return x, result.Error
 }
 
 func (store *Store) SaveUser(x model.User) (model.User, error) {
-	result := store.db.
-		Clauses(clause.OnConflict{
-			Columns: []clause.Column{{Name: "id"}},
-			DoUpdates: clause.Set{
-				clause.Assignment{Column: clause.Column{Name: "name"}, Value: x.Name},
-				clause.Assignment{Column: clause.Column{Name: "upn"}, Value: x.UPN},
-				clause.Assignment{Column: clause.Column{Name: "email"}, Value: x.Email},
-			},
-		}).
-		Save(&x)
+	result := store.db.Save(&x)
 	return x, result.Error
 }
 
-func (store *Store) DeleteUser(id int64) error {
+func (store *Store) DeleteUser(id ulid.ULID) error {
 	x := model.User{}
 	return store.db.
 		Delete(&x, id).Error

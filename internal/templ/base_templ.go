@@ -13,9 +13,12 @@ import "bytes"
 import (
 	"fmt"
 
+	"github.com/oklog/ulid/v2"
 	"github.com/sprungknoedl/dagobert/internal/templ/icons"
 	"github.com/sprungknoedl/dagobert/internal/templ/utils"
 )
+
+var ZeroID = ulid.ULID{}.String()
 
 type CrudUrls struct {
 	List   string
@@ -163,7 +166,7 @@ func Navigation(env utils.Env) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if env.ActiveCase.ID != 0 {
+		if env.ActiveCase.ID != "" {
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"divider\"></div><ul class=\"menu gap-2\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -183,7 +186,7 @@ func Navigation(env utils.Env) templ.Component {
 				}
 				return templ_7745c5c3_Err
 			})
-			templ_7745c5c3_Err = navLink(env, "Timeline", templ.URL(env.Routes("list-events", env.ActiveCase.ID)), nil).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = navLink(env, "Timeline "+env.ActiveCase.ID, templ.URL(env.Routes("list-events", env.ActiveCase.ID)), nil).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -485,7 +488,7 @@ func Navbar(env utils.Env, title string, search bool, sort bool) templ.Component
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		if env.ActiveCase.ID != 0 {
+		if env.ActiveCase.ID != "" {
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<li class=\"text-neutral inline-flex gap-2\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -497,7 +500,7 @@ func Navbar(env utils.Env, title string, search bool, sort bool) templ.Component
 			var templ_7745c5c3_Var22 string
 			templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(env.ActiveCase.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/base.templ`, Line: 95, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/base.templ`, Line: 98, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 			if templ_7745c5c3_Err != nil {
@@ -515,7 +518,7 @@ func Navbar(env utils.Env, title string, search bool, sort bool) templ.Component
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/base.templ`, Line: 98, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/base.templ`, Line: 101, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {

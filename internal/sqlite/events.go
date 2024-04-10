@@ -1,13 +1,13 @@
 package sqlite
 
 import (
+	"github.com/oklog/ulid/v2"
 	"github.com/sprungknoedl/dagobert/pkg/model"
-	"gorm.io/gorm/clause"
 )
 
 var _ model.EventStore = &Store{}
 
-func (store *Store) FindEvents(cid int64, search string, sort string) ([]model.Event, error) {
+func (store *Store) FindEvents(cid ulid.ULID, search string, sort string) ([]model.Event, error) {
 	var list []model.Event
 	query := store.db.
 		Where("case_id = ?", cid).
@@ -44,7 +44,7 @@ func (store *Store) FindEvents(cid int64, search string, sort string) ([]model.E
 	return list, result.Error
 }
 
-func (store *Store) ListEvents(cid int64) ([]model.Event, error) {
+func (store *Store) ListEvents(cid ulid.ULID) ([]model.Event, error) {
 	var list []model.Event
 	result := store.db.Order("time asc").
 		Where("case_id = ?", cid).
@@ -52,34 +52,20 @@ func (store *Store) ListEvents(cid int64) ([]model.Event, error) {
 	return list, result.Error
 }
 
-func (store *Store) GetEvent(cid int64, id int64) (model.Event, error) {
+func (store *Store) GetEvent(cid ulid.ULID, id ulid.ULID) (model.Event, error) {
 	x := model.Event{}
 	result := store.db.
 		Where("case_id = ?", cid).
-		First(&x, id)
+		First(&x, "id = ?", id)
 	return x, result.Error
 }
 
-func (store *Store) SaveEvent(cid int64, x model.Event) (model.Event, error) {
-	x.CRC = model.HashFields(
-		x.CaseID,
-		x.Time,
-		x.AssetA,
-		x.Direction,
-		x.AssetB,
-		x.Event,
-		x.Raw,
-		x.KeyEvent,
-	)
-
-	result := store.db.
-		Where("case_id = ?", cid).
-		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "crc"}}, DoNothing: true}).
-		Save(&x)
+func (store *Store) SaveEvent(cid ulid.ULID, x model.Event) (model.Event, error) {
+	result := store.db.Save(&x)
 	return x, result.Error
 }
 
-func (store *Store) DeleteEvent(cid int64, id int64) error {
+func (store *Store) DeleteEvent(cid ulid.ULID, id ulid.ULID) error {
 	x := model.Event{}
 	return store.db.
 		Where("case_id = ?", cid).

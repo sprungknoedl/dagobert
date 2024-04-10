@@ -11,15 +11,13 @@ import "io"
 import "bytes"
 
 import (
-	"fmt"
-
 	"github.com/sprungknoedl/dagobert/internal/templ/utils"
 	"github.com/sprungknoedl/dagobert/pkg/model"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type CaseDTO struct {
-	ID             int64
+	ID             string
 	Name           string `form:"name"`
 	Closed         bool   `form:"closed"`
 	Classification string `form:"classification"`
@@ -65,7 +63,7 @@ func CaseForm(env utils.Env, obj CaseDTO, vr valid.Result) templ.Component {
 					templ_7745c5c3_Buffer = templ.GetBuffer()
 					defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 				}
-				if obj.ID == 0 {
+				if obj.ID == ZeroID {
 					templ_7745c5c3_Var4 := `Add case`
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 					if templ_7745c5c3_Err != nil {
@@ -365,9 +363,9 @@ func CaseList(env utils.Env, list []model.Case) templ.Component {
 								return templ_7745c5c3_Err
 							}
 							var templ_7745c5c3_Var24 string
-							templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("#%d", obj.ID))
+							templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(obj.ID.String())
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/caseViews.templ`, Line: 64, Col: 118}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/caseViews.templ`, Line: 62, Col: 107}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 							if templ_7745c5c3_Err != nil {
@@ -412,7 +410,7 @@ func CaseList(env utils.Env, list []model.Case) templ.Component {
 							var templ_7745c5c3_Var27 string
 							templ_7745c5c3_Var27, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Name)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/caseViews.templ`, Line: 65, Col: 100}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/caseViews.templ`, Line: 63, Col: 100}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var27))
 							if templ_7745c5c3_Err != nil {
@@ -444,7 +442,7 @@ func CaseList(env utils.Env, list []model.Case) templ.Component {
 							var templ_7745c5c3_Var29 string
 							templ_7745c5c3_Var29, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Classification)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/caseViews.templ`, Line: 66, Col: 37}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/caseViews.templ`, Line: 64, Col: 37}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var29))
 							if templ_7745c5c3_Err != nil {
@@ -472,7 +470,7 @@ func CaseList(env utils.Env, list []model.Case) templ.Component {
 							var templ_7745c5c3_Var31 string
 							templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Severity)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/caseViews.templ`, Line: 67, Col: 31}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/caseViews.templ`, Line: 65, Col: 31}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var31))
 							if templ_7745c5c3_Err != nil {
@@ -500,7 +498,7 @@ func CaseList(env utils.Env, list []model.Case) templ.Component {
 							var templ_7745c5c3_Var33 string
 							templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(obj.Outcome)
 							if templ_7745c5c3_Err != nil {
-								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/caseViews.templ`, Line: 68, Col: 30}
+								return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templ/caseViews.templ`, Line: 66, Col: 30}
 							}
 							_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 							if templ_7745c5c3_Err != nil {
@@ -547,7 +545,7 @@ func CaseList(env utils.Env, list []model.Case) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(list) == 0 {
-				templ_7745c5c3_Err = utils.EmptyCaption(env.Routes("view-case", 0)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = utils.EmptyCaption(env.Routes("view-case", ZeroID)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -561,7 +559,7 @@ func CaseList(env utils.Env, list []model.Case) templ.Component {
 			List:   env.Routes("list-cases"),
 			Import: env.Routes("import-cases"),
 			Export: env.Routes("export-cases"),
-			Add:    env.Routes("view-case", 0),
+			Add:    env.Routes("view-case", ZeroID),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
@@ -573,7 +571,7 @@ func CaseList(env utils.Env, list []model.Case) templ.Component {
 	})
 }
 
-func ReportList(env utils.Env, cid int64, list []string) templ.Component {
+func ReportList(env utils.Env, cid string, list []string) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {

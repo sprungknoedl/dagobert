@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	"github.com/oklog/ulid/v2"
 	"github.com/sprungknoedl/dagobert/pkg/model"
 	"gorm.io/gorm/clause"
 )
@@ -53,13 +54,13 @@ func (store *Store) ListCases() ([]model.Case, error) {
 	return list, result.Error
 }
 
-func (store *Store) GetCase(id int64) (model.Case, error) {
+func (store *Store) GetCase(id ulid.ULID) (model.Case, error) {
 	x := model.Case{}
-	result := store.db.First(&x, id)
+	result := store.db.First(&x, "id = ?", id)
 	return x, result.Error
 }
 
-func (store *Store) GetCaseFull(id int64) (model.Case, error) {
+func (store *Store) GetCaseFull(id ulid.ULID) (model.Case, error) {
 	x := model.Case{}
 	result := store.db.
 		Preload(clause.Associations).
@@ -68,22 +69,11 @@ func (store *Store) GetCaseFull(id int64) (model.Case, error) {
 }
 
 func (store *Store) SaveCase(x model.Case) (model.Case, error) {
-	x.CRC = model.HashFields(
-		x.Name,
-		x.Closed,
-		x.Classification,
-		x.Severity,
-		x.Outcome,
-		x.Summary,
-	)
-
-	result := store.db.
-		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "crc"}}, DoNothing: true}).
-		Save(&x)
+	result := store.db.Save(&x)
 	return x, result.Error
 }
 
-func (store *Store) DeleteCase(id int64) error {
+func (store *Store) DeleteCase(id ulid.ULID) error {
 	tx := store.db.Begin()
 	tx.Delete(&model.Asset{}, "case_id = ?", id)
 	tx.Delete(&model.Event{}, "case_id = ?", id)

@@ -20,8 +20,8 @@ import (
 )
 
 type EvidenceDTO struct {
-	ID          int64
-	CaseID      int64
+	ID          string
+	CaseID      string
 	Type        string `form:"type"`
 	Name        string `form:"name"`
 	Description string `form:"description"`
@@ -72,7 +72,7 @@ func EvidenceForm(env utils.Env, obj EvidenceDTO, vr valid.Result) templ.Compone
 					templ_7745c5c3_Buffer = templ.GetBuffer()
 					defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 				}
-				if obj.ID == 0 {
+				if obj.ID == ZeroID {
 					templ_7745c5c3_Var4 := `Add evidence`
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 					if templ_7745c5c3_Err != nil {
@@ -224,7 +224,7 @@ func EvidenceForm(env utils.Env, obj EvidenceDTO, vr valid.Result) templ.Compone
 	})
 }
 
-func EvidenceList(env utils.Env, cid int64, list []model.Evidence) templ.Component {
+func EvidenceList(env utils.Env, cid string, list []model.Evidence) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -543,7 +543,7 @@ func EvidenceList(env utils.Env, cid int64, list []model.Evidence) templ.Compone
 				return templ_7745c5c3_Err
 			}
 			if len(list) == 0 {
-				templ_7745c5c3_Err = utils.EmptyCaption(env.Routes("view-evidence", cid, 0)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = utils.EmptyCaption(env.Routes("view-evidence", cid, ZeroID)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -557,7 +557,7 @@ func EvidenceList(env utils.Env, cid int64, list []model.Evidence) templ.Compone
 			List:   env.Routes("list-evidences", cid),
 			Import: env.Routes("import-evidences", cid),
 			Export: env.Routes("export-evidences", cid),
-			Add:    env.Routes("view-evidence", cid, 0),
+			Add:    env.Routes("view-evidence", cid, ZeroID),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var13), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

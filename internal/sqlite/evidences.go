@@ -1,13 +1,13 @@
 package sqlite
 
 import (
+	"github.com/oklog/ulid/v2"
 	"github.com/sprungknoedl/dagobert/pkg/model"
-	"gorm.io/gorm/clause"
 )
 
 var _ model.EvidenceStore = &Store{}
 
-func (store *Store) ListEvidences(cid int64) ([]model.Evidence, error) {
+func (store *Store) ListEvidences(cid ulid.ULID) ([]model.Evidence, error) {
 	var list []model.Evidence
 	result := store.db.
 		Where("case_id = ?", cid).
@@ -16,7 +16,7 @@ func (store *Store) ListEvidences(cid int64) ([]model.Evidence, error) {
 	return list, result.Error
 }
 
-func (store *Store) FindEvidences(cid int64, search string, sort string) ([]model.Evidence, error) {
+func (store *Store) FindEvidences(cid ulid.ULID, search string, sort string) ([]model.Evidence, error) {
 	var list []model.Evidence
 	query := store.db.
 		Where("case_id = ?", cid).
@@ -54,33 +54,20 @@ func (store *Store) FindEvidences(cid int64, search string, sort string) ([]mode
 	return list, result.Error
 }
 
-func (store *Store) GetEvidence(cid int64, id int64) (model.Evidence, error) {
+func (store *Store) GetEvidence(cid ulid.ULID, id ulid.ULID) (model.Evidence, error) {
 	x := model.Evidence{}
 	result := store.db.
 		Where("case_id = ?", cid).
-		First(&x, id)
+		First(&x, "id = ?", id)
 	return x, result.Error
 }
 
-func (store *Store) SaveEvidence(cid int64, x model.Evidence) (model.Evidence, error) {
-	x.CRC = model.HashFields(
-		x.CaseID,
-		x.Type,
-		x.Name,
-		x.Description,
-		x.Size,
-		x.Hash,
-		x.Location,
-	)
-
-	result := store.db.
-		Where("case_id = ?", cid).
-		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "crc"}}, DoNothing: true}).
-		Save(&x)
+func (store *Store) SaveEvidence(cid ulid.ULID, x model.Evidence) (model.Evidence, error) {
+	result := store.db.Save(&x)
 	return x, result.Error
 }
 
-func (store *Store) DeleteEvidence(cid int64, id int64) error {
+func (store *Store) DeleteEvidence(cid ulid.ULID, id ulid.ULID) error {
 	x := model.Evidence{}
 	return store.db.
 		Where("case_id = ?", cid).

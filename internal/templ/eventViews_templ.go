@@ -22,8 +22,8 @@ import (
 )
 
 type EventDTO struct {
-	ID        int64
-	CaseID    int64
+	ID        string
+	CaseID    string
 	Time      string `form:"time"`
 	Type      string `form:"type"`
 	AssetA    string `form:"assetA"`
@@ -71,7 +71,7 @@ func EventForm(env utils.Env, obj EventDTO, assets []string, vr valid.Result) te
 					templ_7745c5c3_Buffer = templ.GetBuffer()
 					defer templ.ReleaseBuffer(templ_7745c5c3_Buffer)
 				}
-				if obj.ID == 0 {
+				if obj.ID == ZeroID {
 					templ_7745c5c3_Var4 := `Add event`
 					_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 					if templ_7745c5c3_Err != nil {
@@ -192,7 +192,7 @@ func EventForm(env utils.Env, obj EventDTO, assets []string, vr valid.Result) te
 	})
 }
 
-func EventList(env utils.Env, cid int64, list []model.Event, indicators []model.Indicator) templ.Component {
+func EventList(env utils.Env, cid string, list []model.Event, indicators []model.Indicator) templ.Component {
 	return templ.ComponentFunc(func(ctx context.Context, templ_7745c5c3_W io.Writer) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templ_7745c5c3_W.(*bytes.Buffer)
 		if !templ_7745c5c3_IsBuffer {
@@ -548,7 +548,7 @@ func EventList(env utils.Env, cid int64, list []model.Event, indicators []model.
 				return templ_7745c5c3_Err
 			}
 			if len(list) == 0 {
-				templ_7745c5c3_Err = utils.EmptyCaption(env.Routes("view-event", cid, 0)).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = utils.EmptyCaption(env.Routes("view-event", cid, ZeroID)).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -562,7 +562,7 @@ func EventList(env utils.Env, cid int64, list []model.Event, indicators []model.
 			List:   env.Routes("list-events", cid),
 			Import: env.Routes("import-events", cid),
 			Export: env.Routes("export-events", cid),
-			Add:    env.Routes("view-event", cid, 0),
+			Add:    env.Routes("view-event", cid, ZeroID),
 		}).Render(templ.WithChildren(ctx, templ_7745c5c3_Var8), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err

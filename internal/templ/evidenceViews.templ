@@ -10,8 +10,8 @@ import (
 )
 
 type EvidenceDTO struct {
-	ID          int64
-	CaseID      int64
+	ID          string
+	CaseID      string
 	Type        string `form:"type"`
 	Name        string `form:"name"`
 	Description string `form:"description"`
@@ -22,7 +22,7 @@ templ EvidenceForm(env utils.Env, obj EvidenceDTO, vr valid.Result) {
 		<form id='form' hx-post={env.Routes("save-evidence", obj.CaseID, obj.ID)} hx-target="#modal" hx-encoding="multipart/form-data"
 		x-data={fmt.Sprintf("{ filename: %q }", obj.Name)}>
 		@utils.ModalHeader() {
-			if obj.ID == 0 {
+			if obj.ID == ZeroID {
 				Add evidence
 			} else {
 				Edit evidence
@@ -67,12 +67,12 @@ templ EvidenceForm(env utils.Env, obj EvidenceDTO, vr valid.Result) {
 	}
 }
 
-templ EvidenceList(env utils.Env, cid int64, list []model.Evidence) {
+templ EvidenceList(env utils.Env, cid string, list []model.Evidence) {
 	@TableView(env, "Evidences", CrudUrls{
 		List: env.Routes("list-evidences", cid),
 		Import: env.Routes("import-evidences", cid),
 		Export: env.Routes("export-evidences", cid),
-		Add: env.Routes("view-evidence", cid, 0),
+		Add: env.Routes("view-evidence", cid, ZeroID),
 	}) {
 		@utils.TableHead() {
 			@utils.TH(env, "type", templ.Attributes{"style": "width: 15rem"}) { Type }
@@ -100,7 +100,7 @@ templ EvidenceList(env utils.Env, cid int64, list []model.Evidence) {
 		}
 
 		if len(list) == 0 {
-			@utils.EmptyCaption(env.Routes("view-evidence", cid, 0)) {}
+			@utils.EmptyCaption(env.Routes("view-evidence", cid, ZeroID)) {}
 		}
 	}
 }

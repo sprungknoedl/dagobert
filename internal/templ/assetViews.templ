@@ -8,8 +8,8 @@ import (
 )
 
 type AssetDTO struct {
-	ID          int64
-	CaseID      int64
+	ID          string
+	CaseID      string
 	Type        string `form:"type"`
 	Name        string `form:"name"`
 	IP          string `form:"ip"`
@@ -22,7 +22,7 @@ templ AssetForm(env utils.Env, obj AssetDTO, vr valid.Result) {
 	@utils.Modal("max-w-4xl") {
 		<form hx-post={env.Routes("save-asset", obj.CaseID, obj.ID)} hx-target="#modal">
 		@utils.ModalHeader() {
-			if obj.ID == 0 {
+			if obj.ID == ZeroID {
 				Add asset
 			} else {
 				Edit asset
@@ -43,12 +43,12 @@ templ AssetForm(env utils.Env, obj AssetDTO, vr valid.Result) {
 	}
 }
 
-templ AssetList(env utils.Env, cid int64, list []model.Asset) {
+templ AssetList(env utils.Env, cid string, list []model.Asset) {
 	@TableView(env, "Assets", CrudUrls{
 		List: env.Routes("list-assets", cid),
 		Import: env.Routes("import-assets", cid),
 		Export: env.Routes("export-assets", cid),
-		Add: env.Routes("view-asset", cid, 0),
+		Add: env.Routes("view-asset", cid, ZeroID),
 	}) {
 		@utils.TableHead() {
 			@utils.TH(env, "type", templ.Attributes{"style": "width: 10rem"}) { Type  }
@@ -74,7 +74,7 @@ templ AssetList(env utils.Env, cid int64, list []model.Asset) {
 		}
 
 		if len(list) == 0 {
-			@utils.EmptyCaption(env.Routes("view-asset", cid, 0)) {}
+			@utils.EmptyCaption(env.Routes("view-asset", cid, ZeroID)) {}
 		}
 	}
 }

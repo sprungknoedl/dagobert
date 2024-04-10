@@ -1,15 +1,13 @@
 package templ
 
 import (
-	"fmt"
-
 	"github.com/sprungknoedl/dagobert/internal/templ/utils"
 	"github.com/sprungknoedl/dagobert/pkg/model"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type CaseDTO struct {
-	ID             int64
+	ID             string
 	Name           string `form:"name"`
 	Closed         bool   `form:"closed"`
 	Classification string `form:"classification"`
@@ -22,7 +20,7 @@ templ CaseForm(env utils.Env, obj CaseDTO, vr valid.Result) {
 	@utils.Modal("max-w-4xl") {
 		<form hx-post={env.Routes("save-case", obj.ID)} hx-target="#modal">
 		@utils.ModalHeader() {
-			if obj.ID == 0 {
+			if obj.ID == ZeroID {
 				Add case
 			} else {
 				Edit case
@@ -48,7 +46,7 @@ templ CaseList(env utils.Env, list []model.Case) {
 		List: env.Routes("list-cases"),
 		Import: env.Routes("import-cases"),
 		Export: env.Routes("export-cases"),
-		Add: env.Routes("view-case", 0),
+		Add: env.Routes("view-case", ZeroID),
 	}) {
 		@utils.TableHead() {
 			@utils.TH(env, "id", templ.Attributes{"style": "width: 8rem"}) { ID  }
@@ -62,7 +60,7 @@ templ CaseList(env utils.Env, list []model.Case) {
 		@utils.TableBody() {
 			for _, obj := range list {
 			@utils.TR(nil) {
-				@utils.TD() { <a class="link" href={templ.SafeURL(env.Routes("list-events", obj.ID))}>{ fmt.Sprintf("#%d", obj.ID) }</a> }
+				@utils.TD() { <a class="link" href={templ.SafeURL(env.Routes("list-events", obj.ID))}>{ obj.ID.String() }</a> }
 				@utils.TD() { <a class="link" href={templ.SafeURL(env.Routes("list-events", obj.ID))}>{ obj.Name }</a> }
 				@utils.TD() {{ obj.Classification }}
 				@utils.TD() {{ obj.Severity }}
@@ -72,12 +70,12 @@ templ CaseList(env utils.Env, list []model.Case) {
 		}
 
 		if len(list) == 0 {
-			@utils.EmptyCaption(env.Routes("view-case", 0)) {}
+			@utils.EmptyCaption(env.Routes("view-case", ZeroID)) {}
 		}
 	}
 }
 
-templ ReportList(env utils.Env, cid int64, list []string) {
+templ ReportList(env utils.Env, cid string, list []string) {
 	@utils.Modal("max-w-xl") {
 		<form action={templ.SafeURL(env.Routes("generate-report", cid))}>
 		@utils.ModalHeader() { Select report template }

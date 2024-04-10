@@ -5,12 +5,12 @@ import (
 	"log"
 	"net/url"
 	"os"
-	"strconv"
 
 	"github.com/gorilla/sessions"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/oklog/ulid/v2"
 	"github.com/sprungknoedl/dagobert/internal/handler"
 	"github.com/sprungknoedl/dagobert/internal/sqlite"
 	"github.com/sprungknoedl/dagobert/internal/templ/utils"
@@ -231,8 +231,8 @@ func InitializeDagobert(store model.UserStore, cfg Configuration) error {
 }
 
 func GetActiveCase(store model.CaseStore, c echo.Context) (model.Case, error) {
-	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
-	if err != nil || cid == 0 {
+	cid, err := ulid.Parse(c.Param("cid"))
+	if err != nil || cid == (ulid.ULID{}) {
 		return model.Case{}, err
 	}
 
@@ -247,7 +247,7 @@ func InjectCase(store model.CaseStore) echo.MiddlewareFunc {
 			obj, err := GetActiveCase(store, c)
 			if err == nil {
 				c.Set("case", utils.CaseDTO{
-					ID:   obj.ID,
+					ID:   obj.ID.String(),
 					Name: obj.Name,
 				})
 			}

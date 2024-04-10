@@ -12,8 +12,8 @@ import (
 )
 
 type EventDTO struct {
-	ID        int64
-	CaseID    int64
+	ID        string
+	CaseID    string
 	Time      string `form:"time"`
 	Type      string `form:"type"`
 	AssetA    string `form:"assetA"`
@@ -28,7 +28,7 @@ templ EventForm(env utils.Env, obj EventDTO, assets []string, vr valid.Result) {
 	@utils.Modal("max-w-4xl") {
 		<form hx-post={env.Routes("save-event", obj.CaseID, obj.ID)} hx-target="#modal">
 		@utils.ModalHeader() {
-			if obj.ID == 0 {
+			if obj.ID == ZeroID {
 				Add event
 			} else {
 				Edit event
@@ -51,12 +51,12 @@ templ EventForm(env utils.Env, obj EventDTO, assets []string, vr valid.Result) {
 	}
 }
 
-templ EventList(env utils.Env, cid int64, list []model.Event, indicators []model.Indicator) {
+templ EventList(env utils.Env, cid string, list []model.Event, indicators []model.Indicator) {
 	@TableView(env, "Timeline", CrudUrls{
 		List: env.Routes("list-events", cid),
 		Import: env.Routes("import-events", cid),
 		Export: env.Routes("export-events", cid),
-		Add: env.Routes("view-event", cid, 0),
+		Add: env.Routes("view-event", cid, ZeroID),
 	}) {
 		@utils.TableHead() {
 			@utils.TH(env, "time", templ.Attributes{"style": "width: 20rem"}) { Date / Time  }
@@ -88,7 +88,7 @@ templ EventList(env utils.Env, cid int64, list []model.Event, indicators []model
 		}
 
 		if len(list) == 0 {
-			@utils.EmptyCaption(env.Routes("view-event", cid, 0)) {}
+			@utils.EmptyCaption(env.Routes("view-event", cid, ZeroID)) {}
 		}
 	}
 }

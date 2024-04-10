@@ -5,7 +5,10 @@ import (
 
 	"github.com/sprungknoedl/dagobert/internal/templ/icons"
 	"github.com/sprungknoedl/dagobert/internal/templ/utils"
+	"github.com/oklog/ulid/v2"
 )
+
+var ZeroID = ulid.ULID{}.String()
 
 type CrudUrls struct {
 	List   string
@@ -49,10 +52,10 @@ templ Navigation(env utils.Env) {
 		@navLink(env, "Users", templ.URL(env.Routes("list-users")), nil) { @icons.Users("w-6 h-6") }
 		</ul>
 
-		if env.ActiveCase.ID != 0 {
+		if env.ActiveCase.ID != "" {
 		<div class="divider"></div>
 		<ul class="menu gap-2">
-		@navLink(env, "Timeline", templ.URL(env.Routes("list-events", env.ActiveCase.ID)), nil)       { @icons.Clock("w-6 h-6") }
+		@navLink(env, "Timeline "+env.ActiveCase.ID, templ.URL(env.Routes("list-events", env.ActiveCase.ID)), nil)       { @icons.Clock("w-6 h-6") }
 		@navLink(env, "Assets", templ.URL(env.Routes("list-assets", env.ActiveCase.ID)), nil)         { @icons.Desktop("w-6 h-6") }
 		@navLink(env, "Indicators", templ.URL(env.Routes("list-indicators", env.ActiveCase.ID)), nil) { @icons.GlobeEurope("w-6 h-6") }
 		@navLink(env, "Malware", templ.URL(env.Routes("list-malware", env.ActiveCase.ID)), nil)       { @icons.Bug("w-6 h-6") }
@@ -90,7 +93,7 @@ templ Navbar(env utils.Env, title string, search bool, sort bool) {
 	<nav class="flex items-center justify-between mb-4">
 		<div class="breadcrumbs font-bold text-2xl">
 		<ul>
-			if env.ActiveCase.ID != 0 {
+			if env.ActiveCase.ID != "" {
 			<li class="text-neutral inline-flex gap-2">
 				@icons.Briefcase(icons.Inline)
 				{ env.ActiveCase.Name }

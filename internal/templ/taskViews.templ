@@ -8,8 +8,8 @@ import (
 )
 
 type TaskDTO struct {
-	ID      int64
-	CaseID  int64
+	ID      string
+	CaseID  string
 	Type    string `form:"type"`
 	Task    string `form:"task"`
 	Done    bool   `form:"done"`
@@ -21,7 +21,7 @@ templ TaskForm(env utils.Env, obj TaskDTO, vr valid.Result) {
 	@utils.Modal("max-w-4xl") {
 		<form hx-post={env.Routes("save-task", obj.CaseID, obj.ID)} hx-target="#modal">
 		@utils.ModalHeader() {
-				if obj.ID == 0 {
+				if obj.ID == ZeroID {
 					Add task
 				} else {
 					Edit task
@@ -41,12 +41,12 @@ templ TaskForm(env utils.Env, obj TaskDTO, vr valid.Result) {
 	}
 }
 
-templ TaskList(env utils.Env, cid int64, list []model.Task) {
+templ TaskList(env utils.Env, cid string, list []model.Task) {
 	@TableView(env, "Tasks", CrudUrls{
 		List: env.Routes("list-tasks", cid),
 		Import: env.Routes("import-tasks", cid),
 		Export: env.Routes("export-tasks", cid),
-		Add: env.Routes("view-task", cid, 0),
+		Add: env.Routes("view-task", cid, ZeroID),
 	}) {
 		@utils.TableHead() {
 			@utils.TH(env, "due", templ.Attributes{"style": "width: 8rem"}) { Date due  }
@@ -70,7 +70,7 @@ templ TaskList(env utils.Env, cid int64, list []model.Task) {
 		}
 
 		if len(list) == 0 {
-			@utils.EmptyCaption(env.Routes("view-task", cid, 0)) {}
+			@utils.EmptyCaption(env.Routes("view-task", cid, ZeroID)) {}
 		}
 	}
 }

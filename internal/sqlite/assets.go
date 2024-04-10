@@ -1,13 +1,13 @@
 package sqlite
 
 import (
+	"github.com/oklog/ulid/v2"
 	"github.com/sprungknoedl/dagobert/pkg/model"
-	"gorm.io/gorm/clause"
 )
 
 var _ model.AssetStore = &Store{}
 
-func (store *Store) ListAssets(cid int64) ([]model.Asset, error) {
+func (store *Store) ListAssets(cid ulid.ULID) ([]model.Asset, error) {
 	var list []model.Asset
 	result := store.db.
 		Where("case_id = ?", cid).
@@ -16,7 +16,7 @@ func (store *Store) ListAssets(cid int64) ([]model.Asset, error) {
 	return list, result.Error
 }
 
-func (store *Store) FindAssets(cid int64, search string, sort string) ([]model.Asset, error) {
+func (store *Store) FindAssets(cid ulid.ULID, search string, sort string) ([]model.Asset, error) {
 	var list []model.Asset
 	query := store.db.
 		Where("case_id = ?", cid).
@@ -58,15 +58,15 @@ func (store *Store) FindAssets(cid int64, search string, sort string) ([]model.A
 	return list, result.Error
 }
 
-func (store *Store) GetAsset(cid int64, id int64) (model.Asset, error) {
+func (store *Store) GetAsset(cid ulid.ULID, id ulid.ULID) (model.Asset, error) {
 	x := model.Asset{}
 	result := store.db.
 		Where("case_id = ?", cid).
-		First(&x, id)
+		First(&x, "id = ?", id)
 	return x, result.Error
 }
 
-func (store *Store) GetAssetByName(cid int64, name string) (model.Asset, error) {
+func (store *Store) GetAssetByName(cid ulid.ULID, name string) (model.Asset, error) {
 	x := model.Asset{}
 	result := store.db.
 		Where("case_id = ?", cid).
@@ -74,25 +74,12 @@ func (store *Store) GetAssetByName(cid int64, name string) (model.Asset, error) 
 	return x, result.Error
 }
 
-func (store *Store) SaveAsset(cid int64, x model.Asset) (model.Asset, error) {
-	x.CRC = model.HashFields(
-		x.CaseID,
-		x.Type,
-		x.Name,
-		x.IP,
-		x.Description,
-		x.Compromised,
-		x.Analysed,
-	)
-
-	result := store.db.
-		Where("case_id = ?", cid).
-		Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "crc"}}, DoNothing: true}).
-		Save(&x)
+func (store *Store) SaveAsset(cid ulid.ULID, x model.Asset) (model.Asset, error) {
+	result := store.db.Save(&x)
 	return x, result.Error
 }
 
-func (store *Store) DeleteAsset(cid int64, id int64) error {
+func (store *Store) DeleteAsset(cid ulid.ULID, id ulid.ULID) error {
 	x := model.Asset{}
 	return store.db.
 		Where("case_id = ?", cid).

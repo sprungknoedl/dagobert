@@ -7,8 +7,8 @@ import (
 )
 
 type NoteDTO struct {
-	ID          int64
-	CaseID      int64
+	ID          string
+	CaseID      string
 	Title       string `form:"title"`
 	Category    string `form:"category"`
 	Description string `form:"description"`
@@ -18,7 +18,7 @@ templ NoteForm(env utils.Env, obj NoteDTO, vr valid.Result) {
 	@utils.Modal("max-w-4xl") {
 		<form hx-post={env.Routes("save-note", obj.CaseID, obj.ID)} hx-target="#modal">
 		@utils.ModalHeader() {
-			if obj.ID == 0 {
+			if obj.ID == ZeroID {
 				Add note
 			} else {
 				Edit note
@@ -36,12 +36,12 @@ templ NoteForm(env utils.Env, obj NoteDTO, vr valid.Result) {
 	}
 }
 
-templ NoteList(env utils.Env, cid int64, list []model.Note) {
+templ NoteList(env utils.Env, cid string, list []model.Note) {
 	@TableView(env, "Notes", CrudUrls{
 		List: env.Routes("list-notes", cid),
 		Import: env.Routes("import-notes", cid),
 		Export: env.Routes("export-notes", cid),
-		Add: env.Routes("view-note", cid, 0),
+		Add: env.Routes("view-note", cid, ZeroID),
 	}) {
 		@utils.TableHead() {
 			@utils.TH(env, "category", templ.Attributes{"style": "width: 15rem"}) { Category }
@@ -61,7 +61,7 @@ templ NoteList(env utils.Env, cid int64, list []model.Note) {
 		}
 
 		if len(list) == 0 {
-			@utils.EmptyCaption(env.Routes("view-note", cid, 0)) {}
+			@utils.EmptyCaption(env.Routes("view-note", cid, ZeroID)) {}
 		}
 	}
 }

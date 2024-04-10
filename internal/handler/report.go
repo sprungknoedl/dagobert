@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/oklog/ulid/v2"
 	"github.com/sprungknoedl/dagobert/internal/templ"
 	"github.com/sprungknoedl/dagobert/pkg/doct"
 	"github.com/sprungknoedl/dagobert/pkg/model"
@@ -54,18 +55,18 @@ func LoadTemplates(root string) error {
 }
 
 func (ctrl ReportCtrl) List(c echo.Context) error {
-	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
-	if err != nil || cid == 0 {
+	cid, err := ulid.Parse(c.Param("cid"))
+	if err != nil || cid == ZeroID {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 
 	list := apply2(templates, func(x doct.Template) string { return x.Name() })
-	return render(c, templ.ReportList(ctx(c), cid, list))
+	return render(c, templ.ReportList(ctx(c), cid.String(), list))
 }
 
 func (ctrl ReportCtrl) Generate(c echo.Context) error {
-	cid, err := strconv.ParseInt(c.Param("cid"), 10, 64)
-	if err != nil || cid == 0 {
+	cid, err := ulid.Parse(c.Param("cid"))
+	if err != nil || cid == ZeroID {
 		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
 	}
 

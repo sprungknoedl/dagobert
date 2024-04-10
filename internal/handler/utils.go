@@ -10,8 +10,11 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/labstack/echo/v4"
+	"github.com/oklog/ulid/v2"
 	"github.com/sprungknoedl/dagobert/internal/templ/utils"
 )
+
+var ZeroID ulid.ULID
 
 func ErrorHandler(err error, c echo.Context) {
 	if c.Response().Committed {
