@@ -1,7 +1,11 @@
-.PHONY: build run
+.PHONY: build build-web build-go docker run
 
-build:
+build: build-web build-go
+
+build-web:
 	tailwindcss -c configs/tailwind.config.js -i web/_build.css -o web/dagobert.css
+
+build-go:
 	templ generate
 	go build -o dagobert ./cmd
 
