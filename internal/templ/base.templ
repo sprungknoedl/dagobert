@@ -55,7 +55,7 @@ templ Navigation(env utils.Env) {
 		if env.ActiveCase.ID != "" {
 		<div class="divider"></div>
 		<ul class="menu gap-2">
-		@navLink(env, "Timeline "+env.ActiveCase.ID, templ.URL(env.Routes("list-events", env.ActiveCase.ID)), nil)       { @icons.Clock("w-6 h-6") }
+		@navLink(env, "Timeline", templ.URL(env.Routes("list-events", env.ActiveCase.ID)), nil)       { @icons.Clock("w-6 h-6") }
 		@navLink(env, "Assets", templ.URL(env.Routes("list-assets", env.ActiveCase.ID)), nil)         { @icons.Desktop("w-6 h-6") }
 		@navLink(env, "Indicators", templ.URL(env.Routes("list-indicators", env.ActiveCase.ID)), nil) { @icons.GlobeEurope("w-6 h-6") }
 		@navLink(env, "Malware", templ.URL(env.Routes("list-malware", env.ActiveCase.ID)), nil)       { @icons.Bug("w-6 h-6") }

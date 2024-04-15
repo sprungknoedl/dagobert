@@ -186,7 +186,7 @@ func Navigation(env utils.Env) templ.Component {
 				}
 				return templ_7745c5c3_Err
 			})
-			templ_7745c5c3_Err = navLink(env, "Timeline "+env.ActiveCase.ID, templ.URL(env.Routes("list-events", env.ActiveCase.ID)), nil).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = navLink(env, "Timeline", templ.URL(env.Routes("list-events", env.ActiveCase.ID)), nil).Render(templ.WithChildren(ctx, templ_7745c5c3_Var9), templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
