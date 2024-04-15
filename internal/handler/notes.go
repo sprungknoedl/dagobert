@@ -79,13 +79,13 @@ func (ctrl NoteCtrl) Import(c echo.Context) error {
 	usr := c.Get("user").(string)
 
 	return importHelper(c, uri, 4, func(c echo.Context, rec []string) error {
-		id, err := ulid.Parse(rec[0])
+		id, err := ulid.Parse(cmp.Or(rec[0], ZeroID.String()))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
 		obj := model.Note{
-			ID:           id,
+			ID:           cmp.Or(id, ulid.Make()),
 			CaseID:       cid,
 			Title:        rec[1],
 			Category:     rec[2],

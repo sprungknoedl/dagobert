@@ -95,7 +95,7 @@ func (ctrl EventCtrl) Import(c echo.Context) error {
 	usr := c.Get("user").(string)
 
 	return importHelper(c, uri, 9, func(c echo.Context, rec []string) error {
-		id, err := ulid.Parse(rec[0])
+		id, err := ulid.Parse(cmp.Or(rec[0], ZeroID.String()))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
@@ -105,13 +105,13 @@ func (ctrl EventCtrl) Import(c echo.Context) error {
 			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
-		ke, err := strconv.ParseBool(rec[8])
+		ke, err := strconv.ParseBool(cmp.Or(rec[8], "false"))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
 		obj := model.Event{
-			ID:           id,
+			ID:           cmp.Or(id, ulid.Make()),
 			CaseID:       cid,
 			Time:         t,
 			Type:         rec[2],

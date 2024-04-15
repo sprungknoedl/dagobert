@@ -80,13 +80,13 @@ func (ctrl IndicatorCtrl) Import(c echo.Context) error {
 	usr := c.Get("user").(string)
 
 	return importHelper(c, uri, 6, func(c echo.Context, rec []string) error {
-		id, err := ulid.Parse(rec[0])
+		id, err := ulid.Parse(cmp.Or(rec[0], ZeroID.String()))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
 		obj := model.Indicator{
-			ID:           id,
+			ID:           cmp.Or(id, ulid.Make()),
 			CaseID:       cid,
 			Type:         rec[1],
 			Value:        rec[2],

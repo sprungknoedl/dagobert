@@ -15,6 +15,7 @@ import (
 )
 
 var ZeroID ulid.ULID
+var ZeroTime time.Time
 
 func ErrorHandler(err error, c echo.Context) {
 	if c.Response().Committed {

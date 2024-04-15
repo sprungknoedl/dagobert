@@ -81,23 +81,23 @@ func (ctrl TaskCtrl) Import(c echo.Context) error {
 	usr := c.Get("user").(string)
 
 	return importHelper(c, uri, 6, func(c echo.Context, rec []string) error {
-		id, err := ulid.Parse(rec[0])
+		id, err := ulid.Parse(cmp.Or(rec[0], ZeroID.String()))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
-		done, err := strconv.ParseBool(rec[3])
+		done, err := strconv.ParseBool(cmp.Or(rec[3], "false"))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
-		datedue, err := time.Parse(time.RFC3339, rec[5])
+		datedue, err := time.Parse(time.RFC3339, cmp.Or(rec[5], ZeroTime.Format(time.RFC3339)))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
 		obj := model.Task{
-			ID:           id,
+			ID:           cmp.Or(id, ulid.Make()),
 			CaseID:       cid,
 			Type:         rec[1],
 			Task:         rec[2],

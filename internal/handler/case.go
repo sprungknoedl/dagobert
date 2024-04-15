@@ -67,18 +67,18 @@ func (ctrl CaseCtrl) ImportCases(c echo.Context) error {
 	usr := c.Get("user").(string)
 
 	return importHelper(c, uri, 7, func(c echo.Context, rec []string) error {
-		id, err := ulid.Parse(rec[0])
+		id, err := ulid.Parse(cmp.Or(rec[0], ZeroID.String()))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
-		closed, err := strconv.ParseBool(rec[4])
+		closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
 
 		obj := model.Case{
-			ID:             id,
+			ID:             cmp.Or(id, ulid.Make()),
 			Name:           rec[1],
 			Severity:       rec[2],
 			Classification: rec[3],

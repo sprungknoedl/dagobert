@@ -82,7 +82,7 @@ func (ctrl AssetCtrl) Import(c echo.Context) error {
 	usr := c.Get("user").(string)
 
 	return importHelper(c, uri, 7, func(c echo.Context, rec []string) error {
-		id, err := ulid.Parse(rec[0])
+		id, err := ulid.Parse(cmp.Or(rec[0], ZeroID.String()))
 		if err != nil {
 			return echo.NewHTTPError(http.StatusBadRequest, err)
 		}
@@ -93,7 +93,7 @@ func (ctrl AssetCtrl) Import(c echo.Context) error {
 		}
 
 		obj := model.Asset{
-			ID:           id,
+			ID:           cmp.Or(id, ulid.Make()),
 			CaseID:       cid,
 			Type:         rec[1],
 			Name:         rec[2],
