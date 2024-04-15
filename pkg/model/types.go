@@ -6,8 +6,8 @@ import (
 	"github.com/oklog/ulid/v2"
 )
 
-var CaseSeverities = []string{"Low", "Medium", "High"}
-var CaseOutcomes = []string{"", "False positive", "True positive", "Benign positive"}
+var CaseSeverities = FromEnv("VALUES_CASE_SEVERITIES", []string{"Low", "Medium", "High"})
+var CaseOutcomes = FromEnv("VALUES_CASE_OUTCOMES", []string{"", "False positive", "True positive", "Benign positive"})
 
 type Case struct {
 	ID             ulid.ULID `gorm:"primaryKey"`
@@ -32,7 +32,7 @@ type Case struct {
 	Tasks      []Task
 }
 
-var EvidenceTypes = []string{"File", "Logs", "Artifacts Collection", "System Image", "Memory Dump", "Other"}
+var EvidenceTypes = FromEnv("VALUES_EVIDENCE_TYPES", []string{"File", "Logs", "Artifacts Collection", "System Image", "Memory Dump", "Other"})
 
 type Evidence struct {
 	ID          ulid.ULID `gorm:"primaryKey"`
@@ -52,8 +52,8 @@ type Evidence struct {
 	UserModified string
 }
 
-var AssetTypes = []string{"Account", "Desktop", "Server", "Other"}
-var AssetCompromised = []string{"Compromised", "Not compromised", "Unknown"}
+var AssetTypes = FromEnv("VALUES_ASSET_TYPES", []string{"Account", "Desktop", "Server", "Other"})
+var AssetCompromised = FromEnv("VALUES_ASSET_COMPROMISED", []string{"Compromised", "Not compromised", "Unknown"})
 
 type Asset struct {
 	ID          ulid.ULID `gorm:"primaryKey"`
@@ -73,8 +73,8 @@ type Asset struct {
 	UserModified string
 }
 
-var IndicatorTypes = []string{"IP", "Domain", "URL", "Path", "Hash", "Service", "Other"}
-var IndicatorTLPs = []string{"TLP:RED", "TLP:AMBER", "TLP:GREEN", "TLP:CLEAR"}
+var IndicatorTypes = FromEnv("VALUES_INDICATOR_TYPES", []string{"IP", "Domain", "URL", "Path", "Hash", "Service", "Other"})
+var IndicatorTLPs = FromEnv("VALUES_INDICATOR_TLPS", []string{"TLP:RED", "TLP:AMBER", "TLP:GREEN", "TLP:CLEAR"})
 
 type Indicator struct {
 	ID          ulid.ULID `gorm:"primaryKey"`
@@ -93,7 +93,7 @@ type Indicator struct {
 	UserModified string
 }
 
-var EventTypes = []string{
+var EventTypes = FromEnv("VALUES_EVENT_TYPES", []string{
 	"Reconnaissance",
 	"Resource Development",
 	"Initial Access",
@@ -108,10 +108,11 @@ var EventTypes = []string{
 	"C2",
 	"Exfiltration",
 	"Impact",
-	"DFIR",
+	"Legitimate",
+	"Remediation",
 	"Other",
-}
-var EventDirections = []string{"", "→", "←"}
+})
+var EventDirections = FromEnv("VALUES_EVENT_DIRECTIONS", []string{"", "→", "←"})
 
 type Event struct {
 	ID        ulid.ULID `gorm:"primaryKey"`
@@ -167,7 +168,7 @@ type Note struct {
 	UserModified string
 }
 
-var TaskTypes = []string{"Information request", "Analysis", "Deliverable", "Checkpoint", "Other"}
+var TaskTypes = FromEnv("VALUES_TASK_TYPES", []string{"Information request", "Analysis", "Deliverable", "Checkpoint", "Other"})
 
 type Task struct {
 	ID      ulid.ULID `gorm:"primaryKey"`
