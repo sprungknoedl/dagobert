@@ -90,7 +90,7 @@ templ navLink(env utils.Env, name string, href templ.SafeURL, attrs templ.Attrib
 }
 
 templ Navbar(env utils.Env, title string, search bool, sort bool) {
-	<nav class="flex items-center justify-between mb-4">
+	<nav class="sticky top-0 bg-base-100 z-10 flex items-center justify-between -mt-4 py-4">
 		<div class="breadcrumbs font-bold text-2xl">
 		<ul>
 			if env.ActiveCase.ID != "" {

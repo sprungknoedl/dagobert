@@ -484,7 +484,7 @@ func Navbar(env utils.Env, title string, search bool, sort bool) templ.Component
 			templ_7745c5c3_Var21 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<nav class=\"flex items-center justify-between mb-4\"><div class=\"breadcrumbs font-bold text-2xl\"><ul>")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<nav class=\"sticky top-0 bg-base-100 z-10 flex items-center justify-between -mt-4 py-4\"><div class=\"breadcrumbs font-bold text-2xl\"><ul>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
