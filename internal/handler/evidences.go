@@ -55,7 +55,8 @@ func (ctrl EvidenceCtrl) Export(c echo.Context) error {
 		return err
 	}
 
-	c.Response().Header().Set("Content-Disposition", "attachment; filename=\"templ.csv\"")
+	filename := fmt.Sprintf("%s - %s - Evidences.csv", time.Now().Format("20060102"), ctx(c).ActiveCase.Name)
+	c.Response().Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	c.Response().WriteHeader(http.StatusOK)
 
 	w := csv.NewWriter(c.Response().Writer)
