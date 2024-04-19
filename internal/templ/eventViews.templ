@@ -9,6 +9,7 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/templ/utils"
 	"github.com/sprungknoedl/dagobert/pkg/model"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
+	"hash/adler32"
 )
 
 type EventDTO struct {
@@ -99,43 +100,23 @@ templ renderTime(t time.Time) {
 
 templ renderEventType(typ string) {
 	<span class="flex items-center gap-2 text-sm font-medium me-3">
-	switch typ {
-	case "Reconnaissance":
-		<span class="badge bg-slate-500"></span> {typ}
-	case "Resource Development":
-		<span class="badge bg-slate-500"></span> {typ}
-	case "Initial Access":
-		<span class="badge bg-yellow-500"></span> {typ}
-	case "Execution":
-		<span class="badge bg-indigo-500"></span> {typ}
-	case "Persistence":
-		<span class="badge bg-indigo-500"></span> {typ}
-	case "Privilege Escalation":
-		<span class="badge bg-yellow-500"></span> {typ}
-	case "Defense Evasion":
-		<span class="badge bg-indigo-500"></span> {typ}
-	case "Credential Access":
-		<span class="badge bg-cyan-500"></span> {typ}
-	case "Discovery":
-		<span class="badge bg-slate-500"></span> {typ}
-	case "Lateral Movement":
-		<span class="badge bg-cyan-500"></span> {typ}
-	case "Collection":
-		<span class="badge bg-red-500"></span> {typ}
-	case "C2":
-		<span class="badge bg-fuchsia-500"></span> {typ}
-	case "Exfiltration":
-		<span class="badge bg-red-500"></span> {typ}
-	case "Impact":
-		<span class="badge bg-red-500"></span> {typ}
-	case "DFIR":
-		<span class="badge bg-green-500"></span> {typ}
-	case "Other":
-		<span class="badge bg-slate-500"></span> {typ}
-	default:
-		{typ}
-	}
+		<span class={"badge " + toColor(typ)}></span> {typ}
 	</span>
+}
+
+var colors = []string{
+	"bg-cyan-500",
+	"bg-fuchsia-500",
+	"bg-green-500",
+	"bg-indigo-500",
+	"bg-red-500",
+	"bg-slate-500",
+	"bg-yellow-500",
+}
+
+func toColor(typ string) string {
+	i := int(adler32.Checksum([]byte(typ))) % len(colors)
+	return colors[i]
 }
 
 func hasTimeGap(list []model.Event, i int) (bool, string) {
