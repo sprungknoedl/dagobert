@@ -60,6 +60,5 @@ func (store *Store) SaveNote(cid ulid.ULID, x model.Note) (model.Note, error) {
 func (store *Store) DeleteNote(cid ulid.ULID, id ulid.ULID) error {
 	x := model.Note{}
 	return store.db.
-		Where("case_id = ?", cid).
-		Delete(&x, id).Error
+		Delete(&x, "id = ?", id).Error
 }

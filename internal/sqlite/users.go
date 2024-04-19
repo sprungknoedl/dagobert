@@ -56,5 +56,5 @@ func (store *Store) SaveUser(x model.User) (model.User, error) {
 func (store *Store) DeleteUser(id ulid.ULID) error {
 	x := model.User{}
 	return store.db.
-		Delete(&x, id).Error
+		Delete(&x, "id = ?", id).Error
 }

@@ -82,6 +82,5 @@ func (store *Store) SaveAsset(cid ulid.ULID, x model.Asset) (model.Asset, error)
 func (store *Store) DeleteAsset(cid ulid.ULID, id ulid.ULID) error {
 	x := model.Asset{}
 	return store.db.
-		Where("case_id = ?", cid).
-		Delete(&x, id).Error
+		Delete(&x, "id = ?", id).Error
 }

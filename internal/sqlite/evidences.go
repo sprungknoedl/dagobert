@@ -70,6 +70,5 @@ func (store *Store) SaveEvidence(cid ulid.ULID, x model.Evidence) (model.Evidenc
 func (store *Store) DeleteEvidence(cid ulid.ULID, id ulid.ULID) error {
 	x := model.Evidence{}
 	return store.db.
-		Where("case_id = ?", cid).
-		Delete(&x, id).Error
+		Delete(&x, "id = ?", id).Error
 }

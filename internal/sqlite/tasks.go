@@ -64,6 +64,5 @@ func (store *Store) SaveTask(cid ulid.ULID, x model.Task) (model.Task, error) {
 func (store *Store) DeleteTask(cid ulid.ULID, id ulid.ULID) error {
 	x := model.Task{}
 	return store.db.
-		Where("case_id = ?", cid).
-		Delete(&x, id).Error
+		Delete(&x, "id = ?", id).Error
 }

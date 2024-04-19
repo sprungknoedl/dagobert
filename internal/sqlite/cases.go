@@ -82,7 +82,6 @@ func (store *Store) DeleteCase(id ulid.ULID) error {
 	tx.Delete(&model.Malware{}, "case_id = ?", id)
 	tx.Delete(&model.Note{}, "case_id = ?", id)
 	tx.Delete(&model.Task{}, "case_id = ?", id)
-	tx.Delete(&model.User{}, "case_id = ?", id)
-	tx.Delete(&model.Case{}, id)
+	tx.Delete(&model.Case{}, "id = ?", id)
 	return tx.Commit().Error
 }

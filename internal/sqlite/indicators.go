@@ -70,6 +70,5 @@ func (store *Store) SaveIndicator(cid ulid.ULID, x model.Indicator) (model.Indic
 func (store *Store) DeleteIndicator(cid ulid.ULID, id ulid.ULID) error {
 	x := model.Indicator{}
 	return store.db.
-		Where("case_id = ?", cid).
-		Delete(&x, id).Error
+		Delete(&x, "id = ?", id).Error
 }

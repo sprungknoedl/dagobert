@@ -68,6 +68,5 @@ func (store *Store) SaveEvent(cid ulid.ULID, x model.Event) (model.Event, error)
 func (store *Store) DeleteEvent(cid ulid.ULID, id ulid.ULID) error {
 	x := model.Event{}
 	return store.db.
-		Where("case_id = ?", cid).
-		Delete(&x, id).Error
+		Delete(&x, "id = ?", id).Error
 }
