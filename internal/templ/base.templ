@@ -30,11 +30,14 @@ templ Layout(env utils.Env) {
 		<script src="/dist/hyperscript.min.js" defer></script>
 		<script src="/dist/htmx.min.js" defer></script>
 	</head>
-	<body class="flex">
-		@Navigation(env)
-		{ children... }
+	<body class="drawer drawer-end" x-data="{drawer: false}">
+		<input type="checkbox" class="drawer-toggle" x-model="drawer" />
+		<div class="drawer-content flex">
+			@Navigation(env)
+			{ children... }
+		</div>
 
-		<div id="modal" hx-swap-oob="true"></div>
+		<div id="modal" class="drawer-side z-50" hx-swap-oob="true"></div>
 		<div id="errors" class="fixed bottom-0 right-0 z-50"></div>
 	</body>
 	</html>

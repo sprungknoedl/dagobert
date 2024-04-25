@@ -30,17 +30,15 @@ templ WarningNotification(err *echo.HTTPError) {
 	</div>
 }
 
-templ Modal(w string) {
+templ Modal(_ string) {
 	<!-- Main modal -->
-	<dialog _="on closeModal transition opacity to 0 over 100ms then remove me
-			  on keydown[key is 'Escape'] from window transition opacity to 0 over 100ms then remove me
-			  on load call me.showModal()"
-		class="modal">
-		<!-- Modal content -->
-		<div class={"modal-box " + w}>
-		{ children... }
+	<div id="modal" class="drawer-side z-50" hx-swap-oob="true" @htmx:load="drawer = true" >
+		<label @click="drawer = false" @keydown.escape.window="drawer = false" class="drawer-overlay"></label>
+		<div class="bg-base-200 text-base-content p-4 h-full w-[42rem]">
+			<!-- Modal content -->
+			{ children... }
 		</div>
-	</dialog>
+	</div>
 }
 
 templ ModalHeader() {
@@ -52,7 +50,7 @@ templ ModalHeader() {
 }
 
 templ ModalClose() {
-	<button type="button" _="on click trigger closeModal" class="btn btn-sm btn-circle btn-ghost absolute top-3 end-3"> x </button>
+	<button type="button" @click="drawer = false" class="btn btn-sm btn-circle btn-ghost absolute top-3 end-3"> x </button>
 }
 
 templ ModalBody() {
@@ -71,14 +69,14 @@ templ ModalFooter() {
 
 templ DefaultCrudFooter() {
 	@ModalFooter() {
-		@PrimaryButton(templ.Attributes{"type": "submit"}) { Save }
-		@NeutralButton(templ.Attributes{"_": "on click trigger closeModal"}) { Cancel }
+		@PrimaryButton(templ.Attributes{"@click": "drawer = false", "type": "submit"}) { Save }
+		@NeutralButton(templ.Attributes{"@click": "drawer = false"}) { Cancel }
 		<p class="text-sm text-neutral">Fields marked with <span class="font-bold text-primary">*</span> are required.</p>
 	}
 }
 
 templ Confirm(env Env, dst string) {
-	@Modal("max-w-md") {
+	@Modal("") {
 		@ModalClose() {}
 
 		@ModalBody() {
@@ -87,14 +85,14 @@ templ Confirm(env Env, dst string) {
 		}
 
 		<div class="flex gap-2 items-center justify-center">
-			@DangerButton(templ.Attributes{"hx-delete": dst, "hx-swap": "none"}) { Yes, I am sure }
-			@NeutralButton(templ.Attributes{"_": "on click trigger closeModal"}) { No, cancel }
+			@DangerButton(templ.Attributes{"@click": "drawer = false", "hx-delete": dst, "hx-swap": "none"}) { Yes, I am sure }
+			@NeutralButton(templ.Attributes{"@click": "drawer = false"}) { No, cancel }
 		</div>
 	}
 }
 
 templ Import(env Env, dst string) {
-	@Modal("max-w-4xl") {
+	@Modal("") {
 		<form id="form" hx-post={dst} hx-encoding="multipart/form-data" hx-target="#modal">
 		@ModalHeader() {
 			Import from CSV
@@ -112,8 +110,8 @@ templ Import(env Env, dst string) {
 		}
 
 		@ModalFooter() {
-			@PrimaryButton(templ.Attributes{"type": "submit"}) { Import }
-			@NeutralButton(templ.Attributes{"_": "on click trigger closeModal"}) { Cancel }
+			@PrimaryButton(templ.Attributes{"@click": "drawer = false", "type": "submit"}) { Import }
+			@NeutralButton(templ.Attributes{"@click": "drawer = false"}) { Cancel }
 		}
 		</form>
 	}
