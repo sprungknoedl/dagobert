@@ -1,265 +1,220 @@
 package handler
 
 import (
-	"cmp"
 	"encoding/csv"
 	"fmt"
+	"math"
 	"net/http"
-	"strconv"
+	"strings"
 	"time"
 
-	"github.com/labstack/echo/v4"
-	"github.com/oklog/ulid/v2"
-	"github.com/sprungknoedl/dagobert/internal/templ"
-	"github.com/sprungknoedl/dagobert/internal/templ/utils"
-	"github.com/sprungknoedl/dagobert/pkg/model"
+	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/utils"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type EventCtrl struct {
-	eventStore     model.EventStore
-	assetStore     model.AssetStore
-	indicatorStore model.IndicatorStore
+	store *model.Store
 }
 
-func NewEventCtrl(assetStore model.AssetStore, eventStore model.EventStore, indicatorStore model.IndicatorStore) *EventCtrl {
+func NewEventCtrl(store *model.Store) *EventCtrl {
 	return &EventCtrl{
-		eventStore:     eventStore,
-		assetStore:     assetStore,
-		indicatorStore: indicatorStore,
+		store: store,
 	}
 }
 
-func (ctrl EventCtrl) List(c echo.Context) error {
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	sort := c.QueryParam("sort")
-	search := c.QueryParam("search")
-	list, err := ctrl.eventStore.FindEvents(cid, search, sort)
+func (ctrl EventCtrl) List(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	sort := r.URL.Query().Get("sort")
+	search := r.URL.Query().Get("search")
+	list, err := ctrl.store.FindEvents(cid, search, sort)
 	if err != nil {
-		return err
+		utils.Err(w, r, err)
+		return
 	}
 
-	indicators, err := ctrl.indicatorStore.ListIndicators(cid)
-	if err != nil {
-		return err
-	}
+	// indicators, err := ctrl.store.FindIndicators(cid, "", "")
+	// if err != nil {
+	// 	ErrorHandler(w, r, err)
+	//  return
+	// }
 
-	return render(c, templ.EventList(ctx(c), cid.String(), list, indicators))
-}
+	utils.Render(ctrl.store, w, r, "internal/views/events-many.html", map[string]any{
+		"title": "Timeline",
+		"rows":  list,
+		"hasTimeGap": func(list []model.Event, i int) string {
+			if i > 0 {
+				prev := list[i-1].Time
+				curr := list[i].Time
+				if d := curr.Sub(prev); d > 2*24*time.Hour {
+					return humanizeDuration(d)
+				}
+			}
 
-func (ctrl EventCtrl) Export(c echo.Context) error {
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	list, err := ctrl.eventStore.ListEvents(cid)
-	if err != nil {
-		return err
-	}
-
-	filename := fmt.Sprintf("%s - %s - Timeline.csv", time.Now().Format("20060102"), ctx(c).ActiveCase.Name)
-	c.Response().Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
-	c.Response().WriteHeader(http.StatusOK)
-
-	w := csv.NewWriter(c.Response().Writer)
-	w.Write([]string{"ID", "Time", "Type", "Event System", "Direction", "Remote System", "Event", "Raw", "Key Event"})
-	for _, e := range list {
-		w.Write([]string{
-			e.ID.String(),
-			e.Time.Format(time.RFC3339),
-			e.Type,
-			e.AssetA,
-			e.Direction,
-			e.AssetB,
-			e.Event,
-			e.Raw,
-			strconv.FormatBool(e.KeyEvent),
-		})
-	}
-
-	w.Flush()
-	return nil
-}
-
-func (ctrl EventCtrl) Import(c echo.Context) error {
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	uri := c.Echo().Reverse("import-events", cid)
-	now := time.Now()
-	usr := c.Get("user").(string)
-
-	return importHelper(c, uri, 9, func(c echo.Context, rec []string) error {
-		id, err := ulid.Parse(cmp.Or(rec[0], ZeroID.String()))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err)
-		}
-
-		t, err := time.Parse(time.RFC3339, rec[1])
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err)
-		}
-
-		ke, err := strconv.ParseBool(cmp.Or(rec[8], "false"))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err)
-		}
-
-		obj := model.Event{
-			ID:           cmp.Or(id, ulid.Make()),
-			CaseID:       cid,
-			Time:         t,
-			Type:         rec[2],
-			AssetA:       rec[3],
-			Direction:    rec[4],
-			AssetB:       rec[5],
-			Event:        rec[6],
-			Raw:          rec[7],
-			KeyEvent:     ke,
-			DateAdded:    now,
-			UserAdded:    usr,
-			DateModified: now,
-			UserModified: usr,
-		}
-
-		_, err = ctrl.eventStore.SaveEvent(cid, obj)
-		return err
+			return ""
+		},
 	})
 }
 
-func (ctrl EventCtrl) Edit(c echo.Context) error {
-	id, err := ulid.Parse(c.Param("id"))
-	if err != nil { // id == 0 is valid in this context
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")
+func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	list, err := ctrl.store.FindEvents(cid, "", "")
+	if err != nil {
+		utils.Err(w, r, err)
+		return
 	}
 
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
+	filename := fmt.Sprintf("%s - %s - Timeline.csv", time.Now().Format("20060102"), utils.GetEnv(ctrl.store, r).ActiveCase.Name)
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+	w.WriteHeader(http.StatusOK)
+
+	cw := csv.NewWriter(w)
+	cw.Write([]string{"ID", "Time", "Type", "Assets", "Event", "Raw"})
+	for _, e := range list {
+		cw.Write([]string{
+			e.ID,
+			e.Time.Format(time.RFC3339),
+			e.Type,
+			strings.Join(utils.Apply(e.Assets, func(x model.Asset) string { return x.Name }), " "),
+			e.Event,
+			e.Raw,
+		})
 	}
 
-	obj := model.Event{CaseID: cid}
-	if id != ZeroID {
-		obj, err = ctrl.eventStore.GetEvent(cid, id)
+	cw.Flush()
+}
+
+func (ctrl EventCtrl) Import(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	uri := r.URL.RequestURI()
+	ImportCSV(ctrl.store, w, r, uri, 6, func(rec []string) {
+		t, err := time.Parse(time.RFC3339, rec[1])
 		if err != nil {
-			return err
+			utils.Warn(w, r, err)
+			return
+		}
+
+		obj := model.Event{
+			ID:     rec[0],
+			CaseID: cid,
+			Time:   t,
+			Type:   rec[2],
+			// TODO: import asset links
+			// Assets: rec[3]
+			Event: rec[4],
+			Raw:   rec[5],
+		}
+
+		if err = ctrl.store.SaveEvent(cid, obj); err != nil {
+			utils.Err(w, r, err)
+		}
+	})
+}
+
+func (ctrl EventCtrl) Edit(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	cid := r.PathValue("cid")
+	obj := model.Event{ID: id, CaseID: cid}
+	if id != "new" {
+		var err error
+		obj, err = ctrl.store.GetEvent(cid, id)
+		if err != nil {
+			utils.Err(w, r, err)
+			return
 		}
 	}
 
-	assets, err := ctrl.assetStore.ListAssets(cid)
-	if err != nil {
-		return err
-	}
+	// assets, err := ctrl.store.FindAssets(cid, "", "")
+	// if err != nil {
+	// 	ErrorHandler(w, r, err)
+	//  return
+	// }
+	// names := apply(assets, func(x model.Asset) string { return x.Name })
 
-	names := apply(assets, func(x model.Asset) string { return x.Name })
-	return render(c, templ.EventForm(ctx(c), templ.EventDTO{
-		ID:        obj.ID.String(),
-		CaseID:    obj.CaseID.String(),
-		Time:      formatNonZero(time.RFC3339, obj.Time),
-		Type:      obj.Type,
-		AssetA:    obj.AssetA,
-		AssetB:    obj.AssetB,
-		Direction: obj.Direction,
-		Event:     obj.Event,
-		Raw:       obj.Raw,
-		KeyEvent:  obj.KeyEvent,
-	}, names, valid.Result{}))
+	utils.Render(ctrl.store, w, r, "internal/views/events-one.html", map[string]any{
+		"obj":   obj,
+		"valid": valid.Result{},
+	})
 }
 
-func (ctrl EventCtrl) Save(c echo.Context) error {
-	id, err := ulid.Parse(c.Param("id"))
-	if err != nil { // id == 0 is valid in this context
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid event id")
-	}
-
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	dto := templ.EventDTO{ID: id.String(), CaseID: cid.String()}
-	if err = c.Bind(&dto); err != nil {
-		return err
+func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
+	dto := model.Event{}
+	if err := utils.Decode(r, &dto); err != nil {
+		utils.Warn(w, r, err)
+		return
 	}
 
 	if vr := ValidateEvent(dto); !vr.Valid() {
-		assets, err := ctrl.assetStore.ListAssets(cid)
-		if err != nil {
-			return err
-		}
-
-		names := apply(assets, func(x model.Asset) string { return x.Name })
-		return render(c, templ.EventForm(ctx(c), dto, names, vr))
+		// assets, err := ctrl.store.FindAssets(cid, "", "")
+		// if err != nil {
+		// 	ErrorHandler(w, r, err)
+		//  return
+		// }
+		// names := apply(assets, func(x model.Asset) string { return x.Name })
+		utils.Render(ctrl.store, w, r, "internal/views/events-one.html", map[string]any{
+			"obj":   dto,
+			"valid": vr,
+		})
+		return
 	}
 
-	t, err := time.Parse(time.RFC3339, dto.Time)
-	if err != nil {
-		return err // if ValidateEvent is correct, this should never happen
+	dto.ID = utils.If(dto.ID == "new", "", dto.ID)
+	if err := ctrl.store.SaveEvent(dto.CaseID, dto); err != nil {
+		utils.Err(w, r, err)
+		return
 	}
 
-	now := time.Now()
-	usr := c.Get("user").(string)
-	obj := model.Event{
-		ID:           cmp.Or(id, ulid.Make()),
-		CaseID:       cid,
-		Time:         t,
-		Type:         dto.Type,
-		AssetA:       dto.AssetA,
-		AssetB:       dto.AssetB,
-		Direction:    dto.Direction,
-		Event:        dto.Event,
-		Raw:          dto.Raw,
-		KeyEvent:     dto.KeyEvent,
-		DateAdded:    now,
-		UserAdded:    usr,
-		DateModified: now,
-		UserModified: usr,
-	}
-
-	if id != ZeroID {
-		src, err := ctrl.eventStore.GetEvent(cid, id)
-		if err != nil {
-			return err
-		}
-
-		obj.DateAdded = src.DateAdded
-		obj.UserAdded = src.UserAdded
-	}
-
-	if _, err := ctrl.eventStore.SaveEvent(cid, obj); err != nil {
-		return err
-	}
-
-	return refresh(c)
+	utils.Refresh(w, r)
 }
 
-func (ctrl EventCtrl) Delete(c echo.Context) error {
-	id, err := ulid.Parse(c.Param("id"))
-	if err != nil || id == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid asset id")
+func (ctrl EventCtrl) Delete(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	cid := r.PathValue("cid")
+	if r.URL.Query().Get("confirm") != "yes" {
+		uri := fmt.Sprintf("/cases/%s/events/%s?confirm=yes", cid, id)
+		utils.Render(ctrl.store, w, r, "internal/views/utils-confirm.html", map[string]any{
+			"dst": uri,
+		})
+		return
 	}
 
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	if c.QueryParam("confirm") != "yes" {
-		uri := c.Echo().Reverse("delete-event", cid, id) + "?confirm=yes"
-		return render(c, utils.Confirm(ctx(c), uri))
-	}
-
-	err = ctrl.eventStore.DeleteEvent(cid, id)
+	err := ctrl.store.DeleteEvent(cid, id)
 	if err != nil {
-		return err
+		utils.Err(w, r, err)
+		return
 	}
 
-	return refresh(c)
+	utils.Refresh(w, r)
+}
+
+func humanizeDuration(duration time.Duration) string {
+	days := int64(duration.Hours() / 24)
+	hours := int64(math.Mod(duration.Hours(), 24))
+	minutes := int64(math.Mod(duration.Minutes(), 60))
+	seconds := int64(math.Mod(duration.Seconds(), 60))
+
+	chunks := []struct {
+		singularName string
+		amount       int64
+	}{
+		{"day", days},
+		{"hour", hours},
+		{"minute", minutes},
+		{"second", seconds},
+	}
+
+	parts := []string{}
+
+	for _, chunk := range chunks {
+		switch chunk.amount {
+		case 0:
+			continue
+		case 1:
+			parts = append(parts, fmt.Sprintf("%d %s", chunk.amount, chunk.singularName))
+		default:
+			parts = append(parts, fmt.Sprintf("%d %ss", chunk.amount, chunk.singularName))
+		}
+	}
+
+	return strings.Join(parts, " ")
 }

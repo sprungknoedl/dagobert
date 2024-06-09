@@ -1,0 +1,44 @@
+<div id="modal" class="drawer-side z-50"
+    hx-swap-oob="true"
+    @htmx:load="drawer = true" >
+
+    <label class="drawer-overlay"
+        @click="drawer = false"
+        @keydown.escape.window="drawer = false"></label>
+
+    <div class="bg-base-200 text-base-content p-4 h-full w-[42rem]">
+    <form
+        hx-post="{{ .dst }}"
+        hx-encoding="multipart/form-data" 
+        hx-target="#modal">
+
+        <!-- Modal header -->
+        <button type="button" class="btn btn-sm btn-circle btn-ghost absolute top-3 end-3"
+            @click="drawer = false"> x </button>
+
+        <h3 class="font-bold text-lg mb-4">
+            Import from CSV
+        </h3>
+
+        <!-- Modal body -->
+        <div class="mb-4">
+			<p class="flex items-center gap-2 mb-2">
+			{{ template "icon-information-circle" "inline-block w-5 h-5" }}
+			Please note, that dagobert will attempt to deduplicate entries.
+			</p>
+
+			<div class="form-control mb-2">
+			<input name="file" class="file-input file-input-bordered w-full" type="file" />
+			</div>
+        </div>
+
+        <!-- Modal footer -->
+		<div class="flex gap-2 items-center justify-center">
+            <button type="submit" class="btn btn-primary"
+                @click="drawer = false"> Import </button>
+            <button type="button" class="btn"
+                @click="drawer = false"> Cancel </button>
+        </div>
+    </form>
+    </div>
+</div>

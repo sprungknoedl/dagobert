@@ -1,0 +1,93 @@
+<div id="modal" class="drawer-side z-50"
+    hx-swap-oob="true"
+    @htmx:load="drawer = true" >
+
+    <label class="drawer-overlay"
+        @click="drawer = false"
+        @keydown.escape.window="drawer = false"></label>
+
+    <div class="bg-base-200 text-base-content p-4 h-full w-[42rem]">
+    <form
+        hx-post="/cases/{{ .obj.ID }}"
+        hx-target="#modal" >
+
+        <!-- Modal header -->
+        <button type="button" class="btn btn-sm btn-circle btn-ghost absolute top-3 end-3"
+            @click="drawer = false"> x </button>
+
+        <h3 class="font-bold text-lg mb-4">
+            {{ .name }}
+        </h3>
+
+        <!-- Modal body -->
+        <div class="mb-4">
+            <input name="ID" type="hidden" value="{{ .obj.ID }}" />
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Name
+				    {{ if .valid.Name }}<span class="ml-2 text-sm text-error">{{ .valid.Name }}</span>{{ end }}
+                </label>
+                <input name="Name" type="text" class="input input-bordered" value="{{ .obj.Name }}" />
+            </div>
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Classification
+				    {{ if .valid.Classification }}<span class="ml-2 text-sm text-error">{{ .valid.Classification }}</span>{{ end }}
+                </label>
+                <input name="Classification" type="text" class="input input-bordered" value="{{ .obj.Classification }}" />
+            </div>
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Severity
+                    {{ if .valid.Severity }}<span class="ml-2 text-sm text-error">{{ .valid.Severity }}</span>{{ end }}
+                </label>
+                <select name="Severity" class="select select-bordered">
+                    <option disabled value="" {{ if eq .obj.Severity "" }}selected{{ end }}>Select an option</option>
+                    {{ range .model.CaseSeverities }}
+                        <option {{ if eq $.obj.Severity . }}selected{{ end }}>{{ . }}</option>
+                    {{ end }}
+                </select>
+            </div>
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Outcome
+                    {{ if .valid.Outcome }}<span class="ml-2 text-sm text-error">{{ .valid.Outcome }}</span>{{ end }}
+                </label>
+                <select name="Outcome" class="select select-bordered">
+                    <option disabled value="" {{ if eq .obj.Outcome "" }}selected{{ end }}>Select an option</option>
+                    {{ range .model.CaseOutcomes }}
+                        <option {{ if eq $.obj.Outcome . }}selected{{ end }}>{{ . }}</option>
+                    {{ end }}
+                </select>
+            </div>
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Summary
+				    {{ if .valid.Summary }}<span class="ml-2 text-sm text-error">{{ .valid.Summary }}</span>{{ end }}
+                </label>
+                <textarea name="Summary" rows="5" class="textarea textarea-bordered">{{ .obj.Summary }}</textarea>
+            </div>
+
+            <div class="form-control mb-2">
+                <label class="label cursor-pointer justify-start gap-2">
+                    <input name="Closed" value="true" type="checkbox" class="checkbox" {{ if .obj.Closed }}checked{{ end }} />
+                    Closed
+                </label>
+            </div>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="flex gap-2 items-center">
+            <button type="submit" class="btn btn-primary"
+                @click="drawer = false"> Save </button>
+            <button type="button" class="btn"
+                @click="drawer = false"> Cancel </button>
+        </div>
+    </form>
+    </div>
+</div>

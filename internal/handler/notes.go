@@ -1,208 +1,141 @@
 package handler
 
 import (
-	"cmp"
 	"encoding/csv"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
-	"github.com/labstack/echo/v4"
-	"github.com/oklog/ulid/v2"
-	"github.com/sprungknoedl/dagobert/internal/templ"
-	"github.com/sprungknoedl/dagobert/internal/templ/utils"
-	"github.com/sprungknoedl/dagobert/pkg/model"
+	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/utils"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type NoteCtrl struct {
-	store model.NoteStore
+	store *model.Store
 }
 
-func NewNoteCtrl(store model.NoteStore) *NoteCtrl {
+func NewNoteCtrl(store *model.Store) *NoteCtrl {
 	return &NoteCtrl{store}
 }
 
-func (ctrl NoteCtrl) List(c echo.Context) error {
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	sort := c.QueryParam("sort")
-	search := c.QueryParam("search")
+func (ctrl NoteCtrl) List(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	sort := r.URL.Query().Get("sort")
+	search := r.URL.Query().Get("search")
 	list, err := ctrl.store.FindNotes(cid, search, sort)
 	if err != nil {
-		return err
+		utils.Err(w, r, err)
+		return
 	}
 
-	return render(c, templ.NoteList(ctx(c), cid.String(), list))
+	utils.Render(ctrl.store, w, r, "internal/views/notes-many.html", map[string]any{
+		"title": "Notes",
+		"rows":  list,
+	})
 }
 
-func (ctrl NoteCtrl) Export(c echo.Context) error {
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	list, err := ctrl.store.ListNotes(cid)
+func (ctrl NoteCtrl) Export(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	list, err := ctrl.store.FindNotes(cid, "", "")
 	if err != nil {
-		return err
+		utils.Err(w, r, err)
+		return
 	}
 
-	filename := fmt.Sprintf("%s - %s - Notes.csv", time.Now().Format("20060102"), ctx(c).ActiveCase.Name)
-	c.Response().Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
-	c.Response().WriteHeader(http.StatusOK)
+	filename := fmt.Sprintf("%s - %s - Notes.csv", time.Now().Format("20060102"), utils.GetEnv(ctrl.store, r).ActiveCase.Name)
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+	w.WriteHeader(http.StatusOK)
 
-	w := csv.NewWriter(c.Response().Writer)
-	w.Write([]string{"ID", "Title", "Category", "Description"})
+	cw := csv.NewWriter(w)
+	cw.Write([]string{"ID", "Title", "Category", "Description"})
 	for _, e := range list {
-		w.Write([]string{
-			e.ID.String(),
+		cw.Write([]string{
+			e.ID,
 			e.Title,
 			e.Category,
 			e.Description,
 		})
 	}
 
-	w.Flush()
-	return nil
+	cw.Flush()
 }
 
-func (ctrl NoteCtrl) Import(c echo.Context) error {
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	uri := c.Echo().Reverse("import-notes", cid)
-	now := time.Now()
-	usr := c.Get("user").(string)
-
-	return importHelper(c, uri, 4, func(c echo.Context, rec []string) error {
-		id, err := ulid.Parse(cmp.Or(rec[0], ZeroID.String()))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err)
-		}
-
+func (ctrl NoteCtrl) Import(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	uri := r.URL.RequestURI()
+	ImportCSV(ctrl.store, w, r, uri, 4, func(rec []string) {
 		obj := model.Note{
-			ID:           cmp.Or(id, ulid.Make()),
-			CaseID:       cid,
-			Title:        rec[1],
-			Category:     rec[2],
-			Description:  rec[3],
-			DateAdded:    now,
-			UserAdded:    usr,
-			DateModified: now,
-			UserModified: usr,
+			ID:          rec[0],
+			Title:       rec[1],
+			Category:    rec[2],
+			Description: rec[3],
+			CaseID:      cid,
 		}
 
-		_, err = ctrl.store.SaveNote(cid, obj)
-		return err
+		err := ctrl.store.SaveNote(cid, obj)
+		utils.Err(w, r, err)
 	})
 }
 
-func (ctrl NoteCtrl) View(c echo.Context) error {
-	id, err := ulid.Parse(c.Param("id"))
-	if err != nil { // id == 0 is valid in this context
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid note id")
-	}
-
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	obj := model.Note{CaseID: cid}
-	if id != ZeroID {
+func (ctrl NoteCtrl) Edit(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	cid := r.PathValue("cid")
+	obj := model.Note{ID: id, CaseID: cid}
+	if id != "new" {
+		var err error
 		obj, err = ctrl.store.GetNote(cid, id)
 		if err != nil {
-			return err
+			utils.Err(w, r, err)
+			return
 		}
 	}
 
-	return render(c, templ.NoteForm(ctx(c), templ.NoteDTO{
-		ID:          id.String(),
-		CaseID:      cid.String(),
-		Title:       obj.Title,
-		Category:    obj.Category,
-		Description: obj.Description,
-	}, valid.Result{}))
+	utils.Render(ctrl.store, w, r, "internal/views/notes-one.html", map[string]any{
+		"obj":   obj,
+		"valid": valid.Result{},
+	})
 }
 
-func (ctrl NoteCtrl) Save(c echo.Context) error {
-	id, err := ulid.Parse(c.Param("id"))
-	if err != nil { // id == 0 is valid in this context
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid note id")
-	}
-
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	dto := templ.NoteDTO{ID: id.String(), CaseID: cid.String()}
-	if err = c.Bind(&dto); err != nil {
-		return err
+func (ctrl NoteCtrl) Save(w http.ResponseWriter, r *http.Request) {
+	dto := model.Note{}
+	if err := utils.Decode(r, &dto); err != nil {
+		utils.Warn(w, r, err)
+		return
 	}
 
 	if vr := ValidateNote(dto); !vr.Valid() {
-		return render(c, templ.NoteForm(ctx(c), dto, vr))
+		utils.Render(ctrl.store, w, r, "internal/views/notes-one.html", map[string]any{
+			"obj":   dto,
+			"valid": vr,
+		})
+		return
 	}
 
-	now := time.Now()
-	usr := c.Get("user").(string)
-	obj := model.Note{
-		ID:           cmp.Or(id, ulid.Make()),
-		CaseID:       cid,
-		Title:        dto.Title,
-		Category:     dto.Category,
-		Description:  dto.Description,
-		DateAdded:    now,
-		UserAdded:    usr,
-		DateModified: now,
-		UserModified: usr,
+	dto.ID = utils.If(dto.ID == "new", "", dto.ID)
+	if err := ctrl.store.SaveNote(dto.CaseID, dto); err != nil {
+		utils.Err(w, r, err)
+		return
 	}
 
-	if id != ZeroID {
-		src, err := ctrl.store.GetNote(cid, id)
-		if err != nil {
-			return err
-		}
-
-		obj.DateAdded = src.DateAdded
-		obj.UserAdded = src.UserAdded
-	}
-
-	if _, err := ctrl.store.SaveNote(cid, obj); err != nil {
-		return err
-	}
-
-	return refresh(c)
+	utils.Refresh(w, r)
 }
 
-func (ctrl NoteCtrl) Delete(c echo.Context) error {
-	id, err := ulid.Parse(c.Param("id"))
-	if err != nil || id == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid note id")
+func (ctrl NoteCtrl) Delete(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	cid := r.PathValue("cid")
+	if r.URL.Query().Get("confirm") != "yes" {
+		uri := fmt.Sprintf("/cases/%s/notes/%s?confirm=yes", cid, id)
+		utils.Render(ctrl.store, w, r, "internal/views/utils-confirm.html", map[string]any{
+			"dst": uri,
+		})
 	}
 
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	if c.QueryParam("confirm") != "yes" {
-		uri := c.Echo().Reverse("delete-note", cid, id) + "?confirm=yes"
-		log.Printf("--> confirm uri: %s", uri)
-		return render(c, utils.Confirm(ctx(c), uri))
-	}
-
-	err = ctrl.store.DeleteNote(cid, id)
+	err := ctrl.store.DeleteNote(cid, id)
 	if err != nil {
-		return err
+		utils.Err(w, r, err)
+		return
 	}
 
-	return refresh(c)
+	utils.Refresh(w, r)
 }

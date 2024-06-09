@@ -1,0 +1,29 @@
+{{ template "layout-begin" . }}
+    {{ template "table-view" . }}
+{{ template "layout-end" . }}
+
+{{ define "table-content" }}
+<table class="table w-full">
+	<thead>
+		<tr>
+			<td style="width: auto">Name</td>
+			<td style="width: auto">UPN</td>
+			<td style="width: auto">Email</td>
+		</tr>
+	</thead>
+
+	<tbody>
+        {{ range .rows }}
+        <tr class="hover">
+			<td> {{ .Name }} </td>
+			<td> {{ .UPN }} </td>
+			<td> {{ .Email }} </td>
+        </tr>
+        {{ else }}
+        <tr>
+            <td colspan="42">Nothing here ...</td>
+        </tr>
+        {{ end }}
+	</tbody>
+</table>
+{{ end }}

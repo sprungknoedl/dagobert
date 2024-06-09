@@ -1,0 +1,66 @@
+{{ template "layout-begin" . }}
+    {{ template "table-view" . }}
+{{ template "layout-end" . }}
+
+{{ define "table-content" }}
+<table class="table w-full">
+	<thead>
+		<tr>
+			<td style="width: 15rem">Type</td>
+			<td style="width: auto">Name</td>
+			<td style="width: auto">Description</td>
+			<td style="width: 25rem">Hash</td>
+			<td style="width: 7rem"></td>
+		</tr>
+	</thead>
+
+	<tbody>
+        {{ range .rows }}
+        <tr class="hover">
+			<td>
+                {{ if eq .Type "File" }}                       {{ template "icon-folder-open" "inline-block w-6 h-6 mr-2" }}
+                {{ else if eq .Type "Logs" }}                  {{ template "icon-document-text" "inline-block w-6 h-6 mr-2" }}
+                {{ else if eq .Type "Artifacts Collection" }}  {{ template "icon-archive-box" "inline-block w-6 h-6 mr-2" }}
+                {{ else if eq .Type "System Image" }}          {{ template "icon-server" "inline-block w-6 h-6 mr-2" }}
+                {{ else if eq .Type "Memory Dump" }}           {{ template "icon-cpu-chip" "inline-block w-6 h-6 mr-2" }}
+                {{ else }}                                     {{ template "icon-question-mark-circle" "inline-block w-6 h-6 mr-2" }}
+                {{ end }}
+                {{ .Type }}
+            </td>
+			<td> {{ .Name }} </td>
+			<td> {{ .Description }} </td>
+			<td> {{ .Hash }} </td>
+            <td class="px-6 py-2 flex justify-end join">
+                <a class="join-item btn btn-sm"
+                    href="/cases/{{ .CaseID }}/evidences/{{ .ID }}/download"
+                    @click.stop >
+                    {{ template "icon-arrow-down-tray" "w-4 h-4"}}
+                </a>
+
+                <button type="button" class="join-item btn btn-sm"
+                    hx-get="/cases/{{ .CaseID }}/evidences/{{ .ID }}"
+                    hx-target="#modal"
+                    hx-swap="innerHTML"
+                    hx-push-url="false"
+                    @click.stop >
+                    {{ template "icon-pencil" "w-4 h-4"}}
+                </button>
+            
+                <button type="button" class="join-item btn btn-sm"
+                    hx-delete="/cases/{{ .CaseID }}/evidences/{{ .ID }}"
+                    hx-target="#modal"
+                    hx-swap="innerHTML"
+                    hx-push-url="false"
+                    @click.stop >
+                    {{ template "icon-trash" "w-4 h-4"}}
+                </button>
+            </td>
+        </tr>
+        {{ else }}
+        <tr>
+            <td colspan="42">Nothing here ...</td>
+        </tr>
+        {{ end }}
+	</tbody>
+</table>
+{{ end }}

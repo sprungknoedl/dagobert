@@ -1,0 +1,65 @@
+{{ template "layout-begin" . }}
+    {{ template "table-view" . }}
+{{ template "layout-end" . }}
+
+{{ define "table-content" }}
+<table class="table w-full">
+	<thead>
+		<tr>
+			<td style="width: 8rem">Date due</td>
+			<td style="width: auto">Type</td>
+			<td style="width: auto">Task</td>
+			<td style="width: auto">Owner</td>
+			<td style="width: auto">Done</td>
+			<td style="width: 7rem"></td>
+		</tr>
+	</thead>
+
+	<tbody>
+        {{ range .rows }}
+        <tr class="hover">
+			<td> {{ .DateDue.Format "2006-01-02" }} </td>
+            <td>
+                {{ if eq .Type "Information request" }} {{ template "icon-question-mark-circle" "inline-block w-6 h-6 mr-2" }}
+                {{ else if eq .Type "Analysis" }}       {{ template "icon-magnifying-glass" "inline-block w-6 h-6 mr-2" }}
+                {{ else if eq .Type "Deliverable" }}    {{ template "icon-document-text" "inline-block w-6 h-6 mr-2" }}
+                {{ else if eq .Type "Checkpoint" }}     {{ template "icon-clipboard-check" "inline-block w-6 h-6 mr-2" }}
+                {{ else }}                              {{ template "icon-question-mark-circle" "inline-block w-6 h-6 mr-2" }}
+                {{ end }}
+                {{ .Type }}
+            </td>
+			<td> {{ .Task }} </td>
+			<td> {{ .Owner }} </td>
+			<td>
+                {{ if .Done }} {{ template "icon-check-circle" "w-6 h-6 text-green-500" }}
+                {{ else }} {{ template "icon-x-circle" "w-6 h-6 text-red-500" }}
+                {{ end }}
+            </td>
+            <td class="px-6 py-2 flex justify-end join">
+                <button type="button" class="join-item btn btn-sm"
+                    hx-get="/cases/{{ .CaseID }}/tasks/{{ .ID }}"
+                    hx-target="#modal"
+                    hx-swap="innerHTML"
+                    hx-push-url="false"
+                    @click.stop >
+                    {{ template "icon-pencil" "w-4 h-4"}}
+                </button>
+            
+                <button type="button" class="join-item btn btn-sm"
+                    hx-delete="/cases/{{ .CaseID }}/tasks/{{ .ID }}"
+                    hx-target="#modal"
+                    hx-swap="innerHTML"
+                    hx-push-url="false"
+                    @click.stop >
+                    {{ template "icon-trash" "w-4 h-4"}}
+                </button>
+            </td>
+        </tr>
+        {{ else }}
+        <tr>
+            <td colspan="42">Nothing here ...</td>
+        </tr>
+        {{ end }}
+	</tbody>
+</table>
+{{ end }}

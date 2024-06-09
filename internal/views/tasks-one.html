@@ -1,0 +1,82 @@
+<div id="modal" class="drawer-side z-50"
+    hx-swap-oob="true"
+    @htmx:load="drawer = true" >
+
+    <label class="drawer-overlay"
+        @click="drawer = false"
+        @keydown.escape.window="drawer = false"></label>
+
+    <div class="bg-base-200 text-base-content p-4 h-full w-[42rem]">
+    <form
+        hx-post="/cases/{{ .obj.CaseID }}/tasks/{{ .obj.ID }}"
+        hx-target="#modal" >
+
+        <!-- Modal header -->
+        <button type="button" class="btn btn-sm btn-circle btn-ghost absolute top-3 end-3"
+            @click="drawer = false"> x </button>
+
+        <h3 class="font-bold text-lg mb-4">
+            {{ .name }}
+        </h3>
+
+        <!-- Modal body -->
+        <div class="mb-4">
+            <input name="ID" type="hidden" value="{{ .obj.ID }}" />
+            <input name="CaseID" type="hidden" value="{{ .obj.CaseID }}" />
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Type
+				    {{ if .valid.Type }}<span class="ml-2 text-sm text-error">{{ .valid.Type }}</span>{{ end }}
+                </label>
+                <select name="Type" class="select select-bordered">
+                    <option disabled value="" {{ if eq .obj.Type "" }}selected{{ end }}>Select an option</option>
+                    {{ range .model.TaskTypes }}
+                        <option {{ if eq $.obj.Type . }}selected{{ end }}>{{ . }}</option>
+                    {{ end }}
+                </select>
+            </div>
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Task
+				    {{ if .valid.Task }}<span class="ml-2 text-sm text-error">{{ .valid.Task }}</span>{{ end }}
+                </label>
+                <input name="Task" type="text" class="input input-bordered" value="{{ .obj.Task }}" />
+            </div>
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Owner
+				    {{ if .valid.Owner }}<span class="ml-2 text-sm text-error">{{ .valid.Owner }}</span>{{ end }}
+                </label>
+                <input name="Owner" type="text" class="input input-bordered" value="{{ .obj.Owner }}" />
+            </div>
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Date due
+				    {{ if .valid.DateDue }}<span class="ml-2 text-sm text-error">{{ .valid.DateDue }}</span>{{ end }}
+                </label>
+                <input name="DateDue" type="text" class="input input-bordered" value="{{ .obj.DateDue.Format "2006-01-02T15:04:05Z07:00" }}" />
+            </div>
+
+            <div class="form-control mb-2">
+                <label class="label cursor-pointer justify-start gap-2">
+                    <input name="Done" value="true" type="checkbox" class="checkbox" {{ if .obj.Done }}checked{{ end }} />
+                    Done
+                </label>
+            </div>
+
+        </div>
+
+        <!-- Modal footer -->
+        <div class="flex gap-2 items-center">
+            <button type="submit" class="btn btn-primary"
+                @click="drawer = false"> Save </button>
+            <button type="button" class="btn"
+                @click="drawer = false"> Cancel </button>
+        </div>
+    </form>
+    </div>
+</div>

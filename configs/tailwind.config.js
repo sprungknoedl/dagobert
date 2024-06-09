@@ -1,9 +1,9 @@
 module.exports = {
-  content: ["./internal/**/*.templ"],
+  content: ["./internal/**/*.templ", "./internal/**/*.html"],
 
   plugins: [require("daisyui")],
 
   daisyui: {
-    themes: ["nord"],
+    themes: ["default", "retro", "cyberpunk", "valentine", "aqua", "nord"],
   },
 };

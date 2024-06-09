@@ -8,58 +8,52 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/labstack/echo/v4"
-	"github.com/oklog/ulid/v2"
-	"github.com/sprungknoedl/dagobert/internal/templ"
-	"github.com/sprungknoedl/dagobert/internal/templ/utils"
-	"github.com/sprungknoedl/dagobert/pkg/model"
+	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/utils"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type TaskCtrl struct {
-	store model.TaskStore
+	store *model.Store
 }
 
-func NewTaskCtrl(store model.TaskStore) *TaskCtrl {
+func NewTaskCtrl(store *model.Store) *TaskCtrl {
 	return &TaskCtrl{store}
 }
 
-func (ctrl TaskCtrl) List(c echo.Context) error {
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	sort := c.QueryParam("sort")
-	search := c.QueryParam("search")
+func (ctrl TaskCtrl) List(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	sort := r.URL.Query().Get("sort")
+	search := r.URL.Query().Get("search")
 	list, err := ctrl.store.FindTasks(cid, search, sort)
 	if err != nil {
-		return err
+		utils.Err(w, r, err)
+		return
 	}
 
-	return render(c, templ.TaskList(ctx(c), cid.String(), list))
+	utils.Render(ctrl.store, w, r, "internal/views/tasks-many.html", map[string]any{
+		"title": "Tasks",
+		"rows":  list,
+	})
 }
 
-func (ctrl TaskCtrl) Export(c echo.Context) error {
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	list, err := ctrl.store.ListTasks(cid)
+func (ctrl TaskCtrl) Export(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	list, err := ctrl.store.FindTasks(cid, "", "")
 	if err != nil {
-		return err
+		utils.Err(w, r, err)
+		return
 	}
 
-	filename := fmt.Sprintf("%s - %s - Tasks.csv", time.Now().Format("20060102"), ctx(c).ActiveCase.Name)
-	c.Response().Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
-	c.Response().WriteHeader(http.StatusOK)
+	filename := fmt.Sprintf("%s - %s - Tasks.csv", time.Now().Format("20060102"), utils.GetEnv(ctrl.store, r).ActiveCase.Name)
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+	w.WriteHeader(http.StatusOK)
 
-	w := csv.NewWriter(c.Response().Writer)
-	w.Write([]string{"ID", "Type", "Task", "Done", "Owner", "Due Date"})
+	cw := csv.NewWriter(w)
+	cw.Write([]string{"ID", "Type", "Task", "Done", "Owner", "Due Date"})
 	for _, e := range list {
-		w.Write([]string{
-			e.ID.String(),
+		cw.Write([]string{
+			e.ID,
 			e.Type,
 			e.Task,
 			strconv.FormatBool(e.Done),
@@ -68,163 +62,97 @@ func (ctrl TaskCtrl) Export(c echo.Context) error {
 		})
 	}
 
-	w.Flush()
-	return nil
+	cw.Flush()
 }
 
-func (ctrl TaskCtrl) Import(c echo.Context) error {
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	uri := c.Echo().Reverse("import-tasks", cid)
-	now := time.Now()
-	usr := c.Get("user").(string)
-
-	return importHelper(c, uri, 6, func(c echo.Context, rec []string) error {
-		id, err := ulid.Parse(cmp.Or(rec[0], ZeroID.String()))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err)
-		}
-
+func (ctrl TaskCtrl) Import(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	uri := r.URL.RequestURI()
+	ImportCSV(ctrl.store, w, r, uri, 6, func(rec []string) {
 		done, err := strconv.ParseBool(cmp.Or(rec[3], "false"))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err)
+			utils.Warn(w, r, err)
 		}
 
 		datedue, err := time.Parse(time.RFC3339, cmp.Or(rec[5], ZeroTime.Format(time.RFC3339)))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err)
+			utils.Warn(w, r, err)
 		}
 
 		obj := model.Task{
-			ID:           cmp.Or(id, ulid.Make()),
-			CaseID:       cid,
-			Type:         rec[1],
-			Task:         rec[2],
-			Done:         done, // 3
-			Owner:        rec[4],
-			DateDue:      datedue, // 5
-			DateAdded:    now,
-			UserAdded:    usr,
-			DateModified: now,
-			UserModified: usr,
+			ID:      rec[0],
+			Type:    rec[1],
+			Task:    rec[2],
+			Done:    done, // 3
+			Owner:   rec[4],
+			DateDue: datedue, // 5
+			CaseID:  cid,
 		}
 
-		_, err = ctrl.store.SaveTask(cid, obj)
-		return err
+		err = ctrl.store.SaveTask(cid, obj)
+		utils.Err(w, r, err)
+		return
 	})
 }
 
-func (ctrl TaskCtrl) Edit(c echo.Context) error {
-	id, err := ulid.Parse(c.Param("id"))
-	if err != nil { // id == 0 is valid in this context
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid task id")
-	}
-
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	obj := model.Task{CaseID: cid}
-	if id != ZeroID {
+func (ctrl TaskCtrl) Edit(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	cid := r.PathValue("cid")
+	obj := model.Task{ID: id, CaseID: cid}
+	if id != "new" {
+		var err error
 		obj, err = ctrl.store.GetTask(cid, id)
 		if err != nil {
-			return err
+			utils.Err(w, r, err)
+			return
 		}
 	}
 
-	return render(c, templ.TaskForm(ctx(c), templ.TaskDTO{
-		ID:      id.String(),
-		CaseID:  cid.String(),
-		Type:    obj.Type,
-		Task:    obj.Task,
-		Done:    obj.Done,
-		Owner:   obj.Owner,
-		DateDue: formatNonZero("2006-01-02", obj.DateDue),
-	}, valid.Result{}))
+	utils.Render(ctrl.store, w, r, "internal/views/tasks-one.html", map[string]any{
+		"obj":   obj,
+		"valid": valid.Result{},
+	})
 }
 
-func (ctrl TaskCtrl) Save(c echo.Context) error {
-	id, err := ulid.Parse(c.Param("id"))
-	if err != nil { // id == 0 is valid in this context
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid task id")
-	}
-
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	dto := templ.TaskDTO{ID: id.String(), CaseID: cid.String()}
-	if err = c.Bind(&dto); err != nil {
-		return err
+func (ctrl TaskCtrl) Save(w http.ResponseWriter, r *http.Request) {
+	dto := model.Task{}
+	if err := utils.Decode(r, &dto); err != nil {
+		utils.Warn(w, r, err)
+		return
 	}
 
 	if vr := ValidateTask(dto); !vr.Valid() {
-		return render(c, templ.TaskForm(ctx(c), dto, vr))
+		utils.Render(ctrl.store, w, r, "internal/views/tasks-one.html", map[string]any{
+			"obj":   dto,
+			"valid": vr,
+		})
+		return
 	}
 
-	dateDue, err := time.Parse("2006-01-02", dto.DateDue)
-	if err != nil {
-		return err // if ValidateTask is correct, this should never happen
+	dto.ID = utils.If(dto.ID == "new", "", dto.ID)
+	if err := ctrl.store.SaveTask(dto.CaseID, dto); err != nil {
+		utils.Err(w, r, err)
+		return
 	}
 
-	now := time.Now()
-	usr := c.Get("user").(string)
-	obj := model.Task{
-		ID:           cmp.Or(id, ulid.Make()),
-		CaseID:       cid,
-		Type:         dto.Type,
-		Task:         dto.Task,
-		Done:         dto.Done,
-		Owner:        dto.Owner,
-		DateDue:      dateDue,
-		DateAdded:    now,
-		UserAdded:    usr,
-		DateModified: now,
-		UserModified: usr,
-	}
-
-	if id != ZeroID {
-		src, err := ctrl.store.GetTask(cid, id)
-		if err != nil {
-			return err
-		}
-
-		obj.DateAdded = src.DateAdded
-		obj.UserAdded = src.UserAdded
-	}
-
-	if _, err := ctrl.store.SaveTask(cid, obj); err != nil {
-		return err
-	}
-
-	return refresh(c)
+	utils.Refresh(w, r)
 }
 
-func (ctrl TaskCtrl) Delete(c echo.Context) error {
-	id, err := ulid.Parse(c.Param("id"))
-	if err != nil || id == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid task id")
+func (ctrl TaskCtrl) Delete(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	cid := r.PathValue("cid")
+	if r.URL.Query().Get("confirm") != "yes" {
+		uri := fmt.Sprintf("/cases/%s/tasks/%s?confirm=yes", cid, id)
+		utils.Render(ctrl.store, w, r, "internal/views/utils-confirm.html", map[string]any{
+			"dst": uri,
+		})
 	}
 
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	if c.QueryParam("confirm") != "yes" {
-		uri := c.Echo().Reverse("delete-task", cid, id) + "?confirm=yes"
-		return render(c, utils.Confirm(ctx(c), uri))
-	}
-
-	err = ctrl.store.DeleteTask(cid, id)
+	err := ctrl.store.DeleteTask(cid, id)
 	if err != nil {
-		return err
+		utils.Err(w, r, err)
+		return
 	}
 
-	return refresh(c)
+	utils.Refresh(w, r)
 }

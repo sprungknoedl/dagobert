@@ -5,16 +5,21 @@ import (
 	"encoding/gob"
 	"errors"
 	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
+	"os"
+	"time"
 
 	"github.com/coreos/go-oidc"
-	"github.com/labstack/echo-contrib/session"
-	"github.com/labstack/echo/v4"
-	"github.com/sprungknoedl/dagobert/internal/templ"
-	"github.com/sprungknoedl/dagobert/pkg/model"
+	"github.com/gorilla/sessions"
+	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/utils"
 	"golang.org/x/oauth2"
 )
+
+var SessionName = "default"
+var SessionStore = sessions.NewCookieStore([]byte(os.Getenv("WEB_SESSION_SECRET")))
 
 type OpenIDConfig struct {
 	ClientId      string   //id from the authorization service (OIDC provider)
@@ -24,17 +29,16 @@ type OpenIDConfig struct {
 	Scopes        []string //OAuth scopes. If you're unsure go with: []string{oidc.ScopeOpenID, "profile", "email"}
 	Identifier    string   // name of the openid claim used to securely identify a user (e.g. "sub").
 	PostLogoutUrl url.URL  //user will be redirected to this URL after he logs out (i.e. accesses the '/logout' endpoint added in 'Init()')
-	SessionName   string
 }
 
 type UserCtrl struct {
 	openidConfig OpenIDConfig
 	oauthConfig  *oauth2.Config
 	verifier     *oidc.IDTokenVerifier
-	store        model.UserStore
+	store        *model.Store
 }
 
-func NewUserCtrl(store model.UserStore, cfg OpenIDConfig) *UserCtrl {
+func NewUserCtrl(store *model.Store, cfg OpenIDConfig) *UserCtrl {
 	providerCtx := context.Background()
 	provider, err := oidc.NewProvider(providerCtx, cfg.Issuer.String())
 	if err != nil {
@@ -62,88 +66,96 @@ func NewUserCtrl(store model.UserStore, cfg OpenIDConfig) *UserCtrl {
 	}
 }
 
-func (ctrl UserCtrl) Protect(e *echo.Echo) func(echo.HandlerFunc) echo.HandlerFunc {
-	gob.Register(map[string]interface{}{})
-	e.GET("/logout", ctrl.Logout).Name = "logout"
-	e.Any("/oidc-callback", ctrl.Callback)
+func (ctrl UserCtrl) Protect(next http.Handler) http.Handler {
+	gob.Register(map[string]any{})
 
-	return func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			sess, _ := session.Get(ctrl.openidConfig.SessionName, c)
-			authorized := sess.Values["oidcAuthorized"]
-			if (authorized != nil && authorized.(bool)) || c.Request().URL.Path == "/oidc-callback" {
-				return next(c)
-			}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		sess, _ := SessionStore.Get(r, SessionName)
 
-			state := random(16)
-			sess.Values["oidcAuthorized"] = false
-			sess.Values["oidcState"] = state
-			sess.Values["oidcOriginalRequestUrl"] = c.Request().URL.String()
-			err := sess.Save(c.Request(), c.Response())
-			if err != nil {
-				log.Fatal("failed save sessions. error: " + err.Error()) // todo handle more gracefully
-			}
-
-			return c.Redirect(http.StatusFound, ctrl.oauthConfig.AuthCodeURL(state)) //redirect to authorization server
+		authorized := sess.Values["oidcAuthorized"]
+		if (authorized != nil && authorized.(bool)) || r.URL.Path == "/oidc-callback" {
+			next.ServeHTTP(w, r)
+			return
 		}
-	}
+
+		state := random(16)
+		sess.Values["oidcAuthorized"] = false
+		sess.Values["oidcState"] = state
+		sess.Values["oidcOriginalRequestUrl"] = r.URL.String()
+		err := sess.Save(r, w)
+		if err != nil {
+			log.Fatal("failed save sessions. error: " + err.Error()) // todo handle more gracefully
+		}
+
+		//redirect to authorization server
+		http.Redirect(w, r, ctrl.oauthConfig.AuthCodeURL(state), http.StatusFound)
+	})
 }
 
-func (ctrl UserCtrl) Logout(c echo.Context) error {
-	sess, _ := session.Get(ctrl.openidConfig.SessionName, c)
+func (ctrl UserCtrl) Logout(w http.ResponseWriter, r *http.Request) {
+	sess, _ := SessionStore.Get(r, SessionName)
 	sess.Values["oidcAuthorized"] = false
 	sess.Values["oidcClaims"] = nil
 	sess.Values["oidcState"] = nil
 	sess.Values["oidcOriginalRequestUrl"] = nil
 
-	err := sess.Save(c.Request(), c.Response())
+	err := sess.Save(r, w)
 	if err != nil {
-		return err
+		utils.Err(w, r, err)
+		return
 	}
 
 	logoutUrl := ctrl.openidConfig.Issuer
 	logoutUrl.RawQuery = (url.Values{"redirect_uri": []string{ctrl.openidConfig.PostLogoutUrl.String()}}).Encode()
 	logoutUrl.Path = "protocol/openid-connect/logout"
-	return c.Redirect(http.StatusFound, logoutUrl.String())
+
+	http.Redirect(w, r, logoutUrl.String(), http.StatusFound)
 }
 
-func (ctrl UserCtrl) Callback(c echo.Context) error {
-	ctx := c.Request().Context()
-	sess, _ := session.Get(ctrl.openidConfig.SessionName, c)
+func (ctrl UserCtrl) Callback(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	sess, _ := SessionStore.Get(r, SessionName)
 
 	state, ok := (sess.Values["oidcState"]).(string)
 	if !ok {
-		return errors.New("get 'state' param didn't match local 'state' value")
+		utils.Warn(w, r, errors.New("get 'state' param didn't match local 'state' value"))
+		return
 	}
 
-	if c.QueryParam("state") != state {
-		return errors.New("get 'state' param didn't match local 'state' value")
+	if r.URL.Query().Get("state") != state {
+		utils.Warn(w, r, errors.New("get 'state' param didn't match local 'state' value"))
+		return
 	}
 
-	oauth2Token, err := ctrl.oauthConfig.Exchange(ctx, c.QueryParam("code"))
+	oauth2Token, err := ctrl.oauthConfig.Exchange(ctx, r.URL.Query().Get("code"))
 	if err != nil {
-		return err
+		utils.Warn(w, r, err)
+		return
 	}
 
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
-		return errors.New("no id_token field in oauth2 token")
+		utils.Warn(w, r, errors.New("no id_token field in oauth2 token"))
+		return
 	}
 
 	idToken, err := ctrl.verifier.Verify(ctx, rawIDToken)
 	if err != nil {
-		return err
+		utils.Warn(w, r, err)
+		return
 	}
 
 	var claims map[string]interface{}
 	err = idToken.Claims(&claims)
 	if err != nil {
-		return err
+		utils.Warn(w, r, err)
+		return
 	}
 
 	originalRequestUrl, ok := (sess.Values["oidcOriginalRequestUrl"]).(string)
 	if !ok {
-		return errors.New("failed to parse originalRequestUrl")
+		utils.Warn(w, r, errors.New("failed to parse originalRequestUrl"))
+		return
 	}
 
 	sess.Values["oidcAuthorized"] = true
@@ -151,9 +163,10 @@ func (ctrl UserCtrl) Callback(c echo.Context) error {
 	sess.Values["oidcOriginalRequestUrl"] = nil
 	sess.Values["oidcClaims"] = claims
 
-	err = sess.Save(c.Request(), c.Response())
+	err = sess.Save(r, w)
 	if err != nil {
-		return err
+		utils.Err(w, r, err)
+		return
 	}
 
 	user := model.User{
@@ -162,21 +175,53 @@ func (ctrl UserCtrl) Callback(c echo.Context) error {
 		UPN:   claims["preferred_username"].(string),
 		Email: claims["email"].(string),
 	}
-	_, err = ctrl.store.SaveUser(user)
+	err = ctrl.store.SaveUser(user)
 	if err != nil {
-		return err
+		utils.Err(w, r, err)
+		return
 	}
 
-	return c.Redirect(http.StatusFound, originalRequestUrl)
+	http.Redirect(w, r, originalRequestUrl, http.StatusFound)
 }
 
-func (ctrl UserCtrl) List(c echo.Context) error {
-	sort := c.QueryParam("sort")
-	search := c.QueryParam("search")
+func (ctrl UserCtrl) List(w http.ResponseWriter, r *http.Request) {
+	sort := r.URL.Query().Get("sort")
+	search := r.URL.Query().Get("search")
 	list, err := ctrl.store.FindUsers(search, sort)
 	if err != nil {
-		return err
+		utils.Err(w, r, err)
+		return
 	}
 
-	return render(c, templ.UserList(ctx(c), list))
+	utils.Render(ctrl.store, w, r, "internal/views/users-many.html", map[string]any{
+		"title": "Users",
+		"rows":  list,
+	})
+}
+
+func random(n int) string {
+	// random string
+	var src = rand.NewSource(time.Now().UnixNano())
+
+	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	const (
+		letterIdxBits = 6                    // 6 bits to represent a letter index
+		letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
+		letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+	)
+
+	b := make([]byte, n)
+	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
+		if remain == 0 {
+			cache, remain = src.Int63(), letterIdxMax
+		}
+		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
+			b[i] = letterBytes[idx]
+			i--
+		}
+		cache >>= letterIdxBits
+		remain--
+	}
+
+	return string(b)
 }

@@ -8,48 +8,50 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/labstack/echo/v4"
-	"github.com/oklog/ulid/v2"
-	"github.com/sprungknoedl/dagobert/internal/templ"
-	"github.com/sprungknoedl/dagobert/internal/templ/utils"
-	"github.com/sprungknoedl/dagobert/pkg/model"
+	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/utils"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type CaseCtrl struct {
-	store model.CaseStore
+	store *model.Store
 }
 
-func NewCaseCtrl(store model.CaseStore) *CaseCtrl {
+func NewCaseCtrl(store *model.Store) *CaseCtrl {
 	return &CaseCtrl{store}
 }
 
-func (ctrl CaseCtrl) List(c echo.Context) error {
-	sort := c.QueryParam("sort")
-	search := c.QueryParam("search")
+func (ctrl CaseCtrl) List(w http.ResponseWriter, r *http.Request) {
+	sort := r.URL.Query().Get("sort")
+	search := r.URL.Query().Get("search")
 	list, err := ctrl.store.FindCases(search, sort)
 	if err != nil {
-		return err
+		utils.Err(w, r, err)
+		return
 	}
 
-	return render(c, templ.CaseList(ctx(c), list))
+	utils.Render(ctrl.store, w, r, "internal/views/cases-many.html", map[string]any{
+		"title": "Cases",
+		"rows":  list,
+	})
 }
 
-func (ctrl CaseCtrl) Export(c echo.Context) error {
-	list, err := ctrl.store.ListCases()
+func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
+	list, err := ctrl.store.FindCases("", "")
 	if err != nil {
-		return err
+		utils.Err(w, r, err)
+		return
 	}
 
-	filename := fmt.Sprintf("%s - %s - Cases.csv", time.Now().Format("20060102"), ctx(c).ActiveCase.Name)
-	c.Response().Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
-	c.Response().WriteHeader(http.StatusOK)
+	filename := fmt.Sprintf("%s - %s - Cases.csv", time.Now().Format("20060102"), utils.GetEnv(ctrl.store, r).ActiveCase.Name)
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+	w.WriteHeader(http.StatusOK)
 
-	w := csv.NewWriter(c.Response().Writer)
-	w.Write([]string{"ID", "Name", "Severity", "Classification", "Closed", "Outcome", "Summary"})
+	cw := csv.NewWriter(w)
+	cw.Write([]string{"ID", "Name", "Severity", "Classification", "Closed", "Outcome", "Summary"})
 	for _, e := range list {
-		w.Write([]string{
-			e.ID.String(),
+		cw.Write([]string{
+			e.ID,
 			e.Name,
 			e.Severity,
 			e.Classification,
@@ -59,133 +61,89 @@ func (ctrl CaseCtrl) Export(c echo.Context) error {
 		})
 	}
 
-	w.Flush()
-	return nil
+	cw.Flush()
 }
 
-func (ctrl CaseCtrl) ImportCases(c echo.Context) error {
-	uri := c.Echo().Reverse("import-cases")
-	now := time.Now()
-	usr := c.Get("user").(string)
-
-	return importHelper(c, uri, 7, func(c echo.Context, rec []string) error {
-		id, err := ulid.Parse(cmp.Or(rec[0], ZeroID.String()))
-		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err)
-		}
-
+func (ctrl CaseCtrl) ImportCases(w http.ResponseWriter, r *http.Request) {
+	uri := r.URL.RequestURI()
+	ImportCSV(ctrl.store, w, r, uri, 7, func(rec []string) {
 		closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err)
+			utils.Warn(w, r, err)
+			return
 		}
 
 		obj := model.Case{
-			ID:             cmp.Or(id, ulid.Make()),
+			ID:             rec[0],
 			Name:           rec[1],
 			Severity:       rec[2],
 			Classification: rec[3],
 			Closed:         closed,
 			Outcome:        rec[5],
 			Summary:        rec[6],
-			DateAdded:      now,
-			UserAdded:      usr,
-			DateModified:   now,
-			UserModified:   usr,
 		}
 
-		_, err = ctrl.store.SaveCase(obj)
-		return err
+		if err = ctrl.store.SaveCase(obj); err != nil {
+			utils.Err(w, r, err)
+		}
 	})
 }
 
-func (ctrl CaseCtrl) Edit(c echo.Context) error {
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	var obj model.Case
-	if cid != ZeroID {
+func (ctrl CaseCtrl) Edit(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	obj := model.Case{ID: cid}
+	if cid != "new" {
+		var err error
 		obj, err = ctrl.store.GetCase(cid)
 		if err != nil {
-			return err
+			utils.Err(w, r, err)
+			return
 		}
 	}
 
-	vr := valid.Result{}
-	return render(c, templ.CaseForm(ctx(c), templ.CaseDTO{
-		ID:             obj.ID.String(),
-		Name:           obj.Name,
-		Closed:         obj.Closed,
-		Classification: obj.Classification,
-		Severity:       obj.Severity,
-		Outcome:        obj.Outcome,
-		Summary:        obj.Summary,
-	}, vr))
+	utils.Render(ctrl.store, w, r, "internal/views/cases-one.html", map[string]any{
+		"obj":   obj,
+		"valid": valid.Result{},
+	})
 }
 
-func (ctrl CaseCtrl) Save(c echo.Context) error {
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	dto := templ.CaseDTO{ID: cid.String()}
-	if err = c.Bind(&dto); err != nil {
-		return err
+func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
+	dto := model.Case{}
+	if err := utils.Decode(r, &dto); err != nil {
+		utils.Warn(w, r, err)
+		return
 	}
 
 	if vr := ValidateCase(dto); !vr.Valid() {
-		return render(c, templ.CaseForm(ctx(c), dto, vr))
+		utils.Render(ctrl.store, w, r, "internal/views/cases-one.html", map[string]any{
+			"obj":   dto,
+			"valid": vr,
+		})
+		return
 	}
 
-	now := time.Now()
-	usr := c.Get("user").(string)
-	obj := model.Case{
-		ID:             cmp.Or(cid, ulid.Make()),
-		Name:           dto.Name,
-		Closed:         dto.Closed,
-		Classification: dto.Classification,
-		Severity:       dto.Severity,
-		Outcome:        dto.Outcome,
-		Summary:        dto.Summary,
-		DateAdded:      now,
-		UserAdded:      usr,
-		DateModified:   now,
-		UserModified:   usr,
+	dto.ID = utils.If(dto.ID == "new", "", dto.ID)
+	if err := ctrl.store.SaveCase(dto); err != nil {
+		utils.Err(w, r, err)
+		return
 	}
 
-	if cid != ZeroID {
-		src, err := ctrl.store.GetCase(cid)
-		if err != nil {
-			return err
-		}
-
-		obj.DateAdded = src.DateAdded
-		obj.UserAdded = src.UserAdded
-	}
-
-	if _, err := ctrl.store.SaveCase(obj); err != nil {
-		return err
-	}
-
-	return refresh(c)
+	utils.Refresh(w, r)
 }
 
-func (ctrl CaseCtrl) Delete(c echo.Context) error {
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	if c.QueryParam("confirm") != "yes" {
-		uri := c.Echo().Reverse("delete-case", cid) + "?confirm=yes"
-		return render(c, utils.Confirm(ctx(c), uri))
+func (ctrl CaseCtrl) Delete(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	if r.URL.Query().Get("confirm") != "yes" {
+		uri := fmt.Sprintf("/cases/%s?confirm=yes", cid)
+		utils.Render(ctrl.store, w, r, "internal/views/utils-confirm.html", map[string]any{
+			"dst": uri,
+		})
 	}
 
 	if err := ctrl.store.DeleteCase(cid); err != nil {
-		return err
+		utils.Err(w, r, err)
+		return
 	}
 
-	return refresh(c)
+	utils.Refresh(w, r)
 }

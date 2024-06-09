@@ -1,0 +1,8 @@
+	<div class="alert alert-error w-[42rem] m-4" role="alert"
+		_="on click transition opacity to 0 over 100ms then remove me">
+		{{ template "icon-x-circle-filled" "w-8 h-8" }}
+		<div>
+			<h3 class="font-bold">Unrecoverable error encountered!</h3>
+			<div class="text-xs">{{ .err }}</div>
+		</div>
+	</div>

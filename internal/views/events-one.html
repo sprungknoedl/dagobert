@@ -1,0 +1,74 @@
+<div id="modal" class="drawer-side z-50"
+    hx-swap-oob="true"
+    @htmx:load="drawer = true" >
+
+    <label class="drawer-overlay"
+        @click="drawer = false"
+        @keydown.escape.window="drawer = false"></label>
+
+    <div class="bg-base-200 text-base-content p-4 h-full w-[42rem]">
+    <form
+        hx-post="/cases/{{ .obj.CaseID }}/events/{{ .obj.ID }}"
+        hx-target="#modal">
+
+        <!-- Modal header -->
+        <button type="button" class="btn btn-sm btn-circle btn-ghost absolute top-3 end-3"
+            @click="drawer = false"> x </button>
+
+        <h3 class="font-bold text-lg mb-4">
+            {{ .name }}
+        </h3>
+
+        <!-- Modal body -->
+        <div class="mb-4">
+            <input name="ID" type="hidden" value="{{ .obj.ID }}" />
+            <input name="CaseID" type="hidden" value="{{ .obj.CaseID }}" />
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Date / Time
+				    {{ if .valid.Time }}<span class="ml-2 text-sm text-error">{{ .valid.Time }}</span>{{ end }}
+                </label>
+                <input name="Time" type="text" class="input input-bordered" value="{{ .obj.Time.Format "2006-01-02T15:04:05Z07:00" }}" />
+            </div>
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Type
+				    {{ if .valid.Type }}<span class="ml-2 text-sm text-error">{{ .valid.Type }}</span>{{ end }}
+                </label>
+                <select name="Type" class="select select-bordered">
+                    <option disabled value="" {{ if eq .obj.Type "" }}selected{{ end }}>Select an option</option>
+                    {{ range .model.EventTypes }}
+                        <option {{ if eq $.obj.Type . }}selected{{ end }}>{{ . }}</option>
+                    {{ end }}
+                </select>
+            </div>
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Event
+				    {{ if .valid.Event }}<span class="ml-2 text-sm text-error">{{ .valid.Event }}</span>{{ end }}
+                </label>
+                <textarea name="Event" rows="5" class="textarea textarea-bordered">{{ .obj.Event }}</textarea>
+            </div>
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Raw
+				    {{ if .valid.Raw }}<span class="ml-2 text-sm text-error">{{ .valid.Raw }}</span>{{ end }}
+                </label>
+                <textarea name="Raw" rows="5" class="textarea textarea-bordered">{{ .obj.Raw }}</textarea>
+            </div>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="flex gap-2 items-center">
+            <button type="submit" class="btn btn-primary"
+                @click="drawer = false"> Save </button>
+            <button type="button" class="btn"
+                @click="drawer = false"> Cancel </button>
+        </div>
+    </form>
+    </div>
+</div>

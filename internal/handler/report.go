@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -10,20 +11,18 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/labstack/echo/v4"
-	"github.com/oklog/ulid/v2"
-	"github.com/sprungknoedl/dagobert/internal/templ"
+	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/utils"
 	"github.com/sprungknoedl/dagobert/pkg/doct"
-	"github.com/sprungknoedl/dagobert/pkg/model"
 )
 
 var templates = map[string]doct.Template{}
 
 type ReportCtrl struct {
-	store model.CaseStore
+	store *model.Store
 }
 
-func NewReportCtrl(store model.CaseStore) *ReportCtrl {
+func NewReportCtrl(store *model.Store) *ReportCtrl {
 	return &ReportCtrl{store}
 }
 
@@ -54,31 +53,26 @@ func LoadTemplates(root string) error {
 	})
 }
 
-func (ctrl ReportCtrl) List(c echo.Context) error {
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
-	list := apply2(templates, func(x doct.Template) string { return x.Name() })
-	return render(c, templ.ReportList(ctx(c), cid.String(), list))
+func (ctrl ReportCtrl) List(w http.ResponseWriter, r *http.Request) {
+	list := utils.ApplyM(templates, func(x doct.Template) string { return x.Name() })
+	utils.Render(ctrl.store, w, r, "internal/views/reports-dialog.html", map[string]any{
+		"list": list,
+	})
 }
 
-func (ctrl ReportCtrl) Generate(c echo.Context) error {
-	cid, err := ulid.Parse(c.Param("cid"))
-	if err != nil || cid == ZeroID {
-		return echo.NewHTTPError(http.StatusBadRequest, "Please provide a valid case id")
-	}
-
+func (ctrl ReportCtrl) Generate(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
 	obj, err := ctrl.store.GetCaseFull(cid)
 	if err != nil {
-		return err
+		utils.Err(w, r, err)
+		return
 	}
 
-	name := c.QueryParam("tpl")
+	name := r.URL.Query().Get("Template")
 	tpl, ok := templates[name]
 	if !ok {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid report template")
+		utils.Warn(w, r, errors.New("Invalid report template"))
+		return
 	}
 
 	buf := new(bytes.Buffer)
@@ -87,15 +81,17 @@ func (ctrl ReportCtrl) Generate(c echo.Context) error {
 		"Now":  time.Now(),
 	})
 	if err != nil {
-		return err
+		utils.Err(w, r, err)
+		return
 	}
 
 	filename := fmt.Sprintf("%s - %s%s", time.Now().Format("20060102"), obj.Name, tpl.Ext())
-	c.Response().Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
-	c.Response().Header().Set("Content-Type", tpl.Type())
-	c.Response().Header().Set("Content-Length", strconv.Itoa(buf.Len()))
-	c.Response().WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+	w.Header().Set("Content-Type", tpl.Type())
+	w.Header().Set("Content-Length", strconv.Itoa(buf.Len()))
+	w.WriteHeader(http.StatusOK)
 
-	_, err = io.Copy(c.Response().Writer, buf)
-	return err
+	if _, err = io.Copy(w, buf); err != nil {
+		utils.Err(w, r, err)
+	}
 }

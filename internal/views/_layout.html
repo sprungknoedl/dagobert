@@ -1,0 +1,157 @@
+{{ define "layout-begin" }}
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="nord">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dagobert</title>
+    <link href="/dist/dagobert.css" rel="stylesheet" />
+
+    <script src="/dist/alpine.min.js" defer></script>
+    <script src="/dist/hyperscript.min.js" defer></script>
+    <script src="/dist/htmx.min.js" defer></script>
+</head>
+<body class="drawer drawer-end" x-data="{drawer: false}">
+    <input type="checkbox" class="drawer-toggle" x-model="drawer" />
+    <div class="drawer-content flex">
+        {{ template "sidebar" . }}
+{{ end }}
+
+{{ define "layout-end" }}
+    </div>
+
+    <div id="modal" class="drawer-side z-50" hx-swap-oob="true"></div>
+    <div id="errors" class="fixed bottom-0 right-0 z-50"></div>
+</body>
+</html>
+{{ end }}
+
+{{ define "table-view" }}
+<main class="p-8 grow">
+    <form
+        hx-get="urls.List"
+        hx-trigger="input delay:500ms, sort"
+        hx-target="#list"
+        hx-select="#list"
+        hx-swap="outerHTML"
+        hx-push-url="true"
+        x-data="{ sort_by: '{{ .env.Sort }}' }" >
+
+        {{ template "navbar" . }}
+        {{ template "table-content" . }}
+
+    </form>
+</main>
+{{ end }}
+
+{{ define "navbar" }}
+<nav class="sticky top-0 bg-base-100 z-10 flex items-center justify-between -mt-4 py-4">
+
+    <div class="breadcrumbs font-bold text-2xl">
+        <ul>
+            {{ if ne .env.ActiveCase.ID "" }}
+            <li class="text-neutral inline-flex gap-2">
+                {{ template "icon-briefcase" "inline-block w-5 h-5" }}
+                {{ .env.ActiveCase.Name }}
+            </li>
+            {{ end }}
+            <li>{{ .title }}</li>
+        </ul>
+    </div>
+
+    <div class="flex gap-5 items-center">
+        <!-- search input -->
+        <label class="w-96 input input-bordered flex items-center gap-2">
+            <input type="search" name="search" value="{{ .env.Search }}" class="grow" placeholder="Search ..." />
+            <svg class="w-4 h-4 opacity-70" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+            </svg>
+        </label>
+
+        <!-- sort input -->
+	    <input name="sort" type="hidden" value="{{ .env.Sort }}"
+            x-model="sort_by"
+            x-init="$watch('sort_by', () => { $dispatch('sort'); } )" />
+
+        <!-- buttons -->
+        <div class="join" role="group">
+            <button type="button" class="join-item btn"
+                hx-get="import"
+                hx-target="#modal"
+                hx-select="dialog"
+                hx-swap="innerHTML"
+                hx-push-url="false",
+                _="on keydown[key is 'i' and ctrlKey is true] from window call me.click()" >
+                {{ template "icon-arrow-up-tray" "inline-block mr-1 w-5 h-5" }}
+                Import CSV
+            </button>
+
+            <a type="button" class="join-item btn"
+                href="export"
+                _="on keydown[key is 'e' and ctrlKey is true] from window call me.click()" >
+                {{ template "icon-arrow-down-tray" "inline-block mr-1 w-5 h-5" }}
+                Export CSV
+            </a>
+
+            <button type="button" class="join-item btn"
+                @click="$dispatch('sort')"
+                _="on keydown[key is 'r' and ctrlKey is true] from window call me.click()" >
+                {{ template "icon-arrow-path" "inline-block mr-1 w-5 h-5" }}
+                Refresh
+            </button>
+
+            <button type="button" class="join-item btn"
+                hx-get="new"
+                hx-target="#modal"
+                hx-select="dialog"
+                hx-swap="innerHTML"
+                hx-push-url="false",
+                _="on keydown[key is 'n' and ctrlKey is true] from window call me.click()" >
+                {{ template "icon-plus" "inline-block mr-1 w-5 h-5" }}
+                Add
+            </button>
+        </div>
+
+    </div>
+</nav>
+{{ end }}
+
+{{ define "sidebar" }}
+<aside class="flex flex-col h-screen">
+    <div class="w-8 h-8 m-4 mx-auto bg-primary text-primary-content rounded-lg p-2">
+        {{ template "icon-dagobert" "" }}
+    </div>
+
+    <div class="divider"></div>
+    <ul class="menu gap-2">
+		<li><a href="/" data-tip="Cases" class='tooltip tooltip-right {{ if eq .title "Cases" }}active{{ end }}'> {{ template "icon-briefcase" "w-6 h-6" }} </a></li>
+		<li><a href="/users/" data-tip="Users" class='tooltip tooltip-right {{ if eq .title "Users" }}active{{ end }}'> {{ template "icon-users" "w-6 h-6" }} </a></li>
+    </ul>
+
+    {{ if ne .env.ActiveCase.ID "" }}
+    <div class="divider"></div>
+    <ul class="menu gap-2">
+		<li><a href="/cases/{{ .env.ActiveCase.ID }}/events/" data-tip="Timeline" class='tooltip tooltip-right {{ if eq .title "Timeline" }}active{{ end }}'> {{ template "icon-clock" "w-6 h-6" }} </a></li>
+		<li><a href="/cases/{{ .env.ActiveCase.ID }}/assets/" data-tip="Assets" class='tooltip tooltip-right {{ if eq .title "Assets" }}active{{ end }}'> {{ template "icon-desktop" "w-6 h-6" }} </a></li>
+		<li><a href="/cases/{{ .env.ActiveCase.ID }}/indicators/" data-tip="Indicators" class='tooltip tooltip-right {{ if eq .title "Indicators" }}active{{ end }}'> {{ template "icon-globe-europe" "w-6 h-6" }} </a></li>
+		<li><a href="/cases/{{ .env.ActiveCase.ID }}/malware/" data-tip="Malware" class='tooltip tooltip-right {{ if eq .title "Malware" }}active{{ end }}'> {{ template "icon-bug" "w-6 h-6" }} </a></li>
+		<li><a href="/cases/{{ .env.ActiveCase.ID }}/evidences/" data-tip="Evidences" class='tooltip tooltip-right {{ if eq .title "Evidences" }}active{{ end }}'> {{ template "icon-cube" "w-6 h-6" }} </a></li>
+		<li><a href="/cases/{{ .env.ActiveCase.ID }}/tasks/" data-tip="Tasks" class='tooltip tooltip-right {{ if eq .title "Tasks" }}active{{ end }}'> {{ template "icon-clipboard-check" "w-6 h-6" }} </a></li>
+		<li><a href="/cases/{{ .env.ActiveCase.ID }}/notes/" data-tip="Notes" class='tooltip tooltip-right {{ if eq .title "Notes" }}active{{ end }}'> {{ template "icon-chat-bubble" "w-6 h-6" }} </a></li>
+    </ul>
+
+    <div class="divider"></div>
+    <ul class="menu gap-2">
+		<li><a href="#report" data-tip="Report" class='tooltip tooltip-right'
+            hx-get="/cases/{{ .env.ActiveCase.ID }}/reports"
+            hx-target="#modal"> {{ template "icon-document-arrow-down" "w-6 h-6" }} </a></li>
+    </ul>
+    {{ end }}
+
+    <div class="grow"></div>
+    <div class="divider"></div>
+    <ul class="menu gap-2">
+		<li><a href="/logout" data-tip="Logout" class='tooltip tooltip-right'> {{ template "icon-logout" "w-6 h-6" }} </a></li>
+    </ul>
+</aside>
+{{ end }}

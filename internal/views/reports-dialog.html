@@ -1,0 +1,48 @@
+<div id="modal" class="drawer-side z-50"
+    hx-swap-oob="true"
+    @htmx:load="drawer = true" >
+
+    <label class="drawer-overlay"
+        @click="drawer = false"
+        @keydown.escape.window="drawer = false"></label>
+
+    <div class="bg-base-200 text-base-content p-4 h-full w-[42rem]">
+    <form
+        hx-get="/cases/{{ .obj.CaseID }}/render"
+        hx-target="#modal" >
+
+        <!-- Modal header -->
+        <button type="button" class="btn btn-sm btn-circle btn-ghost absolute top-3 end-3"
+            @click="drawer = false"> x </button>
+
+        <h3 class="font-bold text-lg mb-4">
+            Select report template
+        </h3>
+
+        <!-- Modal body -->
+        <div class="mb-4">
+            <input name="CaseID" type="hidden" value="{{ .obj.CaseID }}" />
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Template
+                </label>
+                <select name="Template" class="select select-bordered">
+                    <option disabled selected value="">Select an option</option>
+                    {{ range .list }}
+                        <option>{{ . }}</option>
+                    {{ end }}
+                </select>
+            </div>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="flex gap-2 items-center">
+            <button type="submit" class="btn btn-primary"
+                @click="drawer = false"> Generate </button>
+            <button type="button" class="btn"
+                @click="drawer = false"> Cancel </button>
+        </div>
+    </form>
+    </div>
+</div>

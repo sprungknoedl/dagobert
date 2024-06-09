@@ -2,142 +2,45 @@ package handler
 
 import (
 	"encoding/csv"
-	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"time"
 
-	"github.com/a-h/templ"
-	"github.com/labstack/echo/v4"
-	"github.com/oklog/ulid/v2"
-	"github.com/sprungknoedl/dagobert/internal/templ/utils"
+	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/utils"
 )
 
-var ZeroID ulid.ULID
+var ZeroID string = "0"
 var ZeroTime time.Time
 
-func ErrorHandler(err error, c echo.Context) {
-	if c.Response().Committed {
+func ImportCSV(store *model.Store, w http.ResponseWriter, r *http.Request, uri string, numFields int, cb func(rec []string)) {
+	if r.Method == http.MethodGet {
+		utils.Render(store, w, r, "internal/views/utils-import.html", map[string]any{"dst": uri})
 		return
 	}
 
-	c.Response().Header().Add("HX-Retarget", "#errors")
-	c.Response().Header().Add("HX-Reswap", "beforeend")
-	c.Response().WriteHeader(http.StatusOK)
-
-	if he, ok := err.(*echo.HTTPError); ok {
-		render(c, utils.WarningNotification(he))
-	} else {
-		render(c, utils.ErrorNotification(err))
-	}
-}
-
-func render(c echo.Context, component templ.Component) error {
-	return component.Render(c.Request().Context(), c.Response().Writer)
-}
-
-func refresh(c echo.Context) error {
-	c.Response().Header().Add("HX-Refresh", "true")
-	return c.NoContent(http.StatusOK)
-}
-
-func ctx(c echo.Context) utils.Env {
-	return utils.Env{
-		Routes:      c.Echo().Reverse,
-		Username:    c.Get("user").(string),
-		ActiveRoute: c.Request().RequestURI,
-		ActiveCase:  c.Get("case").(utils.CaseDTO),
-		Search:      c.QueryParam("search"),
-		Sort:        c.QueryParam("sort"),
-	}
-}
-
-func formatNonZero(layout string, t time.Time) string {
-	if t.IsZero() {
-		return ""
-	}
-	return t.Format(layout)
-}
-
-func importHelper(c echo.Context, uri string, numFields int, cb func(c echo.Context, rec []string) error) error {
-	if c.Request().Method == http.MethodGet {
-		return render(c, utils.Import(ctx(c), uri))
-	}
-
-	fh, err := c.FormFile("file")
+	fr, _, err := r.FormFile("file")
 	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+		utils.Warn(w, r, err)
+		return
 	}
 
-	fr, err := fh.Open()
-	if err != nil {
-		return fmt.Errorf("open file: %w", err)
-	}
-
-	r := csv.NewReader(fr)
-	r.FieldsPerRecord = numFields
-	r.Read() // skip header
+	cr := csv.NewReader(fr)
+	cr.FieldsPerRecord = numFields
+	cr.Read() // skip header
 
 	for {
-		rec, err := r.Read()
+		rec, err := cr.Read()
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
-			return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+			utils.Warn(w, r, err)
+			return
 		}
 
-		err = cb(c, rec)
-		if err != nil {
-			return err
-		}
+		cb(rec)
 	}
 
-	return refresh(c)
-}
-
-func random(n int) string {
-	// random string
-	var src = rand.NewSource(time.Now().UnixNano())
-
-	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	const (
-		letterIdxBits = 6                    // 6 bits to represent a letter index
-		letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
-		letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
-	)
-
-	b := make([]byte, n)
-	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
-		if remain == 0 {
-			cache, remain = src.Int63(), letterIdxMax
-		}
-		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
-			b[i] = letterBytes[idx]
-			i--
-		}
-		cache >>= letterIdxBits
-		remain--
-	}
-
-	return string(b)
-}
-
-func apply[A any, B any](in []A, fn func(A) B) []B {
-	out := make([]B, len(in))
-	for i, a := range in {
-		out[i] = fn(a)
-	}
-	return out
-}
-
-func apply2[A any, B any, C comparable](in map[C]A, fn func(A) B) []B {
-	out := make([]B, len(in))
-	i := 0
-	for _, a := range in {
-		out[i] = fn(a)
-		i = i + 1
-	}
-	return out
+	utils.Refresh(w, r)
 }
