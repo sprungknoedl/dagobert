@@ -124,16 +124,16 @@ func (ctrl EventCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// assets, err := ctrl.store.FindAssets(cid, "", "")
-	// if err != nil {
-	// 	ErrorHandler(w, r, err)
-	//  return
-	// }
-	// names := apply(assets, func(x model.Asset) string { return x.Name })
+	assets, err := ctrl.store.FindAssets(cid, "", "")
+	if err != nil {
+		utils.Err(w, r, err)
+		return
+	}
 
 	utils.Render(ctrl.store, w, r, "internal/views/events-one.html", map[string]any{
-		"obj":   obj,
-		"valid": valid.Result{},
+		"obj":    obj,
+		"assets": assets,
+		"valid":  valid.Result{},
 	})
 }
 
@@ -144,6 +144,14 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// special case: select-multiple :/
+	tmp := struct{ Assets []string }{}
+	if err := utils.Decode(r, &tmp); err != nil {
+		utils.Warn(w, r, err)
+		return
+	}
+
+	dto.Assets = utils.Apply(tmp.Assets, func(id string) model.Asset { return model.Asset{ID: id} })
 	if vr := ValidateEvent(dto); !vr.Valid() {
 		// assets, err := ctrl.store.FindAssets(cid, "", "")
 		// if err != nil {

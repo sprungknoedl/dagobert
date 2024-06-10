@@ -3,8 +3,11 @@ package model
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"slices"
 	"time"
+
+	"github.com/sprungknoedl/dagobert/pkg/tty"
 )
 
 var EventTypes = FromEnv("VALUES_EVENT_TYPES", []string{
@@ -37,6 +40,16 @@ type Event struct {
 	RawAssets []byte
 
 	Assets []Asset
+}
+
+func (e Event) HasAsset(aid string) bool {
+	log.Printf("| %s | %q in event = %+v?", tty.Yellow("DEB"), aid, e)
+	for _, a := range e.Assets {
+		if a.ID == aid {
+			return true
+		}
+	}
+	return false
 }
 
 func (store *Store) FindEvents(cid string, search string, sort string) ([]Event, error) {
@@ -121,6 +134,12 @@ func (store *Store) GetEvent(cid string, id string) (Event, error) {
 
 	var obj Event
 	err = ScanOne(rows, &obj)
+	if err != nil {
+		return Event{}, err
+	}
+
+	// unmarshal json encoded relations
+	err = json.Unmarshal(obj.RawAssets, &obj.Assets)
 	return obj, err
 }
 
@@ -129,14 +148,47 @@ func (store *Store) SaveEvent(cid string, obj Event) error {
 	REPLACE INTO events (id, time, type, event, raw, case_id)
 	VALUES (NULLIF(:id, ''), :time, :type, :event, :raw, :cid)`
 
-	_, err := store.db.Exec(query,
+	query2 := `
+	DELETE FROM event_assets
+	WHERE event_id = :eid`
+
+	query3 := `
+	REPLACE INTO event_assets (event_id, asset_id)
+	VALUES (:eid, :aid)`
+
+	tx, err := store.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	_, err = tx.Exec(query,
 		sql.Named("cid", cid),
 		sql.Named("id", obj.ID),
 		sql.Named("time", obj.Time),
 		sql.Named("type", obj.Type),
 		sql.Named("event", obj.Event),
 		sql.Named("raw", obj.Raw))
-	return err
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(query2,
+		sql.Named("eid", obj.ID))
+	if err != nil {
+		return err
+	}
+
+	for _, a := range obj.Assets {
+		_, err := tx.Exec(query3,
+			sql.Named("eid", obj.ID),
+			sql.Named("aid", a.ID))
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
 func (store *Store) DeleteEvent(cid string, id string) error {
