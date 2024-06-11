@@ -33,12 +33,6 @@ func (ctrl EventCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// indicators, err := ctrl.store.FindIndicators(cid, "", "")
-	// if err != nil {
-	// 	ErrorHandler(w, r, err)
-	//  return
-	// }
-
 	utils.Render(ctrl.store, w, r, "internal/views/events-many.html", map[string]any{
 		"title": "Timeline",
 		"rows":  list,
@@ -46,8 +40,8 @@ func (ctrl EventCtrl) List(w http.ResponseWriter, r *http.Request) {
 			if i > 0 {
 				prev := list[i-1].Time
 				curr := list[i].Time
-				if d := curr.Sub(prev); d > 2*24*time.Hour {
-					return humanizeDuration(d)
+				if d := curr.Sub(prev); d.Abs() > 2*24*time.Hour {
+					return humanizeDuration(d.Abs())
 				}
 			}
 
@@ -130,10 +124,17 @@ func (ctrl EventCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	indicators, err := ctrl.store.FindIndicators(cid, "", "")
+	if err != nil {
+		utils.Err(w, r, err)
+		return
+	}
+
 	utils.Render(ctrl.store, w, r, "internal/views/events-one.html", map[string]any{
-		"obj":    obj,
-		"assets": assets,
-		"valid":  valid.Result{},
+		"obj":        obj,
+		"assets":     assets,
+		"indicators": indicators,
+		"valid":      valid.Result{},
 	})
 }
 
@@ -145,23 +146,35 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// special case: select-multiple :/
-	tmp := struct{ Assets []string }{}
+	tmp := struct {
+		Assets     []string
+		Indicators []string
+	}{}
 	if err := utils.Decode(r, &tmp); err != nil {
 		utils.Warn(w, r, err)
 		return
 	}
 
 	dto.Assets = utils.Apply(tmp.Assets, func(id string) model.Asset { return model.Asset{ID: id} })
+	dto.Indicators = utils.Apply(tmp.Indicators, func(id string) model.Indicator { return model.Indicator{ID: id} })
 	if vr := ValidateEvent(dto); !vr.Valid() {
-		// assets, err := ctrl.store.FindAssets(cid, "", "")
-		// if err != nil {
-		// 	ErrorHandler(w, r, err)
-		//  return
-		// }
-		// names := apply(assets, func(x model.Asset) string { return x.Name })
+		assets, err := ctrl.store.FindAssets(dto.CaseID, "", "")
+		if err != nil {
+			utils.Err(w, r, err)
+			return
+		}
+
+		indicators, err := ctrl.store.FindIndicators(dto.CaseID, "", "")
+		if err != nil {
+			utils.Err(w, r, err)
+			return
+		}
+
 		utils.Render(ctrl.store, w, r, "internal/views/events-one.html", map[string]any{
-			"obj":   dto,
-			"valid": vr,
+			"obj":        dto,
+			"assets":     assets,
+			"indicators": indicators,
+			"valid":      vr,
 		})
 		return
 	}

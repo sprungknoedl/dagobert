@@ -55,7 +55,29 @@
 			<td> {{ .Event }} </td>
 			<td>
                 {{ range .Assets }}
-                <span class="badge badge-neutral mr-1" title="{{ .Type }}">{{ .Name }}</span>
+                <span class="badge badge-outline badge-secondary mr-1 p-3">
+                    {{ if eq .Type "Account" }}      {{ template "icon-user" "inline-block w-4 h-4 mr-2" }}
+                    {{ else if eq .Type "Desktop" }} {{ template "icon-desktop" "inline-block w-4 h-4 mr-2" }}
+                    {{ else if eq .Type "Server" }}  {{ template "icon-server" "inline-block w-4 h-4 mr-2" }}
+                    {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-4 h-4 mr-2" }}
+                    {{ end }}
+                    {{ .Name }}
+                </span>
+                {{ end }}
+            </td>
+			<td>
+                {{ range .Indicators }}
+                <span class="badge badge-outline badge-accent mr-1 p-3">
+                    {{ if eq .Type "IP" }}           {{ template "icon-map-pin" "inline-block w-4 h-4 mr-2" }}
+                    {{ else if eq .Type "Domain" }}  {{ template "icon-globe-europe" "inline-block w-4 h-4 mr-2" }}
+                    {{ else if eq .Type "URL" }}     {{ template "icon-link" "inline-block w-4 h-4 mr-2" }}
+                    {{ else if eq .Type "Path" }}    {{ template "icon-folder-open" "inline-block w-4 h-4 mr-2" }}
+                    {{ else if eq .Type "Hash" }}    {{ template "icon-fingerprint" "inline-block w-4 h-4 mr-2" }}
+                    {{ else if eq .Type "Service" }} {{ template "icon-command-line" "inline-block w-4 h-4 mr-2" }}
+                    {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-4 h-4 mr-2" }}
+                    {{ end }}
+                    {{ .Value }}
+                </span>
                 {{ end }}
             </td>
             <td class="px-6 py-2 flex justify-end join">

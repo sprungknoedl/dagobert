@@ -47,18 +47,6 @@
 
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
-                    Assets
-				    {{ if .valid.System }}<span class="ml-2 text-sm text-error">{{ .valid.Assets }}</span>{{ end }}
-                </label>
-                <select multiple name="Assets" class="select select-bordered">
-                    {{ range .assets }}
-                        <option value="{{ .ID }}" {{ if $.obj.HasAsset .ID }}selected{{ end }}>{{ .Name }}</option>
-                    {{ end }}
-                </select>
-            </div>
-
-            <div class="form-control mb-2">
-                <label class="label justify-start gap-2">
                     Event
 				    {{ if .valid.Event }}<span class="ml-2 text-sm text-error">{{ .valid.Event }}</span>{{ end }}
                 </label>
@@ -71,6 +59,30 @@
 				    {{ if .valid.Raw }}<span class="ml-2 text-sm text-error">{{ .valid.Raw }}</span>{{ end }}
                 </label>
                 <textarea name="Raw" rows="5" class="textarea textarea-bordered">{{ .obj.Raw }}</textarea>
+            </div>
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Assets
+				    {{ if .valid.System }}<span class="ml-2 text-sm text-error">{{ .valid.Assets }}</span>{{ end }}
+                </label>
+                <select multiple name="Assets" class="select select-bordered">
+                    {{ range .assets }}
+                        <option value="{{ .ID }}" {{ if $.obj.HasAsset .ID }}selected{{ end }}>{{ .Name }}</option>
+                    {{ end }}
+                </select>
+            </div>
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Indicators
+				    {{ if .valid.System }}<span class="ml-2 text-sm text-error">{{ .valid.Indicators }}</span>{{ end }}
+                </label>
+                <select multiple name="Indicators" class="select select-bordered">
+                    {{ range .indicators }}
+                        <option value="{{ .ID }}" {{ if $.obj.HasIndicator .ID }}selected{{ end }}>{{ .Value }}</option>
+                    {{ end }}
+                </select>
             </div>
         </div>
 

@@ -132,6 +132,15 @@ CREATE TABLE IF NOT EXISTS event_assets (
 	FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS event_indicators (
+	id           TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
+	event_id     TEXT NOT NULL,
+	indicator_id TEXT NOT NULL,
+
+	FOREIGN KEY (indicator_id) REFERENCES indicators(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS evidences (
 	id          TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
 	case_id     TEXT NOT NULL,
