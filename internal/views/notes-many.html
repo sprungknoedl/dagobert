@@ -3,12 +3,12 @@
 {{ template "layout-end" . }}
 
 {{ define "table-content" }}
-<table class="table w-full">
+<table id="list" class="table w-full">
 	<thead>
 		<tr>
-			<td style="width: 15rem">Category</td>
-			<td style="width: 15rem">Title</td>
-			<td style="width: auto">Description</td>
+			{{ template "table-th" dict "name" "category" "sort" .env.Sort }}
+			{{ template "table-th" dict "name" "title" "sort" .env.Sort }}
+			{{ template "table-th" dict "name" "description" "sort" .env.Sort }}
 			<td style="width: 7rem"></td>
 		</tr>
 	</thead>

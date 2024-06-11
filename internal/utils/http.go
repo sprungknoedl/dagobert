@@ -1,10 +1,12 @@
 package utils
 
 import (
+	"errors"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/gorilla/schema"
@@ -58,7 +60,25 @@ func Render(store *model.Store, w http.ResponseWriter, r *http.Request, name str
 }
 
 func render(w http.ResponseWriter, r *http.Request, name string, values map[string]any) {
-	tpl, err := template.ParseFiles(
+	tpl, err := template.New(filepath.Base(name)).Funcs(template.FuncMap{
+		"lower": strings.ToLower,
+		"upper": strings.ToUpper,
+		"title": strings.Title,
+		"dict": func(values ...interface{}) (map[string]interface{}, error) {
+			if len(values)%2 != 0 {
+				return nil, errors.New("invalid dict call")
+			}
+			dict := make(map[string]interface{}, len(values)/2)
+			for i := 0; i < len(values); i += 2 {
+				key, ok := values[i].(string)
+				if !ok {
+					return nil, errors.New("dict keys must be strings")
+				}
+				dict[key] = values[i+1]
+			}
+			return dict, nil
+		},
+	}).ParseFiles(
 		name,
 		"internal/views/_layout.html",
 		"internal/views/_icons.html",
@@ -69,7 +89,8 @@ func render(w http.ResponseWriter, r *http.Request, name string, values map[stri
 	}
 
 	if err = tpl.Execute(w, values); err != nil {
-		Err(w, r, err)
+		log.Printf("| %s | %v", tty.Red("ERR"), err)
+		return
 	}
 }
 

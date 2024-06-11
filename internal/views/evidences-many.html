@@ -3,13 +3,13 @@
 {{ template "layout-end" . }}
 
 {{ define "table-content" }}
-<table class="table w-full">
+<table id="list" class="table w-full">
 	<thead>
 		<tr>
-			<td style="width: 15rem">Type</td>
-			<td style="width: auto">Name</td>
-			<td style="width: auto">Description</td>
-			<td style="width: 25rem">Hash</td>
+			{{ template "table-th" dict "name" "type" "sort" .env.Sort }}
+			{{ template "table-th" dict "name" "name" "sort" .env.Sort }}
+			{{ template "table-th" dict "name" "description" "sort" .env.Sort }}
+			{{ template "table-th" dict "name" "hash" "sort" .env.Sort }}
 			<td style="width: 7rem"></td>
 		</tr>
 	</thead>

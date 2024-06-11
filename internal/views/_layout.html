@@ -29,7 +29,7 @@
 {{ define "table-view" }}
 <main class="p-8 grow">
     <form
-        hx-get="urls.List"
+        hx-get="#"
         hx-trigger="input delay:500ms, sort"
         hx-target="#list"
         hx-select="#list"
@@ -42,6 +42,14 @@
 
     </form>
 </main>
+{{ end }}
+
+{{ define "table-th" }}
+<th @click="toggle()" x-data="{ toggle(event) { sort_by = (sort_by == '{{ .name }}') ? '-{{ .name }}' : '{{ .name }}' } }">
+    {{ if eq .sort .name }}          {{ template "icon-chevron-up" "w-5 h-5 inline-block" }}
+    {{ else if eq .sort (print "-" .name) }} {{ template "icon-chevron-down" "w-5 h-5 inline-block" }} {{ end }}
+    {{ title .name }}
+</th>
 {{ end }}
 
 {{ define "navbar" }}

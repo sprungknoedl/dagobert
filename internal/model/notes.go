@@ -21,11 +21,11 @@ func (store *Store) FindNotes(cid string, search string, sort string) ([]Note, e
 		instr(title, :search) > 0 OR
 		instr(description, :search) > 0)
 	ORDER BY
-		CASE WHEN :sort = 'title'     THEN title END ASC,
-		CASE WHEN :sort = '-title'    THEN title END DESC,
-		CASE WHEN :sort = 'desc'      THEN description END ASC,
-		CASE WHEN :sort = '-desc'     THEN description END DESC,
-		CASE WHEN :sort = '-category' THEN category END DESC,
+		CASE WHEN :sort = 'title'        THEN title END ASC,
+		CASE WHEN :sort = '-title'       THEN title END DESC,
+		CASE WHEN :sort = 'description'  THEN description END ASC,
+		CASE WHEN :sort = '-description' THEN description END DESC,
+		CASE WHEN :sort = '-category'    THEN category END DESC,
 		category ASC`
 
 	rows, err := store.db.Query(query,

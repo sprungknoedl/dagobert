@@ -3,14 +3,15 @@
 {{ template "layout-end" . }}
 
 {{ define "table-content" }}
-<table class="table w-full">
+<table id="list" class="table w-full">
 	<thead>
 		<tr>
-			<td>Date / Time</td>
-			<td>Type</td>
-			<td>Event</td>
-			<td>Assets</td>
-			<td></td>
+            {{ template "table-th" dict "name" "time" "sort" .env.Sort }}
+            {{ template "table-th" dict "name" "type" "sort" .env.Sort }}
+            {{ template "table-th" dict "name" "event" "sort" .env.Sort }}
+            {{ template "table-th" dict "name" "assets" "sort" .env.Sort }}
+            {{ template "table-th" dict "name" "indicators" "sort" .env.Sort }}
+			<td style="width: 7rem"></td>
 		</tr>
 	</thead>
 
@@ -21,7 +22,7 @@
         {{ if ne $gap "" }}
             <tr>
                 <td class="text-center p-8" colspan="42">
-                <span class="badge badge-accent badge-lg p-4">Mind the gap: {{ $gap }}</span>
+                <span class="badge badge-outline badge-accent badge-lg p-4">Mind the gap: {{ $gap }}</span>
                 </td>
             </tr>
         {{ end }}
@@ -30,7 +31,7 @@
         <tr class="hover">
 			<td> {{ .Time.Format "2006-01-02 15:04:05.000" }} <span class="text-neutral">{{ .Time.Format "Z07:00" }}</span> </td>
 			<td>
-	            <span class="flex items-center gap-2 text-sm font-medium me-3">
+	            <span class="flex items-center gap-2 text-sm me-3">
 		        {{ if eq .Type "Reconnaissance" }}            {{ template "icon-magnifying-glass" "w-5 h-5 inline-block" }}
 		        {{ else if eq .Type "Resource Development" }} {{ template "icon-cog-6-tooth" "w-5 h-5 inline-block" }}
 		        {{ else if eq .Type "Initial Access" }}       {{ template "icon-lock-open" "w-5 h-5 inline-block" }}

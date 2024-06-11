@@ -6,11 +6,11 @@
 <table class="table w-full">
 	<thead>
 		<tr>
-			<td style="width: 8rem">ID</td>
-			<td style="width: auto">Name</td>
-			<td style="width: auto">Classification</td>
-			<td style="width: auto">Severity</td>
-			<td style="width: auto">Outcome</td>
+			{{ template "table-th" dict "name" "id" "sort" .env.Sort }}
+			{{ template "table-th" dict "name" "name" "sort" .env.Sort }}
+			{{ template "table-th" dict "name" "classification" "sort" .env.Sort }}
+			{{ template "table-th" dict "name" "severity" "sort" .env.Sort }}
+			{{ template "table-th" dict "name" "outcome" "sort" .env.Sort }}
 			<td style="width: 7rem"></td>
 		</tr>
 	</thead>

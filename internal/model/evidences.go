@@ -27,15 +27,15 @@ func (store *Store) FindEvidences(cid string, search string, sort string) ([]Evi
 		instr(hash, :search) > 0 OR
 		instr(location, :search) > 0)
 	ORDER BY
-		CASE WHEN :sort = 'hash'      THEN hash END ASC,
-		CASE WHEN :sort = '-hash'     THEN hash END DESC,
-		CASE WHEN :sort = 'location'  THEN location END ASC,
-		CASE WHEN :sort = '-location' THEN location END DESC,
-		CASE WHEN :sort = 'desc'      THEN description END ASC,
-		CASE WHEN :sort = '-desc'     THEN description END DESC,
-		CASE WHEN :sort = 'type'      THEN type END ASC,
-		CASE WHEN :sort = '-type'     THEN type END DESC,
-		CASE WHEN :sort = '-name'     THEN name END DESC,
+		CASE WHEN :sort = 'hash'         THEN hash END ASC,
+		CASE WHEN :sort = '-hash'        THEN hash END DESC,
+		CASE WHEN :sort = 'location'     THEN location END ASC,
+		CASE WHEN :sort = '-location'    THEN location END DESC,
+		CASE WHEN :sort = 'description'  THEN description END ASC,
+		CASE WHEN :sort = '-description' THEN description END DESC,
+		CASE WHEN :sort = 'type'         THEN type END ASC,
+		CASE WHEN :sort = '-type'        THEN type END DESC,
+		CASE WHEN :sort = '-name'        THEN name END DESC,
 		name ASC`
 
 	rows, err := store.db.Query(query,
