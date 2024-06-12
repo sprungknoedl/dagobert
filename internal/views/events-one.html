@@ -30,7 +30,8 @@
                     <span class="text-primary">*</span>
 				    {{ if .valid.Time }}<span class="ml-2 text-sm text-error">{{ .valid.Time }}</span>{{ end }}
                 </label>
-                <input name="Time" type="text" class="input input-bordered" value="{{ .obj.Time.Format "2006-01-02T15:04:05Z07:00" }}" />
+                <input name="Time" type="text" class="input input-bordered" value="{{ .obj.Time.Format "2006-01-02T15:04:05Z07:00" }}"
+                    x-init="setTimeout(() => $el.focus(), 100)" />
             </div>
 
             <div class="form-control mb-2">

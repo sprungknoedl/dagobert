@@ -30,7 +30,8 @@
                     <span class="text-primary">*</span>
 				    {{ if .valid.Type }}<span class="ml-2 text-sm text-error">{{ .valid.Type }}</span>{{ end }}
                 </label>
-                <select name="Type" class="select select-bordered">
+                <select name="Type" class="select select-bordered"
+                    x-init="setTimeout(() => $el.focus(), 100)">
                     <option disabled value="" {{ if eq .obj.Type "" }}selected{{ end }}>Select an option</option>
                     {{ range .model.AssetTypes }}
                         <option {{ if eq $.obj.Type . }}selected{{ end }}>{{ . }}</option>

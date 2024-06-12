@@ -8,7 +8,6 @@
     <link href="/dist/dagobert.css" rel="stylesheet" />
 
     <script src="/dist/alpine.min.js" defer></script>
-    <script src="/dist/hyperscript.min.js" defer></script>
     <script src="/dist/htmx.min.js" defer></script>
 </head>
 <body class="drawer drawer-end" x-data="{drawer: false}">
@@ -89,21 +88,21 @@
                 hx-select="dialog"
                 hx-swap="innerHTML"
                 hx-push-url="false",
-                _="on keydown[key is 'i' and ctrlKey is true] from window call me.click()" >
+                @keydown.i.ctrl.window="$el.click()">
                 {{ template "icon-arrow-up-tray" "inline-block mr-1 w-5 h-5" }}
                 Import CSV
             </button>
 
             <a type="button" class="join-item btn"
                 href="export"
-                _="on keydown[key is 'e' and ctrlKey is true] from window call me.click()" >
+                @keydown.e.ctrl.window="$el.click()">
                 {{ template "icon-arrow-down-tray" "inline-block mr-1 w-5 h-5" }}
                 Export CSV
             </a>
 
             <button type="button" class="join-item btn"
                 @click="$dispatch('sort')"
-                _="on keydown[key is 'r' and ctrlKey is true] from window call me.click()" >
+                @keydown.r.ctrl.window="$el.click()">
                 {{ template "icon-arrow-path" "inline-block mr-1 w-5 h-5" }}
                 Refresh
             </button>
@@ -114,7 +113,7 @@
                 hx-select="dialog"
                 hx-swap="innerHTML"
                 hx-push-url="false",
-                _="on keydown[key is 'n' and ctrlKey is true] from window call me.click()" >
+                @keydown.n.ctrl.window="$el.click()">
                 {{ template "icon-plus" "inline-block mr-1 w-5 h-5" }}
                 Add
             </button>

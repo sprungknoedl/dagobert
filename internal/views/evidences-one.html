@@ -32,7 +32,8 @@
                     <span class="text-primary">*</span>
                 </label>
 				<input name="File" type="file" class="file-input file-input-bordered w-full"
-                    @change="filename = Object.values($event.target.files).map(file => file.name).join(', ')" />
+                    @change="filename = Object.values($event.target.files).map(file => file.name).join(', ')"
+                    x-init="setTimeout(() => $el.focus(), 100)" />
 			</div>
 
 			<div class="form-control mb-2">
