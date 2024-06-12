@@ -27,6 +27,7 @@
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Type
+                    <span class="text-primary">*</span>
 				    {{ if .valid.Type }}<span class="ml-2 text-sm text-error">{{ .valid.Type }}</span>{{ end }}
                 </label>
                 <select name="Type" class="select select-bordered">
@@ -40,6 +41,7 @@
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Task
+                    <span class="text-primary">*</span>
 				    {{ if .valid.Task }}<span class="ml-2 text-sm text-error">{{ .valid.Task }}</span>{{ end }}
                 </label>
                 <input name="Task" type="text" class="input input-bordered" value="{{ .obj.Task }}" />
@@ -55,7 +57,7 @@
 
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
-                    Date due
+                    Due
 				    {{ if .valid.DateDue }}<span class="ml-2 text-sm text-error">{{ .valid.DateDue }}</span>{{ end }}
                 </label>
                 <input name="DateDue" type="text" class="input input-bordered" value="{{ .obj.DateDue.Format "2006-01-02T15:04:05Z07:00" }}" />
@@ -68,6 +70,7 @@
                 </label>
             </div>
 
+            <p class="text-sm text-neutral">Fields marked with <span class="text-primary">*</span> are required.</p>
         </div>
 
         <!-- Modal footer -->

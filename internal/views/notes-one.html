@@ -27,6 +27,7 @@
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Category
+                    <span class="text-primary">*</span>
 				    {{ if .valid.Category }}<span class="ml-2 text-sm text-error">{{ .valid.Category }}</span>{{ end }}
                 </label>
                 <input name="Category" type="text" class="input input-bordered" value="{{ .obj.Category }}" />
@@ -35,6 +36,7 @@
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Title
+                    <span class="text-primary">*</span>
 				    {{ if .valid.Title }}<span class="ml-2 text-sm text-error">{{ .valid.Title }}</span>{{ end }}
                 </label>
                 <input name="Title" type="text" class="input input-bordered" value="{{ .obj.Title }}" />
@@ -47,6 +49,8 @@
                 </label>
                 <textarea name="Description" rows="5" class="textarea textarea-bordered">{{ .obj.Description }}</textarea>
             </div>
+
+            <p class="text-sm text-neutral">Fields marked with <span class="text-primary">*</span> are required.</p>
         </div>
 
         <!-- Modal footer -->

@@ -27,14 +27,18 @@
             <input name="CaseID" type="hidden" value="{{ .obj.CaseID }}" />
 
 			<div class="form-control mb-2">
-				<label class="label"> File </label>
+				<label class="label justify-start gap-2">
+                    File
+                    <span class="text-primary">*</span>
+                </label>
 				<input name="File" type="file" class="file-input file-input-bordered w-full"
                     @change="filename = Object.values($event.target.files).map(file => file.name).join(', ')" />
 			</div>
 
 			<div class="form-control mb-2">
-				<label class="label">
-					Name <span class="font-bold text-primary">*</span>
+				<label class="label justify-start gap-2">
+					Name
+                    <span class="text-primary">*</span>
 				    {{ if .valid.Name }}<span class="ml-2 text-sm text-error">{{ .valid.Name }}</span>{{ end }}
 				</label>
 
@@ -46,6 +50,7 @@
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Type
+                    <span class="text-primary">*</span>
 				    {{ if .valid.Type }}<span class="ml-2 text-sm text-error">{{ .valid.Type }}</span>{{ end }}
                 </label>
                 <select name="Type" class="select select-bordered">
@@ -76,6 +81,8 @@
 					});
 				</script>
 			</div>
+
+            <p class="text-sm text-neutral">Fields marked with <span class="text-primary">*</span> are required.</p>
         </div>
 
         <!-- Modal footer -->

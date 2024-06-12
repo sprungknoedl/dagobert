@@ -26,6 +26,7 @@
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Name
+                    <span class="text-primary">*</span>
 				    {{ if .valid.Name }}<span class="ml-2 text-sm text-error">{{ .valid.Name }}</span>{{ end }}
                 </label>
                 <input name="Name" type="text" class="input input-bordered" value="{{ .obj.Name }}" />
@@ -79,6 +80,8 @@
                     Closed
                 </label>
             </div>
+
+            <p class="text-sm text-neutral">Fields marked with <span class="text-primary">*</span> are required.</p>
         </div>
 
         <!-- Modal footer -->
