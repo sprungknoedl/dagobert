@@ -70,7 +70,7 @@
                     Assets
 				    {{ if .valid.System }}<span class="ml-2 text-sm text-error">{{ .valid.Assets }}</span>{{ end }}
                 </label>
-                <select multiple name="Assets" class="select select-bordered">
+                <select multiple name="Assets" class="tom select select-bordered">
                     {{ range .assets }}
                         <option value="{{ .ID }}" {{ if $.obj.HasAsset .ID }}selected{{ end }}>{{ .Name }}</option>
                     {{ end }}
@@ -82,7 +82,7 @@
                     Indicators
 				    {{ if .valid.System }}<span class="ml-2 text-sm text-error">{{ .valid.Indicators }}</span>{{ end }}
                 </label>
-                <select multiple name="Indicators" class="select select-bordered">
+                <select multiple name="Indicators" class="tom select select-bordered">
                     {{ range .indicators }}
                         <option value="{{ .ID }}" {{ if $.obj.HasIndicator .ID }}selected{{ end }}>{{ .Value }}</option>
                     {{ end }}
@@ -101,4 +101,8 @@
         </div>
     </form>
     </div>
+
+    <script>
+        document.querySelectorAll('.tom').forEach((el)=>{ new TomSelect(el, {}); });
+    </script>
 </div>

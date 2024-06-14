@@ -12,4 +12,25 @@
     @apply z-50;
 }
 
-[x-cloak] { display: none !important; }
+.ts-control {
+    border: unset !important;
+    background: unset !important;
+    line-height: unset !important;
+}
+
+.ts-wrapper {
+    @apply p-0 m-0;
+}
+
+.ts-wrapper.multi .ts-control > .item {
+    @apply p-0 m-0 mr-2;
+    @apply badge badge-outline badge-secondary;
+    height: unset;
+    line-height: unset;
+}
+
+.ts-wrapper.multi .ts-control > .item.active {
+    @apply badge badge-secondary;
+    height: unset;
+    line-height: unset;
+}
