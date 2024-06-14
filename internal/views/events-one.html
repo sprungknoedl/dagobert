@@ -6,7 +6,7 @@
         @click="drawer = false"
         @keydown.escape.window="drawer = false"></label>
 
-    <div class="bg-base-200 text-base-content p-4 h-full w-[42rem]">
+    <div class="bg-base-200 text-base-content p-4 min-h-full w-[42rem]">
     <form
         hx-post="/cases/{{ .obj.CaseID }}/events/{{ .obj.ID }}"
         hx-target="#modal">
