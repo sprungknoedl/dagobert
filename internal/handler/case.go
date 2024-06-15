@@ -64,7 +64,7 @@ func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	cw.Flush()
 }
 
-func (ctrl CaseCtrl) ImportCases(w http.ResponseWriter, r *http.Request) {
+func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	uri := r.URL.RequestURI()
 	ImportCSV(ctrl.store, w, r, uri, 7, func(rec []string) {
 		closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
