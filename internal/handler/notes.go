@@ -98,7 +98,7 @@ func (ctrl NoteCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ctrl NoteCtrl) Save(w http.ResponseWriter, r *http.Request) {
-	dto := model.Note{}
+	dto := model.Note{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
 	if err := utils.Decode(r, &dto); err != nil {
 		utils.Warn(w, r, err)
 		return

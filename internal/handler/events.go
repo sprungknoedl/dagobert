@@ -139,7 +139,7 @@ func (ctrl EventCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
-	dto := model.Event{}
+	dto := model.Event{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
 	if err := utils.Decode(r, &dto); err != nil {
 		utils.Warn(w, r, err)
 		return

@@ -115,7 +115,7 @@ func (ctrl TaskCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ctrl TaskCtrl) Save(w http.ResponseWriter, r *http.Request) {
-	dto := model.Task{}
+	dto := model.Task{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
 	if err := utils.Decode(r, &dto); err != nil {
 		utils.Warn(w, r, err)
 		return

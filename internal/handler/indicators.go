@@ -102,7 +102,7 @@ func (ctrl IndicatorCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
-	dto := model.Indicator{}
+	dto := model.Indicator{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
 	if err := utils.Decode(r, &dto); err != nil {
 		utils.Warn(w, r, err)
 		return

@@ -136,7 +136,7 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto := model.Evidence{}
+	dto := model.Evidence{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
 	if err := utils.Decode(r, &dto); err != nil {
 		utils.Err(w, r, err)
 		return
