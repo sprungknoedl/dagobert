@@ -3,7 +3,7 @@
 {{ template "layout-end" . }}
 
 {{ define "table-content" }}
-<table class="table w-full">
+<table id="list" class="table w-full">
 	<thead>
 		<tr>
 			{{ template "table-th" dict "name" "id" "sort" .env.Sort }}
