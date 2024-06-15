@@ -74,8 +74,8 @@ func main() {
 	// Router
 	// --------------------------------------
 	mux := http.NewServeMux()
-	srv := Recover(mux)
-	srv = Logger(srv)
+	srv := handler.Recover(mux)
+	srv = handler.Logger(srv)
 	srv = userCtrl.Protect(srv)
 
 	// --------------------------------------
