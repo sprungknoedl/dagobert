@@ -50,6 +50,12 @@ func ValidateIndicator(dto model.Indicator) valid.Result {
 	})
 }
 
+func ValidateKey(dto model.Key) valid.Result {
+	return valid.Check([]valid.Condition{
+		{Name: "Name", Missing: dto.Name == ""},
+	})
+}
+
 func ValidateMalware(dto model.Malware) valid.Result {
 	return valid.Check([]valid.Condition{
 		{Name: "Filename", Missing: dto.Filename == ""},

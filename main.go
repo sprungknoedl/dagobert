@@ -109,6 +109,13 @@ func main() {
 	mux.HandleFunc("GET /logout", userCtrl.Logout)
 	mux.HandleFunc("GET /oidc-callback", userCtrl.Callback)
 
+	// api keys
+	keyCtrl := handler.NewKeyCtrl(db)
+	mux.HandleFunc("GET /api-keys/", keyCtrl.List)
+	mux.HandleFunc("GET /api-keys/{key}", keyCtrl.Edit)
+	mux.HandleFunc("POST /api-keys/{key}", keyCtrl.Save)
+	mux.HandleFunc("DELETE /api-keys/{key}", keyCtrl.Delete)
+
 	// templates
 	reportCtrl := handler.NewReportCtrl(db)
 	mux.HandleFunc("GET /cases/{cid}/reports", reportCtrl.List)

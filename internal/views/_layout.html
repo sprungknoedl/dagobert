@@ -135,6 +135,7 @@
     <ul class="menu gap-2">
 		<li><a href="/" data-tip="Cases" class='tooltip tooltip-right {{ if eq .title "Cases" }}active{{ end }}'> {{ template "icon-briefcase" "w-6 h-6" }} </a></li>
 		<li><a href="/users/" data-tip="Users" class='tooltip tooltip-right {{ if eq .title "Users" }}active{{ end }}'> {{ template "icon-users" "w-6 h-6" }} </a></li>
+		<li><a href="/api-keys/" data-tip="API Keys" class='tooltip tooltip-right {{ if eq .title "API Keys" }}active{{ end }}'> {{ template "icon-beaker" "w-6 h-6" }} </a></li>
     </ul>
 
     {{ if ne .env.ActiveCase.ID "" }}

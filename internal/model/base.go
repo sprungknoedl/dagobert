@@ -166,6 +166,11 @@ CREATE TABLE IF NOT EXISTS indicators (
 	FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS keys (
+	key   TEXT DEFAULT (lower(hex(randomblob(21)))) NOT NULL PRIMARY KEY,
+	name TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS malware (
 	id       TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
 	asset_id TEXT NOT NULL,

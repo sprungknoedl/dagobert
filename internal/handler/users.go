@@ -20,6 +20,7 @@ import (
 
 var SessionName = "default"
 var SessionStore = sessions.NewCookieStore([]byte(os.Getenv("WEB_SESSION_SECRET")))
+var ApiKeyHeader = "X-API-Key"
 
 type OpenIDConfig struct {
 	ClientId      string   //id from the authorization service (OIDC provider)
@@ -70,8 +71,22 @@ func (ctrl UserCtrl) Protect(next http.Handler) http.Handler {
 	gob.Register(map[string]any{})
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sess, _ := SessionStore.Get(r, SessionName)
+		// api key based authorization
+		key := r.Header.Get(ApiKeyHeader)
+		if key != "" {
+			// TODO: validate api key header
+			_, err := ctrl.store.GetKey(key)
+			if err != nil {
+				utils.Warn(w, r, err)
+				return
+			}
 
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// session based authorization
+		sess, _ := SessionStore.Get(r, SessionName)
 		authorized := sess.Values["oidcAuthorized"]
 		if (authorized != nil && authorized.(bool)) || r.URL.Path == "/oidc-callback" {
 			next.ServeHTTP(w, r)
@@ -84,7 +99,8 @@ func (ctrl UserCtrl) Protect(next http.Handler) http.Handler {
 		sess.Values["oidcOriginalRequestUrl"] = r.URL.String()
 		err := sess.Save(r, w)
 		if err != nil {
-			log.Fatal("failed save sessions. error: " + err.Error()) // todo handle more gracefully
+			utils.Err(w, r, err)
+			return
 		}
 
 		//redirect to authorization server
