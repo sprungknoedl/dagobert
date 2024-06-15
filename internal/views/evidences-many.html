@@ -10,6 +10,7 @@
 			{{ template "table-th" dict "name" "name" "sort" .env.Sort }}
 			{{ template "table-th" dict "name" "description" "sort" .env.Sort }}
 			{{ template "table-th" dict "name" "hash" "sort" .env.Sort }}
+			{{ template "table-th" dict "name" "size" "sort" .env.Sort }}
 			<td style="width: 7rem"></td>
 		</tr>
 	</thead>
@@ -18,11 +19,12 @@
         {{ range .rows }}
         <tr class="hover">
 			<td>
-                {{ if eq .Type "File" }}                       {{ template "icon-folder-open" "inline-block w-6 h-6 mr-2" }}
+                {{ if eq .Type "File" }}                       {{ template "icon-document" "inline-block w-6 h-6 mr-2" }}
                 {{ else if eq .Type "Logs" }}                  {{ template "icon-document-text" "inline-block w-6 h-6 mr-2" }}
                 {{ else if eq .Type "Artifacts Collection" }}  {{ template "icon-archive-box" "inline-block w-6 h-6 mr-2" }}
                 {{ else if eq .Type "System Image" }}          {{ template "icon-server" "inline-block w-6 h-6 mr-2" }}
                 {{ else if eq .Type "Memory Dump" }}           {{ template "icon-cpu-chip" "inline-block w-6 h-6 mr-2" }}
+                {{ else if eq .Type "Malware" }}               {{ template "icon-bug" "inline-block w-6 h-6 mr-2" }}
                 {{ else }}                                     {{ template "icon-question-mark-circle" "inline-block w-6 h-6 mr-2" }}
                 {{ end }}
                 {{ .Type }}
@@ -30,6 +32,7 @@
 			<td> {{ .Name }} </td>
 			<td> {{ .Description }} </td>
 			<td> {{ .Hash }} </td>
+			<td> {{ call $.humanizeSize .Size }} </td>
             <td class="px-6 py-2 flex justify-end join">
                 <a class="join-item btn btn-sm"
                     href="/cases/{{ .CaseID }}/evidences/{{ .ID }}/download"

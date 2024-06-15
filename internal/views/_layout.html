@@ -109,7 +109,8 @@
                 Refresh
             </button>
 
-            <button type="button" class="join-item btn"
+            <a type="button" class="join-item btn"
+                href="new"
                 hx-get="new"
                 hx-target="#modal"
                 hx-select="dialog"
@@ -118,7 +119,7 @@
                 @keydown.n.ctrl.window="$el.click()">
                 {{ template "icon-plus" "inline-block mr-1 w-5 h-5" }}
                 Add
-            </button>
+            </a>
         </div>
 
     </div>

@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -35,8 +36,9 @@ func (ctrl EvidenceCtrl) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.Render(ctrl.store, w, r, "internal/views/evidences-many.html", map[string]any{
-		"title": "Evidences",
-		"rows":  list,
+		"title":        "Evidences",
+		"rows":         list,
+		"humanizeSize": humanizeSize,
 	})
 }
 
@@ -215,6 +217,7 @@ func (ctrl EvidenceCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	// TODO: delete file from fs
 	err := ctrl.store.DeleteEvidence(cid, id)
 	if err != nil {
 		utils.Err(w, r, err)
@@ -222,4 +225,21 @@ func (ctrl EvidenceCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.Refresh(w, r)
+}
+
+func humanizeSize(s int) string {
+	sizes := []string{"B", "kB", "MB", "GB", "TB", "PB", "EB"}
+
+	if s < 10 {
+		return fmt.Sprintf("%d B", s)
+	}
+	e := math.Floor(math.Log(float64(s)) / math.Log(1000))
+	suffix := sizes[int(e)]
+	val := math.Floor(float64(s)/math.Pow(1000, e)*10+0.5) / 10
+	f := "%.0f %s"
+	if val < 10 {
+		f = "%.1f %s"
+	}
+
+	return fmt.Sprintf(f, val, suffix)
 }
