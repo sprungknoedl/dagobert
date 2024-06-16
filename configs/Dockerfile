@@ -13,8 +13,6 @@ RUN make build-web
 FROM golang:1.22 AS app
 WORKDIR /src
 
-RUN go install github.com/a-h/templ/cmd/templ@latest
-
 COPY go.mod .
 RUN go mod download
 
