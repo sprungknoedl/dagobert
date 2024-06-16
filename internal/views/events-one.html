@@ -103,6 +103,8 @@
     </div>
 
     <script>
-        document.querySelectorAll('.tom').forEach((el)=>{ new TomSelect(el, {}); });
+        document.querySelectorAll('.tom').forEach((el)=>{ new TomSelect(el, {
+            create: function(input){ return {value:'new:'+input,text:input} }
+        }); });
     </script>
 </div>

@@ -78,7 +78,7 @@ func (ctrl AssetCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Notes:  rec[5],
 		}
 
-		if err := ctrl.store.SaveAsset(cid, obj); err != nil {
+		if _, err := ctrl.store.SaveAsset(cid, obj); err != nil {
 			utils.Err(w, r, err)
 		}
 	})
@@ -118,7 +118,7 @@ func (ctrl AssetCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dto.ID = utils.If(dto.ID == "new", "", dto.ID)
-	if err := ctrl.store.SaveAsset(dto.CaseID, dto); err != nil {
+	if _, err := ctrl.store.SaveAsset(dto.CaseID, dto); err != nil {
 		utils.Err(w, r, err)
 		return
 	}

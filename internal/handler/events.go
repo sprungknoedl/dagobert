@@ -155,6 +155,43 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// create any newly specified assets
+	for i, elem := range tmp.Assets {
+		if strings.HasPrefix(elem, "new:") {
+			obj, err := ctrl.store.SaveAsset(dto.CaseID, model.Asset{
+				Name:   strings.TrimPrefix(elem, "new:"),
+				Status: "Under investigation",
+				Type:   "Other",
+			})
+			if err != nil {
+				utils.Err(w, r, err)
+				return
+			}
+
+			tmp.Assets[i] = obj.ID
+		}
+
+	}
+
+	// create any newly specified indicators
+	for i, elem := range tmp.Indicators {
+		if strings.HasPrefix(elem, "new:") {
+			obj, err := ctrl.store.SaveIndicator(dto.CaseID, model.Indicator{
+				Value:  strings.TrimPrefix(elem, "new:"),
+				Status: "Under investigation",
+				Type:   "Other",
+				TLP:    "TLP:RED",
+			})
+			if err != nil {
+				utils.Err(w, r, err)
+				return
+			}
+
+			tmp.Indicators[i] = obj.ID
+		}
+
+	}
+
 	dto.Assets = utils.Apply(tmp.Assets, func(id string) model.Asset { return model.Asset{ID: id} })
 	dto.Indicators = utils.Apply(tmp.Indicators, func(id string) model.Indicator { return model.Indicator{ID: id} })
 	if vr := ValidateEvent(dto); !vr.Valid() {

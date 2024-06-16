@@ -71,12 +71,13 @@ func (store *Store) GetAsset(cid string, id string) (Asset, error) {
 	return obj, err
 }
 
-func (store *Store) SaveAsset(cid string, obj Asset) error {
+func (store *Store) SaveAsset(cid string, obj Asset) (Asset, error) {
 	query := `
 	REPLACE INTO assets (id, status, type, name, addr, notes, case_id)
-	VALUES (NULLIF(:id, ''), :status, :type, :name, :addr, :notes, :cid)`
+	VALUES (NULLIF(:id, ''), :status, :type, :name, :addr, :notes, :cid)
+	RETURNING id, status, type, name, addr, notes, case_id`
 
-	_, err := store.db.Exec(query,
+	rows, err := store.db.Query(query,
 		sql.Named("cid", cid),
 		sql.Named("id", obj.ID),
 		sql.Named("status", obj.Status),
@@ -84,7 +85,12 @@ func (store *Store) SaveAsset(cid string, obj Asset) error {
 		sql.Named("name", obj.Name),
 		sql.Named("addr", obj.Addr),
 		sql.Named("notes", obj.Notes))
-	return err
+	if err != nil {
+		return Asset{}, err
+	}
+
+	err = ScanOne(rows, &obj)
+	return obj, err
 }
 
 func (store *Store) DeleteAsset(cid string, id string) error {

@@ -171,7 +171,8 @@ func (store *Store) GetEvent(cid string, id string) (Event, error) {
 func (store *Store) SaveEvent(cid string, obj Event) error {
 	query := `
 	REPLACE INTO events (id, time, type, event, raw, case_id)
-	VALUES (NULLIF(:id, ''), :time, :type, :event, :raw, :cid)`
+	VALUES (NULLIF(:id, ''), :time, :type, :event, :raw, :cid)
+	RETURNING id, time, type, event, raw, case_id`
 
 	// assets
 	query2 := `
@@ -195,7 +196,7 @@ func (store *Store) SaveEvent(cid string, obj Event) error {
 	}
 	defer tx.Rollback()
 
-	_, err = tx.Exec(query,
+	rows, err := tx.Query(query,
 		sql.Named("cid", cid),
 		sql.Named("id", obj.ID),
 		sql.Named("time", obj.Time),
@@ -203,6 +204,10 @@ func (store *Store) SaveEvent(cid string, obj Event) error {
 		sql.Named("event", obj.Event),
 		sql.Named("raw", obj.Raw))
 	if err != nil {
+		return err
+	}
+
+	if err = ScanOne(rows, &obj); err != nil {
 		return err
 	}
 

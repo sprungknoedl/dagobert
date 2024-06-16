@@ -79,7 +79,7 @@ func (ctrl IndicatorCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			CaseID: cid,
 		}
 
-		err := ctrl.store.SaveIndicator(cid, obj)
+		_, err := ctrl.store.SaveIndicator(cid, obj)
 		utils.Err(w, r, err)
 	})
 }
@@ -119,7 +119,7 @@ func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dto.ID = utils.If(dto.ID == "new", "", dto.ID)
-	if err := ctrl.store.SaveIndicator(dto.CaseID, dto); err != nil {
+	if _, err := ctrl.store.SaveIndicator(dto.CaseID, dto); err != nil {
 		utils.Err(w, r, err)
 		return
 	}

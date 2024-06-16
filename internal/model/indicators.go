@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-var IndicatorStatus = FromEnv("VALUES_INDICATOR_STATUS", []string{"Confirmed", "Suspicious", "Under Investigation", "Unrelated"})
+var IndicatorStatus = FromEnv("VALUES_INDICATOR_STATUS", []string{"Confirmed", "Suspicious", "Under investigation", "Unrelated"})
 var IndicatorTypes = FromEnv("VALUES_INDICATOR_TYPES", []string{"IP", "Domain", "URL", "Path", "Hash", "Service", "Other"})
 var IndicatorTLPs = FromEnv("VALUES_INDICATOR_TLPS", []string{"TLP:RED", "TLP:AMBER", "TLP:GREEN", "TLP:CLEAR"})
 
@@ -97,12 +97,13 @@ func (store *Store) GetIndicator(cid string, id string) (Indicator, error) {
 	return obj, err
 }
 
-func (store *Store) SaveIndicator(cid string, obj Indicator) error {
+func (store *Store) SaveIndicator(cid string, obj Indicator) (Indicator, error) {
 	query := `
 	REPLACE INTO indicators (id, status, type, value, tlp, source, notes, case_id)
-	VALUES (NULLIF(:id, ''), :status, :type, :value, :tlp, :source, :notes, :cid)`
+	VALUES (NULLIF(:id, ''), :status, :type, :value, :tlp, :source, :notes, :cid)
+	RETURNING id, status, type, value, tlp, source, notes, case_id`
 
-	_, err := store.db.Exec(query,
+	rows, err := store.db.Query(query,
 		sql.Named("cid", cid),
 		sql.Named("id", obj.ID),
 		sql.Named("status", obj.Status),
@@ -111,7 +112,12 @@ func (store *Store) SaveIndicator(cid string, obj Indicator) error {
 		sql.Named("tlp", obj.TLP),
 		sql.Named("source", obj.Source),
 		sql.Named("notes", obj.Notes))
-	return err
+	if err != nil {
+		return Indicator{}, err
+	}
+
+	err = ScanOne(rows, &obj)
+	return obj, err
 }
 
 func (store *Store) DeleteIndicator(cid string, id string) error {
