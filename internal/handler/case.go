@@ -138,6 +138,7 @@ func (ctrl CaseCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		utils.Render(ctrl.store, w, r, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
+		return
 	}
 
 	if err := ctrl.store.DeleteCase(cid); err != nil {
