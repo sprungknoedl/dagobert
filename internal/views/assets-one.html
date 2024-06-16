@@ -26,12 +26,26 @@
 
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
+                    Status
+                    <span class="text-primary">*</span>
+				    {{ if .valid.Status }}<span class="ml-2 text-sm text-error">{{ .valid.Status }}</span>{{ end }}
+                </label>
+                <select name="Status" class="select select-bordered"
+                    x-init="setTimeout(() => $el.focus(), 100)">
+                    <option disabled value="" {{ if eq .obj.Status "" }}selected{{ end }}>Select an option</option>
+                    {{ range .model.AssetStatus }}
+                        <option {{ if eq $.obj.Status . }}selected{{ end }}>{{ . }}</option>
+                    {{ end }}
+                </select>
+            </div>
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
                     Type
                     <span class="text-primary">*</span>
 				    {{ if .valid.Type }}<span class="ml-2 text-sm text-error">{{ .valid.Type }}</span>{{ end }}
                 </label>
-                <select name="Type" class="select select-bordered"
-                    x-init="setTimeout(() => $el.focus(), 100)">
+                <select name="Type" class="select select-bordered">
                     <option disabled value="" {{ if eq .obj.Type "" }}selected{{ end }}>Select an option</option>
                     {{ range .model.AssetTypes }}
                         <option {{ if eq $.obj.Type . }}selected{{ end }}>{{ . }}</option>
@@ -50,32 +64,18 @@
 
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
-                    IP
-				    {{ if .valid.IP }}<span class="ml-2 text-sm text-error">{{ .valid.IP }}</span>{{ end }}
+                    Addr
+				    {{ if .valid.Addr }}<span class="ml-2 text-sm text-error">{{ .valid.Addr }}</span>{{ end }}
                 </label>
-                <input name="IP" type="text" class="input input-bordered" value="{{ .obj.IP }}" />
+                <input name="Addr" type="text" class="input input-bordered" value="{{ .obj.Addr }}" />
             </div>
 
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
-                    Description
-				    {{ if .valid.Description }}<span class="ml-2 text-sm text-error">{{ .valid.Description }}</span>{{ end }}
+                    Notes
+				    {{ if .valid.Notes }}<span class="ml-2 text-sm text-error">{{ .valid.Notes }}</span>{{ end }}
                 </label>
-                <textarea name="Description" rows="5" class="textarea textarea-bordered">{{ .obj.Description }}</textarea>
-            </div>
-
-            <div class="form-control mb-2">
-                <label class="label cursor-pointer justify-start gap-2">
-                    <input name="Compromised" value="true" type="checkbox" class="checkbox" {{ if .obj.Compromised }}checked{{ end }} />
-                    Compromised
-                </label>
-            </div>
-
-            <div class="form-control mb-2">
-                <label class="label cursor-pointer justify-start gap-2">
-                    <input name="Analysed" value="true" type="checkbox" class="checkbox" {{ if .obj.Analysed }}checked{{ end }} />
-                    Analysed
-                </label>
+                <textarea name="Notes" rows="5" class="textarea textarea-bordered">{{ .obj.Notes }}</textarea>
             </div>
         
             <p class="text-sm text-neutral">Fields marked with <span class="text-primary">*</span> are required.</p>

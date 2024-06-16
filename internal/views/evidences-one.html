@@ -64,10 +64,10 @@
 
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
-                    Description
-				    {{ if .valid.Description }}<span class="ml-2 text-sm text-error">{{ .valid.Description }}</span>{{ end }}
+                    Notes
+				    {{ if .valid.Notes }}<span class="ml-2 text-sm text-error">{{ .valid.Notes }}</span>{{ end }}
                 </label>
-                <textarea name="Description" rows="5" class="textarea textarea-bordered">{{ .obj.Description }}</textarea>
+                <textarea name="Notes" rows="5" class="textarea textarea-bordered">{{ .obj.Notes }}</textarea>
             </div>
 
 			<div class="form-control mb-2">

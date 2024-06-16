@@ -6,11 +6,13 @@
 <table id="list" class="table w-full">
 	<thead>
 		<tr>
+			{{ template "table-th" dict "name" "status" "sort" .env.Sort }}
 			{{ template "table-th" dict "name" "type" "sort" .env.Sort }}
 			{{ template "table-th" dict "name" "value" "sort" .env.Sort }}
-			{{ template "table-th" dict "name" "description" "sort" .env.Sort }}
 			{{ template "table-th" dict "name" "tlp" "sort" .env.Sort }}
 			{{ template "table-th" dict "name" "source" "sort" .env.Sort }}
+			{{ template "table-th" dict "name" "first seen" "sort" .env.Sort }}
+			{{ template "table-th" dict "name" "notes" "sort" .env.Sort }}
 			<td style="width: 7rem"></td>
 		</tr>
 	</thead>
@@ -18,6 +20,7 @@
 	<tbody>
         {{ range .rows }}
         <tr class="hover">
+			<td> {{ .Status }} </td>
 			<td>
                 {{ if eq .Type "IP" }}           {{ template "icon-map-pin" "inline-block w-6 h-6 mr-2" }}
                 {{ else if eq .Type "Domain" }}  {{ template "icon-globe-europe" "inline-block w-6 h-6 mr-2" }}
@@ -30,7 +33,6 @@
                 {{ .Type }}
             </td>
 			<td> {{ .Value }} </td>
-			<td> {{ .Description }} </td>
 			<td>
                 {{ if eq .TLP "TLP:RED" }}        <span class="text-red-600">{{ .TLP }}</span>
                 {{ else if eq .TLP "TLP:AMBER" }} <span class="text-amber-600">{{ .TLP }}</span>
@@ -39,6 +41,12 @@
                 {{ end }}
             </td>
 			<td> {{ .Source }} </td>
+			<td>
+                {{ if .FirstSeen.IsZero }} -
+                {{ else }} {{ .FirstSeen.Format "2006-01-02 15:04:05.000" }} <span class="text-neutral">{{ .FirstSeen.Format "Z07:00" }}</span>
+                {{ end }}
+            </td>
+			<td> {{ .Notes }} </td>
             <td class="px-6 py-2 flex justify-end join">
                 <button type="button" class="join-item btn btn-sm"
                     hx-get="/cases/{{ .CaseID }}/indicators/{{ .ID }}"

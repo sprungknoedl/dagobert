@@ -4,37 +4,36 @@ import (
 	"database/sql"
 )
 
+var AssetStatus = FromEnv("VALUES_ASSET_STATUS", []string{"Compromised", "Accessed", "Under investigation", "No sign of compromise", "Out of scope"})
 var AssetTypes = FromEnv("VALUES_ASSET_TYPES", []string{"Account", "Desktop", "Server", "Other"})
 
 type Asset struct {
-	ID          string
-	Type        string
-	Name        string
-	IP          string
-	Description string
-	Compromised bool
-	Analysed    bool
-	CaseID      string
+	ID     string
+	Status string
+	Type   string
+	Name   string
+	Addr   string
+	Notes  string
+	CaseID string
 }
 
 func (store *Store) FindAssets(cid string, search string, sort string) ([]Asset, error) {
 	query := `
-	SELECT id, type, name, ip, description, compromised, analysed, case_id
+	SELECT id, status, type, name, addr, notes, case_id
 	FROM assets
 	WHERE case_id = :cid AND (
+		instr(status, :search) > 0 OR
 		instr(type, :search) > 0 OR
 		instr(name, :search) > 0 OR
-		instr(ip, :search) > 0 OR
-		instr(description, :search) > 0)
+		instr(addr, :search) > 0 OR
+		instr(notes, :search) > 0)
 	ORDER BY
-		CASE WHEN :sort = 'analysed'     THEN analysed END ASC,
-		CASE WHEN :sort = '-analysed'    THEN analysed END DESC,
-		CASE WHEN :sort = 'compromised'  THEN compromised END ASC,
-		CASE WHEN :sort = '-compromised' THEN compromised END DESC,
-		CASE WHEN :sort = 'desc'         THEN description END ASC,
-		CASE WHEN :sort = '-desc'        THEN description END DESC,
-		CASE WHEN :sort = 'addr'           THEN ip END ASC,
-		CASE WHEN :sort = '-addr'          THEN ip END DESC,
+		CASE WHEN :sort = 'notes'        THEN notes END ASC,
+		CASE WHEN :sort = '-notes'       THEN notes END DESC,
+		CASE WHEN :sort = 'addr'         THEN addr END ASC,
+		CASE WHEN :sort = '-addr'        THEN addr END DESC,
+		CASE WHEN :sort = 'status'         THEN status END ASC,
+		CASE WHEN :sort = '-status'        THEN status END DESC,
 		CASE WHEN :sort = 'type'         THEN type END ASC,
 		CASE WHEN :sort = '-type'        THEN type END DESC,
 		CASE WHEN :sort = '-name'        THEN name END DESC,
@@ -55,7 +54,7 @@ func (store *Store) FindAssets(cid string, search string, sort string) ([]Asset,
 
 func (store *Store) GetAsset(cid string, id string) (Asset, error) {
 	query := `
-	SELECT id, type, name, ip, description, compromised, analysed, case_id
+	SELECT id, status, type, name, addr, notes, case_id
 	FROM assets
 	WHERE case_id = :cid AND id = :id
 	LIMIT 1`
@@ -74,18 +73,17 @@ func (store *Store) GetAsset(cid string, id string) (Asset, error) {
 
 func (store *Store) SaveAsset(cid string, obj Asset) error {
 	query := `
-	REPLACE INTO assets (id, type, name, ip, description, compromised, analysed, case_id)
-	VALUES (NULLIF(:id, ''), :type, :name, :ip, :description, :compromised, :analysed, :cid)`
+	REPLACE INTO assets (id, status, type, name, addr, notes, case_id)
+	VALUES (NULLIF(:id, ''), :status, :type, :name, :addr, :notes, :cid)`
 
 	_, err := store.db.Exec(query,
 		sql.Named("cid", cid),
 		sql.Named("id", obj.ID),
+		sql.Named("status", obj.Status),
 		sql.Named("type", obj.Type),
 		sql.Named("name", obj.Name),
-		sql.Named("ip", obj.IP),
-		sql.Named("description", obj.Description),
-		sql.Named("compromised", obj.Compromised),
-		sql.Named("analysed", obj.Analysed))
+		sql.Named("addr", obj.Addr),
+		sql.Named("notes", obj.Notes))
 	return err
 }
 

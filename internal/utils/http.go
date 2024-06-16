@@ -46,14 +46,17 @@ func Err(w http.ResponseWriter, r *http.Request, err error) {
 func Render(store *model.Store, w http.ResponseWriter, r *http.Request, name string, values map[string]any) {
 	values["env"] = GetEnv(store, r)
 	values["model"] = map[string]any{
-		"AssetTypes":     model.AssetTypes,
-		"CaseSeverities": model.CaseSeverities,
-		"CaseOutcomes":   model.CaseOutcomes,
-		"EventTypes":     model.EventTypes,
-		"EvidenceTypes":  model.EvidenceTypes,
-		"IndicatorTypes": model.IndicatorTypes,
-		"IndicatorTLPs":  model.IndicatorTLPs,
-		"TaskTypes":      model.TaskTypes,
+		"AssetStatus":     model.AssetStatus,
+		"AssetTypes":      model.AssetTypes,
+		"CaseOutcomes":    model.CaseOutcomes,
+		"CaseSeverities":  model.CaseSeverities,
+		"EventTypes":      model.EventTypes,
+		"EvidenceTypes":   model.EvidenceTypes,
+		"IndicatorStatus": model.IndicatorStatus,
+		"IndicatorTLPs":   model.IndicatorTLPs,
+		"IndicatorTypes":  model.IndicatorTypes,
+		"MalwareStatus":   model.MalwareStatus,
+		"TaskTypes":       model.TaskTypes,
 	}
 
 	render(w, r, name, values)

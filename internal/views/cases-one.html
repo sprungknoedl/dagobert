@@ -47,7 +47,6 @@
                     {{ if .valid.Severity }}<span class="ml-2 text-sm text-error">{{ .valid.Severity }}</span>{{ end }}
                 </label>
                 <select name="Severity" class="select select-bordered">
-                    <option disabled value="" {{ if eq .obj.Severity "" }}selected{{ end }}>Select an option</option>
                     {{ range .model.CaseSeverities }}
                         <option {{ if eq $.obj.Severity . }}selected{{ end }}>{{ . }}</option>
                     {{ end }}
@@ -60,7 +59,6 @@
                     {{ if .valid.Outcome }}<span class="ml-2 text-sm text-error">{{ .valid.Outcome }}</span>{{ end }}
                 </label>
                 <select name="Outcome" class="select select-bordered">
-                    <option disabled value="" {{ if eq .obj.Outcome "" }}selected{{ end }}>Select an option</option>
                     {{ range .model.CaseOutcomes }}
                         <option {{ if eq $.obj.Outcome . }}selected{{ end }}>{{ . }}</option>
                     {{ end }}

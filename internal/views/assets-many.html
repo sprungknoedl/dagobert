@@ -6,12 +6,11 @@
 <table id="list" class="table w-full">
 	<thead>
 		<tr>
+			{{ template "table-th" dict "name" "status" "sort" .env.Sort }}
 			{{ template "table-th" dict "name" "type" "sort" .env.Sort }}
 			{{ template "table-th" dict "name" "name" "sort" .env.Sort }}
 			{{ template "table-th" dict "name" "addr" "sort" .env.Sort }}
-			{{ template "table-th" dict "name" "description" "sort" .env.Sort }}
-			{{ template "table-th" dict "name" "compromised" "sort" .env.Sort }}
-			{{ template "table-th" dict "name" "analysed" "sort" .env.Sort }}
+			{{ template "table-th" dict "name" "notes" "sort" .env.Sort }}
 			<td style="width: 7rem"></td>
 		</tr>
 	</thead>
@@ -19,6 +18,14 @@
 	<tbody>
         {{ range .rows }}
         <tr class="hover">
+			<td>
+                {{ if eq .Status "Compromised" }} <span class="text-error">{{ template "icon-bug" "inline-block w-6 h-6 mr-2" }} {{ .Status }}
+                {{ else if eq .Status "Accessed" }} <span class="text-warning">{{ template "icon-command-line" "inline-block w-6 h-6 mr-2" }} {{ .Status }}
+                {{ else if eq .Status "No sign of compromise" }} <span class="text-success">{{ template "icon-check-circle" "inline-block w-6 h-6 mr-2" }} {{ .Status }}
+                {{ else }}
+                {{ .Status }}
+                {{ end }}
+            </td>
 			<td>
                 {{ if eq .Type "Account" }}      {{ template "icon-user" "inline-block w-6 h-6 mr-2" }}
                 {{ else if eq .Type "Desktop" }} {{ template "icon-desktop" "inline-block w-6 h-6 mr-2" }}
@@ -28,18 +35,8 @@
                 {{ .Type }}
             </td>
 			<td> {{ .Name }} </td>
-			<td> {{ .IP }} </td>
-			<td> {{ .Description }} </td>
-			<td>
-                {{ if .Compromised }} <span class="text-error"> {{ template "icon-bug" "inline-block w-6 h-6 mr-2" }} Yes </span>
-                {{ else }}            No
-                {{ end }}
-            </td>
-			<td>
-                {{ if .Analysed }} {{ template "icon-check-circle" "w-6 h-6 text-success" }}
-                {{ else }}         {{ template "icon-x-circle" "w-6 h-6 text-error" }}
-                {{ end }}
-            </td>
+			<td> {{ .Addr }} </td>
+			<td> {{ .Notes }} </td>
             <td class="px-6 py-2 flex justify-end join">
                 <button type="button" class="join-item btn btn-sm"
                     hx-get="/cases/{{ .CaseID }}/assets/{{ .ID }}"

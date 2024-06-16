@@ -157,6 +157,7 @@ CREATE TABLE IF NOT EXISTS evidences (
 CREATE TABLE IF NOT EXISTS indicators (
 	id          TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
 	case_id     TEXT NOT NULL,
+	status      TEXT NOT NULL,
 	type        TEXT NOT NULL,
 	value       TEXT NOT NULL,
 	tlp         TEXT NOT NULL,

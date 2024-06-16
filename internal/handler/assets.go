@@ -4,7 +4,6 @@ import (
 	"encoding/csv"
 	"fmt"
 	"net/http"
-	"strconv"
 	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/model"
@@ -50,16 +49,15 @@ func (ctrl AssetCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Type", "Name", "IP", "Description", "Compromised", "Analysed"})
+	cw.Write([]string{"ID", "Status", "Type", "Name", "Addr", "Notes"})
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
+			e.Status,
 			e.Type,
 			e.Name,
-			e.IP,
-			e.Description,
-			strconv.FormatBool(e.Compromised),
-			strconv.FormatBool(e.Analysed),
+			e.Addr,
+			e.Notes,
 		})
 	}
 
@@ -69,31 +67,18 @@ func (ctrl AssetCtrl) Export(w http.ResponseWriter, r *http.Request) {
 func (ctrl AssetCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := r.URL.RequestURI()
-	ImportCSV(ctrl.store, w, r, uri, 7, func(rec []string) {
-		compromised, err := strconv.ParseBool(rec[5])
-		if err != nil {
-			utils.Warn(w, r, err)
-			return
-		}
-
-		analysed, err := strconv.ParseBool(rec[6])
-		if err != nil {
-			utils.Warn(w, r, err)
-			return
-		}
-
+	ImportCSV(ctrl.store, w, r, uri, 6, func(rec []string) {
 		obj := model.Asset{
-			ID:          rec[0],
-			CaseID:      cid,
-			Type:        rec[1],
-			Name:        rec[2],
-			IP:          rec[3],
-			Description: rec[4],
-			Compromised: compromised,
-			Analysed:    analysed,
+			ID:     rec[0],
+			CaseID: cid,
+			Status: rec[1],
+			Type:   rec[2],
+			Name:   rec[3],
+			Addr:   rec[4],
+			Notes:  rec[5],
 		}
 
-		if err = ctrl.store.SaveAsset(cid, obj); err != nil {
+		if err := ctrl.store.SaveAsset(cid, obj); err != nil {
 			utils.Err(w, r, err)
 		}
 	})

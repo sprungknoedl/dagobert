@@ -8,9 +8,9 @@
 		<tr>
 			{{ template "table-th" dict "name" "type" "sort" .env.Sort }}
 			{{ template "table-th" dict "name" "name" "sort" .env.Sort }}
-			{{ template "table-th" dict "name" "description" "sort" .env.Sort }}
 			{{ template "table-th" dict "name" "hash" "sort" .env.Sort }}
 			{{ template "table-th" dict "name" "size" "sort" .env.Sort }}
+			{{ template "table-th" dict "name" "notes" "sort" .env.Sort }}
 			<td style="width: 7rem"></td>
 		</tr>
 	</thead>
@@ -30,9 +30,9 @@
                 {{ .Type }}
             </td>
 			<td> {{ .Name }} </td>
-			<td> {{ .Description }} </td>
 			<td> {{ .Hash }} </td>
 			<td> {{ call $.humanizeSize .Size }} </td>
+			<td> {{ .Notes }} </td>
             <td class="px-6 py-2 flex justify-end join">
                 <a class="join-item btn btn-sm"
                     href="/cases/{{ .CaseID }}/evidences/{{ .ID }}/download"

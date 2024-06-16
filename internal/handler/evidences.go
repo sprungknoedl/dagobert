@@ -55,16 +55,15 @@ func (ctrl EvidenceCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Type", "Name", "Description", "Size", "Hash", "Location"})
+	cw.Write([]string{"ID", "Type", "Name", "Hash", "Size", "Notes"})
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
 			e.Type,
 			e.Name,
-			e.Description,
-			strconv.FormatInt(e.Size, 10),
 			e.Hash,
-			e.Location,
+			strconv.FormatInt(e.Size, 10),
+			e.Notes,
 		})
 	}
 
@@ -82,14 +81,13 @@ func (ctrl EvidenceCtrl) Import(w http.ResponseWriter, r *http.Request) {
 		}
 
 		obj := model.Evidence{
-			ID:          rec[0],
-			CaseID:      cid,
-			Type:        rec[1],
-			Name:        rec[2],
-			Description: rec[3],
-			Size:        size,
-			Hash:        rec[5],
-			Location:    rec[7],
+			ID:     rec[0],
+			CaseID: cid,
+			Type:   rec[1],
+			Name:   rec[2],
+			Hash:   rec[3],
+			Size:   size, // rec[4]
+			Notes:  rec[5],
 		}
 
 		err = ctrl.store.SaveEvidence(cid, obj)

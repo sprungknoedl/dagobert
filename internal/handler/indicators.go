@@ -48,14 +48,15 @@ func (ctrl IndicatorCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Type", "Value", "TLP", "Description", "Source"})
+	cw.Write([]string{"ID", "Status", "Type", "Value", "TLP", "Source", "Notes"})
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
+			e.Status,
 			e.Type,
 			e.Value,
 			e.TLP,
-			e.Description,
+			e.Notes,
 			e.Source,
 		})
 	}
@@ -66,15 +67,16 @@ func (ctrl IndicatorCtrl) Export(w http.ResponseWriter, r *http.Request) {
 func (ctrl IndicatorCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := r.URL.RequestURI()
-	ImportCSV(ctrl.store, w, r, uri, 6, func(rec []string) {
+	ImportCSV(ctrl.store, w, r, uri, 7, func(rec []string) {
 		obj := model.Indicator{
-			ID:          rec[0],
-			Type:        rec[1],
-			Value:       rec[2],
-			TLP:         rec[3],
-			Description: rec[4],
-			Source:      rec[5],
-			CaseID:      cid,
+			ID:     rec[0],
+			Status: rec[1],
+			Type:   rec[2],
+			Value:  rec[3],
+			TLP:    rec[4],
+			Source: rec[5],
+			Notes:  rec[6],
+			CaseID: cid,
 		}
 
 		err := ctrl.store.SaveIndicator(cid, obj)
