@@ -37,11 +37,11 @@ func Logger(next http.Handler) http.Handler {
 			duration = duration.Truncate(time.Second)
 		}
 
-		log.Printf("| %-3s | %13v | %15s | %s %q",
-			statusColor(fmt.Sprintf("%3d", lw.Status)),
+		log.Printf("|%-3s| %13v | %15s |%s %q",
+			statusColor(fmt.Sprintf(" %3d ", lw.Status)),
 			duration,
 			r.RemoteAddr,
-			methodColor(fmt.Sprintf("%-7s", r.Method)),
+			methodColor(fmt.Sprintf(" %-7s", r.Method)),
 			r.URL)
 	})
 }
