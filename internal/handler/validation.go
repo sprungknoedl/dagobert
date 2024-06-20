@@ -66,8 +66,8 @@ func ValidateMalware(dto model.Malware) valid.Result {
 
 func ValidateNote(dto model.Note) valid.Result {
 	return valid.Check([]valid.Condition{
+		{Name: "Category", Missing: dto.Category == ""},
 		{Name: "Title", Missing: dto.Title == ""},
-		{Name: "Description", Missing: dto.Description == ""},
 	})
 }
 
@@ -75,6 +75,6 @@ func ValidateTask(dto model.Task) valid.Result {
 	return valid.Check([]valid.Condition{
 		{Name: "Task", Missing: dto.Task == ""},
 		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !slices.Contains(model.TaskTypes, dto.Type)},
-		{Name: "DateDue", Message: "Invalid format, expected e.g. '2006-01-02'.", Missing: dto.DateDue.IsZero()},
+		{Name: "DateDue", Message: "Invalid format, expected e.g. '2006-01-02'."},
 	})
 }
