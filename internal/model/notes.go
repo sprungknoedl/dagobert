@@ -76,7 +76,7 @@ func (store *Store) SaveNote(cid string, obj Note) error {
 
 func (store *Store) DeleteNote(cid string, id string) error {
 	query := `
-	DELETE FROM malware
+	DELETE FROM notes
 	WHERE id = :id`
 
 	_, err := store.db.Exec(query,
