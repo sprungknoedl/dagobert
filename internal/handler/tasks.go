@@ -31,7 +31,7 @@ func (ctrl TaskCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Render(ctrl.store, w, r, "internal/views/tasks-many.html", map[string]any{
+	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/tasks-many.html", map[string]any{
 		"title": "Tasks",
 		"rows":  list,
 	})
@@ -67,7 +67,7 @@ func (ctrl TaskCtrl) Export(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl TaskCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	uri := r.URL.RequestURI()
+	uri := fmt.Sprintf("/cases/%s/tasks/", cid)
 	ImportCSV(ctrl.store, w, r, uri, 6, func(rec []string) {
 		done, err := strconv.ParseBool(cmp.Or(rec[3], "false"))
 		if err != nil {
@@ -108,7 +108,7 @@ func (ctrl TaskCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	utils.Render(ctrl.store, w, r, "internal/views/tasks-one.html", map[string]any{
+	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/tasks-one.html", map[string]any{
 		"obj":   obj,
 		"valid": valid.Result{},
 	})
@@ -122,7 +122,7 @@ func (ctrl TaskCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if vr := ValidateTask(dto); !vr.Valid() {
-		utils.Render(ctrl.store, w, r, "internal/views/tasks-one.html", map[string]any{
+		utils.Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/tasks-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,
 		})
@@ -135,7 +135,7 @@ func (ctrl TaskCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Refresh(w, r)
+	http.Redirect(w, r, fmt.Sprintf("/cases/%s/tasks/", dto.CaseID), http.StatusSeeOther)
 }
 
 func (ctrl TaskCtrl) Delete(w http.ResponseWriter, r *http.Request) {
@@ -143,9 +143,10 @@ func (ctrl TaskCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s/tasks/%s?confirm=yes", cid, id)
-		utils.Render(ctrl.store, w, r, "internal/views/utils-confirm.html", map[string]any{
+		utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
+		return
 	}
 
 	err := ctrl.store.DeleteTask(cid, id)
@@ -154,5 +155,5 @@ func (ctrl TaskCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Refresh(w, r)
+	http.Redirect(w, r, fmt.Sprintf("/cases/%s/tasks/", cid), http.StatusSeeOther)
 }

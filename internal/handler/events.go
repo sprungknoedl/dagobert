@@ -33,7 +33,7 @@ func (ctrl EventCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Render(ctrl.store, w, r, "internal/views/events-many.html", map[string]any{
+	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/events-many.html", map[string]any{
 		"title": "Timeline",
 		"rows":  list,
 		"hasTimeGap": func(list []model.Event, i int) string {
@@ -80,7 +80,7 @@ func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl EventCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	uri := r.URL.RequestURI()
+	uri := fmt.Sprintf("/cases/%s/events/", cid)
 	ImportCSV(ctrl.store, w, r, uri, 6, func(rec []string) {
 		t, err := time.Parse(time.RFC3339, rec[1])
 		if err != nil {
@@ -130,7 +130,7 @@ func (ctrl EventCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Render(ctrl.store, w, r, "internal/views/events-one.html", map[string]any{
+	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/events-one.html", map[string]any{
 		"obj":        obj,
 		"assets":     assets,
 		"indicators": indicators,
@@ -207,7 +207,7 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		utils.Render(ctrl.store, w, r, "internal/views/events-one.html", map[string]any{
+		utils.Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/events-one.html", map[string]any{
 			"obj":        dto,
 			"assets":     assets,
 			"indicators": indicators,
@@ -222,7 +222,7 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Refresh(w, r)
+	http.Redirect(w, r, fmt.Sprintf("/cases/%s/events/", dto.CaseID), http.StatusSeeOther)
 }
 
 func (ctrl EventCtrl) Delete(w http.ResponseWriter, r *http.Request) {
@@ -230,7 +230,7 @@ func (ctrl EventCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s/events/%s?confirm=yes", cid, id)
-		utils.Render(ctrl.store, w, r, "internal/views/utils-confirm.html", map[string]any{
+		utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
 		return
@@ -242,7 +242,7 @@ func (ctrl EventCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Refresh(w, r)
+	http.Redirect(w, r, fmt.Sprintf("/cases/%s/events/", cid), http.StatusSeeOther)
 }
 
 func humanizeDuration(duration time.Duration) string {

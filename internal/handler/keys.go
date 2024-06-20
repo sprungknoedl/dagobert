@@ -26,7 +26,7 @@ func (ctrl KeyCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Render(ctrl.store, w, r, "internal/views/keys-many.html", map[string]any{
+	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/keys-many.html", map[string]any{
 		"title": "API Keys",
 		"rows":  list,
 	})
@@ -44,7 +44,7 @@ func (ctrl KeyCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	utils.Render(ctrl.store, w, r, "internal/views/keys-one.html", map[string]any{
+	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/keys-one.html", map[string]any{
 		"obj":   obj,
 		"valid": valid.Result{},
 	})
@@ -58,7 +58,7 @@ func (ctrl KeyCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if vr := ValidateKey(dto); !vr.Valid() {
-		utils.Render(ctrl.store, w, r, "internal/views/keys-one.html", map[string]any{
+		utils.Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/keys-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,
 		})
@@ -71,16 +71,17 @@ func (ctrl KeyCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Refresh(w, r)
+	http.Redirect(w, r, fmt.Sprintf("/api-keys/"), http.StatusSeeOther)
 }
 
 func (ctrl KeyCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	key := r.PathValue("key")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/api-keys/%s?confirm=yes", key)
-		utils.Render(ctrl.store, w, r, "internal/views/utils-confirm.html", map[string]any{
+		utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
+		return
 	}
 
 	if err := ctrl.store.DeleteKey(key); err != nil {
@@ -88,5 +89,5 @@ func (ctrl KeyCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Refresh(w, r)
+	http.Redirect(w, r, fmt.Sprintf("/api-keys/"), http.StatusSeeOther)
 }

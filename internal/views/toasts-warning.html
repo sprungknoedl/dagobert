@@ -1,9 +1,15 @@
-<div class="alert alert-warning w-[42rem] m-4" role="alert"
-    @click="$el.remove()"
-    x-init="setTimeout(() => $el.remove(), 5000)">
-    {{ template "icon-exclamation-circle-filled" "w-8 h-8" }}
-    <div>
-        <h3 class="font-bold">Bad request.</h3>
-        <div class="text-cs">{{ .err }}</div>
+<!DOCTYPE html>
+<html lang="en">
+{{ template "layout-head" }}
+<body>
+    <main>
+    <div class="alert alert-warning w-[42rem] m-4" up-flashes
+        @click="$el.remove()">
+        {{ template "icon-exclamation-circle-filled" "w-8 h-8" }}
+        <div>
+            <h3 class="font-bold">Bad request.</h3>
+            <div class="text-cs">{{ .err }}</div>
+        </div>
     </div>
-</div>
+    </main>
+</body>

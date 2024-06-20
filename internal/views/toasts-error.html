@@ -1,4 +1,10 @@
+<!DOCTYPE html>
+<html lang="en">
+{{ template "layout-head" }}
+<body>
+<main>
 	<div class="alert alert-error w-[42rem] m-4" role="alert"
+		up-flashes
     	@click="$el.remove()">
 		{{ template "icon-x-circle-filled" "w-8 h-8" }}
 		<div>
@@ -6,3 +12,5 @@
 			<div class="text-xs">{{ .err }}</div>
 		</div>
 	</div>
+</main>
+</body>

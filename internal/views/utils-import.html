@@ -1,21 +1,11 @@
-<div id="modal" class="drawer-side z-50"
-    hx-swap-oob="true"
-    @htmx:load="drawer = true" >
-
-    <label class="drawer-overlay"
-        @click="drawer = false"
-        @keydown.escape.window="drawer = false"></label>
-
-    <div class="bg-base-200 text-base-content p-4 min-h-full w-[42rem]">
-    <form
-        hx-post="{{ .dst }}"
-        hx-encoding="multipart/form-data" 
-        hx-target="#modal">
-
+<!DOCTYPE html>
+<html lang="en">
+{{ template "layout-head" }}
+<body>
+<main>
+    <form method="post" up-submit
+        enctype="multipart/form-data">
         <!-- Modal header -->
-        <button type="button" class="btn btn-sm btn-circle btn-ghost absolute top-3 end-3"
-            @click="drawer = false"> x </button>
-
         <h3 class="font-bold text-lg mb-4">
             Import from CSV
         </h3>
@@ -33,12 +23,10 @@
         </div>
 
         <!-- Modal footer -->
-		<div class="flex gap-2 items-center justify-center">
-            <button type="submit" class="btn btn-primary"
-                @click="drawer = false"> Import </button>
-            <button type="button" class="btn"
-                @click="drawer = false"> Cancel </button>
+        <div class="flex gap-2 items-center">
+            <button type="submit" class="btn btn-primary"> Save </button>
+            <a class="btn" up-dismiss> Cancel </a>
         </div>
     </form>
-    </div>
-</div>
+    </main>
+</body>

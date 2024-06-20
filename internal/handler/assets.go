@@ -29,7 +29,7 @@ func (ctrl AssetCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Render(ctrl.store, w, r, "internal/views/assets-many.html", map[string]any{
+	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/assets-many.html", map[string]any{
 		"env":   utils.GetEnv(ctrl.store, r),
 		"title": "Assets",
 		"rows":  list,
@@ -66,7 +66,7 @@ func (ctrl AssetCtrl) Export(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl AssetCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	uri := r.URL.RequestURI()
+	uri := fmt.Sprintf("/cases/%s/assets/", cid)
 	ImportCSV(ctrl.store, w, r, uri, 6, func(rec []string) {
 		obj := model.Asset{
 			ID:     rec[0],
@@ -97,7 +97,7 @@ func (ctrl AssetCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	utils.Render(ctrl.store, w, r, "internal/views/assets-one.html", map[string]any{
+	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/assets-one.html", map[string]any{
 		"obj":   obj,
 		"valid": valid.Result{},
 	})
@@ -111,10 +111,11 @@ func (ctrl AssetCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if vr := ValidateAsset(dto); !vr.Valid() {
-		utils.Render(ctrl.store, w, r, "internal/views/assets-one.html", map[string]any{
+		utils.Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/assets-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,
 		})
+		return
 	}
 
 	dto.ID = utils.If(dto.ID == "new", "", dto.ID)
@@ -123,7 +124,7 @@ func (ctrl AssetCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Refresh(w, r)
+	http.Redirect(w, r, fmt.Sprintf("/cases/%s/assets/", dto.CaseID), http.StatusSeeOther)
 }
 
 func (ctrl AssetCtrl) Delete(w http.ResponseWriter, r *http.Request) {
@@ -131,9 +132,10 @@ func (ctrl AssetCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s/assets/%s?confirm=yes", cid, id)
-		utils.Render(ctrl.store, w, r, "internal/views/utils-confirm.html", map[string]any{
+		utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
+		return
 	}
 
 	err := ctrl.store.DeleteAsset(cid, id)
@@ -142,5 +144,5 @@ func (ctrl AssetCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Refresh(w, r)
+	http.Redirect(w, r, fmt.Sprintf("/cases/%s/assets/", cid), http.StatusSeeOther)
 }

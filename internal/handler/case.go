@@ -30,7 +30,7 @@ func (ctrl CaseCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Render(ctrl.store, w, r, "internal/views/cases-many.html", map[string]any{
+	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/cases-many.html", map[string]any{
 		"title": "Cases",
 		"rows":  list,
 	})
@@ -65,7 +65,7 @@ func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
-	uri := r.URL.RequestURI()
+	uri := fmt.Sprintf("/")
 	ImportCSV(ctrl.store, w, r, uri, 7, func(rec []string) {
 		closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
 		if err != nil {
@@ -101,7 +101,7 @@ func (ctrl CaseCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	utils.Render(ctrl.store, w, r, "internal/views/cases-one.html", map[string]any{
+	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/cases-one.html", map[string]any{
 		"obj":   obj,
 		"valid": valid.Result{},
 	})
@@ -115,7 +115,7 @@ func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if vr := ValidateCase(dto); !vr.Valid() {
-		utils.Render(ctrl.store, w, r, "internal/views/cases-one.html", map[string]any{
+		utils.Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/cases-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,
 		})
@@ -128,14 +128,14 @@ func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Refresh(w, r)
+	http.Redirect(w, r, fmt.Sprintf("/"), http.StatusSeeOther)
 }
 
 func (ctrl CaseCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s?confirm=yes", cid)
-		utils.Render(ctrl.store, w, r, "internal/views/utils-confirm.html", map[string]any{
+		utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
 		return
@@ -146,5 +146,5 @@ func (ctrl CaseCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Refresh(w, r)
+	http.Redirect(w, r, fmt.Sprintf("/"), http.StatusSeeOther)
 }

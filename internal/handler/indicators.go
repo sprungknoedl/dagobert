@@ -29,7 +29,7 @@ func (ctrl IndicatorCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Render(ctrl.store, w, r, "internal/views/indicators-many.html", map[string]any{
+	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/indicators-many.html", map[string]any{
 		"title": "Indicators",
 		"rows":  list,
 	})
@@ -66,7 +66,7 @@ func (ctrl IndicatorCtrl) Export(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl IndicatorCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	uri := r.URL.RequestURI()
+	uri := fmt.Sprintf("/cases/%s/indicators/", cid)
 	ImportCSV(ctrl.store, w, r, uri, 7, func(rec []string) {
 		obj := model.Indicator{
 			ID:     rec[0],
@@ -97,7 +97,7 @@ func (ctrl IndicatorCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	utils.Render(ctrl.store, w, r, "internal/views/indicators-one.html", map[string]any{
+	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/indicators-one.html", map[string]any{
 		"obj":   obj,
 		"valid": valid.Result{},
 	})
@@ -111,7 +111,7 @@ func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if vr := ValidateIndicator(dto); !vr.Valid() {
-		utils.Render(ctrl.store, w, r, "internal/views/indicators-one.html", map[string]any{
+		utils.Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/indicators-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,
 		})
@@ -124,7 +124,7 @@ func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Refresh(w, r)
+	http.Redirect(w, r, fmt.Sprintf("/cases/%s/indicators/", dto.CaseID), http.StatusSeeOther)
 }
 
 func (ctrl IndicatorCtrl) Delete(w http.ResponseWriter, r *http.Request) {
@@ -132,9 +132,10 @@ func (ctrl IndicatorCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s/indicators/%s?confirm=yes", cid, id)
-		utils.Render(ctrl.store, w, r, "internal/views/utils-confirm.html", map[string]any{
+		utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
+		return
 	}
 
 	err := ctrl.store.DeleteIndicator(cid, id)
@@ -143,5 +144,5 @@ func (ctrl IndicatorCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Refresh(w, r)
+	http.Redirect(w, r, fmt.Sprintf("/cases/%s/indicators/", cid), http.StatusSeeOther)
 }

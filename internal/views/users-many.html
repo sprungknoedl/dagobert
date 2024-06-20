@@ -1,6 +1,9 @@
-{{ template "layout-begin" . }}
+<!DOCTYPE html>
+<html lang="en">
+{{ template "layout-head" }}
+<body>
     {{ template "table-view" . }}
-{{ template "layout-end" . }}
+</body>
 
 {{ define "table-content" }}
 <table id="list" class="table w-full">

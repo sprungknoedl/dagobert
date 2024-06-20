@@ -1,22 +1,14 @@
-<div id="modal" class="drawer-side z-50"
-    hx-swap-oob="true"
-    @htmx:load="drawer = true" >
-
-    <label class="drawer-overlay"
-        @click="drawer = false"
-        @keydown.escape.window="drawer = false"></label>
-
-    <div class="bg-base-200 text-base-content p-4 min-h-full w-[42rem]">
-    <form
-        hx-post="/cases/{{ .obj.CaseID }}/events/{{ .obj.ID }}"
-        hx-target="#modal">
-
+<!DOCTYPE html>
+<html lang="en">
+{{ template "layout-head" }}
+<body>
+    <main>
+    <form method="post" action="/cases/{{ .obj.CaseID }}/events/{{ .obj.ID }}" up-submit>
         <!-- Modal header -->
-        <button type="button" class="btn btn-sm btn-circle btn-ghost absolute top-3 end-3"
-            @click="drawer = false"> x </button>
-
         <h3 class="font-bold text-lg mb-4">
-            {{ .name }}
+            {{ if eq .obj.ID "new" }} Add event
+            {{ else }} Edit event
+            {{ end }}
         </h3>
 
         <!-- Modal body -->
@@ -28,7 +20,7 @@
                 <label class="label justify-start gap-2">
                     Time
                     <span class="text-primary">*</span>
-				    {{ if .valid.Time }}<span class="ml-2 text-sm text-error">{{ .valid.Time }}</span>{{ end }}
+                    {{ if .valid.Time }}<span class="ml-2 text-sm text-error">{{ .valid.Time }}</span>{{ end }}
                 </label>
                 <input name="Time" type="text" class="input input-bordered" value="{{ .obj.Time.Format "2006-01-02T15:04:05Z07:00" }}"
                     x-init="setTimeout(() => $el.focus(), 100)" />
@@ -38,7 +30,7 @@
                 <label class="label justify-start gap-2">
                     Type
                     <span class="text-primary">*</span>
-				    {{ if .valid.Type }}<span class="ml-2 text-sm text-error">{{ .valid.Type }}</span>{{ end }}
+                    {{ if .valid.Type }}<span class="ml-2 text-sm text-error">{{ .valid.Type }}</span>{{ end }}
                 </label>
                 <select name="Type" class="select select-bordered">
                     <option disabled value="" {{ if eq .obj.Type "" }}selected{{ end }}>Select an option</option>
@@ -52,7 +44,7 @@
                 <label class="label justify-start gap-2">
                     Event
                     <span class="text-primary">*</span>
-				    {{ if .valid.Event }}<span class="ml-2 text-sm text-error">{{ .valid.Event }}</span>{{ end }}
+                    {{ if .valid.Event }}<span class="ml-2 text-sm text-error">{{ .valid.Event }}</span>{{ end }}
                 </label>
                 <textarea name="Event" rows="5" class="textarea textarea-bordered">{{ .obj.Event }}</textarea>
             </div>
@@ -60,7 +52,7 @@
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Raw
-				    {{ if .valid.Raw }}<span class="ml-2 text-sm text-error">{{ .valid.Raw }}</span>{{ end }}
+                    {{ if .valid.Raw }}<span class="ml-2 text-sm text-error">{{ .valid.Raw }}</span>{{ end }}
                 </label>
                 <textarea name="Raw" rows="5" class="textarea textarea-bordered">{{ .obj.Raw }}</textarea>
             </div>
@@ -68,7 +60,7 @@
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Assets
-				    {{ if .valid.System }}<span class="ml-2 text-sm text-error">{{ .valid.Assets }}</span>{{ end }}
+                    {{ if .valid.System }}<span class="ml-2 text-sm text-error">{{ .valid.Assets }}</span>{{ end }}
                 </label>
                 <select multiple name="Assets" class="tom select select-bordered">
                     {{ range .assets }}
@@ -80,7 +72,7 @@
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Indicators
-				    {{ if .valid.System }}<span class="ml-2 text-sm text-error">{{ .valid.Indicators }}</span>{{ end }}
+                    {{ if .valid.System }}<span class="ml-2 text-sm text-error">{{ .valid.Indicators }}</span>{{ end }}
                 </label>
                 <select multiple name="Indicators" class="tom select select-bordered">
                     {{ range .indicators }}
@@ -94,17 +86,15 @@
 
         <!-- Modal footer -->
         <div class="flex gap-2 items-center">
-            <button type="submit" class="btn btn-primary"
-                @click="drawer = false"> Save </button>
-            <button type="button" class="btn"
-                @click="drawer = false"> Cancel </button>
+            <button type="submit" class="btn btn-primary"> Save </button>
+            <a class="btn" up-dismiss> Cancel </a>
         </div>
-    </form>
-    </div>
 
-    <script>
-        document.querySelectorAll('.tom').forEach((el)=>{ new TomSelect(el, {
-            create: function(input){ return {value:'new:'+input,text:input} }
-        }); });
-    </script>
-</div>
+        <script>
+            document.querySelectorAll('.tom').forEach((el)=>{ new TomSelect(el, {
+                create: function(input){ return {value:'new:'+input,text:input} }
+            }); });
+        </script>
+    </form>
+    </main>
+</body>

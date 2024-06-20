@@ -15,7 +15,7 @@ var ZeroTime time.Time
 
 func ImportCSV(store *model.Store, w http.ResponseWriter, r *http.Request, uri string, numFields int, cb func(rec []string)) {
 	if r.Method == http.MethodGet {
-		utils.Render(store, w, r, "internal/views/utils-import.html", map[string]any{"dst": uri})
+		utils.Render(store, w, r, http.StatusOK, "internal/views/utils-import.html", map[string]any{})
 		return
 	}
 
@@ -42,5 +42,5 @@ func ImportCSV(store *model.Store, w http.ResponseWriter, r *http.Request, uri s
 		cb(rec)
 	}
 
-	utils.Refresh(w, r)
+	http.Redirect(w, r, uri, http.StatusSeeOther)
 }

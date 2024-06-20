@@ -55,7 +55,7 @@ func LoadTemplates(root string) error {
 
 func (ctrl ReportCtrl) List(w http.ResponseWriter, r *http.Request) {
 	list := utils.ApplyM(templates, func(x doct.Template) string { return x.Name() })
-	utils.Render(ctrl.store, w, r, "internal/views/reports-dialog.html", map[string]any{
+	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/reports-dialog.html", map[string]any{
 		"list": list,
 	})
 }

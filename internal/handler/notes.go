@@ -29,7 +29,7 @@ func (ctrl NoteCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Render(ctrl.store, w, r, "internal/views/notes-many.html", map[string]any{
+	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/notes-many.html", map[string]any{
 		"title": "Notes",
 		"rows":  list,
 	})
@@ -63,7 +63,7 @@ func (ctrl NoteCtrl) Export(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl NoteCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	uri := r.URL.RequestURI()
+	uri := fmt.Sprintf("/cases/%s/notes/", cid)
 	ImportCSV(ctrl.store, w, r, uri, 4, func(rec []string) {
 		obj := model.Note{
 			ID:          rec[0],
@@ -91,7 +91,7 @@ func (ctrl NoteCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	utils.Render(ctrl.store, w, r, "internal/views/notes-one.html", map[string]any{
+	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/notes-one.html", map[string]any{
 		"obj":   obj,
 		"valid": valid.Result{},
 	})
@@ -105,7 +105,7 @@ func (ctrl NoteCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if vr := ValidateNote(dto); !vr.Valid() {
-		utils.Render(ctrl.store, w, r, "internal/views/notes-one.html", map[string]any{
+		utils.Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/notes-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,
 		})
@@ -118,7 +118,7 @@ func (ctrl NoteCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Refresh(w, r)
+	http.Redirect(w, r, fmt.Sprintf("/cases/%s/notes/", dto.CaseID), http.StatusSeeOther)
 }
 
 func (ctrl NoteCtrl) Delete(w http.ResponseWriter, r *http.Request) {
@@ -126,9 +126,10 @@ func (ctrl NoteCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s/notes/%s?confirm=yes", cid, id)
-		utils.Render(ctrl.store, w, r, "internal/views/utils-confirm.html", map[string]any{
+		utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
+		return
 	}
 
 	err := ctrl.store.DeleteNote(cid, id)
@@ -137,5 +138,5 @@ func (ctrl NoteCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Refresh(w, r)
+	http.Redirect(w, r, fmt.Sprintf("/cases/%s/notes/", cid), http.StatusSeeOther)
 }

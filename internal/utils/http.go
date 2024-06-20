@@ -24,11 +24,8 @@ func Warn(w http.ResponseWriter, r *http.Request, err error) {
 		return
 	}
 
-	log.Printf("| %s | %v", tty.Yellow("WAR"), err)
-
-	w.Header().Add("HX-Retarget", "#errors")
-	w.Header().Add("HX-Reswap", "beforeend")
-	render(w, r, "internal/views/toasts-warning.html", map[string]any{"err": err})
+	log.Printf("|%s| %v", tty.Yellow(" WAR "), err)
+	render(w, r, http.StatusBadRequest, "internal/views/toasts-warning.html", map[string]any{"err": err})
 }
 
 func Err(w http.ResponseWriter, r *http.Request, err error) {
@@ -36,14 +33,11 @@ func Err(w http.ResponseWriter, r *http.Request, err error) {
 		return
 	}
 
-	log.Printf("| %s | %v", tty.Red("ERR"), err)
-
-	w.Header().Add("HX-Retarget", "#errors")
-	w.Header().Add("HX-Reswap", "beforeend")
-	render(w, r, "internal/views/toasts-error.html", map[string]any{"err": err})
+	log.Printf("|%s| %v", tty.Red(" ERR "), err)
+	render(w, r, http.StatusInternalServerError, "internal/views/toasts-error.html", map[string]any{"err": err})
 }
 
-func Render(store *model.Store, w http.ResponseWriter, r *http.Request, name string, values map[string]any) {
+func Render(store *model.Store, w http.ResponseWriter, r *http.Request, status int, name string, values map[string]any) {
 	values["env"] = GetEnv(store, r)
 	values["model"] = map[string]any{
 		"AssetStatus":     model.AssetStatus,
@@ -59,10 +53,10 @@ func Render(store *model.Store, w http.ResponseWriter, r *http.Request, name str
 		"TaskTypes":       model.TaskTypes,
 	}
 
-	render(w, r, name, values)
+	render(w, r, status, name, values)
 }
 
-func render(w http.ResponseWriter, r *http.Request, name string, values map[string]any) {
+func render(w http.ResponseWriter, r *http.Request, status int, name string, values map[string]any) {
 	tpl, err := template.New(filepath.Base(name)).Funcs(template.FuncMap{
 		"lower": strings.ToLower,
 		"upper": strings.ToUpper,
@@ -91,15 +85,11 @@ func render(w http.ResponseWriter, r *http.Request, name string, values map[stri
 		return
 	}
 
+	w.WriteHeader(status)
 	if err = tpl.Execute(w, values); err != nil {
 		log.Printf("| %s | %v", tty.Red("ERR"), err)
 		return
 	}
-}
-
-func Refresh(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("HX-Refresh", "true")
-	w.WriteHeader(http.StatusOK)
 }
 
 func Decode(r *http.Request, dst any) error {
@@ -135,7 +125,7 @@ func GetEnv(store *model.Store, r *http.Request) Env {
 
 	return Env{
 		Username:    user,
-		ActiveRoute: r.RequestURI,
+		ActiveRoute: r.URL.Path,
 		ActiveCase:  kase,
 		Search:      r.URL.Query().Get("search"),
 		Sort:        r.URL.Query().Get("sort"),

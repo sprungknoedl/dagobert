@@ -1,48 +1,44 @@
-{{ define "layout-begin" }}
-<!DOCTYPE html>
-<html lang="en" dir="ltr" data-theme="nord">
+{{ define "layout-head" }}
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dagobert</title>
     <link href="/dist/tom-select.css" rel="stylesheet" />
+    <link href="/dist/unpoly.min.css" rel="stylesheet" />
     <link href="/dist/dagobert.css" rel="stylesheet" />
 
     <script src="/dist/alpine.min.js" defer></script>
-    <script src="/dist/htmx.min.js" defer></script>
+    <script src="/dist/unpoly.min.js" defer></script>
     <script src="/dist/tom-select.base.js" defer></script>
+    <script>
+    onload = (event) => {
+        up.log.enable();
+        up.network.config.autoCache = (request) => false;
+        up.network.config.wrapMethod = false;
+        up.layer.config.drawer.position = 'right';
+        up.layer.config.drawer.size = 'large';
+
+        up.compiler('#list', (elem, data) => {
+            // auto reload #list when server returns it in an overlay
+            elem.setAttribute('up-hungry', '');
+            elem.setAttribute('up-if-layer', 'subtree')
+        });
+    };
+    </script>
 </head>
-<body class="drawer drawer-end" x-data="{drawer: false}">
-    <input type="checkbox" class="drawer-toggle" x-model="drawer" />
-    <div class="drawer-content flex">
-        {{ template "sidebar" . }}
-{{ end }}
-
-{{ define "layout-end" }}
-    </div>
-
-    <div id="modal" class="drawer-side z-50" hx-swap-oob="true"></div>
-    <div id="errors" class="fixed bottom-0 right-0 z-50"></div>
-</body>
-</html>
 {{ end }}
 
 {{ define "table-view" }}
-<main class="p-8 grow">
-    <form
-        hx-get="#"
-        hx-trigger="input delay:500ms, sort"
-        hx-target="#list"
-        hx-select="#list"
-        hx-swap="outerHTML"
-        hx-push-url="true"
-        x-data="{ sort_by: '{{ .env.Sort }}' }" >
+<div class="drawer-content flex">
+    <div up-flashes></div>
 
+    {{ template "sidebar" . }}
+
+    <main class="p-8 grow" x-data="{ sort_by: '{{ .env.Sort }}' }" >
         {{ template "navbar" . }}
         {{ template "table-content" . }}
-
-    </form>
-</main>
+    </main>
+</div>
 {{ end }}
 
 {{ define "table-th" }}
@@ -69,6 +65,7 @@
     </div>
 
     <div class="flex gap-5 items-center">
+        <form method="get" action="./" up-target="#list" up-autosubmit up-watch-delay="500">
         <!-- search input -->
         <label class="w-96 input input-bordered flex items-center gap-2">
             <input type="search" name="search" value="{{ .env.Search }}" class="grow" placeholder="Search ..." />
@@ -81,41 +78,32 @@
 	    <input name="sort" type="hidden" value="{{ .env.Sort }}"
             x-model="sort_by"
             x-init="$watch('sort_by', () => { $dispatch('sort'); } )" />
+        </form>
 
         <!-- buttons -->
         <div class="join" role="group">
-            <button type="button" class="join-item btn"
-                hx-get="import"
-                hx-target="#modal"
-                hx-select="dialog"
-                hx-swap="innerHTML"
-                hx-push-url="false",
+            <a class="join-item btn" href="import"
+                up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}"
                 @keydown.i.ctrl.window="$el.click()">
                 {{ template "icon-arrow-up-tray" "inline-block mr-1 w-5 h-5" }}
                 Import CSV
             </button>
 
-            <a type="button" class="join-item btn"
-                href="export"
+            <a class="join-item btn" href="export"
                 @keydown.e.ctrl.window="$el.click()">
                 {{ template "icon-arrow-down-tray" "inline-block mr-1 w-5 h-5" }}
                 Export CSV
             </a>
 
-            <button type="button" class="join-item btn"
-                @click="$dispatch('sort')"
+            <a class="join-item btn" href="./"
+                up-target="#list"
                 @keydown.r.ctrl.window="$el.click()">
                 {{ template "icon-arrow-path" "inline-block mr-1 w-5 h-5" }}
                 Refresh
             </button>
 
-            <a type="button" class="join-item btn"
-                href="new"
-                hx-get="new"
-                hx-target="#modal"
-                hx-select="dialog"
-                hx-swap="innerHTML"
-                hx-push-url="false",
+            <a class="join-item btn" href="new"
+                up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}"
                 @keydown.n.ctrl.window="$el.click()">
                 {{ template "icon-plus" "inline-block mr-1 w-5 h-5" }}
                 Add
@@ -153,9 +141,7 @@
 
     <div class="divider"></div>
     <ul class="menu gap-2">
-		<li><a href="#report" data-tip="Report" class='tooltip tooltip-right'
-            hx-get="/cases/{{ .env.ActiveCase.ID }}/reports"
-            hx-target="#modal"> {{ template "icon-document-arrow-down" "w-6 h-6" }} </a></li>
+		<li><a href="/cases/{{ .env.ActiveCase.ID }}/reports" data-tip="Report" class='tooltip tooltip-right' up-layer="new drawer"> {{ template "icon-document-arrow-down" "w-6 h-6" }} </a></li>
     </ul>
     {{ end }}
 

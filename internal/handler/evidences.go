@@ -35,7 +35,7 @@ func (ctrl EvidenceCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Render(ctrl.store, w, r, "internal/views/evidences-many.html", map[string]any{
+	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/evidences-many.html", map[string]any{
 		"title":        "Evidences",
 		"rows":         list,
 		"humanizeSize": humanizeSize,
@@ -72,7 +72,7 @@ func (ctrl EvidenceCtrl) Export(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl EvidenceCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	uri := r.URL.RequestURI()
+	uri := fmt.Sprintf("/cases/%s/evidences/", cid)
 	ImportCSV(ctrl.store, w, r, uri, 7, func(rec []string) {
 		size, err := strconv.ParseInt(rec[4], 10, 64)
 		if err != nil {
@@ -108,7 +108,7 @@ func (ctrl EvidenceCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	utils.Render(ctrl.store, w, r, "internal/views/evidences-one.html", map[string]any{
+	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/evidences-one.html", map[string]any{
 		"obj":   obj,
 		"valid": valid.Result{},
 	})
@@ -148,7 +148,7 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	dto.Location = ""
 	dto.Name = filepath.Base(dto.Name) // sanitize name
 	if vr := ValidateEvidence(dto); !vr.Valid() {
-		utils.Render(ctrl.store, w, r, "internal/views/evidences-one.html", map[string]any{
+		utils.Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/evidences-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,
 		})
@@ -202,7 +202,7 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Refresh(w, r)
+	http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/", dto.CaseID), http.StatusSeeOther)
 }
 
 func (ctrl EvidenceCtrl) Delete(w http.ResponseWriter, r *http.Request) {
@@ -210,9 +210,10 @@ func (ctrl EvidenceCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s/evidences/%s?confirm=yes", cid, id)
-		utils.Render(ctrl.store, w, r, "internal/views/utils-confirm.html", map[string]any{
+		utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
+		return
 	}
 
 	// TODO: delete file from fs
@@ -222,7 +223,7 @@ func (ctrl EvidenceCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.Refresh(w, r)
+	http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/", cid), http.StatusSeeOther)
 }
 
 func humanizeSize(s int) string {

@@ -1,22 +1,14 @@
-<div id="modal" class="drawer-side z-50"
-    hx-swap-oob="true"
-    @htmx:load="drawer = true" >
-
-    <label class="drawer-overlay"
-        @click="drawer = false"
-        @keydown.escape.window="drawer = false"></label>
-
-    <div class="bg-base-200 text-base-content p-4 min-h-full w-[42rem]">
-    <form
-        hx-post="/api-keys/{{ .obj.Key }}"
-        hx-target="#modal" >
-
+<!DOCTYPE html>
+<html lang="en">
+{{ template "layout-head" }}
+<body>
+    <main>
+    <form method="post" action="/api-keys/{{ .obj.Key }}" up-submit>
         <!-- Modal header -->
-        <button type="button" class="btn btn-sm btn-circle btn-ghost absolute top-3 end-3"
-            @click="drawer = false"> x </button>
-
         <h3 class="font-bold text-lg mb-4">
-            {{ .name }}
+            {{ if eq .obj.Key "new" }} Add API key
+            {{ else }} Edit API key
+            {{ end }}
         </h3>
 
         <!-- Modal body -->
@@ -38,11 +30,9 @@
 
         <!-- Modal footer -->
         <div class="flex gap-2 items-center">
-            <button type="submit" class="btn btn-primary"
-                @click="drawer = false"> Save </button>
-            <button type="button" class="btn"
-                @click="drawer = false"> Cancel </button>
+            <button type="submit" class="btn btn-primary"> Save </button>
+            <a class="btn" up-dismiss> Cancel </a>
         </div>
     </form>
-    </div>
-</div>
+    </main>
+</body>

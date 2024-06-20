@@ -3,9 +3,15 @@
 @import "tailwindcss/utilities";
 
 /*
-.btn, .input, .select, .file-input, .badge {
-    @apply rounded-full;
+UNPOLY
+*/
+
+up-drawer-box {
+    @apply bg-base-200 text-base-content;
 }
+
+/*
+TOM SELECT
 */
 
 .tooltip::before {
