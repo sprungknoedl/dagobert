@@ -1,9 +1,16 @@
 module.exports = {
-  content: ["./internal/**/*.templ", "./internal/**/*.html"],
+  content: ["./internal/**/*.html"],
 
   plugins: [require("daisyui")],
 
   daisyui: {
-    themes: ["nord"],
+    themes: [
+      {
+        dark: {
+          ...require("daisyui/src/theming/themes")["dark"],
+          fontFamily: "ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,Liberation Mono,Courier New,monospace",
+        },
+      }, 
+    ],
   },
 };

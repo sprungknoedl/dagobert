@@ -18,14 +18,14 @@
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Name
-                    <span class="text-primary">*</span>
+                    <span class="text-accent">*</span>
 				    {{ if .valid.Name }}<span class="ml-2 text-sm text-error">{{ .valid.Name }}</span>{{ end }}
                 </label>
                 <input name="Name" type="text" class="input input-bordered" value="{{ .obj.Name }}"
                     x-init="setTimeout(() => $el.focus(), 100)" />
             </div>
 
-            <p class="text-sm text-neutral">Fields marked with <span class="text-primary">*</span> are required.</p>
+            <p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
         </div>
 
         <!-- Modal footer -->

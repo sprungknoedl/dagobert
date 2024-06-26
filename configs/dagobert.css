@@ -1,6 +1,6 @@
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /*
 UNPOLY
@@ -29,8 +29,8 @@ TOM SELECT
 }
 
 .ts-wrapper.multi .ts-control > .item {
-    @apply p-0 m-0 mr-2;
-    @apply badge badge-outline badge-secondary;
+    @apply badge badge-neutral;
+    @apply p-0 px-2 m-0 mr-2;
     height: unset;
     line-height: unset;
 }

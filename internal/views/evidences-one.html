@@ -21,7 +21,7 @@
 			<div class="form-control mb-2">
 				<label class="label justify-start gap-2">
                     File
-                    <span class="text-primary">*</span>
+                    <span class="text-accent">*</span>
                 </label>
 				<input name="File" type="file" class="file-input file-input-bordered w-full"
                     @change="filename = Object.values($event.target.files).map(file => file.name).join(', ')"
@@ -31,7 +31,7 @@
 			<div class="form-control mb-2">
 				<label class="label justify-start gap-2">
 					Name
-                    <span class="text-primary">*</span>
+                    <span class="text-accent">*</span>
 				    {{ if .valid.Name }}<span class="ml-2 text-sm text-error">{{ .valid.Name }}</span>{{ end }}
 				</label>
 
@@ -43,7 +43,7 @@
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Type
-                    <span class="text-primary">*</span>
+                    <span class="text-accent">*</span>
 				    {{ if .valid.Type }}<span class="ml-2 text-sm text-error">{{ .valid.Type }}</span>{{ end }}
                 </label>
                 <select name="Type" class="select select-bordered">
@@ -62,20 +62,7 @@
                 <textarea name="Notes" rows="5" class="textarea textarea-bordered">{{ .obj.Notes }}</textarea>
             </div>
 
-			<div class="form-control mb-2">
-                <label class="label justify-start gap-2">
-                    Progress
-                </label>
-				<progress id="progress" class="progress w-full" value="0" max="100"></progress>
-
-				<script>
-					htmx.on('#form', 'htmx:xhr:progress', function(evt) {
-					htmx.find('#progress').setAttribute('value', (evt.detail.loaded/evt.detail.total * 100))
-					});
-				</script>
-			</div>
-
-            <p class="text-sm text-neutral">Fields marked with <span class="text-primary">*</span> are required.</p>
+            <p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
         </div>
 
         <!-- Modal footer -->

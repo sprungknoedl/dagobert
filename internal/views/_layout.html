@@ -55,12 +55,12 @@
     <div class="breadcrumbs font-bold text-2xl">
         <ul>
             {{ if ne .env.ActiveCase.ID "" }}
-            <li class="text-neutral inline-flex gap-2">
+            <li class="inline-flex gap-2">
                 {{ template "icon-briefcase" "inline-block w-5 h-5" }}
                 {{ .env.ActiveCase.Name }}
             </li>
             {{ end }}
-            <li>{{ .title }}</li>
+            <li class="text-accent">{{ .title }}</li>
         </ul>
     </div>
 
@@ -102,7 +102,7 @@
                 Refresh
             </button>
 
-            <a class="join-item btn" href="new"
+            <a class="join-item btn btn-accent" href="new"
                 up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}"
                 @keydown.n.ctrl.window="$el.click()">
                 {{ template "icon-plus" "inline-block mr-1 w-5 h-5" }}
