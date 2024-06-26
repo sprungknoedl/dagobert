@@ -8,9 +8,9 @@ import (
 	"net/url"
 	"os"
 
+	"github.com/sprungknoedl/dagobert/internal/extensions"
 	"github.com/sprungknoedl/dagobert/internal/handler"
 	"github.com/sprungknoedl/dagobert/internal/model"
-	"github.com/sprungknoedl/dagobert/internal/utils"
 	"github.com/sprungknoedl/dagobert/pkg/tty"
 )
 
@@ -53,6 +53,14 @@ func main() {
 	err = InitializeDagobert(db, cfg)
 	if err != nil {
 		log.Fatalf("Failed to initialize dagobert: %v", err)
+	}
+
+	// --------------------------------------
+	// Extensions
+	// --------------------------------------
+	err = extensions.Load()
+	if err != nil {
+		log.Fatalf("Failed to load extensions: %v", err)
 	}
 
 	// --------------------------------------
@@ -172,6 +180,8 @@ func main() {
 	mux.HandleFunc("POST /cases/{cid}/evidences/import", evidenceCtrl.Import)
 	mux.HandleFunc("GET /cases/{cid}/evidences/{id}", evidenceCtrl.Edit)
 	mux.HandleFunc("GET /cases/{cid}/evidences/{id}/download", evidenceCtrl.Download)
+	mux.HandleFunc("GET /cases/{cid}/evidences/{id}/run", evidenceCtrl.Extensions)
+	mux.HandleFunc("POST /cases/{cid}/evidences/{id}/run", evidenceCtrl.Run)
 	mux.HandleFunc("POST /cases/{cid}/evidences/{id}", evidenceCtrl.Save)
 	mux.HandleFunc("DELETE /cases/{cid}/evidences/{id}", evidenceCtrl.Delete)
 
@@ -196,10 +206,10 @@ func main() {
 	mux.HandleFunc("DELETE /cases/{cid}/notes/{id}", noteCtrl.Delete)
 
 	// --------------------------------------
-	// Assets
+	// Static Assets
 	// --------------------------------------
-	mux.Handle("GET /favicon.ico", utils.ServeFile("dist/favicon.ico"))
-	mux.Handle("GET /dist/", utils.ServeDir("/dist/", cfg.AssetsFolder))
+	mux.Handle("GET /favicon.ico", handler.ServeFile("dist/favicon.ico"))
+	mux.Handle("GET /dist/", handler.ServeDir("/dist/", cfg.AssetsFolder))
 
 	err = http.ListenAndServe(":8080", srv)
 	if err != nil {

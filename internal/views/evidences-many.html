@@ -41,6 +41,10 @@
                     @click.stop >
                     {{ template "icon-arrow-down-tray" "w-4 h-4"}}
                 </a>
+                <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/evidences/{{ .ID }}/run"
+                    up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
+                    {{ template "icon-bolt" "w-4 h-4"}}
+                </a>
                 <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/evidences/{{ .ID }}"
                     up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
                     {{ template "icon-pencil" "w-4 h-4"}}

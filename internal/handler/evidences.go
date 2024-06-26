@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
+	"log"
 	"math"
 	"net/http"
 	"os"
@@ -12,8 +13,10 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sprungknoedl/dagobert/internal/extensions"
 	"github.com/sprungknoedl/dagobert/internal/fp"
 	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/pkg/tty"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
@@ -114,20 +117,6 @@ func (ctrl EvidenceCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (ctrl EvidenceCtrl) Download(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	cid := r.PathValue("cid")
-	obj, err := ctrl.store.GetEvidence(cid, id)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", obj.Name))
-	w.WriteHeader(http.StatusOK)
-	http.ServeFile(w, r, obj.Location)
-}
-
 func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	// get handle to form file
 	fr, fh, err := r.FormFile("File")
@@ -203,6 +192,100 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/", dto.CaseID), http.StatusSeeOther)
+}
+
+func (ctrl EvidenceCtrl) Download(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	cid := r.PathValue("cid")
+	obj, err := ctrl.store.GetEvidence(cid, id)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", obj.Name))
+	w.WriteHeader(http.StatusOK)
+	http.ServeFile(w, r, obj.Location)
+}
+
+func (ctrl EvidenceCtrl) Extensions(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	cid := r.PathValue("cid")
+	obj, err := ctrl.store.GetEvidence(cid, id)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	exts := fp.Filter(extensions.Extensions, func(p model.Extension) bool { return p.Supports(obj) })
+	runs, err := ctrl.store.GetRuns(exts, obj.ID)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	Render(ctrl.store, w, r, http.StatusOK, "internal/views/evidences-process.html", map[string]any{
+		"obj":  obj,
+		"runs": runs,
+	})
+}
+
+func (ctrl EvidenceCtrl) Run(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	cid := r.PathValue("cid")
+	name := r.FormValue("name")
+	obj, err := ctrl.store.GetEvidence(cid, id)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	ext, err := extensions.Get(name)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	// record progress
+	err = ctrl.store.SaveRun(id, model.Run{
+		Name:   ext.Name,
+		Status: "Running",
+		TTL:    time.Now().Add(1 * time.Hour),
+	})
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	// start extension in background
+	go func() {
+		err = ext.Run(*ctrl.store, obj)
+		if err == nil {
+			// record success
+			err = ctrl.store.SaveRun(id, model.Run{
+				Name:   ext.Name,
+				Status: "Success",
+			})
+			if err != nil {
+				log.Printf("|%s| %v", tty.Red(" ERR "), err)
+			}
+		} else {
+			log.Printf("|%s| plugin %q failed with: %v", tty.Yellow(" WAR "), ext.Name, err)
+
+			// record failure
+			err = ctrl.store.SaveRun(id, model.Run{
+				Name:   ext.Name,
+				Status: "Failed",
+				Error:  err.Error(),
+			})
+			if err != nil {
+				log.Printf("|%s| %v", tty.Red(" ERR "), err)
+			}
+		}
+	}()
+
+	// http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/process", cid), http.StatusSeeOther)
+	ctrl.Extensions(w, r)
 }
 
 func (ctrl EvidenceCtrl) Delete(w http.ResponseWriter, r *http.Request) {

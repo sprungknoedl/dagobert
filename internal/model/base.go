@@ -154,6 +154,18 @@ CREATE TABLE IF NOT EXISTS evidences (
 	FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS runs (
+	evidence_id TEXT NOT NULL,
+	name        TEXT NOT NULL,
+	description TEXT NOT NULL,
+	status      TEXT NOT NULL,
+	error       TEXT NOT NULL,
+	ttl         DATETIME NOT NULL,
+
+	PRIMARY KEY (evidence_id, name),
+	FOREIGN KEY (evidence_id) REFERENCES evidences(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS indicators (
 	id          TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
 	case_id     TEXT NOT NULL,
