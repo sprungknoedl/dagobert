@@ -142,14 +142,15 @@ CREATE TABLE IF NOT EXISTS event_indicators (
 );
 
 CREATE TABLE IF NOT EXISTS evidences (
-	id          TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
-	case_id     TEXT NOT NULL,
-	name        TEXT NOT NULL,
-	type        TEXT NOT NULL,
-	description TEXT NOT NULL,
-	size        INTEGER NOT NULL,
-	hash        TEXT NOT NULL,
-	location    TEXT NOT NULL,
+	id       TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
+	case_id  TEXT NOT NULL,
+	name     TEXT NOT NULL,
+	type     TEXT NOT NULL,
+	size     INTEGER NOT NULL,
+	source   TEXT NOT NULL,
+	notes    TEXT NOT NULL,
+	hash     TEXT NOT NULL,
+	location TEXT NOT NULL,
 
 	FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE ON UPDATE CASCADE
 );

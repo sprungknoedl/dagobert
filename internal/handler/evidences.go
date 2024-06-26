@@ -111,9 +111,16 @@ func (ctrl EvidenceCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	assets, err := ctrl.store.FindAssets(cid, "", "")
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
 	Render(ctrl.store, w, r, http.StatusOK, "internal/views/evidences-one.html", map[string]any{
-		"obj":   obj,
-		"valid": valid.Result{},
+		"obj":    obj,
+		"assets": assets,
+		"valid":  valid.Result{},
 	})
 }
 

@@ -13,6 +13,7 @@
 			{{ template "table-th" dict "name" "name" "sort" .env.Sort }}
 			{{ template "table-th" dict "name" "hash" "sort" .env.Sort }}
 			{{ template "table-th" dict "name" "size" "sort" .env.Sort }}
+			{{ template "table-th" dict "name" "source" "sort" .env.Sort }}
 			{{ template "table-th" dict "name" "notes" "sort" .env.Sort }}
 			<td style="width: 7rem"></td>
 		</tr>
@@ -35,6 +36,7 @@
 			<td> {{ .Name }} </td>
 			<td> {{ .Hash }} </td>
 			<td> {{ call $.humanizeSize .Size }} </td>
+			<td> {{ .Source }} </td>
 			<td> {{ .Notes }} </td>
             <td class="px-6 py-2 flex justify-end join">
                 <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/evidences/{{ .ID }}/download"

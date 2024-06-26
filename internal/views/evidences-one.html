@@ -56,6 +56,15 @@
 
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
+                    Source
+				    {{ if .valid.Source }}<span class="ml-2 text-sm text-error">{{ .valid.Source }}</span>{{ end }}
+                </label>
+				<input name="Source" type="text" class="input input-bordered"
+                    value="{{ .obj.Source }}" />
+            </div>
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
                     Notes
 				    {{ if .valid.Notes }}<span class="ml-2 text-sm text-error">{{ .valid.Notes }}</span>{{ end }}
                 </label>

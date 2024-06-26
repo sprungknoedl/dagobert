@@ -12,6 +12,7 @@ type Evidence struct {
 	Name     string
 	Hash     string
 	Size     int64
+	Source   string
 	Notes    string
 	Location string
 	CaseID   string
@@ -19,20 +20,24 @@ type Evidence struct {
 
 func (store *Store) FindEvidences(cid string, search string, sort string) ([]Evidence, error) {
 	query := `
-	SELECT id, type, name, hash, size, notes, location, case_id
+	SELECT id, type, name, hash, size, source, notes, location, case_id
 	FROM evidences
 	WHERE case_id = :cid AND (
 		instr(type, :search) > 0 OR
 		instr(name, :search) > 0 OR
-		instr(hash, :search) > 0)
+		instr(hash, :search) > 0 OR
+		instr(source, :search) > 0 OR
+		instr(notes, :search) > 0)
 	ORDER BY
-		CASE WHEN :sort = 'hash'         THEN hash END ASC,
-		CASE WHEN :sort = '-hash'        THEN hash END DESC,
-		CASE WHEN :sort = 'notes'  THEN notes END ASC,
-		CASE WHEN :sort = '-notes' THEN notes END DESC,
-		CASE WHEN :sort = 'type'         THEN type END ASC,
-		CASE WHEN :sort = '-type'        THEN type END DESC,
-		CASE WHEN :sort = '-name'        THEN name END DESC,
+		CASE WHEN :sort = 'hash'    THEN hash END ASC,
+		CASE WHEN :sort = '-hash'   THEN hash END DESC,
+		CASE WHEN :sort = 'source'  THEN source END ASC,
+		CASE WHEN :sort = '-source' THEN source END DESC,
+		CASE WHEN :sort = 'notes'   THEN notes END ASC,
+		CASE WHEN :sort = '-notes'  THEN notes END DESC,
+		CASE WHEN :sort = 'type'    THEN type END ASC,
+		CASE WHEN :sort = '-type'   THEN type END DESC,
+		CASE WHEN :sort = '-name'   THEN name END DESC,
 		name ASC`
 
 	rows, err := store.db.Query(query,
@@ -50,7 +55,7 @@ func (store *Store) FindEvidences(cid string, search string, sort string) ([]Evi
 
 func (store *Store) GetEvidence(cid string, id string) (Evidence, error) {
 	query := `
-	SELECT id, type, name, hash, size, notes, location, case_id
+	SELECT id, type, name, hash, size, source, notes, location, case_id
 	FROM evidences
 	WHERE case_id = :cid AND id = :id
 	LIMIT 1`
@@ -69,8 +74,8 @@ func (store *Store) GetEvidence(cid string, id string) (Evidence, error) {
 
 func (store *Store) SaveEvidence(cid string, obj Evidence) error {
 	query := `
-	REPLACE INTO evidences (id, type, name, hash, size, notes, location, case_id)
-	VALUES (NULLIF(:id, ''), :type, :name, :hash, :size, :notes, :location, :cid)`
+	REPLACE INTO evidences (id, type, name, hash, size, source, notes, location, case_id)
+	VALUES (NULLIF(:id, ''), :type, :name, :hash, :size, :source, :notes, :location, :cid)`
 
 	_, err := store.db.Exec(query,
 		sql.Named("cid", cid),
@@ -79,6 +84,7 @@ func (store *Store) SaveEvidence(cid string, obj Evidence) error {
 		sql.Named("name", obj.Name),
 		sql.Named("hash", obj.Hash),
 		sql.Named("size", obj.Size),
+		sql.Named("source", obj.Source),
 		sql.Named("notes", obj.Notes),
 		sql.Named("location", obj.Location))
 	return err
