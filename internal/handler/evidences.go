@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sprungknoedl/dagobert/internal/fp"
 	"github.com/sprungknoedl/dagobert/internal/model"
-	"github.com/sprungknoedl/dagobert/internal/utils"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
@@ -31,11 +31,11 @@ func (ctrl EvidenceCtrl) List(w http.ResponseWriter, r *http.Request) {
 	search := r.URL.Query().Get("search")
 	list, err := ctrl.store.FindEvidences(cid, search, sort)
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
-	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/evidences-many.html", map[string]any{
+	Render(ctrl.store, w, r, http.StatusOK, "internal/views/evidences-many.html", map[string]any{
 		"title":        "Evidences",
 		"rows":         list,
 		"humanizeSize": humanizeSize,
@@ -46,11 +46,11 @@ func (ctrl EvidenceCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	list, err := ctrl.store.FindEvidences(cid, "", "")
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
-	filename := fmt.Sprintf("%s - %s - Evidences.csv", time.Now().Format("20060102"), utils.GetEnv(ctrl.store, r).ActiveCase.Name)
+	filename := fmt.Sprintf("%s - %s - Evidences.csv", time.Now().Format("20060102"), GetEnv(ctrl.store, r).ActiveCase.Name)
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.WriteHeader(http.StatusOK)
 
@@ -76,7 +76,7 @@ func (ctrl EvidenceCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	ImportCSV(ctrl.store, w, r, uri, 7, func(rec []string) {
 		size, err := strconv.ParseInt(rec[4], 10, 64)
 		if err != nil {
-			utils.Warn(w, r, err)
+			Warn(w, r, err)
 			return
 		}
 
@@ -91,7 +91,7 @@ func (ctrl EvidenceCtrl) Import(w http.ResponseWriter, r *http.Request) {
 		}
 
 		err = ctrl.store.SaveEvidence(cid, obj)
-		utils.Err(w, r, err)
+		Err(w, r, err)
 	})
 }
 
@@ -103,12 +103,12 @@ func (ctrl EvidenceCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		var err error
 		obj, err = ctrl.store.GetEvidence(cid, id)
 		if err != nil {
-			utils.Err(w, r, err)
+			Err(w, r, err)
 			return
 		}
 	}
 
-	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/evidences-one.html", map[string]any{
+	Render(ctrl.store, w, r, http.StatusOK, "internal/views/evidences-one.html", map[string]any{
 		"obj":   obj,
 		"valid": valid.Result{},
 	})
@@ -119,7 +119,7 @@ func (ctrl EvidenceCtrl) Download(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	obj, err := ctrl.store.GetEvidence(cid, id)
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
@@ -132,13 +132,13 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	// get handle to form file
 	fr, fh, err := r.FormFile("File")
 	if err != nil && err != http.ErrMissingFile {
-		utils.Warn(w, r, err)
+		Warn(w, r, err)
 		return
 	}
 
 	dto := model.Evidence{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
-	if err := utils.Decode(r, &dto); err != nil {
-		utils.Err(w, r, err)
+	if err := Decode(r, &dto); err != nil {
+		Err(w, r, err)
 		return
 	}
 
@@ -148,7 +148,7 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	dto.Location = ""
 	dto.Name = filepath.Base(dto.Name) // sanitize name
 	if vr := ValidateEvidence(dto); !vr.Valid() {
-		utils.Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/evidences-one.html", map[string]any{
+		Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/evidences-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,
 		})
@@ -161,14 +161,14 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		dto.Location = filepath.Join("./files/evidences", filepath.Base(dto.CaseID), dto.Name)
 		err = os.MkdirAll(filepath.Dir(dto.Location), 0755)
 		if err != nil {
-			utils.Err(w, r, err)
+			Err(w, r, err)
 			return
 		}
 
 		// create file
 		fw, err := os.Create(dto.Location)
 		if err != nil {
-			utils.Err(w, r, err)
+			Err(w, r, err)
 			return
 		}
 
@@ -177,7 +177,7 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		mw := io.MultiWriter(fw, hasher)
 		_, err = io.Copy(mw, fr)
 		if err != nil {
-			utils.Err(w, r, err)
+			Err(w, r, err)
 			return
 		}
 
@@ -187,7 +187,7 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		// keep metadata for existing evidences that did not change
 		obj, err := ctrl.store.GetEvidence(dto.CaseID, dto.ID)
 		if err != nil {
-			utils.Err(w, r, err)
+			Err(w, r, err)
 			return
 		}
 
@@ -196,9 +196,9 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		dto.Location = obj.Location
 	}
 
-	dto.ID = utils.If(dto.ID == "new", "", dto.ID)
+	dto.ID = fp.If(dto.ID == "new", "", dto.ID)
 	if err := ctrl.store.SaveEvidence(dto.CaseID, dto); err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
@@ -210,16 +210,21 @@ func (ctrl EvidenceCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s/evidences/%s?confirm=yes", cid, id)
-		utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
+		Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
 		return
 	}
 
-	// TODO: delete file from fs
-	err := ctrl.store.DeleteEvidence(cid, id)
+	// try to delete file from disk
+	obj, err := ctrl.store.GetEvidence(cid, id)
+	if err == nil {
+		os.Remove(obj.Location)
+	}
+
+	err = ctrl.store.DeleteEvidence(cid, id)
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 

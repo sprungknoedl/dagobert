@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sprungknoedl/dagobert/internal/fp"
 	"github.com/sprungknoedl/dagobert/internal/model"
-	"github.com/sprungknoedl/dagobert/internal/utils"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
@@ -29,11 +29,11 @@ func (ctrl EventCtrl) List(w http.ResponseWriter, r *http.Request) {
 	search := r.URL.Query().Get("search")
 	list, err := ctrl.store.FindEvents(cid, search, sort)
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
-	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/events-many.html", map[string]any{
+	Render(ctrl.store, w, r, http.StatusOK, "internal/views/events-many.html", map[string]any{
 		"title": "Timeline",
 		"rows":  list,
 		"hasTimeGap": func(list []model.Event, i int) string {
@@ -54,11 +54,11 @@ func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	list, err := ctrl.store.FindEvents(cid, "", "")
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
-	filename := fmt.Sprintf("%s - %s - Timeline.csv", time.Now().Format("20060102"), utils.GetEnv(ctrl.store, r).ActiveCase.Name)
+	filename := fmt.Sprintf("%s - %s - Timeline.csv", time.Now().Format("20060102"), GetEnv(ctrl.store, r).ActiveCase.Name)
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.WriteHeader(http.StatusOK)
 
@@ -69,7 +69,7 @@ func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
 			e.ID,
 			e.Time.Format(time.RFC3339),
 			e.Type,
-			strings.Join(utils.Apply(e.Assets, func(x model.Asset) string { return x.Name }), " "),
+			strings.Join(fp.Apply(e.Assets, func(x model.Asset) string { return x.Name }), " "),
 			e.Event,
 			e.Raw,
 		})
@@ -84,7 +84,7 @@ func (ctrl EventCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	ImportCSV(ctrl.store, w, r, uri, 6, func(rec []string) {
 		t, err := time.Parse(time.RFC3339, rec[1])
 		if err != nil {
-			utils.Warn(w, r, err)
+			Warn(w, r, err)
 			return
 		}
 
@@ -100,7 +100,7 @@ func (ctrl EventCtrl) Import(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err = ctrl.store.SaveEvent(cid, obj); err != nil {
-			utils.Err(w, r, err)
+			Err(w, r, err)
 		}
 	})
 }
@@ -113,24 +113,24 @@ func (ctrl EventCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		var err error
 		obj, err = ctrl.store.GetEvent(cid, id)
 		if err != nil {
-			utils.Err(w, r, err)
+			Err(w, r, err)
 			return
 		}
 	}
 
 	assets, err := ctrl.store.FindAssets(cid, "", "")
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
 	indicators, err := ctrl.store.FindIndicators(cid, "", "")
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
-	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/events-one.html", map[string]any{
+	Render(ctrl.store, w, r, http.StatusOK, "internal/views/events-one.html", map[string]any{
 		"obj":        obj,
 		"assets":     assets,
 		"indicators": indicators,
@@ -140,8 +140,8 @@ func (ctrl EventCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	dto := model.Event{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
-	if err := utils.Decode(r, &dto); err != nil {
-		utils.Warn(w, r, err)
+	if err := Decode(r, &dto); err != nil {
+		Warn(w, r, err)
 		return
 	}
 
@@ -150,8 +150,8 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		Assets     []string
 		Indicators []string
 	}{}
-	if err := utils.Decode(r, &tmp); err != nil {
-		utils.Warn(w, r, err)
+	if err := Decode(r, &tmp); err != nil {
+		Warn(w, r, err)
 		return
 	}
 
@@ -164,7 +164,7 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 				Type:   "Other",
 			})
 			if err != nil {
-				utils.Err(w, r, err)
+				Err(w, r, err)
 				return
 			}
 
@@ -183,7 +183,7 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 				TLP:    "TLP:RED",
 			})
 			if err != nil {
-				utils.Err(w, r, err)
+				Err(w, r, err)
 				return
 			}
 
@@ -192,22 +192,22 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	dto.Assets = utils.Apply(tmp.Assets, func(id string) model.Asset { return model.Asset{ID: id} })
-	dto.Indicators = utils.Apply(tmp.Indicators, func(id string) model.Indicator { return model.Indicator{ID: id} })
+	dto.Assets = fp.Apply(tmp.Assets, func(id string) model.Asset { return model.Asset{ID: id} })
+	dto.Indicators = fp.Apply(tmp.Indicators, func(id string) model.Indicator { return model.Indicator{ID: id} })
 	if vr := ValidateEvent(dto); !vr.Valid() {
 		assets, err := ctrl.store.FindAssets(dto.CaseID, "", "")
 		if err != nil {
-			utils.Err(w, r, err)
+			Err(w, r, err)
 			return
 		}
 
 		indicators, err := ctrl.store.FindIndicators(dto.CaseID, "", "")
 		if err != nil {
-			utils.Err(w, r, err)
+			Err(w, r, err)
 			return
 		}
 
-		utils.Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/events-one.html", map[string]any{
+		Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/events-one.html", map[string]any{
 			"obj":        dto,
 			"assets":     assets,
 			"indicators": indicators,
@@ -216,9 +216,9 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto.ID = utils.If(dto.ID == "new", "", dto.ID)
+	dto.ID = fp.If(dto.ID == "new", "", dto.ID)
 	if err := ctrl.store.SaveEvent(dto.CaseID, dto); err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
@@ -230,7 +230,7 @@ func (ctrl EventCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s/events/%s?confirm=yes", cid, id)
-		utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
+		Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
 		return
@@ -238,7 +238,7 @@ func (ctrl EventCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err := ctrl.store.DeleteEvent(cid, id)
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 

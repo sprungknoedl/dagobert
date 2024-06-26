@@ -8,18 +8,13 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
-	"os"
 	"time"
 
 	"github.com/coreos/go-oidc"
-	"github.com/gorilla/sessions"
 	"github.com/sprungknoedl/dagobert/internal/model"
-	"github.com/sprungknoedl/dagobert/internal/utils"
 	"golang.org/x/oauth2"
 )
 
-var SessionName = "default"
-var SessionStore = sessions.NewCookieStore([]byte(os.Getenv("WEB_SESSION_SECRET")))
 var ApiKeyHeader = "X-API-Key"
 
 type OpenIDConfig struct {
@@ -77,7 +72,7 @@ func (ctrl UserCtrl) Protect(next http.Handler) http.Handler {
 			// TODO: validate api key header
 			_, err := ctrl.store.GetKey(key)
 			if err != nil {
-				utils.Warn(w, r, err)
+				Warn(w, r, err)
 				return
 			}
 
@@ -99,7 +94,7 @@ func (ctrl UserCtrl) Protect(next http.Handler) http.Handler {
 		sess.Values["oidcOriginalRequestUrl"] = r.URL.String()
 		err := sess.Save(r, w)
 		if err != nil {
-			utils.Err(w, r, err)
+			Err(w, r, err)
 			return
 		}
 
@@ -117,7 +112,7 @@ func (ctrl UserCtrl) Logout(w http.ResponseWriter, r *http.Request) {
 
 	err := sess.Save(r, w)
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
@@ -134,43 +129,43 @@ func (ctrl UserCtrl) Callback(w http.ResponseWriter, r *http.Request) {
 
 	state, ok := (sess.Values["oidcState"]).(string)
 	if !ok {
-		utils.Warn(w, r, errors.New("get 'state' param didn't match local 'state' value"))
+		Warn(w, r, errors.New("get 'state' param didn't match local 'state' value"))
 		return
 	}
 
 	if r.URL.Query().Get("state") != state {
-		utils.Warn(w, r, errors.New("get 'state' param didn't match local 'state' value"))
+		Warn(w, r, errors.New("get 'state' param didn't match local 'state' value"))
 		return
 	}
 
 	oauth2Token, err := ctrl.oauthConfig.Exchange(ctx, r.URL.Query().Get("code"))
 	if err != nil {
-		utils.Warn(w, r, err)
+		Warn(w, r, err)
 		return
 	}
 
 	rawIDToken, ok := oauth2Token.Extra("id_token").(string)
 	if !ok {
-		utils.Warn(w, r, errors.New("no id_token field in oauth2 token"))
+		Warn(w, r, errors.New("no id_token field in oauth2 token"))
 		return
 	}
 
 	idToken, err := ctrl.verifier.Verify(ctx, rawIDToken)
 	if err != nil {
-		utils.Warn(w, r, err)
+		Warn(w, r, err)
 		return
 	}
 
 	var claims map[string]interface{}
 	err = idToken.Claims(&claims)
 	if err != nil {
-		utils.Warn(w, r, err)
+		Warn(w, r, err)
 		return
 	}
 
 	originalRequestUrl, ok := (sess.Values["oidcOriginalRequestUrl"]).(string)
 	if !ok {
-		utils.Warn(w, r, errors.New("failed to parse originalRequestUrl"))
+		Warn(w, r, errors.New("failed to parse originalRequestUrl"))
 		return
 	}
 
@@ -181,7 +176,7 @@ func (ctrl UserCtrl) Callback(w http.ResponseWriter, r *http.Request) {
 
 	err = sess.Save(r, w)
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
@@ -193,7 +188,7 @@ func (ctrl UserCtrl) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 	err = ctrl.store.SaveUser(user)
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
@@ -205,11 +200,11 @@ func (ctrl UserCtrl) List(w http.ResponseWriter, r *http.Request) {
 	search := r.URL.Query().Get("search")
 	list, err := ctrl.store.FindUsers(search, sort)
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
-	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/users-many.html", map[string]any{
+	Render(ctrl.store, w, r, http.StatusOK, "internal/views/users-many.html", map[string]any{
 		"title": "Users",
 		"rows":  list,
 	})

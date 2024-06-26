@@ -11,8 +11,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sprungknoedl/dagobert/internal/fp"
 	"github.com/sprungknoedl/dagobert/internal/model"
-	"github.com/sprungknoedl/dagobert/internal/utils"
 	"github.com/sprungknoedl/dagobert/pkg/doct"
 )
 
@@ -54,8 +54,8 @@ func LoadTemplates(root string) error {
 }
 
 func (ctrl ReportCtrl) List(w http.ResponseWriter, r *http.Request) {
-	list := utils.ApplyM(templates, func(x doct.Template) string { return x.Name() })
-	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/reports-dialog.html", map[string]any{
+	list := fp.ToList(fp.ApplyM(templates, func(x doct.Template) string { return x.Name() }))
+	Render(ctrl.store, w, r, http.StatusOK, "internal/views/reports-dialog.html", map[string]any{
 		"list": list,
 	})
 }
@@ -64,14 +64,14 @@ func (ctrl ReportCtrl) Generate(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	obj, err := ctrl.store.GetCaseFull(cid)
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
 	name := r.URL.Query().Get("Template")
 	tpl, ok := templates[name]
 	if !ok {
-		utils.Warn(w, r, errors.New("Invalid report template"))
+		Warn(w, r, errors.New("Invalid report template"))
 		return
 	}
 
@@ -81,7 +81,7 @@ func (ctrl ReportCtrl) Generate(w http.ResponseWriter, r *http.Request) {
 		"Now":  time.Now(),
 	})
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
@@ -92,6 +92,6 @@ func (ctrl ReportCtrl) Generate(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	if _, err = io.Copy(w, buf); err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 	}
 }

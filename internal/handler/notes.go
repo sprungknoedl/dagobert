@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/sprungknoedl/dagobert/internal/fp"
 	"github.com/sprungknoedl/dagobert/internal/model"
-	"github.com/sprungknoedl/dagobert/internal/utils"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
@@ -25,11 +25,11 @@ func (ctrl NoteCtrl) List(w http.ResponseWriter, r *http.Request) {
 	search := r.URL.Query().Get("search")
 	list, err := ctrl.store.FindNotes(cid, search, sort)
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
-	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/notes-many.html", map[string]any{
+	Render(ctrl.store, w, r, http.StatusOK, "internal/views/notes-many.html", map[string]any{
 		"title": "Notes",
 		"rows":  list,
 	})
@@ -39,11 +39,11 @@ func (ctrl NoteCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	list, err := ctrl.store.FindNotes(cid, "", "")
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
-	filename := fmt.Sprintf("%s - %s - Notes.csv", time.Now().Format("20060102"), utils.GetEnv(ctrl.store, r).ActiveCase.Name)
+	filename := fmt.Sprintf("%s - %s - Notes.csv", time.Now().Format("20060102"), GetEnv(ctrl.store, r).ActiveCase.Name)
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.WriteHeader(http.StatusOK)
 
@@ -74,7 +74,7 @@ func (ctrl NoteCtrl) Import(w http.ResponseWriter, r *http.Request) {
 		}
 
 		err := ctrl.store.SaveNote(cid, obj)
-		utils.Err(w, r, err)
+		Err(w, r, err)
 	})
 }
 
@@ -86,12 +86,12 @@ func (ctrl NoteCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		var err error
 		obj, err = ctrl.store.GetNote(cid, id)
 		if err != nil {
-			utils.Err(w, r, err)
+			Err(w, r, err)
 			return
 		}
 	}
 
-	utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/notes-one.html", map[string]any{
+	Render(ctrl.store, w, r, http.StatusOK, "internal/views/notes-one.html", map[string]any{
 		"obj":   obj,
 		"valid": valid.Result{},
 	})
@@ -99,22 +99,22 @@ func (ctrl NoteCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl NoteCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	dto := model.Note{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
-	if err := utils.Decode(r, &dto); err != nil {
-		utils.Warn(w, r, err)
+	if err := Decode(r, &dto); err != nil {
+		Warn(w, r, err)
 		return
 	}
 
 	if vr := ValidateNote(dto); !vr.Valid() {
-		utils.Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/notes-one.html", map[string]any{
+		Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/notes-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,
 		})
 		return
 	}
 
-	dto.ID = utils.If(dto.ID == "new", "", dto.ID)
+	dto.ID = fp.If(dto.ID == "new", "", dto.ID)
 	if err := ctrl.store.SaveNote(dto.CaseID, dto); err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
@@ -126,7 +126,7 @@ func (ctrl NoteCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s/notes/%s?confirm=yes", cid, id)
-		utils.Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
+		Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
 		return
@@ -134,7 +134,7 @@ func (ctrl NoteCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err := ctrl.store.DeleteNote(cid, id)
 	if err != nil {
-		utils.Err(w, r, err)
+		Err(w, r, err)
 		return
 	}
 
