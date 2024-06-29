@@ -23,6 +23,14 @@ func Load() error {
 		Supports:    func(e model.Evidence) bool { return slices.Contains([]string{".evtx", ".zip"}, filepath.Ext(e.Name)) },
 		Run:         RunHayabusa,
 	})
+
+	Extensions = append(Extensions, model.Extension{
+		Name:        "Plaso",
+		Description: "Plaso (Plaso Langar Að Safna Öllu), or super timeline all the things, is a Python-based engine used by several tools for automatic creation of timelines.",
+		Supports:    func(e model.Evidence) bool { return slices.Contains([]string{".zip"}, filepath.Ext(e.Name)) },
+		Run:         RunPlaso,
+	})
+
 	return nil
 }
 
