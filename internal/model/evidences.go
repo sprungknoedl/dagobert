@@ -4,7 +4,7 @@ import (
 	"database/sql"
 )
 
-var EvidenceTypes = FromEnv("VALUES_EVIDENCE_TYPES", []string{"File", "Logs", "Artifacts Collection", "System Image", "Memory Dump", "Malware", "Other"})
+var EvidenceTypes = FromEnv("VALUES_EVIDENCE_TYPES", []string{"File", "Logs", "Triage", "System Image", "Memory Dump", "Malware", "Other"})
 
 type Evidence struct {
 	ID       string

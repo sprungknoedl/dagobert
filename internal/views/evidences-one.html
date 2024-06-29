@@ -46,10 +46,10 @@
                     <span class="text-accent">*</span>
 				    {{ if .valid.Type }}<span class="ml-2 text-sm text-error">{{ .valid.Type }}</span>{{ end }}
                 </label>
-                <select name="Type" class="select select-bordered">
-                    <option disabled value="" {{ if eq .obj.Type "" }}selected{{ end }}>Select an option</option>
+                <select name="Type" class="tom select select-bordered">
+                    <option selected>{{ .obj.Type }}</option>
                     {{ range .model.EvidenceTypes }}
-                        <option {{ if eq $.obj.Type . }}selected{{ end }}>{{ . }}</option>
+                        {{ if ne $.obj.Type . }}<option>{{ . }}</option>{{ end }}
                     {{ end }}
                 </select>
             </div>
@@ -79,6 +79,13 @@
             <button type="submit" class="btn btn-primary"> Save </button>
             <a class="btn" up-dismiss> Cancel </a>
         </div>
+
+        <script>
+            document.querySelectorAll('.tom').forEach((el)=>{ new TomSelect(el, {
+                create: true,
+                sortField: { field: "text", direction: "asc" },
+            }); });
+        </script>
     </form>
     </main>
 </body>

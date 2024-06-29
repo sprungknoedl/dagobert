@@ -19,9 +19,14 @@ TOM SELECT
 }
 
 .ts-control {
+    color: unset !important;
     border: unset !important;
     background: unset !important;
     line-height: unset !important;
+}
+
+.ts-control input {
+    color: unset !important;
 }
 
 .ts-wrapper {
