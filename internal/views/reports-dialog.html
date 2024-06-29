@@ -3,7 +3,7 @@
 {{ template "layout-head" }}
 <body>
     <main>
-    <form method="post" action="/cases/{{ .obj.CaseID }}/render" up-submit>
+    <form method="post" action="/cases/{{ .env.ActiveCase.ID }}/render">
         <!-- Modal header -->
         <h3 class="font-bold text-lg mb-4">
             Select report template
@@ -11,7 +11,7 @@
 
         <!-- Modal body -->
         <div class="mb-4">
-            <input name="CaseID" type="hidden" value="{{ .obj.CaseID }}" />
+            <input name="CaseID" type="hidden" value="{{ .env.ActiveCase.ID }}" />
 
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">

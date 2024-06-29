@@ -127,7 +127,7 @@ func main() {
 	// templates
 	reportCtrl := handler.NewReportCtrl(db)
 	mux.HandleFunc("GET /cases/{cid}/reports", reportCtrl.List)
-	mux.HandleFunc("GET /cases/{cid}/render", reportCtrl.Generate)
+	mux.HandleFunc("POST /cases/{cid}/render", reportCtrl.Generate)
 
 	// --------------------------------------
 	// Investigation
