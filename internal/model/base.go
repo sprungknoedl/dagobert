@@ -6,7 +6,7 @@ import (
 	"reflect"
 	"strings"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 )
 
 type Store struct {
@@ -15,7 +15,7 @@ type Store struct {
 
 func Connect(dburl string) (*Store, error) {
 	var err error
-	db, err := sql.Open("sqlite3", dburl)
+	db, err := sql.Open("sqlite", dburl)
 	if err != nil {
 		return nil, err
 	}

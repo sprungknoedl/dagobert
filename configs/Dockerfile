@@ -21,13 +21,14 @@ RUN make build-go
 
 # ---------------------------------
 
-FROM golang:1.22
+FROM debian:12-slim
 WORKDIR /app
 
 RUN mkdir -p /app/files
 
 COPY --from=web /src/web /app/web
-COPY --from=app /src/templates /app/templates
 COPY --from=app /src/dagobert /app/dagobert
+COPY --from=app /src/internal/views /app/internal/views
+COPY --from=app /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 CMD ["/app/dagobert"]

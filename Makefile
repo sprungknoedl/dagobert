@@ -6,7 +6,7 @@ build-web:
 	tailwindcss -c configs/tailwind.config.js -i configs/dagobert.css -o web/dagobert.css
 
 build-go:
-	go build -o dagobert .
+	CGO_ENABLED=0 go build -o dagobert .
 
 docker:
 	docker build . -f configs/Dockerfile -t sprungknoedl/dagobert
