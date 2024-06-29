@@ -13,25 +13,15 @@ import (
 )
 
 func RunHayabusa(store model.Store, obj model.Evidence) error {
-	exe := os.Getenv("EXE_HAYABUSA")
-	dst := filepath.Join("./files/evidences", filepath.Base(obj.CaseID),
-		strings.TrimSuffix(obj.Name, filepath.Ext(obj.Name))+".hayabusa.json")
-	log.Printf("|%s| hayabusa -> exe: %s", tty.Cyan(" DEB "), exe)
-	log.Printf("|%s| hayabusa -> dst: %s", tty.Cyan(" DEB "), dst)
-
-	// TODO: support archives
-	args := []string{
-		"json-timeline",
-		"--JSONL-output",
-		"--RFC-3339",
-		"--UTC",
-		"--no-wizard",
-		"--min-level", "informational",
-		"--profile", "timesketch-verbose",
-		"--output", dst,
+	name := strings.TrimSuffix(obj.Name, filepath.Ext(obj.Name))
+	dstdir, err := filepath.Abs(filepath.Dir(obj.Location))
+	if err != nil {
+		return err
 	}
-	ext := filepath.Ext(obj.Name)
-	switch ext {
+
+	var srcdir string
+	var args2 []string
+	switch filepath.Ext(obj.Name) {
 	case ".zip":
 		src, err := unpack(obj)
 		if err != nil {
@@ -39,7 +29,9 @@ func RunHayabusa(store model.Store, obj model.Evidence) error {
 		}
 		defer os.RemoveAll(src)
 		log.Printf("|%s| hayabusa -> unpacked archive to %s", tty.Cyan(" DEB "), src)
-		args = append(args, "--directory", src)
+		srcdir = src
+		args2 = []string{"--directory", "/data/"}
+
 	case ".evtx":
 		src, err := clone(obj)
 		if err != nil {
@@ -47,27 +39,45 @@ func RunHayabusa(store model.Store, obj model.Evidence) error {
 		}
 		defer os.Remove(src)
 		log.Printf("|%s| hayabusa -> cloned file to %s", tty.Cyan(" DEB "), src)
-		args = append(args, "--file", src)
+		srcdir = filepath.Dir(src)
+		args2 = []string{"--file", filepath.Join("/data/", filepath.Base(src))}
+
 	default:
-		return fmt.Errorf("unsupported file type %s", ext)
+		return fmt.Errorf("unsupported file type %s", obj.Name)
 	}
 
-	cmd := exec.Command(exe, args...)
+	args := append([]string{
+		"run",
+		"-v", srcdir + ":/data",
+		"-v", dstdir + ":/out",
+		"sprungknoedl/hayabusa",
+		"json-timeline",
+		"--JSONL-output",
+		"--RFC-3339",
+		"--UTC",
+		"--no-wizard",
+		"--min-level", "informational",
+		"--profile", "timesketch-verbose",
+		"--output", filepath.Join("/out/", name+".hayabusa.jsonl"),
+	}, args2...)
+
+	cmd := exec.Command("docker", args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	log.Printf("|%s| hayabusa -> running command", tty.Cyan(" DEB "))
+	log.Printf("|%s| hayabusa -> running command: docker %s", tty.Cyan(" DEB "), args)
 	if err := cmd.Run(); err != nil {
-		os.Remove(dst) // try to clean up
+		// try to clean up
+		os.Remove(filepath.Join(dstdir, name+".hayabusa.jsonl"))
 		return err
 	}
 
 	log.Printf("|%s| hayabusa -> successful run: %s", tty.Cyan(" DEB "), cmd.ProcessState)
 	return addFromFS(store, model.Evidence{
 		Type:     "Logs",
-		Name:     filepath.Base(dst),
+		Name:     name + ".hayabusa.jsonl",
 		Notes:    "ext-hayabusa",
-		Location: dst,
+		Location: filepath.Join(dstdir, name+".hayabusa.jsonl"),
 		CaseID:   obj.CaseID,
 	})
 }
