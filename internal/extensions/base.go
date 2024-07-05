@@ -5,10 +5,12 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/fp"
 	"github.com/sprungknoedl/dagobert/internal/model"
@@ -68,7 +70,8 @@ func clone(obj model.Evidence) (string, error) {
 	}
 	defer sh.Close()
 
-	dh, err := os.CreateTemp("", "*."+obj.Name)
+	dst := filepath.Join("files", "tmp", random(10)+"."+obj.Name)
+	dh, err := os.Create(dst)
 	if err != nil {
 		return "", err
 	}
@@ -85,8 +88,8 @@ func unpack(obj model.Evidence) (string, error) {
 	}
 	defer reader.Close()
 
-	dir, err := os.MkdirTemp("", "")
-	if err != nil {
+	dir := filepath.Join("files", "tmp", random(10))
+	if err = os.Mkdir(dir, 0755); err != nil {
 		return "", err
 	}
 
@@ -131,4 +134,31 @@ func unpack(obj model.Evidence) (string, error) {
 	}
 
 	return dir, nil
+}
+
+func random(n int) string {
+	// random string
+	var src = rand.NewSource(time.Now().UnixNano())
+
+	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	const (
+		letterIdxBits = 6                    // 6 bits to represent a letter index
+		letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
+		letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+	)
+
+	b := make([]byte, n)
+	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
+		if remain == 0 {
+			cache, remain = src.Int63(), letterIdxMax
+		}
+		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
+			b[i] = letterBytes[idx]
+			i--
+		}
+		cache >>= letterIdxBits
+		remain--
+	}
+
+	return string(b)
 }

@@ -13,10 +13,7 @@ import (
 
 func RunPlaso(store model.Store, obj model.Evidence) error {
 	name := strings.TrimSuffix(obj.Name, filepath.Ext(obj.Name))
-	dstdir, err := filepath.Abs(filepath.Dir(obj.Location))
-	if err != nil {
-		return err
-	}
+	dstdir := filepath.Dir(obj.Location)
 
 	src, err := clone(obj)
 	if err != nil {
@@ -24,7 +21,12 @@ func RunPlaso(store model.Store, obj model.Evidence) error {
 	}
 	defer os.Remove(src)
 
-	srcdir, err := filepath.Abs(filepath.Dir(src))
+	volsrc, err := filepath.Abs(filepath.Join(os.Getenv("DAGOBERT_CWD"), filepath.Dir(src)))
+	if err != nil {
+		return err
+	}
+
+	voldst, err := filepath.Abs(filepath.Join(os.Getenv("DAGOBERT_CWD"), dstdir))
 	if err != nil {
 		return err
 	}
@@ -33,13 +35,13 @@ func RunPlaso(store model.Store, obj model.Evidence) error {
 	// psteal.py --source /path/to/artifact -o dynamic --storage-file $artifact_id.plaso -w $artifact_id.csv
 	args := []string{
 		"run",
-		"-v", srcdir + ":/data",
-		"-v", dstdir + ":/out",
+		"-v", volsrc + ":/in:ro",
+		"-v", voldst + ":/out",
 		"log2timeline/plaso",
 		"psteal.py",
 		"--unattended",
-		// "--parsers", "prefetch",
-		"--source", filepath.Join("/data", filepath.Base(src)),
+		"--parsers", "prefetch",
+		"--source", filepath.Join("/in", filepath.Base(src)),
 		"--output-format", "dynamic",
 		"--storage-file", filepath.Join("/out", name+".plaso"),
 		"--write", filepath.Join("/out", name+".plaso.csv"),

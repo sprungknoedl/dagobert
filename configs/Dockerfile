@@ -25,6 +25,7 @@ FROM debian:12-slim
 WORKDIR /app
 
 RUN mkdir -p /app/files
+RUN apt update && apt install -y docker.io
 
 COPY --from=web /src/web /app/web
 COPY --from=app /src/dagobert /app/dagobert
