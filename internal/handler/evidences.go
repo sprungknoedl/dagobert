@@ -154,15 +154,15 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	// process file if present
 	if fh != nil && fh.Size > 0 {
 		// prepare location for evidence storage
-		dto.Location = filepath.Join("./files/evidences", filepath.Base(dto.CaseID), dto.Name)
-		err = os.MkdirAll(filepath.Dir(dto.Location), 0755)
+		dst := filepath.Join("files", "evidences", dto.CaseID, dto.Name)
+		err = os.MkdirAll(filepath.Dir(dst), 0755)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 
 		// create file
-		fw, err := os.Create(dto.Location)
+		fw, err := os.Create(dst)
 		if err != nil {
 			Err(w, r, err)
 			return
@@ -179,6 +179,7 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 
 		dto.Size = fh.Size
 		dto.Hash = fmt.Sprintf("%x", hasher.Sum(nil))
+		dto.Location = dto.Name
 	} else if dto.ID != "new" {
 		// keep metadata for existing evidences that did not change
 		obj, err := ctrl.store.GetEvidence(dto.CaseID, dto.ID)
@@ -212,7 +213,7 @@ func (ctrl EvidenceCtrl) Download(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", obj.Name))
 	w.WriteHeader(http.StatusOK)
-	http.ServeFile(w, r, obj.Location)
+	http.ServeFile(w, r, filepath.Join("files", "evidences", obj.CaseID, obj.Location))
 }
 
 func (ctrl EvidenceCtrl) Extensions(w http.ResponseWriter, r *http.Request) {
@@ -309,7 +310,7 @@ func (ctrl EvidenceCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	// try to delete file from disk
 	obj, err := ctrl.store.GetEvidence(cid, id)
 	if err == nil {
-		os.Remove(obj.Location)
+		os.Remove(filepath.Join("files", "evidences", obj.CaseID, obj.Location))
 	}
 
 	err = ctrl.store.DeleteEvidence(cid, id)

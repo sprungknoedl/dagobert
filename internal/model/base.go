@@ -101,12 +101,11 @@ CREATE TABLE IF NOT EXISTS cases (
 CREATE TABLE IF NOT EXISTS assets (
 	id          TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
 	case_id     TEXT NOT NULL,
+	status      TEXT NOT NULL,
 	type        TEXT NOT NULL,
 	name        TEXT NOT NULL,
-	ip          TEXT NOT NULL,
-	description TEXT NOT NULL,
-	compromised BOOLEAN NOT NULL,
-	analysed    BOOLEAN NOT NULL,
+	addr        TEXT NOT NULL,
+	notes       TEXT NOT NULL,
 
 	UNIQUE (name, case_id),
 	FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -174,7 +173,7 @@ CREATE TABLE IF NOT EXISTS indicators (
 	type        TEXT NOT NULL,
 	value       TEXT NOT NULL,
 	tlp         TEXT NOT NULL,
-	description TEXT NOT NULL,
+	notes       TEXT NOT NULL,
 	source      TEXT NOT NULL,
 
 	FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -189,10 +188,9 @@ CREATE TABLE IF NOT EXISTS malware (
 	id       TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
 	asset_id TEXT NOT NULL,
 	case_id  TEXT NOT NULL,
-	filename TEXT NOT NULL,
-	filepath TEXT NOT NULL,
-	c_date   DATETIME NOT NULL,
-	m_date   DATETIME NOT NULL,
+	status   TEXT NOT NULL,
+	name     TEXT NOT NULL,
+	path     TEXT NOT NULL,
 	hash     TEXT NOT NULL,
 	notes    TEXT NOT NULL,
 

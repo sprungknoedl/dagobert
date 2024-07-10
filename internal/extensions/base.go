@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 	"time"
 
@@ -22,14 +21,21 @@ func Load() error {
 	Extensions = append(Extensions, model.Extension{
 		Name:        "Hayabusa",
 		Description: "Hayabusa (隼) is a sigma-based threat hunting and fast forensics timeline generator for Windows event logs.",
-		Supports:    func(e model.Evidence) bool { return slices.Contains([]string{".evtx", ".zip"}, filepath.Ext(e.Name)) },
-		Run:         RunHayabusa,
+		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".evtx" },
+		Run:         RunHayabusaEvtx,
+	})
+
+	Extensions = append(Extensions, model.Extension{
+		Name:        "Hayabusa",
+		Description: "Hayabusa (隼) is a sigma-based threat hunting and fast forensics timeline generator for Windows event logs.",
+		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
+		Run:         RunHayabusaZip,
 	})
 
 	Extensions = append(Extensions, model.Extension{
 		Name:        "Plaso",
 		Description: "Plaso (Plaso Langar Að Safna Öllu), or super timeline all the things, is a Python-based engine used by several tools for automatic creation of timelines.",
-		Supports:    func(e model.Evidence) bool { return slices.Contains([]string{".zip"}, filepath.Ext(e.Name)) },
+		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
 		Run:         RunPlaso,
 	})
 
@@ -42,7 +48,8 @@ func Get(name string) (model.Extension, error) {
 }
 
 func addFromFS(store model.Store, obj model.Evidence) error {
-	fr, err := os.Open(obj.Location)
+	src := filepath.Join("files", "evidences", obj.CaseID, obj.Location)
+	fr, err := os.Open(src)
 	if err != nil {
 		return err
 	}
@@ -64,7 +71,8 @@ func addFromFS(store model.Store, obj model.Evidence) error {
 }
 
 func clone(obj model.Evidence) (string, error) {
-	sh, err := os.Open(obj.Location)
+	src := filepath.Join("files", "evidences", obj.CaseID, obj.Location)
+	sh, err := os.Open(src)
 	if err != nil {
 		return "", err
 	}
@@ -82,7 +90,8 @@ func clone(obj model.Evidence) (string, error) {
 }
 
 func unpack(obj model.Evidence) (string, error) {
-	reader, err := zip.OpenReader(obj.Location)
+	src := filepath.Join("files", "evidences", obj.CaseID, obj.Location)
+	reader, err := zip.OpenReader(src)
 	if err != nil {
 		return "", err
 	}
