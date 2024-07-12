@@ -5,14 +5,17 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"io"
+	"log"
 	"math/rand"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/fp"
 	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/pkg/tty"
 )
 
 var Extensions = []model.Extension{}
@@ -47,6 +50,24 @@ func Get(name string) (model.Extension, error) {
 	return plugin, fp.If(!ok, fmt.Errorf("invalid extension: %s", name), nil)
 }
 
+func runDocker(src string, dst string, container string, args []string) error {
+	srcmnt := filepath.Join(os.Getenv("DOCKER_MOUNT"), strings.TrimPrefix(filepath.Dir(src), "files/"))
+	dstmnt := filepath.Join(os.Getenv("DOCKER_MOUNT"), strings.TrimPrefix(filepath.Dir(dst), "files/"))
+
+	cmd := exec.Command("docker", append([]string{
+		"run",
+		"-v", srcmnt + ":/in:ro",
+		"-v", dstmnt + ":/out",
+		container,
+	}, args...)...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	log.Printf("|%s| running command: docker %s", tty.Cyan(" DEB "), cmd.Args)
+	return cmd.Run()
+}
+
 func addFromFS(store model.Store, obj model.Evidence) error {
 	src := filepath.Join("files", "evidences", obj.CaseID, obj.Location)
 	fr, err := os.Open(src)
@@ -79,6 +100,11 @@ func clone(obj model.Evidence) (string, error) {
 	defer sh.Close()
 
 	dst := filepath.Join("files", "tmp", random(10)+"."+obj.Name)
+	err = os.MkdirAll(filepath.Dir(dst), 0755)
+	if err != nil {
+		return "", err
+	}
+
 	dh, err := os.Create(dst)
 	if err != nil {
 		return "", err
@@ -98,7 +124,7 @@ func unpack(obj model.Evidence) (string, error) {
 	defer reader.Close()
 
 	dir := filepath.Join("files", "tmp", random(10))
-	if err = os.Mkdir(dir, 0755); err != nil {
+	if err = os.MkdirAll(dir, 0755); err != nil {
 		return "", err
 	}
 
@@ -142,7 +168,7 @@ func unpack(obj model.Evidence) (string, error) {
 		}
 	}
 
-	return dir, nil
+	return dir + string(filepath.Separator), nil
 }
 
 func random(n int) string {

@@ -1,62 +1,46 @@
 package extensions
 
 import (
-	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
 	"github.com/sprungknoedl/dagobert/internal/model"
-	"github.com/sprungknoedl/dagobert/pkg/tty"
 )
 
 func RunPlaso(store model.Store, obj model.Evidence) error {
 	name := strings.TrimSuffix(obj.Name, filepath.Ext(obj.Name))
-
+	dst := filepath.Join("files", "evidences", obj.CaseID, name+".plaso")
 	src, err := clone(obj)
 	if err != nil {
 		return err
 	}
 	defer os.Remove(src)
 
-	srcmnt := filepath.Join(os.Getenv("DOCKER_MOUNT"), strings.TrimPrefix(filepath.Dir(src), "files/"))
-	dstmnt := filepath.Join(os.Getenv("DOCKER_MOUNT"), "evidences", obj.CaseID)
-
-	// psteal.py --source /path/to/artifact -o dynamic --storage-file $artifact_id.plaso -w $artifact_id.csv
-	args := []string{
-		"run",
-		"-v", srcmnt + ":/in:ro",
-		"-v", dstmnt + ":/out",
-		"log2timeline/plaso",
+	err = runDocker(src, dst, "log2timeline/plaso", []string{
 		"psteal.py",
 		"--unattended",
-		"--parsers", "prefetch",
+		// CDQR 'datt' parser set
+		"--parsers", "text/bash_history,bencode,czip,esedb,filestat,lnk,mcafee_protection,olecf,pe,prefetch,recycle_bin,recycle_bin_info2,text/sccm,text/sophos_av,sqlite,symantec_scanlog,winevt,winevtx,webhist,text/winfirewall,winjob,winreg,text/zsh_extended_history",
 		"--output-format", "dynamic",
 		"--source", "/in/" + filepath.Base(src),
-		"--storage-file", "/out/" + name + ".plaso",
-		"--write", "/out/" + name + ".plaso.csv",
-	}
+		"--storage-file", "/out/" + filepath.Base(dst),
+		"--write", "/out/" + filepath.Base(dst) + ".csv",
+	})
 
-	cmd := exec.Command("docker", args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	log.Printf("|%s| plaso -> running command: %s", tty.Cyan(" DEB "), cmd)
-	if err := cmd.Run(); err != nil {
+	if err != nil {
 		// try to clean up
-		os.Remove(filepath.Join("files", "evidences", obj.CaseID, name+".plaso"))
-		os.Remove(filepath.Join("files", "evidences", obj.CaseID, name+".plaso.csv"))
+		os.Remove(dst)
+		os.Remove(dst + ".csv")
 		return err
 	}
 
-	log.Printf("|%s| plaso -> successful run: %s", tty.Cyan(" DEB "), cmd.ProcessState)
 	if err := addFromFS(store, model.Evidence{
 		Type:     "Other",
-		Name:     name + ".plaso",
+		Name:     filepath.Base(dst),
 		Source:   obj.Source,
 		Notes:    "ext-plaso",
-		Location: name + ".plaso",
+		Location: filepath.Base(dst),
 		CaseID:   obj.CaseID,
 	}); err != nil {
 		return err
@@ -64,10 +48,10 @@ func RunPlaso(store model.Store, obj model.Evidence) error {
 
 	if err := addFromFS(store, model.Evidence{
 		Type:     "Other",
-		Name:     name + ".plaso.csv",
+		Name:     filepath.Base(dst) + ".csv",
 		Source:   obj.Source,
 		Notes:    "ext-plaso",
-		Location: name + ".plaso.csv",
+		Location: filepath.Base(dst) + ".csv",
 		CaseID:   obj.CaseID,
 	}); err != nil {
 		return err
