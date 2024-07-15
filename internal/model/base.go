@@ -91,6 +91,9 @@ func FromEnv(name string, defaults []string) []string {
 }
 
 const schema = `
+PRAGMA foreign_keys = ON;
+PRAGMA journal_mode = WAL;
+
 CREATE TABLE IF NOT EXISTS cases (
 	id             TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
 	name           TEXT NOT NULL,
