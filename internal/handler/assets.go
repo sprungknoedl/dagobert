@@ -30,9 +30,7 @@ func (ctrl AssetCtrl) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Render(ctrl.store, w, r, http.StatusOK, "internal/views/assets-many.html", map[string]any{
-		"env":   GetEnv(ctrl.store, r),
-		"title": "Assets",
-		"rows":  list,
+		"rows": list,
 	})
 }
 

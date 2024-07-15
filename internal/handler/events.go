@@ -35,8 +35,7 @@ func (ctrl EventCtrl) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Render(ctrl.store, w, r, http.StatusOK, "internal/views/events-many.html", map[string]any{
-		"title": "Timeline",
-		"rows":  list,
+		"rows": list,
 		"hasTimeGap": func(list []model.Event, i int) string {
 			if i > 0 {
 				prev := list[i-1].Time

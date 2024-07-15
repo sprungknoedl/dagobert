@@ -2,104 +2,110 @@
 <html lang="en">
 {{ template "layout-head" }}
 <body>
-    {{ template "table-view" . }}
+    <div class="drawer-content flex">
+        <div up-flashes></div>
+
+        {{ template "sidebar" . }}
+
+        <main class="p-8 grow" x-data="{ sort_by: '{{ .env.Sort }}' }" >
+            {{ template "navbar" dict "env" .env "title" "Timeline" }}
+
+            <table id="list" class="table w-full">
+                <thead>
+                    <tr>
+                        {{ template "table-th" dict "name" "time" "sort" .env.Sort }}
+                        {{ template "table-th" dict "name" "type" "sort" .env.Sort }}
+                        {{ template "table-th" dict "name" "event" "sort" .env.Sort }}
+                        {{ template "table-th" dict "name" "assets" "sort" .env.Sort }}
+                        {{ template "table-th" dict "name" "indicators" "sort" .env.Sort }}
+                        <td style="width: 7rem"></td>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {{ range $i, $row := .rows }}
+
+                    {{ with $gap := call $.hasTimeGap $.rows $i }}
+                    {{ if ne $gap "" }}
+                        <tr>
+                            <td class="text-center p-8" colspan="42">
+                            <span class="badge badge-outline badge-accent badge-lg p-4">Mind the gap: {{ $gap }}</span>
+                            </td>
+                        </tr>
+                    {{ end }}
+                    {{ end }}
+
+                    <tr class="hover">
+                        <td> {{ .Time.Format "2006-01-02 15:04:05.000" }} <span class="text-neutral">{{ .Time.Format "Z07:00" }}</span> </td>
+                        <td>
+                            <span class="flex items-center gap-2 text-sm me-3">
+                            {{ if eq .Type "Reconnaissance" }}            {{ template "icon-magnifying-glass" "w-5 h-5 inline-block" }}
+                            {{ else if eq .Type "Resource Development" }} {{ template "icon-cog-6-tooth" "w-5 h-5 inline-block" }}
+                            {{ else if eq .Type "Initial Access" }}       {{ template "icon-lock-open" "w-5 h-5 inline-block" }}
+                            {{ else if eq .Type "Execution" }}            {{ template "icon-play" "w-5 h-5 inline-block" }}
+                            {{ else if eq .Type "Persistence" }}          {{ template "icon-arrow-path" "w-5 h-5 inline-block" }}
+                            {{ else if eq .Type "Privilege Escalation" }} {{ template "icon-logout" "w-5 h-5 inline-block" }}
+                            {{ else if eq .Type "Defense Evasion" }}      {{ template "icon-eye-slash" "w-5 h-5 inline-block" }}
+                            {{ else if eq .Type "Credential Access" }}    {{ template "icon-identification" "w-5 h-5 inline-block" }}
+                            {{ else if eq .Type "Discovery" }}            {{ template "icon-eye" "w-5 h-5 inline-block" }}
+                            {{ else if eq .Type "Lateral Movement" }}     {{ template "icon-arrows-right-left" "w-5 h-5 inline-block" }}
+                            {{ else if eq .Type "Collection" }}           {{ template "icon-arrow-down-tray" "w-5 h-5 inline-block" }}
+                            {{ else if eq .Type "C2" }}                   {{ template "icon-server" "w-5 h-5 inline-block" }}
+                            {{ else if eq .Type "Exfiltration" }}         {{ template "icon-truck" "w-5 h-5 inline-block" }}
+                            {{ else if eq .Type "Impact" }}               {{ template "icon-fire" "w-5 h-5 inline-block" }}
+                            {{ else if eq .Type "Legitimate" }}           {{ template "icon-check-circle" "w-5 h-5 inline-block" }}
+                            {{ else if eq .Type "Remediation" }}          {{ template "icon-heart" "w-5 h-5 inline-block" }}
+                            {{ else }}                                    {{ template "icon-question-mark-circle" "w-5 h-5 inline-block" }}
+                            {{ end  }}
+                            {{ .Type }}
+                            </span>
+                        </td>
+                        <td> {{ .Event }} </td>
+                        <td>
+                            {{ range .Assets }}
+                            <span class="badge badge-outline badge-secondary mr-1 p-3">
+                                {{ if eq .Type "Account" }}      {{ template "icon-user" "inline-block w-4 h-4 mr-2" }}
+                                {{ else if eq .Type "Desktop" }} {{ template "icon-desktop" "inline-block w-4 h-4 mr-2" }}
+                                {{ else if eq .Type "Server" }}  {{ template "icon-server" "inline-block w-4 h-4 mr-2" }}
+                                {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-4 h-4 mr-2" }}
+                                {{ end }}
+                                {{ .Name }}
+                            </span>
+                            {{ end }}
+                        </td>
+                        <td>
+                            {{ range .Indicators }}
+                            <span class="badge badge-outline badge-accent mr-1 p-3">
+                                {{ if eq .Type "IP" }}           {{ template "icon-map-pin" "inline-block w-4 h-4 mr-2" }}
+                                {{ else if eq .Type "Domain" }}  {{ template "icon-globe-europe" "inline-block w-4 h-4 mr-2" }}
+                                {{ else if eq .Type "URL" }}     {{ template "icon-link" "inline-block w-4 h-4 mr-2" }}
+                                {{ else if eq .Type "Path" }}    {{ template "icon-folder-open" "inline-block w-4 h-4 mr-2" }}
+                                {{ else if eq .Type "Hash" }}    {{ template "icon-fingerprint" "inline-block w-4 h-4 mr-2" }}
+                                {{ else if eq .Type "Service" }} {{ template "icon-command-line" "inline-block w-4 h-4 mr-2" }}
+                                {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-4 h-4 mr-2" }}
+                                {{ end }}
+                                {{ .Value }}
+                            </span>
+                            {{ end }}
+                        </td>
+                        <td class="px-6 py-2 flex justify-end join">
+                            <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/events/{{ .ID }}"
+                                up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
+                                {{ template "icon-pencil" "w-4 h-4"}}
+                            </a>
+                            <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/events/{{ .ID }}"
+                                up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
+                                {{ template "icon-trash" "w-4 h-4"}}
+                            </a>
+                        </td>
+                    </tr>
+                    {{ else }}
+                    <tr>
+                        <td colspan="42">Nothing here ...</td>
+                    </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+        </main>
+    </div>
 </body>
-
-{{ define "table-content" }}
-<table id="list" class="table w-full">
-	<thead>
-		<tr>
-            {{ template "table-th" dict "name" "time" "sort" .env.Sort }}
-            {{ template "table-th" dict "name" "type" "sort" .env.Sort }}
-            {{ template "table-th" dict "name" "event" "sort" .env.Sort }}
-            {{ template "table-th" dict "name" "assets" "sort" .env.Sort }}
-            {{ template "table-th" dict "name" "indicators" "sort" .env.Sort }}
-			<td style="width: 7rem"></td>
-		</tr>
-	</thead>
-
-	<tbody>
-        {{ range $i, $row := .rows }}
-
-        {{ with $gap := call $.hasTimeGap $.rows $i }}
-        {{ if ne $gap "" }}
-            <tr>
-                <td class="text-center p-8" colspan="42">
-                <span class="badge badge-outline badge-accent badge-lg p-4">Mind the gap: {{ $gap }}</span>
-                </td>
-            </tr>
-        {{ end }}
-        {{ end }}
-
-        <tr class="hover">
-			<td> {{ .Time.Format "2006-01-02 15:04:05.000" }} <span class="text-neutral">{{ .Time.Format "Z07:00" }}</span> </td>
-			<td>
-	            <span class="flex items-center gap-2 text-sm me-3">
-		        {{ if eq .Type "Reconnaissance" }}            {{ template "icon-magnifying-glass" "w-5 h-5 inline-block" }}
-		        {{ else if eq .Type "Resource Development" }} {{ template "icon-cog-6-tooth" "w-5 h-5 inline-block" }}
-		        {{ else if eq .Type "Initial Access" }}       {{ template "icon-lock-open" "w-5 h-5 inline-block" }}
-		        {{ else if eq .Type "Execution" }}            {{ template "icon-play" "w-5 h-5 inline-block" }}
-		        {{ else if eq .Type "Persistence" }}          {{ template "icon-arrow-path" "w-5 h-5 inline-block" }}
-		        {{ else if eq .Type "Privilege Escalation" }} {{ template "icon-logout" "w-5 h-5 inline-block" }}
-		        {{ else if eq .Type "Defense Evasion" }}      {{ template "icon-eye-slash" "w-5 h-5 inline-block" }}
-		        {{ else if eq .Type "Credential Access" }}    {{ template "icon-identification" "w-5 h-5 inline-block" }}
-		        {{ else if eq .Type "Discovery" }}            {{ template "icon-eye" "w-5 h-5 inline-block" }}
-		        {{ else if eq .Type "Lateral Movement" }}     {{ template "icon-arrows-right-left" "w-5 h-5 inline-block" }}
-		        {{ else if eq .Type "Collection" }}           {{ template "icon-arrow-down-tray" "w-5 h-5 inline-block" }}
-		        {{ else if eq .Type "C2" }}                   {{ template "icon-server" "w-5 h-5 inline-block" }}
-		        {{ else if eq .Type "Exfiltration" }}         {{ template "icon-truck" "w-5 h-5 inline-block" }}
-		        {{ else if eq .Type "Impact" }}               {{ template "icon-fire" "w-5 h-5 inline-block" }}
-		        {{ else if eq .Type "Legitimate" }}           {{ template "icon-check-circle" "w-5 h-5 inline-block" }}
-		        {{ else if eq .Type "Remediation" }}          {{ template "icon-heart" "w-5 h-5 inline-block" }}
-		        {{ else }}                                    {{ template "icon-question-mark-circle" "w-5 h-5 inline-block" }}
-                {{ end  }}
-                {{ .Type }}
-	            </span>
-            </td>
-			<td> {{ .Event }} </td>
-			<td>
-                {{ range .Assets }}
-                <span class="badge badge-outline badge-secondary mr-1 p-3">
-                    {{ if eq .Type "Account" }}      {{ template "icon-user" "inline-block w-4 h-4 mr-2" }}
-                    {{ else if eq .Type "Desktop" }} {{ template "icon-desktop" "inline-block w-4 h-4 mr-2" }}
-                    {{ else if eq .Type "Server" }}  {{ template "icon-server" "inline-block w-4 h-4 mr-2" }}
-                    {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-4 h-4 mr-2" }}
-                    {{ end }}
-                    {{ .Name }}
-                </span>
-                {{ end }}
-            </td>
-			<td>
-                {{ range .Indicators }}
-                <span class="badge badge-outline badge-accent mr-1 p-3">
-                    {{ if eq .Type "IP" }}           {{ template "icon-map-pin" "inline-block w-4 h-4 mr-2" }}
-                    {{ else if eq .Type "Domain" }}  {{ template "icon-globe-europe" "inline-block w-4 h-4 mr-2" }}
-                    {{ else if eq .Type "URL" }}     {{ template "icon-link" "inline-block w-4 h-4 mr-2" }}
-                    {{ else if eq .Type "Path" }}    {{ template "icon-folder-open" "inline-block w-4 h-4 mr-2" }}
-                    {{ else if eq .Type "Hash" }}    {{ template "icon-fingerprint" "inline-block w-4 h-4 mr-2" }}
-                    {{ else if eq .Type "Service" }} {{ template "icon-command-line" "inline-block w-4 h-4 mr-2" }}
-                    {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-4 h-4 mr-2" }}
-                    {{ end }}
-                    {{ .Value }}
-                </span>
-                {{ end }}
-            </td>
-            <td class="px-6 py-2 flex justify-end join">
-                <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/events/{{ .ID }}"
-                    up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                    {{ template "icon-pencil" "w-4 h-4"}}
-                </a>
-                <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/events/{{ .ID }}"
-                    up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                    {{ template "icon-trash" "w-4 h-4"}}
-                </a>
-            </td>
-        </tr>
-        {{ else }}
-        <tr>
-            <td colspan="42">Nothing here ...</td>
-        </tr>
-        {{ end }}
-	</tbody>
-</table>
-{{ end }}

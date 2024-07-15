@@ -31,8 +31,7 @@ func (ctrl CaseCtrl) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Render(ctrl.store, w, r, http.StatusOK, "internal/views/cases-many.html", map[string]any{
-		"title": "Cases",
-		"rows":  list,
+		"rows": list,
 	})
 }
 

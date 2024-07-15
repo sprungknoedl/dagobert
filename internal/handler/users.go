@@ -205,8 +205,7 @@ func (ctrl UserCtrl) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Render(ctrl.store, w, r, http.StatusOK, "internal/views/users-many.html", map[string]any{
-		"title": "Users",
-		"rows":  list,
+		"rows": list,
 	})
 }
 

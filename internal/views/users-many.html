@@ -2,31 +2,40 @@
 <html lang="en">
 {{ template "layout-head" }}
 <body>
-    {{ template "table-view" . }}
+	<div class="drawer-content flex">
+        <div up-flashes></div>
+
+        {{ template "sidebar" . }}
+
+        <main class="p-8 grow" x-data="{ sort_by: '{{ .env.Sort }}' }" >
+            {{ template "navbar" dict "env" .env "title" "Users"
+                "hideImport" true
+                "hideExport" true
+                "hideAdd" true }}
+
+			<table id="list" class="table w-full">
+				<thead>
+					<tr>
+						{{ template "table-th" dict "name" "name" "sort" .env.Sort }}
+						{{ template "table-th" dict "name" "upn" "sort" .env.Sort }}
+						{{ template "table-th" dict "name" "email" "sort" .env.Sort }}
+					</tr>
+				</thead>
+
+				<tbody>
+					{{ range .rows }}
+					<tr class="hover">
+						<td> {{ .Name }} </td>
+						<td> {{ .UPN }} </td>
+						<td> {{ .Email }} </td>
+					</tr>
+					{{ else }}
+					<tr>
+						<td colspan="42">Nothing here ...</td>
+					</tr>
+					{{ end }}
+				</tbody>
+			</table>
+        </main>
+    </div>
 </body>
-
-{{ define "table-content" }}
-<table id="list" class="table w-full">
-	<thead>
-		<tr>
-			{{ template "table-th" dict "name" "name" "sort" .env.Sort }}
-			{{ template "table-th" dict "name" "upn" "sort" .env.Sort }}
-			{{ template "table-th" dict "name" "email" "sort" .env.Sort }}
-		</tr>
-	</thead>
-
-	<tbody>
-        {{ range .rows }}
-        <tr class="hover">
-			<td> {{ .Name }} </td>
-			<td> {{ .UPN }} </td>
-			<td> {{ .Email }} </td>
-        </tr>
-        {{ else }}
-        <tr>
-            <td colspan="42">Nothing here ...</td>
-        </tr>
-        {{ end }}
-	</tbody>
-</table>
-{{ end }}

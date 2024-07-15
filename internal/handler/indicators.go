@@ -30,8 +30,7 @@ func (ctrl IndicatorCtrl) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Render(ctrl.store, w, r, http.StatusOK, "internal/views/indicators-many.html", map[string]any{
-		"title": "Indicators",
-		"rows":  list,
+		"rows": list,
 	})
 }
 

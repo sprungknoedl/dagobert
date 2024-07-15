@@ -2,60 +2,65 @@
 <html lang="en">
 {{ template "layout-head" }}
 <body>
-    {{ template "table-view" . }}
+    <div class="drawer-content flex">
+        <div up-flashes></div>
+        {{ template "sidebar" . }}
+
+        <main class="p-8 grow" x-data="{ sort_by: '{{ .env.Sort }}' }" >
+            {{ template "navbar" dict "env" .env "title" "Assets" }}
+
+            <table id="list" class="table w-full">
+                <thead>
+                    <tr>
+                        {{ template "table-th" dict "name" "status" "sort" .env.Sort }}
+                        {{ template "table-th" dict "name" "type" "sort" .env.Sort }}
+                        {{ template "table-th" dict "name" "name" "sort" .env.Sort }}
+                        {{ template "table-th" dict "name" "addr" "sort" .env.Sort }}
+                        {{ template "table-th" dict "name" "notes" "sort" .env.Sort }}
+                        <td style="width: 7rem"></td>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {{ range .rows }}
+                    <tr class="hover">
+                        <td>
+                            {{ if eq .Status "Compromised" }} <span class="text-error">{{ template "icon-bug" "inline-block w-6 h-6 mr-2" }} {{ .Status }}
+                            {{ else if eq .Status "Accessed" }} <span class="text-warning">{{ template "icon-command-line" "inline-block w-6 h-6 mr-2" }} {{ .Status }}
+                            {{ else if eq .Status "No sign of compromise" }} <span class="text-success">{{ template "icon-check-circle" "inline-block w-6 h-6 mr-2" }} {{ .Status }}
+                            {{ else }}
+                            {{ .Status }}
+                            {{ end }}
+                        </td>
+                        <td>
+                            {{ if eq .Type "Account" }}      {{ template "icon-user" "inline-block w-6 h-6 mr-2" }}
+                            {{ else if eq .Type "Desktop" }} {{ template "icon-desktop" "inline-block w-6 h-6 mr-2" }}
+                            {{ else if eq .Type "Server" }}  {{ template "icon-server" "inline-block w-6 h-6 mr-2" }}
+                            {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-6 h-6 mr-2" }}
+                            {{ end }}
+                            {{ .Type }}
+                        </td>
+                        <td> {{ .Name }} </td>
+                        <td> {{ .Addr }} </td>
+                        <td> {{ .Notes }} </td>
+                        <td class="px-6 py-2 flex justify-end join">
+                            <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/assets/{{ .ID }}"
+                                up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
+                                {{ template "icon-pencil" "w-4 h-4"}}
+                            </a>
+                            <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/assets/{{ .ID }}"
+                                up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
+                                {{ template "icon-trash" "w-4 h-4"}}
+                            </a>
+                        </td>
+                    </tr>
+                    {{ else }}
+                    <tr>
+                        <td colspan="42">Nothing here ...</td>
+                    </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+        </main>
+    </div>
 </body>
-
-{{ define "table-content" }}
-<table id="list" class="table w-full">
-	<thead>
-		<tr>
-			{{ template "table-th" dict "name" "status" "sort" .env.Sort }}
-			{{ template "table-th" dict "name" "type" "sort" .env.Sort }}
-			{{ template "table-th" dict "name" "name" "sort" .env.Sort }}
-			{{ template "table-th" dict "name" "addr" "sort" .env.Sort }}
-			{{ template "table-th" dict "name" "notes" "sort" .env.Sort }}
-			<td style="width: 7rem"></td>
-		</tr>
-	</thead>
-
-	<tbody>
-        {{ range .rows }}
-        <tr class="hover">
-			<td>
-                {{ if eq .Status "Compromised" }} <span class="text-error">{{ template "icon-bug" "inline-block w-6 h-6 mr-2" }} {{ .Status }}
-                {{ else if eq .Status "Accessed" }} <span class="text-warning">{{ template "icon-command-line" "inline-block w-6 h-6 mr-2" }} {{ .Status }}
-                {{ else if eq .Status "No sign of compromise" }} <span class="text-success">{{ template "icon-check-circle" "inline-block w-6 h-6 mr-2" }} {{ .Status }}
-                {{ else }}
-                {{ .Status }}
-                {{ end }}
-            </td>
-			<td>
-                {{ if eq .Type "Account" }}      {{ template "icon-user" "inline-block w-6 h-6 mr-2" }}
-                {{ else if eq .Type "Desktop" }} {{ template "icon-desktop" "inline-block w-6 h-6 mr-2" }}
-                {{ else if eq .Type "Server" }}  {{ template "icon-server" "inline-block w-6 h-6 mr-2" }}
-                {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-6 h-6 mr-2" }}
-                {{ end }}
-                {{ .Type }}
-            </td>
-			<td> {{ .Name }} </td>
-			<td> {{ .Addr }} </td>
-			<td> {{ .Notes }} </td>
-            <td class="px-6 py-2 flex justify-end join">
-                <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/assets/{{ .ID }}"
-                    up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                    {{ template "icon-pencil" "w-4 h-4"}}
-                </a>
-                <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/assets/{{ .ID }}"
-                    up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                    {{ template "icon-trash" "w-4 h-4"}}
-                </a>
-            </td>
-        </tr>
-        {{ else }}
-        <tr>
-            <td colspan="42">Nothing here ...</td>
-        </tr>
-        {{ end }}
-	</tbody>
-</table>
-{{ end }}

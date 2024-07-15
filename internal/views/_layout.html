@@ -28,27 +28,6 @@
 </head>
 {{ end }}
 
-{{ define "table-view" }}
-<div class="drawer-content flex">
-    <div up-flashes></div>
-
-    {{ template "sidebar" . }}
-
-    <main class="p-8 grow" x-data="{ sort_by: '{{ .env.Sort }}' }" >
-        {{ template "navbar" . }}
-        {{ template "table-content" . }}
-    </main>
-</div>
-{{ end }}
-
-{{ define "table-th" }}
-<th @click="toggle()" x-data="{ toggle(event) { sort_by = (sort_by == '{{ .name }}') ? '-{{ .name }}' : '{{ .name }}' } }">
-    {{ if eq .sort .name }}          {{ template "icon-chevron-up" "w-5 h-5 inline-block" }}
-    {{ else if eq .sort (print "-" .name) }} {{ template "icon-chevron-down" "w-5 h-5 inline-block" }} {{ end }}
-    {{ title .name }}
-</th>
-{{ end }}
-
 {{ define "navbar" }}
 <nav class="sticky top-0 bg-base-100 z-10 flex items-center justify-between -mt-4 py-4">
 
@@ -66,13 +45,16 @@
 
     <div class="flex gap-5 items-center">
         <form method="get" action="./" up-target="#list" up-autosubmit up-watch-delay="500">
+
         <!-- search input -->
+         {{ if not .hideSearch }}
         <label class="w-96 input input-bordered flex items-center gap-2">
             <input type="search" name="search" value="{{ .env.Search }}" class="grow" placeholder="Search ..." />
             <svg class="w-4 h-4 opacity-70" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
             </svg>
         </label>
+        {{ end }}
 
         <!-- sort input -->
 	    <input name="sort" type="hidden" value="{{ .env.Sort }}"
@@ -82,32 +64,40 @@
 
         <!-- buttons -->
         <div class="join" role="group">
+            {{ if not .hideImport }}
             <a class="join-item btn" href="import"
                 up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}"
                 @keydown.i.ctrl.window="$el.click()">
                 {{ template "icon-arrow-up-tray" "inline-block mr-1 w-5 h-5" }}
                 Import CSV
-            </button>
+            </a>
+            {{ end }}
 
+            {{ if not .hideExport }}
             <a class="join-item btn" href="export"
                 @keydown.e.ctrl.window="$el.click()">
                 {{ template "icon-arrow-down-tray" "inline-block mr-1 w-5 h-5" }}
                 Export CSV
             </a>
+            {{ end }}
 
+            {{ if not .hideRefresh }}
             <a class="join-item btn" href="./"
                 up-target="#list"
                 @keydown.r.ctrl.window="$el.click()">
                 {{ template "icon-arrow-path" "inline-block mr-1 w-5 h-5" }}
                 Refresh
-            </button>
+            </a>
+            {{ end }}
 
+            {{ if not .hideAdd }}
             <a class="join-item btn btn-accent" href="new"
                 up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}"
                 @keydown.n.ctrl.window="$el.click()">
                 {{ template "icon-plus" "inline-block mr-1 w-5 h-5" }}
                 Add
             </a>
+            {{ end }}
         </div>
 
     </div>
@@ -151,4 +141,12 @@
 		<li><a href="/logout" data-tip="Logout" class='tooltip tooltip-right'> {{ template "icon-logout" "w-6 h-6" }} </a></li>
     </ul>
 </aside>
+{{ end }}
+
+{{ define "table-th" }}
+<th @click="toggle()" x-data="{ toggle(event) { sort_by = (sort_by == '{{ .name }}') ? '-{{ .name }}' : '{{ .name }}' } }">
+    {{ if eq .sort .name }}          {{ template "icon-chevron-up" "w-5 h-5 inline-block" }}
+    {{ else if eq .sort (print "-" .name) }} {{ template "icon-chevron-down" "w-5 h-5 inline-block" }} {{ end }}
+    {{ title .name }}
+</th>
 {{ end }}
