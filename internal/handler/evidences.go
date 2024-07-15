@@ -40,6 +40,7 @@ func (ctrl EvidenceCtrl) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Render(ctrl.store, w, r, http.StatusOK, "internal/views/evidences-many.html", map[string]any{
+		"title":        "Evidences",
 		"rows":         list,
 		"humanizeSize": humanizeSize,
 	})

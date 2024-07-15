@@ -32,7 +32,8 @@ func (ctrl TaskCtrl) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Render(ctrl.store, w, r, http.StatusOK, "internal/views/tasks-many.html", map[string]any{
-		"rows": list,
+		"title": "Tasks",
+		"rows":  list,
 	})
 }
 

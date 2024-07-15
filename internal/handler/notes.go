@@ -30,7 +30,8 @@ func (ctrl NoteCtrl) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Render(ctrl.store, w, r, http.StatusOK, "internal/views/notes-many.html", map[string]any{
-		"rows": list,
+		"title": "Notes",
+		"rows":  list,
 	})
 }
 

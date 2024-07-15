@@ -27,7 +27,8 @@ func (ctrl KeyCtrl) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Render(ctrl.store, w, r, http.StatusOK, "internal/views/keys-many.html", map[string]any{
-		"rows": list,
+		"title": "API Keys",
+		"rows":  list,
 	})
 }
 

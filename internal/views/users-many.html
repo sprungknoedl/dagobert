@@ -8,7 +8,7 @@
         {{ template "sidebar" . }}
 
         <main class="p-8 grow" x-data="{ sort_by: '{{ .env.Sort }}' }" >
-            {{ template "navbar" dict "env" .env "title" "Users"
+            {{ template "navbar" dict "env" .env "title" .title
                 "hideImport" true
                 "hideExport" true
                 "hideAdd" true }}

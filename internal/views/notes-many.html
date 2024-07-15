@@ -8,13 +8,13 @@
         {{ template "sidebar" . }}
 
         <main class="p-8 grow" x-data="{ sort_by: '{{ .env.Sort }}' }" >
-            {{ template "navbar" dict "env" .env "title" "Notes" }}
+            {{ template "navbar" dict "env" .env "title" .title }}
 
             <table id="list" class="table w-full">
                 <thead>
                     <tr>
                         {{ template "table-th" dict "name" "category" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "title" "sort" .env.Sort }}
+                        {{ template "table-th" dict "name" "title" .title .env.Sort }}
                         {{ template "table-th" dict "name" "description" "sort" .env.Sort }}
                         <td style="width: 7rem"></td>
                     </tr>
