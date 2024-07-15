@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"database/sql"
 	"encoding/csv"
 	"fmt"
 	"math"
@@ -63,13 +64,14 @@ func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Time", "Type", "Assets", "Event", "Raw"})
+	cw.Write([]string{"ID", "Time", "Type", "Assets", "Indicators", "Event", "Raw"})
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
 			e.Time.Format(time.RFC3339),
 			e.Type,
 			strings.Join(fp.Apply(e.Assets, func(x model.Asset) string { return x.Name }), " "),
+			strings.Join(fp.Apply(e.Indicators, func(x model.Indicator) string { return x.Value }), " "),
 			e.Event,
 			e.Raw,
 		})
@@ -81,22 +83,75 @@ func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
 func (ctrl EventCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/events/", cid)
-	ImportCSV(ctrl.store, w, r, uri, 6, func(rec []string) {
+	ImportCSV(ctrl.store, w, r, uri, 7, func(rec []string) {
 		t, err := time.Parse(time.RFC3339, rec[1])
 		if err != nil {
 			Warn(w, r, err)
 			return
 		}
 
+		// import assets (creates new one if they don't exist)
+		assets := []model.Asset{}
+		for _, asset := range strings.Split(rec[3], " ") {
+			if asset == "" {
+				continue
+			}
+
+			obj, err := ctrl.store.GetAssetByName(cid, asset)
+			if err != nil && err != sql.ErrNoRows {
+				Err(w, r, fmt.Errorf("get asset by name: %w", err))
+				return
+			} else if err != nil && err == sql.ErrNoRows {
+				obj, err = ctrl.store.SaveAsset(cid, model.Asset{
+					Name:   asset,
+					Status: "Under investigation",
+					Type:   "Other",
+				})
+				if err != nil {
+					Err(w, r, fmt.Errorf("save asset: %w", err))
+					return
+				}
+			}
+
+			assets = append(assets, obj)
+		}
+
+		// import indicators (creates new one if they don't exist)
+		indicators := []model.Indicator{}
+		for _, indicator := range strings.Split(rec[4], " ") {
+			if indicator == "" {
+				continue
+			}
+
+			obj, err := ctrl.store.GetIndicatorByValue(cid, indicator)
+			if err != nil && err != sql.ErrNoRows {
+				Err(w, r, err)
+				return
+			} else if err != nil && err == sql.ErrNoRows {
+				obj, err = ctrl.store.SaveIndicator(cid, model.Indicator{
+					Value:  indicator,
+					Status: "Under investigation",
+					Type:   "Other",
+					TLP:    "TLP:RED",
+				})
+				if err != nil {
+					Err(w, r, err)
+					return
+				}
+			}
+
+			indicators = append(indicators, obj)
+		}
+
 		obj := model.Event{
-			ID:     rec[0],
-			CaseID: cid,
-			Time:   t,
-			Type:   rec[2],
-			// TODO: import asset links
-			// Assets: rec[3]
-			Event: rec[4],
-			Raw:   rec[5],
+			ID:         rec[0],
+			CaseID:     cid,
+			Time:       t,
+			Type:       rec[2],
+			Assets:     assets,
+			Indicators: indicators,
+			Event:      rec[5],
+			Raw:        rec[6],
 		}
 
 		if err = ctrl.store.SaveEvent(cid, obj); err != nil {

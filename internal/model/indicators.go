@@ -97,6 +97,25 @@ func (store *Store) GetIndicator(cid string, id string) (Indicator, error) {
 	return obj, err
 }
 
+func (store *Store) GetIndicatorByValue(cid string, value string) (Indicator, error) {
+	query := `
+	SELECT id, status, type, value, tlp, source, notes, case_id
+	FROM indicators
+	WHERE case_id = :cid AND value = :value
+	LIMIT 1`
+
+	rows, err := store.db.Query(query,
+		sql.Named("cid", cid),
+		sql.Named("value", value))
+	if err != nil {
+		return Indicator{}, err
+	}
+
+	var obj Indicator
+	err = ScanOne(rows, &obj)
+	return obj, err
+}
+
 func (store *Store) SaveIndicator(cid string, obj Indicator) (Indicator, error) {
 	query := `
 	REPLACE INTO indicators (id, status, type, value, tlp, source, notes, case_id)

@@ -56,8 +56,8 @@ func (ctrl IndicatorCtrl) Export(w http.ResponseWriter, r *http.Request) {
 			e.Type,
 			e.Value,
 			e.TLP,
-			e.Notes,
 			e.Source,
+			e.Notes,
 		})
 	}
 

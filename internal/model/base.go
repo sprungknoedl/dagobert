@@ -71,7 +71,10 @@ func ScanOne(rows *sql.Rows, dest any) error {
 		args[i] = destv.Field(i).Addr().Interface()
 	}
 
-	rows.Next()
+	if !rows.Next() {
+		return sql.ErrNoRows
+	}
+
 	if err := rows.Err(); err != nil {
 		return err
 	}

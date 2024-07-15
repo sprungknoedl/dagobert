@@ -43,7 +43,7 @@ func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	filename := fmt.Sprintf("%s - %s - Cases.csv", time.Now().Format("20060102"), GetEnv(ctrl.store, r).ActiveCase.Name)
+	filename := fmt.Sprintf("%s - Cases.csv", time.Now().Format("20060102"))
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.WriteHeader(http.StatusOK)
 

@@ -71,6 +71,25 @@ func (store *Store) GetAsset(cid string, id string) (Asset, error) {
 	return obj, err
 }
 
+func (store *Store) GetAssetByName(cid string, name string) (Asset, error) {
+	query := `
+	SELECT id, status, type, name, addr, notes, case_id
+	FROM assets
+	WHERE case_id = :cid AND name = :name
+	LIMIT 1`
+
+	rows, err := store.db.Query(query,
+		sql.Named("cid", cid),
+		sql.Named("name", name))
+	if err != nil {
+		return Asset{}, err
+	}
+
+	var obj Asset
+	err = ScanOne(rows, &obj)
+	return obj, err
+}
+
 func (store *Store) SaveAsset(cid string, obj Asset) (Asset, error) {
 	query := `
 	REPLACE INTO assets (id, status, type, name, addr, notes, case_id)

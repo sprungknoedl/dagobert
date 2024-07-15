@@ -3,6 +3,7 @@ package handler
 import (
 	"crypto/sha1"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -67,6 +68,7 @@ func (ctrl EvidenceCtrl) Export(w http.ResponseWriter, r *http.Request) {
 			e.Hash,
 			strconv.FormatInt(e.Size, 10),
 			e.Notes,
+			e.Location,
 		})
 	}
 
@@ -83,14 +85,21 @@ func (ctrl EvidenceCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		loc := filepath.Base(filepath.Clean(rec[6]))
+		if _, err := os.Stat(filepath.Join("files", "evidences", cid, loc)); errors.Is(err, os.ErrNotExist) {
+			Warn(w, r, err)
+			return
+		}
+
 		obj := model.Evidence{
-			ID:     rec[0],
-			CaseID: cid,
-			Type:   rec[1],
-			Name:   rec[2],
-			Hash:   rec[3],
-			Size:   size, // rec[4]
-			Notes:  rec[5],
+			ID:       rec[0],
+			CaseID:   cid,
+			Type:     rec[1],
+			Name:     rec[2],
+			Hash:     rec[3],
+			Size:     size, // rec[4]
+			Notes:    rec[5],
+			Location: loc,
 		}
 
 		err = ctrl.store.SaveEvidence(cid, obj)
