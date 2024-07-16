@@ -4,11 +4,11 @@ go 1.22
 
 require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
-	github.com/gorilla/schema v1.3.0
-	github.com/gorilla/sessions v1.2.1
+	github.com/gorilla/schema v1.4.1
+	github.com/gorilla/sessions v1.3.0
 	go.arsenm.dev/pcre v0.0.0-20220530205550-74594f6c8b0e
-	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
-	modernc.org/sqlite v1.30.1
+	golang.org/x/oauth2 v0.21.0
+	modernc.org/sqlite v1.30.2
 )
 
 require (
@@ -16,7 +16,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/gorilla/securecookie v1.1.1 // indirect
+	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
