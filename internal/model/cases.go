@@ -93,8 +93,12 @@ func (store *Store) GetCaseFull(cid string) (Case, error) {
 
 func (store *Store) SaveCase(obj Case) error {
 	query := `
-	REPLACE INTO cases (id, name, closed, classification, severity, outcome, summary)
-	VALUES (NULLIF(:id, ''), :name, :closed, :classification, :severity, :outcome, :summary)`
+	INSERT INTO cases (id, name, closed, classification, severity, outcome, summary)
+	VALUES (iif(:id != '', :id, lower(hex(randomblob(5)))), :name, :closed, :classification, :severity, :outcome, :summary)
+	ON CONFLICT (id)
+		DO UPDATE SET name=:name, closed=:closed, classification=:classification, severity=:severity, outcome=:outcome, summary=:summary
+		WHERE id = :id
+	`
 
 	_, err := store.db.Exec(query,
 		sql.Named("id", obj.ID),

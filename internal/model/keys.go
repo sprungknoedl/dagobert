@@ -54,8 +54,11 @@ func (store *Store) GetKey(key string) (Key, error) {
 
 func (store *Store) SaveKey(obj Key) error {
 	query := `
-	REPLACE INTO keys (key, name)
-	VALUES (NULLIF(:key, ''), :name)`
+	INSERT INTO keys (key, name)
+	VALUES (NULLIF(:key, ''), :name)
+	ON CONFLICT (key)
+		DO UPDATE SET name=:name
+		WHERE key = :key`
 
 	_, err := store.db.Exec(query,
 		sql.Named("key", obj.Key),

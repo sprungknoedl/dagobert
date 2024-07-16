@@ -74,8 +74,11 @@ func (store *Store) GetEvidence(cid string, id string) (Evidence, error) {
 
 func (store *Store) SaveEvidence(cid string, obj Evidence) error {
 	query := `
-	REPLACE INTO evidences (id, type, name, hash, size, source, notes, location, case_id)
-	VALUES (NULLIF(:id, ''), :type, :name, :hash, :size, :source, :notes, :location, :cid)`
+	INSERT INTO evidences (id, type, name, hash, size, source, notes, location, case_id)
+	VALUES (iif(:id != '', :id, lower(hex(randomblob(5)))), :type, :name, :hash, :size, :source, :notes, :location, :cid)
+	ON CONFLICT (id)
+		DO UPDATE SET type=:type, name=:name, source=:source, notes=:notes
+		WHERE id = :id`
 
 	_, err := store.db.Exec(query,
 		sql.Named("cid", cid),

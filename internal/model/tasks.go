@@ -69,8 +69,11 @@ func (store *Store) GetTask(cid string, id string) (Task, error) {
 
 func (store *Store) SaveTask(cid string, obj Task) error {
 	query := `
-	REPLACE INTO tasks (id, type, task, done, owner, date_due, case_id)
-	VALUES (NULLIF(:id, ''), :type, :task, :done, :owner, :datedue, :cid)`
+	INSERT INTO tasks (id, type, task, done, owner, date_due, case_id)
+	VALUES (iif(:id != '', :id, lower(hex(randomblob(5)))), :type, :task, :done, :owner, :datedue, :cid)
+	ON CONFLICT (id)
+		DO UPDATE SET type=:type, task=:task, done=:done, owner=:owner, date_due=:datedue
+		WHERE id = :id`
 
 	_, err := store.db.Exec(query,
 		sql.Named("cid", cid),

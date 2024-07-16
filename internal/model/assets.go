@@ -92,8 +92,11 @@ func (store *Store) GetAssetByName(cid string, name string) (Asset, error) {
 
 func (store *Store) SaveAsset(cid string, obj Asset) (Asset, error) {
 	query := `
-	REPLACE INTO assets (id, status, type, name, addr, notes, case_id)
-	VALUES (NULLIF(:id, ''), :status, :type, :name, :addr, :notes, :cid)
+	INSERT INTO assets (id, status, type, name, addr, notes, case_id)
+	VALUES (iif(:id != '', :id, lower(hex(randomblob(5)))), :status, :type, :name, :addr, :notes, :cid)
+	ON CONFLICT (id) 
+		DO UPDATE SET status=:status, type=:type, name=:name, addr=:addr, notes=:notes
+		WHERE id = :id
 	RETURNING id, status, type, name, addr, notes, case_id`
 
 	rows, err := store.db.Query(query,

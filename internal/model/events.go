@@ -170,8 +170,11 @@ func (store *Store) GetEvent(cid string, id string) (Event, error) {
 
 func (store *Store) SaveEvent(cid string, obj Event) error {
 	query := `
-	REPLACE INTO events (id, time, type, event, raw, case_id)
-	VALUES (NULLIF(:id, ''), :time, :type, :event, :raw, :cid)
+	INSERt INTO events (id, time, type, event, raw, case_id)
+	VALUES (iif(:id != '', :id, lower(hex(randomblob(5)))), :time, :type, :event, :raw, :cid)
+	ON CONFLICT (id)
+		DO UPDATE SET time=:time, type=:type, event=:event, raw=:raw
+		WHERE id = :id
 	RETURNING id, time, type, event, raw, case_id`
 
 	// assets

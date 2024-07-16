@@ -118,8 +118,11 @@ func (store *Store) GetIndicatorByValue(cid string, value string) (Indicator, er
 
 func (store *Store) SaveIndicator(cid string, obj Indicator) (Indicator, error) {
 	query := `
-	REPLACE INTO indicators (id, status, type, value, tlp, source, notes, case_id)
-	VALUES (NULLIF(:id, ''), :status, :type, :value, :tlp, :source, :notes, :cid)
+	INSERT INTO indicators (id, status, type, value, tlp, source, notes, case_id)
+	VALUES (iif(:id != '', :id, lower(hex(randomblob(5)))), :status, :type, :value, :tlp, :source, :notes, :cid)
+	ON CONFLICT (id)
+		DO UPDATE SET status=:status, type=:type, value=:value, tlp=:tlp, source=:source, notes=:notes
+		WHERE id = :id
 	RETURNING id, status, type, value, tlp, source, notes, case_id`
 
 	rows, err := store.db.Query(query,

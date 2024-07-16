@@ -62,8 +62,11 @@ func (store *Store) GetNote(cid string, id string) (Note, error) {
 
 func (store *Store) SaveNote(cid string, obj Note) error {
 	query := `
-	REPLACE INTO notes (id, title, category, description, case_id)
-	VALUES (NULLIF(:id, ''), :title, :category, :description, :cid)`
+	INSERT INTO notes (id, title, category, description, case_id)
+	VALUES (iif(:id != '', :id, lower(hex(randomblob(5)))), :title, :category, :description, :cid)
+	ON CONFLICT (id)
+		DO UPDATE SET title=:title, category=:category, description=:description
+		WHERE id = :id`
 
 	_, err := store.db.Exec(query,
 		sql.Named("cid", cid),

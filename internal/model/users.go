@@ -59,8 +59,11 @@ func (store *Store) GetUser(id string) (User, error) {
 
 func (store *Store) SaveUser(obj User) error {
 	query := `
-	REPLACE INTO users (id, name, upn, email)
-	VALUES (NULLIF(:id, ''), :name, :upn, :email)`
+	INSERT INTO users (id, name, upn, email)
+	VALUES (iif(:id != '', :id, lower(hex(randomblob(5)))), :name, :upn, :email)
+	ON CONFLICT (id)
+		DO UPDATE SET name=:name, upn=:upn, email=:email
+		WHERE id = :id`
 
 	_, err := store.db.Exec(query,
 		sql.Named("id", obj.ID),
