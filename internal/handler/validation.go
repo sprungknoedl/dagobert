@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"path/filepath"
 	"regexp"
 	"slices"
 
@@ -77,5 +78,15 @@ func ValidateTask(dto model.Task) valid.Result {
 		{Name: "Task", Missing: dto.Task == ""},
 		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !slices.Contains(model.TaskTypes, dto.Type)},
 		{Name: "DateDue", Message: "Invalid format, expected e.g. '2006-01-02'."},
+	})
+}
+
+func ValidateReport(dto model.Report) valid.Result {
+	return valid.Check([]valid.Condition{
+		{
+			Name: "Name", Missing: dto.Name == "",
+			Invalid: !slices.Contains([]string{".odt", ".ods", ".odp", ".docx"}, filepath.Ext(dto.Name)),
+			Message: "Unsupported file type.",
+		},
 	})
 }

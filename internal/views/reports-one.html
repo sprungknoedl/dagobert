@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+{{ template "layout-head" }}
+<body>
+    <main>
+    <form method="post" action="/settings/reports/{{ .obj.ID }}" up-submit
+        enctype="multipart/form-data"
+        x-data="{ filename: '{{ .obj.Name }}' }" >
+        <!-- Modal header -->
+        <h3 class="font-bold text-lg mb-4">
+            {{ if eq .obj.ID "new" }} Add report
+            {{ else }} Edit report
+            {{ end }}
+        </h3>
+
+        <!-- Modal body -->
+        <div class="mb-4">
+            <input name="ID" type="hidden" value="{{ .obj.ID }}" />
+
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">
+                    File
+                    <span class="text-accent">*</span>
+                </label>
+				<input name="File" type="file" class="file-input file-input-bordered w-full"
+                    @change="filename = Object.values($event.target.files).map(file => file.name).join(', ')"
+                    x-init="setTimeout(() => $el.focus(), 100)" />
+			</div>
+
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">
+					Name
+                    <span class="text-accent">*</span>
+				    {{ if .valid.Name }}<span class="ml-2 text-sm text-error">{{ .valid.Name }}</span>{{ end }}
+				</label>
+
+				<input name="Name" type="text" class="input input-bordered"
+                    value="{{ .obj.Name }}"
+                    x-model="filename" />
+			</div>
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Notes
+				    {{ if .valid.Notes }}<span class="ml-2 text-sm text-error">{{ .valid.Notes }}</span>{{ end }}
+                </label>
+                <textarea name="Notes" rows="5" class="textarea textarea-bordered">{{ .obj.Notes }}</textarea>
+            </div>
+
+            <p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="flex gap-2 items-center">
+            <button type="submit" class="btn btn-primary"> Save </button>
+            <a class="btn" up-dismiss> Cancel </a>
+        </div>
+
+        <script>
+            document.querySelectorAll('.tom').forEach((el)=>{ new TomSelect(el, {
+                create: true,
+                sortField: { field: "text", direction: "asc" },
+            }); });
+        </script>
+    </form>
+    </main>
+</body>

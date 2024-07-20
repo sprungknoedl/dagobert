@@ -87,14 +87,6 @@ func main() {
 	srv = userCtrl.Protect(srv)
 
 	// --------------------------------------
-	// Reports
-	// --------------------------------------
-	err = handler.LoadTemplates("./files/templates/")
-	if err != nil {
-		log.Fatalf("failed to load report: %v", err)
-	}
-
-	// --------------------------------------
 	// Home
 	// --------------------------------------
 	// index
@@ -119,14 +111,18 @@ func main() {
 
 	// api keys
 	keyCtrl := handler.NewKeyCtrl(db)
-	mux.HandleFunc("GET /api-keys/", keyCtrl.List)
-	mux.HandleFunc("GET /api-keys/{key}", keyCtrl.Edit)
-	mux.HandleFunc("POST /api-keys/{key}", keyCtrl.Save)
-	mux.HandleFunc("DELETE /api-keys/{key}", keyCtrl.Delete)
+	mux.HandleFunc("GET /settings/api-keys/", keyCtrl.List)
+	mux.HandleFunc("GET /settings/api-keys/{key}", keyCtrl.Edit)
+	mux.HandleFunc("POST /settings/api-keys/{key}", keyCtrl.Save)
+	mux.HandleFunc("DELETE /settings/api-keys/{key}", keyCtrl.Delete)
 
 	// templates
 	reportCtrl := handler.NewReportCtrl(db)
-	mux.HandleFunc("GET /cases/{cid}/reports", reportCtrl.List)
+	mux.HandleFunc("GET /settings/reports/", reportCtrl.List)
+	mux.HandleFunc("GET /settings/reports/{id}", reportCtrl.Edit)
+	mux.HandleFunc("POST /settings/reports/{id}", reportCtrl.Save)
+	mux.HandleFunc("DELETE /settings/reports/{id}", reportCtrl.Delete)
+	mux.HandleFunc("GET /cases/{cid}/reports", reportCtrl.Dialog)
 	mux.HandleFunc("POST /cases/{cid}/render", reportCtrl.Generate)
 
 	// --------------------------------------

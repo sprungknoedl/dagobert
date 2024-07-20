@@ -3,7 +3,7 @@
 {{ template "layout-head" }}
 <body>
     <main>
-    <form method="post" action="/api-keys/{{ .obj.Key }}" up-submit>
+    <form method="post" action="/settings/api-keys/{{ .obj.Key }}" up-submit>
         <!-- Modal header -->
         <h3 class="font-bold text-lg mb-4">
             {{ if eq .obj.Key "new" }} Add API key

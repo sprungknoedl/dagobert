@@ -8,15 +8,15 @@
         {{ template "sidebar" . }}
 
         <main class="p-8 grow" x-data="{ sort_by: '{{ .env.Sort }}' }" >
-            {{ template "navbar" dict "env" .env "title" "API Keys"
-                "hideImport" true
-                "hideExport" true }}
+            {{ template "navbar" dict "env" .env "title" .title 
+                "hideExport" true
+                "hideImport" true }}
 
             <table id="list" class="table w-full">
                 <thead>
                     <tr>
                         {{ template "table-th" dict "name" "name" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "key" "sort" .env.Sort }}
+                        {{ template "table-th" dict "name" "notes" "sort" .env.Sort }}
                         <td style="width: 7rem"></td>
                     </tr>
                 </thead>
@@ -25,13 +25,17 @@
                     {{ range .rows }}
                     <tr class="hover">
                         <td> {{ .Name }} </td>
-                        <td> {{ .Key }} </td>
+                        <td> {{ .Notes }} </td>
                         <td class="px-6 py-2 flex justify-end join">
-                            <a class="join-item btn btn-sm" href="/settings/api-keys/{{ .Key }}"
+                            <a class="join-item btn btn-sm" href="/settings/reports/{{ .ID }}/download"
+                                @click.stop >
+                                {{ template "icon-arrow-down-tray" "w-4 h-4"}}
+                            </a>
+                            <a class="join-item btn btn-sm" href="/settings/reports/{{ .ID }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
                                 {{ template "icon-pencil" "w-4 h-4"}}
                             </a>
-                            <a class="join-item btn btn-sm" href="/settings/api-keys/{{ .Key }}"
+                            <a class="join-item btn btn-sm" href="/settings/reports/{{ .ID }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
                                 {{ template "icon-trash" "w-4 h-4"}}
                             </a>

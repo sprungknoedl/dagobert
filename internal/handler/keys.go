@@ -71,13 +71,13 @@ func (ctrl KeyCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/api-keys/"), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/settings/api-keys/"), http.StatusSeeOther)
 }
 
 func (ctrl KeyCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	key := r.PathValue("key")
 	if r.URL.Query().Get("confirm") != "yes" {
-		uri := fmt.Sprintf("/api-keys/%s?confirm=yes", key)
+		uri := fmt.Sprintf("/settings/api-keys/%s?confirm=yes", key)
 		Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
@@ -89,5 +89,5 @@ func (ctrl KeyCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/api-keys/"), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("/settings/api-keys/"), http.StatusSeeOther)
 }

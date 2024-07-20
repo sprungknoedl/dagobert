@@ -19,8 +19,8 @@
                 </label>
                 <select name="Template" class="select select-bordered">
                     <option disabled selected value="">Select an option</option>
-                    {{ range .list }}
-                        <option>{{ . }}</option>
+                    {{ range .rows }}
+                        <option>{{ .Name }}</option>
                     {{ end }}
                 </select>
             </div>
