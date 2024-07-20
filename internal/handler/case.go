@@ -65,7 +65,7 @@ func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
-	uri := fmt.Sprintf("/")
+	uri := "/"
 	ImportCSV(ctrl.store, w, r, uri, 7, func(rec []string) {
 		closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
 		if err != nil {
@@ -128,7 +128,7 @@ func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/"), http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (ctrl CaseCtrl) Delete(w http.ResponseWriter, r *http.Request) {
@@ -146,5 +146,5 @@ func (ctrl CaseCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/"), http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }

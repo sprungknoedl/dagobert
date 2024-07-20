@@ -63,7 +63,7 @@ func Warn(w http.ResponseWriter, r *http.Request, err error) {
 	}
 
 	log.Printf("|%s| %v", tty.Yellow(" WAR "), err)
-	render(w, r, http.StatusBadRequest, "internal/views/toasts-warning.html", map[string]any{"err": err})
+	render(w, http.StatusBadRequest, "internal/views/toasts-warning.html", map[string]any{"err": err})
 }
 
 func Err(w http.ResponseWriter, r *http.Request, err error) {
@@ -72,7 +72,7 @@ func Err(w http.ResponseWriter, r *http.Request, err error) {
 	}
 
 	log.Printf("|%s| %v", tty.Red(" ERR "), err)
-	render(w, r, http.StatusInternalServerError, "internal/views/toasts-error.html", map[string]any{"err": err})
+	render(w, http.StatusInternalServerError, "internal/views/toasts-error.html", map[string]any{"err": err})
 }
 
 func Render(store *model.Store, w http.ResponseWriter, r *http.Request, status int, name string, values map[string]any) {
@@ -91,10 +91,10 @@ func Render(store *model.Store, w http.ResponseWriter, r *http.Request, status i
 		"TaskTypes":       model.TaskTypes,
 	}
 
-	render(w, r, status, name, values)
+	render(w, status, name, values)
 }
 
-func render(w http.ResponseWriter, r *http.Request, status int, name string, values map[string]any) {
+func render(w http.ResponseWriter, status int, name string, values map[string]any) {
 	tpl, err := template.New(filepath.Base(name)).Funcs(template.FuncMap{
 		"lower": strings.ToLower,
 		"upper": strings.ToUpper,

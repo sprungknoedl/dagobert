@@ -91,7 +91,6 @@ func (ctrl TaskCtrl) Import(w http.ResponseWriter, r *http.Request) {
 
 		err = ctrl.store.SaveTask(cid, obj)
 		Err(w, r, err)
-		return
 	})
 }
 

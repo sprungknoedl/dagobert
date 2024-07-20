@@ -71,7 +71,7 @@ func (ctrl KeyCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/settings/api-keys/"), http.StatusSeeOther)
+	http.Redirect(w, r, "/settings/api-keys/", http.StatusSeeOther)
 }
 
 func (ctrl KeyCtrl) Delete(w http.ResponseWriter, r *http.Request) {
@@ -89,5 +89,5 @@ func (ctrl KeyCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/settings/api-keys/"), http.StatusSeeOther)
+	http.Redirect(w, r, "/settings/api-keys/", http.StatusSeeOther)
 }
