@@ -2,7 +2,6 @@ package model
 
 import (
 	"database/sql"
-	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/fp"
 )
@@ -27,7 +26,7 @@ type Run struct {
 	Description string
 	Status      string
 	Error       string
-	TTL         time.Time
+	TTL         Time
 }
 
 func (store *Store) GetRuns(base []Extension, eid string) ([]Run, error) {

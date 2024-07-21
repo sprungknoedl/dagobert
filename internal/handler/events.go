@@ -39,8 +39,8 @@ func (ctrl EventCtrl) List(w http.ResponseWriter, r *http.Request) {
 		"rows":  list,
 		"hasTimeGap": func(list []model.Event, i int) string {
 			if i > 0 {
-				prev := list[i-1].Time
-				curr := list[i].Time
+				prev := time.Time(list[i-1].Time)
+				curr := time.Time(list[i].Time)
 				if d := curr.Sub(prev); d.Abs() > 2*24*time.Hour {
 					return humanizeDuration(d.Abs())
 				}
@@ -146,7 +146,7 @@ func (ctrl EventCtrl) Import(w http.ResponseWriter, r *http.Request) {
 		obj := model.Event{
 			ID:         rec[0],
 			CaseID:     cid,
-			Time:       t,
+			Time:       model.Time(t),
 			Type:       rec[2],
 			Assets:     assets,
 			Indicators: indicators,

@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"slices"
-	"time"
 )
 
 var EventTypes = FromEnv("VALUES_EVENT_TYPES", []string{
@@ -29,7 +28,7 @@ var EventTypes = FromEnv("VALUES_EVENT_TYPES", []string{
 
 type Event struct {
 	ID            string
-	Time          time.Time
+	Time          Time
 	Type          string
 	Event         string
 	Raw           string

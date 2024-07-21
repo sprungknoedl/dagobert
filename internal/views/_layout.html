@@ -151,3 +151,9 @@
     {{ title .name }}
 </th>
 {{ end }}
+
+{{ define "format-time" }}
+    {{ if .IsZero }} -
+    {{ else }} {{ .Format "2006-01-02 15:04:05.000" }} <span class="text-neutral">{{ .Format "Z07:00" }}</span>
+    {{ end }}
+{{ end }}

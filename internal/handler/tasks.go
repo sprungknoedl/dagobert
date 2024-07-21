@@ -85,7 +85,7 @@ func (ctrl TaskCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Task:    rec[2],
 			Done:    done, // 3
 			Owner:   rec[4],
-			DateDue: datedue, // 5
+			DateDue: model.Time(datedue), // 5
 			CaseID:  cid,
 		}
 

@@ -267,7 +267,7 @@ func (ctrl EvidenceCtrl) Run(w http.ResponseWriter, r *http.Request) {
 	err = ctrl.store.SaveRun(id, model.Run{
 		Name:   ext.Name,
 		Status: "Running",
-		TTL:    time.Now().Add(1 * time.Hour),
+		TTL:    model.Time(time.Now().Add(1 * time.Hour)),
 	})
 	if err != nil {
 		Err(w, r, err)

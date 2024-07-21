@@ -16,6 +16,8 @@
                         {{ template "table-th" dict "name" "type" "sort" .env.Sort }}
                         {{ template "table-th" dict "name" "name" "sort" .env.Sort }}
                         {{ template "table-th" dict "name" "addr" "sort" .env.Sort }}
+                        {{ template "table-th" dict "name" "first seen" "sort" .env.Sort }}
+                        {{ template "table-th" dict "name" "last seen" "sort" .env.Sort }}
                         {{ template "table-th" dict "name" "notes" "sort" .env.Sort }}
                         <td style="width: 7rem"></td>
                     </tr>
@@ -42,6 +44,8 @@
                         </td>
                         <td> {{ .Name }} </td>
                         <td> {{ .Addr }} </td>
+                        <td> {{ template "format-time" .FirstSeen }} </td>
+                        <td> {{ template "format-time" .LastSeen }} </td>
                         <td> {{ .Notes }} </td>
                         <td class="px-6 py-2 flex justify-end join">
                             <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/assets/{{ .ID }}"

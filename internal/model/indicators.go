@@ -2,7 +2,6 @@ package model
 
 import (
 	"database/sql"
-	"time"
 )
 
 var IndicatorStatus = FromEnv("VALUES_INDICATOR_STATUS", []string{"Confirmed", "Suspicious", "Under investigation", "Unrelated"})
@@ -19,29 +18,24 @@ type Indicator struct {
 	Notes  string
 	CaseID string
 
-	RawFirstSeen string
-	FirstSeen    time.Time
+	FirstSeen Time
+	LastSeen  Time
 }
 
 func (store *Store) FindIndicators(cid string, search string, sort string) ([]Indicator, error) {
 	query := `
 	SELECT 
 		i.id, i.status, i.type, i.value, i.tlp, i.source, i.notes, i.case_id,
-		IFNULL(min(e.time), '')
+		(SELECT  min(e.time)
+			FROM events e
+			LEFT JOIN event_indicators ON e.id = event_indicators.event_id 
+			WHERE event_indicators.indicator_id = i.id) AS first_seen,
+		(SELECT  max(e.time)
+			FROM events e
+			LEFT JOIN event_indicators ON e.id = event_indicators.event_id 
+			WHERE event_indicators.indicator_id = i.id) AS last_seen
 	FROM
 		indicators i
-	LEFT OUTER JOIN
-		event_indicators ei ON i.id = ei.indicator_id 
-	LEFT OUTER JOIN
-		events e ON e.id = ei.event_id 
-	WHERE i.case_id = :cid AND (
-		instr(i.status, :search) > 0 OR
-		instr(i.type, :search) > 0 OR
-		instr(i.value, :search) > 0 OR
-		instr(i.source, :search) > 0 OR
-		instr(i.notes, :search) > 0)
-	GROUP BY 
-		i.id, i.type, i.value, i.tlp, i.notes, i.source, i.case_id
 	ORDER BY
 		CASE WHEN :sort = 'source'  THEN i.source END ASC,
 		CASE WHEN :sort = '-source' THEN i.source END DESC,
@@ -68,20 +62,21 @@ func (store *Store) FindIndicators(cid string, search string, sort string) ([]In
 
 	var list []Indicator
 	err = ScanAll(rows, &list)
-
-	// transform raw relations / fields
-	for i, elem := range list {
-		elem.FirstSeen, _ = time.Parse("2006-01-02 15:04:05Z07:00", elem.RawFirstSeen)
-		list[i] = elem
-	}
-
 	return list, err
 }
 
 func (store *Store) GetIndicator(cid string, id string) (Indicator, error) {
 	query := `
-	SELECT id, status, type, value, tlp, source, notes, case_id
-	FROM indicators
+	SELECT id, status, type, value, tlp, source, notes, case_id,
+		(SELECT  min(e.time)
+			FROM events e
+			LEFT JOIN event_indicators ON e.id = event_indicators.event_id 
+			WHERE event_indicators.indicator_id = i.id) AS first_seen,
+		(SELECT  max(e.time)
+			FROM events e
+			LEFT JOIN event_indicators ON e.id = event_indicators.event_id 
+			WHERE event_indicators.indicator_id = i.id) AS last_seen
+	FROM indicators i
 	WHERE case_id = :cid AND id = :id
 	LIMIT 1`
 

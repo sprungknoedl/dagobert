@@ -2,7 +2,6 @@ package model
 
 import (
 	"database/sql"
-	"time"
 )
 
 var TaskTypes = FromEnv("VALUES_TASK_TYPES", []string{"Information request", "Analysis", "Deliverable", "Checkpoint", "Other"})
@@ -13,7 +12,7 @@ type Task struct {
 	Task    string
 	Done    bool
 	Owner   string
-	DateDue time.Time
+	DateDue Time
 	CaseID  string
 }
 

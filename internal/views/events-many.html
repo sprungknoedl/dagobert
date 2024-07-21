@@ -36,7 +36,7 @@
                     {{ end }}
 
                     <tr class="hover">
-                        <td> {{ .Time.Format "2006-01-02 15:04:05.000" }} <span class="text-neutral">{{ .Time.Format "Z07:00" }}</span> </td>
+                        <td> {{ template "format-time" .Time }}</span> </td>
                         <td>
                             <span class="flex items-center gap-2 text-sm me-3">
                             {{ if eq .Type "Reconnaissance" }}            {{ template "icon-magnifying-glass" "w-5 h-5 inline-block" }}

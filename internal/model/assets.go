@@ -15,12 +15,23 @@ type Asset struct {
 	Addr   string
 	Notes  string
 	CaseID string
+
+	FirstSeen Time
+	LastSeen  Time
 }
 
 func (store *Store) FindAssets(cid string, search string, sort string) ([]Asset, error) {
 	query := `
-	SELECT id, status, type, name, addr, notes, case_id
-	FROM assets
+	SELECT id, status, type, name, addr, notes, case_id,
+		(SELECT  min(e.time)
+			FROM events e
+			LEFT JOIN event_assets ON e.id = event_assets.event_id 
+			WHERE event_assets.asset_id = a.id) AS first_seen,
+		(SELECT  max(e.time)
+			FROM events e
+			LEFT JOIN event_assets ON e.id = event_assets.event_id 
+			WHERE event_assets.asset_id = a.id) AS last_seen
+	FROM assets a
 	WHERE case_id = :cid AND (
 		instr(status, :search) > 0 OR
 		instr(type, :search) > 0 OR
@@ -54,8 +65,16 @@ func (store *Store) FindAssets(cid string, search string, sort string) ([]Asset,
 
 func (store *Store) GetAsset(cid string, id string) (Asset, error) {
 	query := `
-	SELECT id, status, type, name, addr, notes, case_id
-	FROM assets
+	SELECT id, status, type, name, addr, notes, case_id,
+		(SELECT  min(e.time)
+			FROM events e
+			LEFT JOIN event_assets ON e.id = event_assets.event_id 
+			WHERE event_assets.asset_id = a.id) AS first_seen,
+		(SELECT  max(e.time)
+			FROM events e
+			LEFT JOIN event_assets ON e.id = event_assets.event_id 
+			WHERE event_assets.asset_id = a.id) AS last_seen
+	FROM assets a
 	WHERE case_id = :cid AND id = :id
 	LIMIT 1`
 
