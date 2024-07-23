@@ -13,7 +13,7 @@ services:
     environment:
       - "OIDC_CLIENT_ID=<<<CLIENT_ID>>>"
       - "OIDC_CLIENT_SECRET=<<<CLIENT_SECRET>>>"
-      - "OIDC_CLIENT_URL=https://<<<CLIENT_URL>>>/oidc-callback"
+      - "OIDC_CLIENT_URL=https://<<<CLIENT_URL>>>/auth/callback"
       - "OIDC_ISSUER=https://login.microsoftonline.com/<<<AZURE_TENANT>>>/v2.0"
       - "OIDC_ID_CLAIM=oid"
       - "WEB_SESSION_SECRET=<<<RANDOM_VALUE>>>"
