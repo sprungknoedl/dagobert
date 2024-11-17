@@ -34,8 +34,13 @@ func (store *Store) FindIndicators(cid string, search string, sort string) ([]In
 			FROM events e
 			LEFT JOIN event_indicators ON e.id = event_indicators.event_id 
 			WHERE event_indicators.indicator_id = i.id) AS last_seen
-	FROM
-		indicators i
+	FROM indicators i
+	WHERE case_id = :cid AND (
+		instr(status, :search) > 0 OR
+		instr(type, :search) > 0 OR
+		instr(tlp, :search) > 0 OR
+		instr(notes, :search) > 0 OR
+		instr(value, :search) > 0)
 	ORDER BY
 		CASE WHEN :sort = 'source'  THEN i.source END ASC,
 		CASE WHEN :sort = '-source' THEN i.source END DESC,
