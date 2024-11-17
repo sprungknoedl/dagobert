@@ -22,14 +22,14 @@ var Extensions = []model.Extension{}
 
 func Load() error {
 	Extensions = append(Extensions, model.Extension{
-		Name:        "Hayabusa",
+		Name:        "Hayabusa (evtx)",
 		Description: "Hayabusa (隼) is a sigma-based threat hunting and fast forensics timeline generator for Windows event logs.",
 		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".evtx" },
 		Run:         RunHayabusaEvtx,
 	})
 
 	Extensions = append(Extensions, model.Extension{
-		Name:        "Hayabusa",
+		Name:        "Hayabusa (zip)",
 		Description: "Hayabusa (隼) is a sigma-based threat hunting and fast forensics timeline generator for Windows event logs.",
 		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
 		Run:         RunHayabusaZip,
