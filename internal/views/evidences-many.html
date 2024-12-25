@@ -7,18 +7,18 @@
 
         {{ template "sidebar" . }}
 
-        <main class="p-8 grow" x-data="{ sort_by: '{{ .env.Sort }}' }" >
+        <main class="pl-20 p-4 grow max-w-full">
             {{ template "navbar" dict "env" .env "title" .title }}
 
             <table id="list" class="table w-full">
                 <thead>
                     <tr>
-                        {{ template "table-th" dict "name" "type" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "name" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "hash" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "size" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "source" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "notes" "sort" .env.Sort }}
+                        <th>Type</th>
+                        <th>Name</th>
+                        <th>Hash</th>
+                        <th>Size</th>
+                        <th>Source</th>
+                        <th>Notes</th>
                         <td style="width: 7rem"></td>
                     </tr>
                 </thead>
@@ -26,14 +26,14 @@
                 <tbody>
                     {{ range .rows }}
                     <tr class="hover">
-                        <td>
-                            {{ if eq .Type "File" }}              {{ template "icon-document" "inline-block w-6 h-6 mr-2" }}
-                            {{ else if eq .Type "Logs" }}         {{ template "icon-document-text" "inline-block w-6 h-6 mr-2" }}
-                            {{ else if eq .Type "Triage" }}       {{ template "icon-archive-box" "inline-block w-6 h-6 mr-2" }}
-                            {{ else if eq .Type "System Image" }} {{ template "icon-server" "inline-block w-6 h-6 mr-2" }}
-                            {{ else if eq .Type "Memory Dump" }}  {{ template "icon-cpu-chip" "inline-block w-6 h-6 mr-2" }}
-                            {{ else if eq .Type "Malware" }}      {{ template "icon-bug" "inline-block w-6 h-6 mr-2" }}
-                            {{ else }}                            {{ template "icon-cube" "inline-block w-6 h-6 mr-2" }}
+                        <td class="truncate">
+                            {{ if eq .Type "File" }}              {{ template "icon-document" "inline-block w-5 h-5" }}
+                            {{ else if eq .Type "Logs" }}         {{ template "icon-document-text" "inline-block w-5 h-5" }}
+                            {{ else if eq .Type "Triage" }}       {{ template "icon-archive-box" "inline-block w-5 h-5" }}
+                            {{ else if eq .Type "System Image" }} {{ template "icon-server" "inline-block w-5 h-5" }}
+                            {{ else if eq .Type "Memory Dump" }}  {{ template "icon-cpu-chip" "inline-block w-5 h-5" }}
+                            {{ else if eq .Type "Malware" }}      {{ template "icon-bug" "inline-block w-5 h-5" }}
+                            {{ else }}                            {{ template "icon-cube" "inline-block w-5 h-5" }}
                             {{ end }}
                             {{ .Type }}
                         </td>
@@ -45,25 +45,21 @@
                         <td class="px-6 py-2 flex justify-end join">
                             <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/evidences/{{ .ID }}/download"
                                 @click.stop >
-                                {{ template "icon-arrow-down-tray" "w-4 h-4"}}
+                                {{ template "icon-arrow-down-tray" "w-5 h-5"}}
                             </a>
                             <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/evidences/{{ .ID }}/run"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-bolt" "w-4 h-4"}}
+                                {{ template "icon-bolt" "w-5 h-5"}}
                             </a>
                             <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/evidences/{{ .ID }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-pencil" "w-4 h-4"}}
+                                {{ template "icon-pencil" "w-5 h-5"}}
                             </a>
                             <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/evidences/{{ .ID }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-trash" "w-4 h-4"}}
+                                {{ template "icon-trash" "w-5 h-5"}}
                             </a>
                         </td>
-                    </tr>
-                    {{ else }}
-                    <tr>
-                        <td colspan="42">Nothing here ...</td>
                     </tr>
                     {{ end }}
                 </tbody>

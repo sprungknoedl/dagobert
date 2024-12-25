@@ -7,40 +7,49 @@
 
         {{ template "sidebar" . }}
 
-        <main class="p-8 grow" x-data="{ sort_by: '{{ .env.Sort }}' }" >
+        <main class="pl-20 p-4 grow max-w-full">
             {{ template "navbar" dict "env" .env "title" .title }}
 
-            <table id="list" class="table w-full">
+            <table id="list" class="table w-full grow">
                 <thead>
                     <tr>
-                        {{ template "table-th" dict "name" "status" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "type" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "value" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "tlp" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "source" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "first seen" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "last seen" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "notes" "sort" .env.Sort }}
-                        <td style="width: 7rem"></td>
+                        <th>Status</th>
+                        <th>Type</th>
+                        <th>Value</th>
+                        <th>TLP</th>
+                        <th>Source</th>
+                        <th>First seen</th>
+                        <th>Last seen</th>
+                        <th>Events</th>
+                        <th style="width: 7rem"></th>
                     </tr>
                 </thead>
 
                 <tbody>
                     {{ range .rows }}
                     <tr class="hover">
-                        <td> {{ .Status }} </td>
-                        <td>
-                            {{ if eq .Type "IP" }}           {{ template "icon-map-pin" "inline-block w-6 h-6 mr-2" }}
-                            {{ else if eq .Type "Domain" }}  {{ template "icon-globe-europe" "inline-block w-6 h-6 mr-2" }}
-                            {{ else if eq .Type "URL" }}     {{ template "icon-link" "inline-block w-6 h-6 mr-2" }}
-                            {{ else if eq .Type "Path" }}    {{ template "icon-folder-open" "inline-block w-6 h-6 mr-2" }}
-                            {{ else if eq .Type "Hash" }}    {{ template "icon-fingerprint" "inline-block w-6 h-6 mr-2" }}
-                            {{ else if eq .Type "Service" }} {{ template "icon-command-line" "inline-block w-6 h-6 mr-2" }}
-                            {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-6 h-6 mr-2" }}
+                        <td class="truncate">
+                            {{ if eq .Status "Confirmed" }} <span class="text-error">{{ template "icon-bug" "inline-block w-5 h-5" }} {{ .Status }}</span>
+                            {{ else if eq .Status "Suspicious" }} <span class="text-warning">{{ template "icon-fingerprint" "inline-block w-5 h-5" }} {{ .Status }}</span>
+                            {{ else if eq .Status "Unrelated" }} <span class="text-success">{{ template "icon-check-circle" "inline-block w-5 h-5" }} {{ .Status }}</span>
+                            {{ else }}
+                            {{ .Status }}
+                            {{ end }}
+                        </td>
+                        <td class="truncate">
+                            {{ if eq .Type "IP" }}           {{ template "icon-map-pin" "inline-block w-5 h-5" }}
+                            {{ else if eq .Type "Domain" }}  {{ template "icon-globe-europe" "inline-block w-5 h-5" }}
+                            {{ else if eq .Type "URL" }}     {{ template "icon-link" "inline-block w-5 h-5" }}
+                            {{ else if eq .Type "Path" }}    {{ template "icon-folder-open" "inline-block w-5 h-5" }}
+                            {{ else if eq .Type "Hash" }}    {{ template "icon-fingerprint" "inline-block w-5 h-5" }}
+                            {{ else if eq .Type "Service" }} {{ template "icon-command-line" "inline-block w-5 h-5" }}
+                            {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-5 h-5" }}
                             {{ end }}
                             {{ .Type }}
                         </td>
-                        <td> {{ .Value }} </td>
+                        <td>
+                            {{ .Value }}
+                        </td>
                         <td>
                             {{ if eq .TLP "TLP:RED" }}        <span class="text-red-600">{{ .TLP }}</span>
                             {{ else if eq .TLP "TLP:AMBER" }} <span class="text-amber-600">{{ .TLP }}</span>
@@ -49,23 +58,28 @@
                             {{ end }}
                         </td>
                         <td> {{ .Source }} </td>
-                        <td> {{ template "format-time" .FirstSeen }} </td>
-                        <td> {{ template "format-time" .LastSeen }} </td>
-                        <td> {{ .Notes }} </td>
+                        <td class="truncate"> {{ template "format-time" .FirstSeen }} </td>
+                        <td class="truncate"> {{ template "format-time" .LastSeen }} </td>
+                        <td> {{ .Events }} </td>
                         <td class="px-6 py-2 flex justify-end join">
+                            {{ if eq .Type "IP" }}
+                            <a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
+                            {{ else if eq .Type "Domain" }}
+                            <a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
+                            {{ else if eq .Type "Hash" }}
+                            <a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
+                            <a class="join-item btn btn-sm" target="_blank" href="https://www.hybrid-analysis.com/search?query={{ .Value }}">HA</a>
+                            {{ end }}
+
                             <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/indicators/{{ .ID }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-pencil" "w-4 h-4"}}
+                                {{ template "icon-pencil" "w-5 h-5"}}
                             </a>
                             <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/indicators/{{ .ID }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-trash" "w-4 h-4"}}
+                                {{ template "icon-trash" "w-5 h-5"}}
                             </a>
                         </td>
-                    </tr>
-                    {{ else }}
-                    <tr>
-                        <td colspan="42">Nothing here ...</td>
                     </tr>
                     {{ end }}
                 </tbody>

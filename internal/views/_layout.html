@@ -6,10 +6,13 @@
     <link href="/dist/tom-select.css" rel="stylesheet" />
     <link href="/dist/unpoly.min.css" rel="stylesheet" />
     <link href="/dist/dagobert.css" rel="stylesheet" />
+    <link href="/dist/dataTables-2.1.8.min.css" rel="stylesheet" />
 
+    <script src="/dist/jquery-3.7.1.min.js" defer></script>
     <script src="/dist/alpine.min.js" defer></script>
     <script src="/dist/unpoly.min.js" defer></script>
     <script src="/dist/tom-select.base.js" defer></script>
+    <script src="/dist/dataTables-2.1.8.min.js" defer></script>
     <script>
     onload = (event) => {
         up.log.enable();
@@ -19,9 +22,26 @@
         up.layer.config.drawer.size = 'large';
 
         up.compiler('#list', (elem, data) => {
+            // cleanup old datatables wrapper
+            let wrapper = document.getElementById("list_wrapper");
+            if (wrapper != null) {
+                wrapper.replaceWith(elem);
+            }
+
             // auto reload #list when server returns it in an overlay
             elem.setAttribute('up-hungry', '');
             elem.setAttribute('up-if-layer', 'subtree')
+
+            let table = new DataTable('#list', {
+                paging: false,
+                searching: true,
+                layout: { topStart: null, topEnd: null, bottomStart: null, bottomEnd: null }
+            });
+
+            $("[name='search']").val("");
+            $("[name='search']").on('keyup', function() {
+                table.search($(this).val()).draw();
+            });
         });
     };
     </script>
@@ -29,13 +49,13 @@
 {{ end }}
 
 {{ define "navbar" }}
-<nav class="sticky top-0 bg-base-100 z-10 flex items-center justify-between -mt-4 py-4">
+<nav class="sticky top-0 bg-base-100 z-10 flex items-center justify-between max-w-full p-2 -mt-4">
 
     <div class="breadcrumbs font-bold text-2xl">
         <ul>
             {{ if ne .env.ActiveCase.ID "" }}
             <li class="inline-flex gap-2">
-                {{ template "icon-briefcase" "inline-block w-5 h-5" }}
+                {{ template "icon-briefcase" "inline-block w-6 h-6" }}
                 {{ .env.ActiveCase.Name }}
             </li>
             {{ end }}
@@ -44,23 +64,15 @@
     </div>
 
     <div class="flex gap-5 items-center">
-        <form method="get" action="./" up-target="#list" up-autosubmit up-watch-delay="500">
-
         <!-- search input -->
          {{ if not .hideSearch }}
         <label class="w-96 input input-bordered flex items-center gap-2">
             <input type="search" name="search" value="{{ .env.Search }}" class="grow" placeholder="Search ..." />
-            <svg class="w-4 h-4 opacity-70" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+            <svg class="w-6 h-6 opacity-70" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
             </svg>
         </label>
         {{ end }}
-
-        <!-- sort input -->
-	    <input name="sort" type="hidden" value="{{ .env.Sort }}"
-            x-model="sort_by"
-            x-init="$watch('sort_by', () => { $dispatch('sort'); } )" />
-        </form>
 
         <!-- buttons -->
         <div class="join" role="group">
@@ -68,7 +80,7 @@
             <a class="join-item btn" href="import"
                 up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}"
                 @keydown.i.ctrl.window="$el.click()">
-                {{ template "icon-arrow-up-tray" "inline-block mr-1 w-5 h-5" }}
+                {{ template "icon-arrow-up-tray" "inline-block mr-1 w-6 h-6" }}
                 Import CSV
             </a>
             {{ end }}
@@ -76,7 +88,7 @@
             {{ if not .hideExport }}
             <a class="join-item btn" href="export"
                 @keydown.e.ctrl.window="$el.click()">
-                {{ template "icon-arrow-down-tray" "inline-block mr-1 w-5 h-5" }}
+                {{ template "icon-arrow-down-tray" "inline-block mr-1 w-6 h-6" }}
                 Export CSV
             </a>
             {{ end }}
@@ -85,7 +97,7 @@
             <a class="join-item btn" href="./"
                 up-target="#list"
                 @keydown.r.ctrl.window="$el.click()">
-                {{ template "icon-arrow-path" "inline-block mr-1 w-5 h-5" }}
+                {{ template "icon-arrow-path" "inline-block mr-1 w-6 h-6" }}
                 Refresh
             </a>
             {{ end }}
@@ -94,7 +106,7 @@
             <a class="join-item btn btn-accent" href="new"
                 up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}"
                 @keydown.n.ctrl.window="$el.click()">
-                {{ template "icon-plus" "inline-block mr-1 w-5 h-5" }}
+                {{ template "icon-plus" "inline-block mr-1 w-6 h-6" }}
                 Add
             </a>
             {{ end }}
@@ -105,55 +117,55 @@
 {{ end }}
 
 {{ define "sidebar" }}
-<aside class="flex flex-col h-screen">
+<aside class="flex flex-col h-screen fixed overflow-auto z-50 bg-base-100">
     <div class="w-8 h-8 m-4 mx-auto bg-primary text-primary-content rounded-lg p-2">
         {{ template "icon-dagobert" "" }}
     </div>
 
     <div class="divider"></div>
     <ul class="menu gap-2">
-		<li><a href="/" data-tip="Cases" class='tooltip tooltip-right {{ if eq .title "Cases" }}active{{ end }}'> {{ template "icon-briefcase" "w-6 h-6" }} </a></li>
-		<li><a href="/users/" data-tip="Users" class='tooltip tooltip-right {{ if eq .title "Users" }}active{{ end }}'> {{ template "icon-users" "w-6 h-6" }} </a></li>
-		<li><a href="/settings/api-keys/" data-tip="API Keys" class='tooltip tooltip-right {{ if eq .title "API Keys" }}active{{ end }}'> {{ template "icon-beaker" "w-6 h-6" }} </a></li>
-		<li><a href="/settings/reports/" data-tip="Report Templates" class='tooltip tooltip-right {{ if eq .title "Report Templates" }}active{{ end }}'> {{ template "icon-document-text" "w-6 h-6" }} </a></li>
+		<li><a href="/" title="Cases" class='{{ if eq .title "Cases" }}active{{ end }}'> {{ template "icon-briefcase" "w-6 h-6" }} </a></li>
+		<li><a href="/settings/users/" title="Users" class='{{ if eq .title "Users" }}active{{ end }}'> {{ template "icon-users" "w-6 h-6" }} </a></li>
+		<li><a href="/settings/api-keys/" title="API Keys" class='{{ if eq .title "API Keys" }}active{{ end }}'> {{ template "icon-beaker" "w-6 h-6" }} </a></li>
+		<li><a href="/settings/reports/" title="Report Templates" class='{{ if eq .title "Report Templates" }}active{{ end }}'> {{ template "icon-document-text" "w-6 h-6" }} </a></li>
     </ul>
 
     {{ if ne .env.ActiveCase.ID "" }}
     <div class="divider"></div>
     <ul class="menu gap-2">
-		<li><a href="/cases/{{ .env.ActiveCase.ID }}/events/" data-tip="Timeline" class='tooltip tooltip-right {{ if eq .title "Timeline" }}active{{ end }}'> {{ template "icon-clock" "w-6 h-6" }} </a></li>
-		<li><a href="/cases/{{ .env.ActiveCase.ID }}/assets/" data-tip="Assets" class='tooltip tooltip-right {{ if eq .title "Assets" }}active{{ end }}'> {{ template "icon-desktop" "w-6 h-6" }} </a></li>
-		<li><a href="/cases/{{ .env.ActiveCase.ID }}/indicators/" data-tip="Indicators" class='tooltip tooltip-right {{ if eq .title "Indicators" }}active{{ end }}'> {{ template "icon-globe-europe" "w-6 h-6" }} </a></li>
-		<li><a href="/cases/{{ .env.ActiveCase.ID }}/malware/" data-tip="Malware" class='tooltip tooltip-right {{ if eq .title "Malware" }}active{{ end }}'> {{ template "icon-bug" "w-6 h-6" }} </a></li>
-		<li><a href="/cases/{{ .env.ActiveCase.ID }}/evidences/" data-tip="Evidences" class='tooltip tooltip-right {{ if eq .title "Evidences" }}active{{ end }}'> {{ template "icon-cube" "w-6 h-6" }} </a></li>
-		<li><a href="/cases/{{ .env.ActiveCase.ID }}/tasks/" data-tip="Tasks" class='tooltip tooltip-right {{ if eq .title "Tasks" }}active{{ end }}'> {{ template "icon-clipboard-check" "w-6 h-6" }} </a></li>
-		<li><a href="/cases/{{ .env.ActiveCase.ID }}/notes/" data-tip="Notes" class='tooltip tooltip-right {{ if eq .title "Notes" }}active{{ end }}'> {{ template "icon-chat-bubble" "w-6 h-6" }} </a></li>
+		<li><a href="/cases/{{ .env.ActiveCase.ID }}/events/" title="Timeline" class='{{ if eq .title "Timeline" }}active{{ end }}'> {{ template "icon-clock" "w-6 h-6" }} </a></li>
+		<li><a href="/cases/{{ .env.ActiveCase.ID }}/assets/" title="Assets" class='{{ if eq .title "Assets" }}active{{ end }}'> {{ template "icon-desktop" "w-6 h-6" }} </a></li>
+		<li><a href="/cases/{{ .env.ActiveCase.ID }}/indicators/" title="Indicators" class='{{ if eq .title "Indicators" }}active{{ end }}'> {{ template "icon-fingerprint" "w-6 h-6" }} </a></li>
+		<li><a href="/cases/{{ .env.ActiveCase.ID }}/malware/" title="Malware" class='{{ if eq .title "Malware" }}active{{ end }}'> {{ template "icon-bug" "w-6 h-6" }} </a></li>
+		<li><a href="/cases/{{ .env.ActiveCase.ID }}/evidences/" title="Evidences" class='{{ if eq .title "Evidences" }}active{{ end }}'> {{ template "icon-cube" "w-6 h-6" }} </a></li>
+		<li><a href="/cases/{{ .env.ActiveCase.ID }}/tasks/" title="Tasks" class='{{ if eq .title "Tasks" }}active{{ end }}'> {{ template "icon-clipboard-check" "w-6 h-6" }} </a></li>
+		<li><a href="/cases/{{ .env.ActiveCase.ID }}/notes/" title="Notes" class='{{ if eq .title "Notes" }}active{{ end }}'> {{ template "icon-chat-bubble" "w-6 h-6" }} </a></li>
     </ul>
 
     <div class="divider"></div>
     <ul class="menu gap-2">
-		<li><a href="/cases/{{ .env.ActiveCase.ID }}/reports" data-tip="Report" class='tooltip tooltip-right' up-layer="new drawer"> {{ template "icon-document-arrow-down" "w-6 h-6" }} </a></li>
+		<li><a href="/cases/{{ .env.ActiveCase.ID }}/reports" title="Report" class='' up-layer="new drawer"> {{ template "icon-document-arrow-down" "w-6 h-6" }} </a></li>
     </ul>
     {{ end }}
 
     <div class="grow"></div>
     <div class="divider"></div>
     <ul class="menu gap-2">
-		<li><a href="/logout" data-tip="Logout" class='tooltip tooltip-right'> {{ template "icon-logout" "w-6 h-6" }} </a></li>
+		<li><a href="/auth/logout" title="Logout" class=''> {{ template "icon-logout" "w-6 h-6" }} </a></li>
     </ul>
 </aside>
 {{ end }}
 
 {{ define "table-th" }}
 <th @click="toggle()" x-data="{ toggle(event) { sort_by = (sort_by == '{{ .name }}') ? '-{{ .name }}' : '{{ .name }}' } }">
-    {{ if eq .sort .name }}          {{ template "icon-chevron-up" "w-5 h-5 inline-block" }}
-    {{ else if eq .sort (print "-" .name) }} {{ template "icon-chevron-down" "w-5 h-5 inline-block" }} {{ end }}
+    {{ if eq .sort .name }}          {{ template "icon-chevron-up" "w-6 h-6 inline-block" }}
+    {{ else if eq .sort (print "-" .name) }} {{ template "icon-chevron-down" "w-6 h-6 inline-block" }} {{ end }}
     {{ title .name }}
 </th>
 {{ end }}
 
 {{ define "format-time" }}
     {{ if .IsZero }} -
-    {{ else }} {{ .Format "2006-01-02 15:04:05.000" }} <span class="text-neutral">{{ .Format "Z07:00" }}</span>
+    {{ else }} {{ .Format "2006-01-02 15:04:05" }} <span class="text-neutral">{{ .Format "Z07:00" }}</span>
     {{ end }}
 {{ end }}

@@ -7,17 +7,17 @@
 
         {{ template "sidebar" . }}
 
-        <main class="p-8 grow" x-data="{ sort_by: '{{ .env.Sort }}' }" >
+        <main class="pl-20 p-4 grow max-w-full">
             {{ template "navbar" dict "env" .env "title" .title }}
 
             <table id="list" class="table w-full">
                 <thead>
                     <tr>
-                        {{ template "table-th" dict "name" "due" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "type" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "task" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "owner" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "done" "sort" .env.Sort }}
+                        <th>Due</th>
+                        <th>Type</th>
+                        <th>Task</th>
+                        <th>Owner</th>
+                        <th>Done</th>
                         <td style="width: 7rem"></td>
                     </tr>
                 </thead>
@@ -25,37 +25,33 @@
                 <tbody>
                     {{ range .rows }}
                     <tr class="hover">
-                        <td> {{ .DateDue.Format "2006-01-02" }} </td>
-                        <td>
-                            {{ if eq .Type "Information request" }} {{ template "icon-question-mark-circle" "inline-block w-6 h-6 mr-2" }}
-                            {{ else if eq .Type "Analysis" }}       {{ template "icon-magnifying-glass" "inline-block w-6 h-6 mr-2" }}
-                            {{ else if eq .Type "Deliverable" }}    {{ template "icon-document-text" "inline-block w-6 h-6 mr-2" }}
-                            {{ else if eq .Type "Checkpoint" }}     {{ template "icon-clipboard-check" "inline-block w-6 h-6 mr-2" }}
-                            {{ else }}                              {{ template "icon-question-mark-circle" "inline-block w-6 h-6 mr-2" }}
+                        <td class="truncate"> {{ .DateDue.Format "2006-01-02" }} </td>
+                        <td class="truncate">
+                            {{ if eq .Type "Information request" }} {{ template "icon-question-mark-circle" "inline-block w-5 h-5" }}
+                            {{ else if eq .Type "Analysis" }}       {{ template "icon-magnifying-glass" "inline-block w-5 h-5" }}
+                            {{ else if eq .Type "Deliverable" }}    {{ template "icon-document-text" "inline-block w-5 h-5" }}
+                            {{ else if eq .Type "Checkpoint" }}     {{ template "icon-clipboard-check" "inline-block w-5 h-5" }}
+                            {{ else }}                              {{ template "icon-question-mark-circle" "inline-block w-5 h-5" }}
                             {{ end }}
                             {{ .Type }}
                         </td>
                         <td> {{ .Task }} </td>
                         <td> {{ .Owner }} </td>
                         <td>
-                            {{ if .Done }} {{ template "icon-check-circle" "w-6 h-6 text-green-500" }}
-                            {{ else }} {{ template "icon-x-circle" "w-6 h-6 text-red-500" }}
+                            {{ if .Done }} {{ template "icon-check-circle" "w-5 h-5 text-green-500" }}
+                            {{ else }} {{ template "icon-x-circle" "w-5 h-5 text-red-500" }}
                             {{ end }}
                         </td>
                         <td class="px-6 py-2 flex justify-end join">
                             <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/tasks/{{ .ID }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-pencil" "w-4 h-4"}}
+                                {{ template "icon-pencil" "w-5 h-5"}}
                             </a>
                             <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/tasks/{{ .ID }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-trash" "w-4 h-4"}}
+                                {{ template "icon-trash" "w-5 h-5"}}
                             </a>
                         </td>
-                    </tr>
-                    {{ else }}
-                    <tr>
-                        <td colspan="42">Nothing here ...</td>
                     </tr>
                     {{ end }}
                 </tbody>

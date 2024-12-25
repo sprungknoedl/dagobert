@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+    font-size: 12px; 
+}
+
+.table {
+    font-size: 1rem;
+}
+
 /*
 UNPOLY
 */
