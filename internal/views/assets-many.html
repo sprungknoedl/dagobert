@@ -6,19 +6,19 @@
         <div up-flashes></div>
         {{ template "sidebar" . }}
 
-        <main class="p-8 grow" x-data="{ sort_by: '{{ .env.Sort }}' }" >
+        <main class="pl-20 p-4 grow max-w-full">
             {{ template "navbar" dict "env" .env "title" .title }}
 
             <table id="list" class="table w-full">
                 <thead>
                     <tr>
-                        {{ template "table-th" dict "name" "status" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "type" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "name" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "addr" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "first seen" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "last seen" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "notes" "sort" .env.Sort }}
+                        <th>Status</th>
+                        <th>Type</th>
+                        <th>Name</th>
+                        <th>Address</th>
+                        <th>First seen</th>
+                        <th>Last seen</th>
+                        <th>Notes</th>
                         <td style="width: 7rem"></td>
                     </tr>
                 </thead>
@@ -26,41 +26,37 @@
                 <tbody>
                     {{ range .rows }}
                     <tr class="hover">
-                        <td>
-                            {{ if eq .Status "Compromised" }} <span class="text-error">{{ template "icon-bug" "inline-block w-6 h-6 mr-2" }} {{ .Status }}
-                            {{ else if eq .Status "Accessed" }} <span class="text-warning">{{ template "icon-command-line" "inline-block w-6 h-6 mr-2" }} {{ .Status }}
-                            {{ else if eq .Status "No sign of compromise" }} <span class="text-success">{{ template "icon-check-circle" "inline-block w-6 h-6 mr-2" }} {{ .Status }}
+                        <td class="truncate">
+                            {{ if eq .Status "Compromised" }} <span class="text-error">{{ template "icon-bug" "inline-block w-5 h-5" }} {{ .Status }}
+                            {{ else if eq .Status "Accessed" }} <span class="text-warning">{{ template "icon-command-line" "inline-block w-5 h-5" }} {{ .Status }}
+                            {{ else if eq .Status "No sign of compromise" }} <span class="text-success">{{ template "icon-check-circle" "inline-block w-5 h-5" }} {{ .Status }}
                             {{ else }}
                             {{ .Status }}
                             {{ end }}
                         </td>
-                        <td>
-                            {{ if eq .Type "Account" }}      {{ template "icon-user" "inline-block w-6 h-6 mr-2" }}
-                            {{ else if eq .Type "Desktop" }} {{ template "icon-desktop" "inline-block w-6 h-6 mr-2" }}
-                            {{ else if eq .Type "Server" }}  {{ template "icon-server" "inline-block w-6 h-6 mr-2" }}
-                            {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-6 h-6 mr-2" }}
+                        <td class="truncate">
+                            {{ if eq .Type "Account" }}      {{ template "icon-user" "inline-block w-5 h-5" }}
+                            {{ else if eq .Type "Desktop" }} {{ template "icon-desktop" "inline-block w-5 h-5" }}
+                            {{ else if eq .Type "Server" }}  {{ template "icon-server" "inline-block w-5 h-5" }}
+                            {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-5 h-5" }}
                             {{ end }}
                             {{ .Type }}
                         </td>
                         <td> {{ .Name }} </td>
                         <td> {{ .Addr }} </td>
-                        <td> {{ template "format-time" .FirstSeen }} </td>
-                        <td> {{ template "format-time" .LastSeen }} </td>
+                        <td class="truncate"> {{ template "format-time" .FirstSeen }} </td>
+                        <td class="truncate"> {{ template "format-time" .LastSeen }} </td>
                         <td> {{ .Notes }} </td>
                         <td class="px-6 py-2 flex justify-end join">
                             <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/assets/{{ .ID }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-pencil" "w-4 h-4"}}
+                                {{ template "icon-pencil" "w-5 h-5"}}
                             </a>
                             <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/assets/{{ .ID }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-trash" "w-4 h-4"}}
+                                {{ template "icon-trash" "w-5 h-5"}}
                             </a>
                         </td>
-                    </tr>
-                    {{ else }}
-                    <tr>
-                        <td colspan="42">Nothing here ...</td>
                     </tr>
                     {{ end }}
                 </tbody>

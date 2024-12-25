@@ -7,17 +7,17 @@
 
         {{ template "sidebar" . }}
 
-        <main class="p-8 grow" x-data="{ sort_by: '{{ .env.Sort }}' }" >
+        <main class="pl-20 p-4 grow max-w-full">
             {{ template "navbar" dict "env" .env "title" .title }}
 
             <table id="list" class="table w-full">
                 <thead>
                     <tr>
-                        {{ template "table-th" dict "name" "time" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "type" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "event" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "assets" "sort" .env.Sort }}
-                        {{ template "table-th" dict "name" "indicators" "sort" .env.Sort }}
+                        <th>Time</th>
+                        <th>Type</th>
+                        <th>Event</th>
+                        <th>Assets</th>
+                        <th>Indicators</th>
                         <td style="width: 7rem"></td>
                     </tr>
                 </thead>
@@ -25,6 +25,7 @@
                 <tbody>
                     {{ range $i, $row := .rows }}
 
+                    <!--
                     {{ with $gap := call $.hasTimeGap $.rows $i }}
                     {{ if ne $gap "" }}
                         <tr>
@@ -34,11 +35,11 @@
                         </tr>
                     {{ end }}
                     {{ end }}
+                    -->
 
                     <tr class="hover">
-                        <td> {{ template "format-time" .Time }}</span> </td>
-                        <td>
-                            <span class="flex items-center gap-2 text-sm me-3">
+                        <td class="truncate"> {{ template "format-time" .Time }}</span> </td>
+                        <td class="truncate">
                             {{ if eq .Type "Reconnaissance" }}            {{ template "icon-magnifying-glass" "w-5 h-5 inline-block" }}
                             {{ else if eq .Type "Resource Development" }} {{ template "icon-cog-6-tooth" "w-5 h-5 inline-block" }}
                             {{ else if eq .Type "Initial Access" }}       {{ template "icon-lock-open" "w-5 h-5 inline-block" }}
@@ -58,50 +59,45 @@
                             {{ else }}                                    {{ template "icon-question-mark-circle" "w-5 h-5 inline-block" }}
                             {{ end  }}
                             {{ .Type }}
-                            </span>
                         </td>
                         <td> {{ .Event }} </td>
                         <td>
                             {{ range .Assets }}
-                            <span class="badge badge-outline badge-secondary mr-1 p-3">
-                                {{ if eq .Type "Account" }}      {{ template "icon-user" "inline-block w-4 h-4 mr-2" }}
-                                {{ else if eq .Type "Desktop" }} {{ template "icon-desktop" "inline-block w-4 h-4 mr-2" }}
-                                {{ else if eq .Type "Server" }}  {{ template "icon-server" "inline-block w-4 h-4 mr-2" }}
-                                {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-4 h-4 mr-2" }}
+                            <div class="text-success truncate">
+                                {{ if eq .Type "Account" }}      {{ template "icon-user" "inline-block w-5 h-5" }}
+                                {{ else if eq .Type "Desktop" }} {{ template "icon-desktop" "inline-block w-5 h-5" }}
+                                {{ else if eq .Type "Server" }}  {{ template "icon-server" "inline-block w-5 h-5" }}
+                                {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-5 h-5" }}
                                 {{ end }}
                                 {{ .Name }}
-                            </span>
+                            </div>
                             {{ end }}
                         </td>
                         <td>
                             {{ range .Indicators }}
-                            <span class="badge badge-outline badge-accent mr-1 p-3">
-                                {{ if eq .Type "IP" }}           {{ template "icon-map-pin" "inline-block w-4 h-4 mr-2" }}
-                                {{ else if eq .Type "Domain" }}  {{ template "icon-globe-europe" "inline-block w-4 h-4 mr-2" }}
-                                {{ else if eq .Type "URL" }}     {{ template "icon-link" "inline-block w-4 h-4 mr-2" }}
-                                {{ else if eq .Type "Path" }}    {{ template "icon-folder-open" "inline-block w-4 h-4 mr-2" }}
-                                {{ else if eq .Type "Hash" }}    {{ template "icon-fingerprint" "inline-block w-4 h-4 mr-2" }}
-                                {{ else if eq .Type "Service" }} {{ template "icon-command-line" "inline-block w-4 h-4 mr-2" }}
-                                {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-4 h-4 mr-2" }}
+                            <div class="text-error truncate">
+                                {{ if eq .Type "IP" }}           {{ template "icon-map-pin" "inline-block w-5 h-5" }}
+                                {{ else if eq .Type "Domain" }}  {{ template "icon-globe-europe" "inline-block w-5 h-5" }}
+                                {{ else if eq .Type "URL" }}     {{ template "icon-link" "inline-block w-5 h-5" }}
+                                {{ else if eq .Type "Path" }}    {{ template "icon-folder-open" "inline-block w-5 h-5" }}
+                                {{ else if eq .Type "Hash" }}    {{ template "icon-fingerprint" "inline-block w-5 h-5" }}
+                                {{ else if eq .Type "Service" }} {{ template "icon-command-line" "inline-block w-5 h-5" }}
+                                {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-5 h-5" }}
                                 {{ end }}
                                 {{ .Value }}
-                            </span>
+                            </div>
                             {{ end }}
                         </td>
                         <td class="px-6 py-2 flex justify-end join">
                             <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/events/{{ .ID }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-pencil" "w-4 h-4"}}
+                                {{ template "icon-pencil" "w-5 h-5"}}
                             </a>
                             <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/events/{{ .ID }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-trash" "w-4 h-4"}}
+                                {{ template "icon-trash" "w-5 h-5"}}
                             </a>
                         </td>
-                    </tr>
-                    {{ else }}
-                    <tr>
-                        <td colspan="42">Nothing here ...</td>
                     </tr>
                     {{ end }}
                 </tbody>
