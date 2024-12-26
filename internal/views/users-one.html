@@ -41,7 +41,7 @@
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Name
-                    <span class="text-sm text-neutral">(Will be overwritten by identity provider.)</span>
+                    <span class="text-sm text-neutral-content">(Will be overwritten by identity provider.)</span>
 				    {{ if .valid.Name }}<span class="ml-2 text-sm text-error">{{ .valid.Name }}</span>{{ end }}
                 </label>
                 <input name="Name" type="text" class="input input-bordered" value="{{ .obj.Name }}" />
@@ -50,7 +50,7 @@
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     UPN
-                    <span class="text-sm text-neutral">(Will be overwritten by identity provider.)</span>
+                    <span class="text-sm text-neutral-content">(Will be overwritten by identity provider.)</span>
 				    {{ if .valid.UPN }}<span class="ml-2 text-sm text-error">{{ .valid.UPN }}</span>{{ end }}
                 </label>
                 <input name="UPN" type="text" class="input input-bordered" value="{{ .obj.UPN }}" />
@@ -59,7 +59,7 @@
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Email
-                    <span class="text-sm text-neutral">(Will be overwritten by identity provider.)</span>
+                    <span class="text-sm text-neutral-content">(Will be overwritten by identity provider.)</span>
 				    {{ if .valid.Email }}<span class="ml-2 text-sm text-error">{{ .valid.Email }}</span>{{ end }}
                 </label>
                 <input name="Email" type="text" class="input input-bordered" value="{{ .obj.Email }}" />

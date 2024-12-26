@@ -37,7 +37,7 @@
                     {{ end }}
                     -->
 
-                    <tr class="hover">
+                    <tr class='hover {{ if .Starred }}bg-important{{ else if eq .Type "Remediation"}}bg-good{{ else if eq .Type "Legitimate"}}bg-good{{ end }}'>
                         <td class="truncate"> {{ template "format-time" .Time }}</span> </td>
                         <td class="truncate">
                             {{ if eq .Type "Reconnaissance" }}            {{ template "icon-magnifying-glass" "w-5 h-5 inline-block" }}

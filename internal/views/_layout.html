@@ -38,7 +38,7 @@
                 layout: { topStart: null, topEnd: null, bottomStart: null, bottomEnd: null }
             });
 
-            $("[name='search']").val("");
+            table.search($("[name='search']").val()).draw();
             $("[name='search']").on('keyup', function() {
                 table.search($(this).val()).draw();
             });
@@ -166,6 +166,6 @@
 
 {{ define "format-time" }}
     {{ if .IsZero }} -
-    {{ else }} {{ .Format "2006-01-02 15:04:05" }} <span class="text-neutral">{{ .Format "Z07:00" }}</span>
+    {{ else }} {{ .Format "2006-01-02 15:04:05" }} <span class="text-neutral-content">{{ .Format "Z07:00" }}</span>
     {{ end }}
 {{ end }}

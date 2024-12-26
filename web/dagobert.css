@@ -2890,9 +2890,9 @@ html {
   color: rgb(34 197 94 / var(--tw-text-opacity));
 }
 
-.text-neutral {
+.text-neutral-content {
   --tw-text-opacity: 1;
-  color: var(--fallback-n,oklch(var(--n)/var(--tw-text-opacity)));
+  color: var(--fallback-nc,oklch(var(--nc)/var(--tw-text-opacity)));
 }
 
 .text-primary-content {
@@ -2925,6 +2925,16 @@ html {
 
 .table {
   font-size: 1rem;
+}
+
+.bg-good {
+  --tw-bg-opacity: 1 !important;
+  background-color: rgb(2 44 34 / var(--tw-bg-opacity)) !important;
+}
+
+.bg-important {
+  --tw-bg-opacity: 1 !important;
+  background-color: rgb(8 47 73 / var(--tw-bg-opacity)) !important;
 }
 
 /*

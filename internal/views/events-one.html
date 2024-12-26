@@ -58,6 +58,13 @@
             </div>
 
             <div class="form-control mb-2">
+                <label class="label cursor-pointer justify-start gap-2">
+                    <input name="Starred" value="true" type="checkbox" class="checkbox" {{ if .obj.Starred }}checked{{ end }} />
+                    Starred
+                </label>
+            </div>
+
+            <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Assets
                     {{ if .valid.System }}<span class="ml-2 text-sm text-error">{{ .valid.Assets }}</span>{{ end }}
