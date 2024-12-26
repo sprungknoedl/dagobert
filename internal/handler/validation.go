@@ -16,7 +16,7 @@ func ValidateAsset(dto model.Asset) valid.Result {
 		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !slices.Contains(model.AssetStatus, dto.Status)},
 		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !slices.Contains(model.AssetTypes, dto.Type)},
 		{Name: "Name", Missing: dto.Name == ""},
-		{Name: "IP", Message: "Invalid format, expected e.g. '203.0.113.1'.", Invalid: !regexIP.MatchString(dto.Addr)},
+		{Name: "Addr", Message: "Invalid format, expected e.g. '203.0.113.1'.", Invalid: !regexIP.MatchString(dto.Addr)},
 	})
 }
 
@@ -88,5 +88,12 @@ func ValidateReport(dto model.Report) valid.Result {
 			Invalid: !slices.Contains([]string{".odt", ".ods", ".odp", ".docx"}, filepath.Ext(dto.Name)),
 			Message: "Unsupported file type.",
 		},
+	})
+}
+
+func ValidateUser(dto model.User) valid.Result {
+	return valid.Check([]valid.Condition{
+		{Name: "ID", Missing: dto.ID == ""},
+		{Name: "Role", Message: "Invalid role"},
 	})
 }

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/sprungknoedl/dagobert/internal/extensions"
 	"github.com/sprungknoedl/dagobert/internal/handler"
@@ -27,8 +28,6 @@ type Configuration struct {
 	IdentityClaim string
 
 	SessionSecret string
-
-	Superadmin string
 }
 
 func main() {
@@ -42,7 +41,6 @@ func main() {
 		Issuer:         os.Getenv("OIDC_ISSUER"),
 		IdentityClaim:  cmp.Or(os.Getenv("OIDC_ID_CLAIM"), "sub"),
 		SessionSecret:  os.Getenv("WEB_SESSION_SECRET"),
-		Superadmin:     os.Getenv("DAGOBERT_ADMIN"),
 	}
 
 	db, err := model.Connect(cfg.Database)
@@ -68,12 +66,13 @@ func main() {
 	// --------------------------------------
 	issuer, _ := url.Parse(cfg.Issuer)
 	clientUrl, _ := url.Parse(cfg.ClientUrl)
-	userCtrl := handler.NewUserCtrl(db, handler.OpenIDConfig{
+	auth := handler.NewAuthCtrl(db, handler.OpenIDConfig{
 		ClientId:      cfg.ClientId,
 		ClientSecret:  cfg.ClientSecret,
 		Issuer:        *issuer,
 		ClientUrl:     *clientUrl,
 		Identifier:    cfg.IdentityClaim,
+		AutoProvision: os.Getenv("OIDC_AUTO_PROVISION") == "true",
 		Scopes:        []string{"openid", "profile", "email"},
 		PostLogoutUrl: *clientUrl,
 	})
@@ -84,7 +83,7 @@ func main() {
 	mux := http.NewServeMux()
 	srv := handler.Recover(mux)
 	srv = handler.Logger(srv)
-	srv = userCtrl.Protect(srv)
+	srv = auth.Protect(srv)
 
 	// --------------------------------------
 	// Home
@@ -93,6 +92,11 @@ func main() {
 	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/cases/", http.StatusTemporaryRedirect)
 	})
+
+	// auth
+	mux.HandleFunc("GET /auth/logout", auth.Logout)
+	mux.HandleFunc("GET /auth/callback", auth.Callback)
+	mux.HandleFunc("GET /auth/forbidden", auth.Forbidden)
 
 	// cases
 	caseCtrl := handler.NewCaseCtrl(db)
@@ -104,10 +108,12 @@ func main() {
 	mux.HandleFunc("POST /cases/{cid}", caseCtrl.Save)
 	mux.HandleFunc("DELETE /cases/{cid}", caseCtrl.Delete)
 
-	// users / authentication
-	mux.HandleFunc("GET /users/", userCtrl.List)
-	mux.HandleFunc("GET /logout", userCtrl.Logout)
-	mux.HandleFunc("GET /oidc-callback", userCtrl.Callback)
+	// users
+	userCtrl := handler.NewUserCtrl(db)
+	mux.HandleFunc("GET /settings/users/", userCtrl.List)
+	mux.HandleFunc("GET /settings/users/{id}", userCtrl.Edit)
+	mux.HandleFunc("POST /settings/users/{id}", userCtrl.Save)
+	mux.HandleFunc("DELETE /settings/users/{id}", userCtrl.Delete)
 
 	// api keys
 	keyCtrl := handler.NewKeyCtrl(db)
@@ -207,6 +213,7 @@ func main() {
 	mux.Handle("GET /favicon.ico", handler.ServeFile("dist/favicon.ico"))
 	mux.Handle("GET /dist/", handler.ServeDir("/dist/", cfg.AssetsFolder))
 
+	log.Printf("Ready to receive requests. Listening on :8080 ...")
 	err = http.ListenAndServe(":8080", srv)
 	if err != nil {
 		fmt.Printf("| %s | %v\n", tty.Red("ERR"), err)
@@ -214,19 +221,30 @@ func main() {
 }
 
 func InitializeDagobert(store *model.Store, cfg Configuration) error {
-	users, err := store.FindUsers("", "")
+	users, err := store.ListUsers()
 	if err != nil {
 		return err
 	}
 
-	if len(users) == 0 && cfg.Superadmin != "" {
-		// initialize super user
-		log.Printf("Initializing super user ...")
-		err = store.SaveUser(model.User{
-			ID: cfg.Superadmin,
-		})
-		if err != nil {
-			return err
+	if len(users) == 0 {
+		// initialize administrators
+		log.Printf("Initializing administrators")
+		for _, env := range os.Environ() {
+			if !strings.HasPrefix(env, "DAGOBERT_ADMIN_") {
+				continue
+			}
+
+			key, value, _ := strings.Cut(env, "=")
+			log.Printf("  Adding %q as administrator", value)
+			err = store.SaveUser(model.User{
+				ID:   value,
+				UPN:  key,
+				Name: key,
+				Role: "Administrator",
+			})
+			if err != nil {
+				return err
+			}
 		}
 	}
 

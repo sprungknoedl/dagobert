@@ -7,31 +7,43 @@
 
         {{ template "sidebar" . }}
 
-        <main class="p-8 grow" x-data="{ sort_by: '{{ .env.Sort }}' }" >
+        <main class="pl-20 p-4 grow max-w-full">
             {{ template "navbar" dict "env" .env "title" .title
                 "hideImport" true
-                "hideExport" true
-                "hideAdd" true }}
+                "hideExport" true }}
 
 			<table id="list" class="table w-full">
 				<thead>
 					<tr>
-						{{ template "table-th" dict "name" "name" "sort" .env.Sort }}
-						{{ template "table-th" dict "name" "upn" "sort" .env.Sort }}
-						{{ template "table-th" dict "name" "email" "sort" .env.Sort }}
+						<th>ID</th>
+						<th>Name</th>
+						<th>UPN</th>
+						<th>Email</th>
+						<th>Role</th>
+						<th>Last login</th>
+                        <td style="width: 7rem"></td>
 					</tr>
 				</thead>
 
 				<tbody>
 					{{ range .rows }}
 					<tr class="hover">
+						<td> {{ .ID }} </td>
 						<td> {{ .Name }} </td>
 						<td> {{ .UPN }} </td>
 						<td> {{ .Email }} </td>
-					</tr>
-					{{ else }}
-					<tr>
-						<td colspan="42">Nothing here ...</td>
+						<td> {{ .Role }} </td>
+						<td> {{ template "format-time" .LastLogin }} </td>
+                        <td class="px-6 py-2 flex justify-end join">
+                            <a class="join-item btn btn-sm" href="/settings/users/{{ .ID }}"
+                                up-method="get" up-layer="new drawer" up-accept-location="/settings/users/">
+                                {{ template "icon-pencil" "w-5 h-5"}}
+                            </a>
+                            <a class="join-item btn btn-sm" href="/settings/users/{{ .ID }}"
+                                up-method="delete" up-layer="new drawer" up-accept-location="/settings/users/">
+                                {{ template "icon-trash" "w-5 h-5"}}
+                            </a>
+                        </td>
 					</tr>
 					{{ end }}
 				</tbody>
