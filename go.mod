@@ -3,6 +3,7 @@ module github.com/sprungknoedl/dagobert
 go 1.22
 
 require (
+	github.com/casbin/casbin/v2 v2.102.0
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/gorilla/schema v1.4.1
 	github.com/gorilla/sessions v1.3.0
@@ -12,6 +13,8 @@ require (
 )
 
 require (
+	github.com/bmatcuk/doublestar/v4 v4.6.1 // indirect
+	github.com/casbin/govaluate v1.2.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect

@@ -4,15 +4,18 @@ import (
 	"context"
 	"encoding/gob"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/casbin/casbin/v2"
 	"github.com/coreos/go-oidc"
 	"github.com/sprungknoedl/dagobert/internal/fp"
 	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/pkg/tty"
 	"golang.org/x/oauth2"
 )
 
@@ -35,13 +38,14 @@ type AuthCtrl struct {
 	verifier      *oidc.IDTokenVerifier
 	autoProvision bool
 	store         *model.Store
+	acl           *casbin.Enforcer
 }
 
 func NewAuthCtrl(store *model.Store, cfg OpenIDConfig) *AuthCtrl {
 	providerCtx := context.Background()
 	provider, err := oidc.NewProvider(providerCtx, cfg.Issuer.String())
 	if err != nil {
-		log.Fatalf("Failed to init OIDC provider. Error: %v \n", err.Error())
+		log.Fatalf("Failed to init OIDC provider: %v \n", err.Error())
 	}
 	oidcConfig := &oidc.Config{
 		ClientID: cfg.ClientId,
@@ -57,13 +61,38 @@ func NewAuthCtrl(store *model.Store, cfg OpenIDConfig) *AuthCtrl {
 		Scopes:       cfg.Scopes,
 	}
 
+	enforcer, err := casbin.NewEnforcer("files/model.conf", store)
+	if err != nil {
+		log.Fatalf("Failed to init Casbin enforcer: %v \n", err.Error())
+	}
+
+	enforcer.EnableAutoSave(true)
+
 	return &AuthCtrl{
 		openidConfig:  cfg,
 		oauthConfig:   config,
 		verifier:      verifier,
 		autoProvision: cfg.AutoProvision,
 		store:         store,
+		acl:           enforcer,
 	}
+}
+
+func (ctrl AuthCtrl) isAuthorized(r *http.Request) bool {
+	sess, _ := SessionStore.Get(r, SessionName)
+	claims, _ := sess.Values["oidcClaims"].(map[string]any)
+
+	sub, _ := claims[ctrl.openidConfig.Identifier].(string) // the user that wants to access a resource.
+	obj := r.URL.Path                                       // the resource that is going to be accessed.
+	act := r.Method                                         // the operation that the user performs on the resource.
+
+	res, err := ctrl.acl.Enforce(sub, obj, act)
+	if err != nil {
+		log.Printf("|%s| failed to authorize: %v", tty.Yellow(" WAR "), err)
+	}
+
+	log.Printf("|%s| sub:%q -> obj:%q with act:%q = %v", tty.Cyan("INFO "), sub, obj, act, res)
+	return res
 }
 
 func (ctrl AuthCtrl) Protect(next http.Handler) http.Handler {
@@ -86,16 +115,20 @@ func (ctrl AuthCtrl) Protect(next http.Handler) http.Handler {
 
 		// session based authorization
 		sess, _ := SessionStore.Get(r, SessionName)
-		authorized := sess.Values["oidcAuthorized"]
-		if (authorized != nil && authorized.(bool)) ||
+		authenticated := sess.Values["oidcAuthenticated"]
+		if authenticated != nil && authenticated.(bool) ||
 			strings.HasPrefix(r.URL.Path, "/auth/") ||
 			strings.HasPrefix(r.URL.Path, "/dist/") {
-			next.ServeHTTP(w, r)
+			if ctrl.isAuthorized(r) {
+				next.ServeHTTP(w, r)
+			} else {
+				ctrl.Forbidden(w, r)
+			}
 			return
 		}
 
 		state := random(16)
-		sess.Values["oidcAuthorized"] = false
+		sess.Values["oidcAuthenticated"] = false
 		sess.Values["oidcState"] = state
 		sess.Values["oidcOriginalRequestUrl"] = r.URL.String()
 		err := sess.Save(r, w)
@@ -111,7 +144,7 @@ func (ctrl AuthCtrl) Protect(next http.Handler) http.Handler {
 
 func (ctrl AuthCtrl) Logout(w http.ResponseWriter, r *http.Request) {
 	sess, _ := SessionStore.Get(r, SessionName)
-	sess.Values["oidcAuthorized"] = false
+	sess.Values["oidcAuthenticated"] = false
 	sess.Values["oidcClaims"] = nil
 	sess.Values["oidcState"] = nil
 	sess.Values["oidcOriginalRequestUrl"] = nil
@@ -184,7 +217,7 @@ func (ctrl AuthCtrl) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// store successful authentication
-	sess.Values["oidcAuthorized"] = true
+	sess.Values["oidcAuthenticated"] = true
 	sess.Values["oidcState"] = nil
 	sess.Values["oidcOriginalRequestUrl"] = nil
 	sess.Values["oidcClaims"] = claims
@@ -213,4 +246,36 @@ func (ctrl AuthCtrl) Callback(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl AuthCtrl) Forbidden(w http.ResponseWriter, r *http.Request) {
 	Render(ctrl.store, w, r, http.StatusForbidden, "internal/views/auth-forbidden.html", map[string]any{})
+}
+
+func (ctrl AuthCtrl) SaveRoleAssignment(uid string, role string) error {
+	_, err := ctrl.acl.DeleteRolesForUser(uid)
+	if err != nil {
+		return err
+	}
+
+	_, err = ctrl.acl.AddRoleForUser(uid, "role::"+role)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (ctrl AuthCtrl) SaveCaseAssignments(uid string, role string, cases []string) error {
+	_, err := ctrl.acl.DeletePermissionsForUser(uid)
+	if err != nil {
+		return err
+	}
+
+	for _, c := range cases {
+		obj := fmt.Sprintf("/cases/%s/*", c)
+		act := fp.If(role == "Read-Only", http.MethodGet, "*")
+		_, err := ctrl.acl.AddPermissionForUser(uid, obj, act)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
