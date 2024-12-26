@@ -51,9 +51,9 @@
                             {{ .Value }}
                         </td>
                         <td>
-                            {{ if eq .TLP "TLP:RED" }}        <span class="text-red-600">{{ .TLP }}</span>
-                            {{ else if eq .TLP "TLP:AMBER" }} <span class="text-amber-600">{{ .TLP }}</span>
-                            {{ else if eq .TLP "TLP:GREEN" }} <span class="text-green-600">{{ .TLP }}</span>
+                            {{ if eq .TLP "TLP:RED" }}        <span class="text-error">{{ .TLP }}</span>
+                            {{ else if eq .TLP "TLP:AMBER" }} <span class="text-warning">{{ .TLP }}</span>
+                            {{ else if eq .TLP "TLP:GREEN" }} <span class="text-success">{{ .TLP }}</span>
                             {{ else }}                        <span>{{ .TLP }}</span>
                             {{ end }}
                         </td>
