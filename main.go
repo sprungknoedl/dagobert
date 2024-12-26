@@ -48,11 +48,6 @@ func main() {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	err = InitializeDagobert(db, cfg)
-	if err != nil {
-		log.Fatalf("Failed to initialize dagobert: %v", err)
-	}
-
 	// --------------------------------------
 	// Extensions
 	// --------------------------------------
@@ -82,8 +77,8 @@ func main() {
 	// --------------------------------------
 	mux := http.NewServeMux()
 	srv := handler.Recover(mux)
-	srv = handler.Logger(srv)
 	srv = auth.Protect(srv)
+	srv = handler.Logger(srv)
 
 	// --------------------------------------
 	// Home
@@ -213,6 +208,14 @@ func main() {
 	mux.Handle("GET /favicon.ico", handler.ServeFile("dist/favicon.ico"))
 	mux.Handle("GET /dist/", handler.ServeDir("/dist/", cfg.AssetsFolder))
 
+	// --------------------------------------
+	// Initialize Dagobert
+	// --------------------------------------
+	err = InitializeDagobert(db, auth, cfg)
+	if err != nil {
+		log.Fatalf("Failed to initialize dagobert: %v", err)
+	}
+
 	log.Printf("Ready to receive requests. Listening on :8080 ...")
 	err = http.ListenAndServe(":8080", srv)
 	if err != nil {
@@ -220,7 +223,7 @@ func main() {
 	}
 }
 
-func InitializeDagobert(store *model.Store, cfg Configuration) error {
+func InitializeDagobert(store *model.Store, auth *handler.AuthCtrl, cfg Configuration) error {
 	users, err := store.ListUsers()
 	if err != nil {
 		return err
@@ -242,6 +245,11 @@ func InitializeDagobert(store *model.Store, cfg Configuration) error {
 				Name: key,
 				Role: "Administrator",
 			})
+			if err != nil {
+				return err
+			}
+
+			err = auth.SaveRoleAssignment(value, "Administrator")
 			if err != nil {
 				return err
 			}
