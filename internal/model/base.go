@@ -130,7 +130,7 @@ PRAGMA foreign_keys = ON;
 PRAGMA journal_mode = WAL;
 
 CREATE TABLE IF NOT EXISTS cases (
-	id             TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
+	id             TEXT NOT NULL PRIMARY KEY,
 	name           TEXT NOT NULL,
 	closed         BOOLEAN NOT NULL,
 	classification TEXT NOT NULL,
@@ -140,7 +140,7 @@ CREATE TABLE IF NOT EXISTS cases (
 );
 
 CREATE TABLE IF NOT EXISTS assets (
-	id          TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
+	id          TEXT NOT NULL PRIMARY KEY,
 	case_id     TEXT NOT NULL,
 	status      TEXT NOT NULL,
 	type        TEXT NOT NULL,
@@ -153,7 +153,7 @@ CREATE TABLE IF NOT EXISTS assets (
 );
 
 CREATE TABLE IF NOT EXISTS events (
-	id      TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
+	id      TEXT NOT NULL PRIMARY KEY,
 	case_id TEXT NOT NULL,
 	time    DATETIME NOT NULL,
 	type    TEXT NOT NULL,
@@ -164,7 +164,7 @@ CREATE TABLE IF NOT EXISTS events (
 );
 
 CREATE TABLE IF NOT EXISTS event_assets (
-	id       TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
+	id       TEXT NOT NULL PRIMARY KEY,
 	event_id TEXT NOT NULL,
 	asset_id TEXT NOT NULL,
 
@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS event_assets (
 );
 
 CREATE TABLE IF NOT EXISTS event_indicators (
-	id           TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
+	id           TEXT NOT NULL PRIMARY KEY,
 	event_id     TEXT NOT NULL,
 	indicator_id TEXT NOT NULL,
 
@@ -182,7 +182,7 @@ CREATE TABLE IF NOT EXISTS event_indicators (
 );
 
 CREATE TABLE IF NOT EXISTS evidences (
-	id       TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
+	id       TEXT NOT NULL PRIMARY KEY,
 	case_id  TEXT NOT NULL,
 	name     TEXT NOT NULL,
 	type     TEXT NOT NULL,
@@ -196,7 +196,7 @@ CREATE TABLE IF NOT EXISTS evidences (
 );
 
 CREATE TABLE IF NOT EXISTS reports (
-	id       TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
+	id       TEXT NOT NULL PRIMARY KEY,
 	name     TEXT NOT NULL,
 	notes    TEXT NOT NULL,
 
@@ -216,7 +216,7 @@ CREATE TABLE IF NOT EXISTS runs (
 );
 
 CREATE TABLE IF NOT EXISTS indicators (
-	id          TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
+	id          TEXT NOT NULL PRIMARY KEY,
 	case_id     TEXT NOT NULL,
 	status      TEXT NOT NULL,
 	type        TEXT NOT NULL,
@@ -229,12 +229,12 @@ CREATE TABLE IF NOT EXISTS indicators (
 );
 
 CREATE TABLE IF NOT EXISTS keys (
-	key   TEXT DEFAULT (lower(hex(randomblob(21)))) NOT NULL PRIMARY KEY,
+	key  TEXT NOT NULL PRIMARY KEY,
 	name TEXT NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS malware (
-	id       TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
+	id       TEXT NOT NULL PRIMARY KEY,
 	asset_id TEXT NOT NULL,
 	case_id  TEXT NOT NULL,
 	status   TEXT NOT NULL,
@@ -248,7 +248,7 @@ CREATE TABLE IF NOT EXISTS malware (
 );
 
 CREATE TABLE IF NOT EXISTS notes (
-	id          TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
+	id          TEXT NOT NULL PRIMARY KEY,
 	case_id     TEXT NOT NULL,
 	title       TEXT NOT NULL,
 	category    TEXT NOT NULL,
@@ -258,7 +258,7 @@ CREATE TABLE IF NOT EXISTS notes (
 );
 
 CREATE TABLE IF NOT EXISTS tasks (
-	id       TEXT DEFAULT (lower(hex(randomblob(5)))) NOT NULL PRIMARY KEY,
+	id       TEXT NOT NULL PRIMARY KEY,
 	case_id  TEXT NOT NULL,
 	type     TEXT NOT NULL,
 	task     TEXT NOT NULL,
@@ -270,10 +270,12 @@ CREATE TABLE IF NOT EXISTS tasks (
 );
 
 CREATE TABLE IF NOT EXISTS users (
-	id    TEXT NOT NULL PRIMARY KEY,
-	name  TEXT NOT NULL,
-	upn   TEXT NOT NULL,
-	email TEXT NOT NULL,
+	id         TEXT NOT NULL PRIMARY KEY,
+	name       TEXT NOT NULL,
+	upn        TEXT NOT NULL,
+	email      TEXT NOT NULL,
+	role       TEXT NOT NULL DEFAULT 'Read-Only',
+	last_login DATETIME,
 
 	UNIQUE (upn)
 );
