@@ -269,7 +269,7 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto.ID = fp.If(dto.ID == "new", "", dto.ID)
+	dto.ID = fp.If(dto.ID == "new", random(10), dto.ID)
 	if err := ctrl.store.SaveEvent(dto.CaseID, dto); err != nil {
 		Err(w, r, err)
 		return

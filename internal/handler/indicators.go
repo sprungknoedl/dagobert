@@ -116,7 +116,7 @@ func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto.ID = fp.If(dto.ID == "new", "", dto.ID)
+	dto.ID = fp.If(dto.ID == "new", random(10), dto.ID)
 	if _, err := ctrl.store.SaveIndicator(dto.CaseID, dto); err != nil {
 		Err(w, r, err)
 		return

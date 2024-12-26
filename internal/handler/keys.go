@@ -63,7 +63,7 @@ func (ctrl KeyCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto.Key = fp.If(dto.Key == "new", "", dto.Key)
+	dto.Key = fp.If(dto.Key == "new", random(64), dto.Key)
 	if err := ctrl.store.SaveKey(dto); err != nil {
 		Err(w, r, err)
 		return
