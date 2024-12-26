@@ -23,9 +23,7 @@ func NewTaskCtrl(store *model.Store) *TaskCtrl {
 
 func (ctrl TaskCtrl) List(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	sort := r.URL.Query().Get("sort")
-	search := r.URL.Query().Get("search")
-	list, err := ctrl.store.FindTasks(cid, search, sort)
+	list, err := ctrl.store.ListTasks(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -39,7 +37,7 @@ func (ctrl TaskCtrl) List(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl TaskCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.store.FindTasks(cid, "", "")
+	list, err := ctrl.store.ListTasks(cid)
 	if err != nil {
 		Err(w, r, err)
 		return

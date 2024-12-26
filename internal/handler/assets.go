@@ -21,9 +21,7 @@ func NewAssetCtrl(store *model.Store) *AssetCtrl {
 
 func (ctrl AssetCtrl) List(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	sort := r.URL.Query().Get("sort")
-	search := r.URL.Query().Get("search")
-	list, err := ctrl.store.FindAssets(cid, search, sort)
+	list, err := ctrl.store.ListAssets(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -37,7 +35,7 @@ func (ctrl AssetCtrl) List(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl AssetCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.store.FindAssets(cid, "", "")
+	list, err := ctrl.store.ListAssets(cid)
 	if err != nil {
 		Err(w, r, err)
 		return

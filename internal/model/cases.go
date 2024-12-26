@@ -25,32 +25,13 @@ type Case struct {
 	Tasks      []Task
 }
 
-func (store *Store) FindCases(search string, sort string) ([]Case, error) {
+func (store *Store) ListCases() ([]Case, error) {
 	query := `
 	SELECT id, name, summary, classification, severity, outcome, closed
-	FROM 
-		cases
-	WHERE
-		instr(name, :search) > 0 OR
-		instr(summary, :search) > 0 OR
-		instr(classification, :search) > 0 OR
-		instr(severity, :search) > 0 OR
-		instr(outcome, :search) > 0
-	ORDER BY
-		CASE WHEN :sort = 'summary'         THEN summary END ASC,
-		CASE WHEN :sort = '-summary'        THEN summary END DESC,
-		CASE WHEN :sort = 'classification'  THEN classification END ASC,
-		CASE WHEN :sort = '-classification' THEN classification END DESC,
-		CASE WHEN :sort = 'severity'        THEN severity END ASC,
-		CASE WHEN :sort = '-severity'       THEN severity END DESC,
-		CASE WHEN :sort = 'outcome'         THEN outcome END ASC,
-		CASE WHEN :sort = '-outcome'        THEN outcome END DESC,
-		CASE WHEN :sort = '-name'           THEN name END DESC,
-		name ASC`
+	FROM cases
+	ORDER BY name ASC`
 
-	rows, err := store.db.Query(query,
-		sql.Named("search", search),
-		sql.Named("sort", sort))
+	rows, err := store.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -62,12 +43,9 @@ func (store *Store) FindCases(search string, sort string) ([]Case, error) {
 
 func (store *Store) GetCase(cid string) (Case, error) {
 	query := `
-	SELECT
-		id, name, summary, classification, severity, outcome, closed
-	FROM
-		cases
-	WHERE
-		id = :cid`
+	SELECT id, name, summary, classification, severity, outcome, closed
+	FROM cases
+	WHERE id = :cid`
 
 	rows, err := store.db.Query(query,
 		sql.Named("cid", cid))

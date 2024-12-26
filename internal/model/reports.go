@@ -10,21 +10,13 @@ type Report struct {
 	Notes string
 }
 
-func (store *Store) FindReports(search string, sort string) ([]Report, error) {
+func (store *Store) ListReports() ([]Report, error) {
 	query := `
 	SELECT id, name, notes
 	FROM reports
-	WHERE instr(name, :search) > 0 OR
-		  instr(notes, :search) > 0
-	ORDER BY
-		CASE WHEN :sort = 'notes'   THEN notes END DESC,
-		CASE WHEN :sort = '-notes'  THEN notes END DESC,
-		CASE WHEN :sort = '-name'   THEN name END DESC,
-		name ASC`
+	ORDER BY name ASC`
 
-	rows, err := store.db.Query(query,
-		sql.Named("search", search),
-		sql.Named("sort", sort))
+	rows, err := store.db.Query(query)
 	if err != nil {
 		return nil, err
 	}

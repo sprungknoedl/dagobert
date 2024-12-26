@@ -22,9 +22,7 @@ func NewCaseCtrl(store *model.Store) *CaseCtrl {
 }
 
 func (ctrl CaseCtrl) List(w http.ResponseWriter, r *http.Request) {
-	sort := r.URL.Query().Get("sort")
-	search := r.URL.Query().Get("search")
-	list, err := ctrl.store.FindCases(search, sort)
+	list, err := ctrl.store.ListCases()
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -37,7 +35,7 @@ func (ctrl CaseCtrl) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
-	list, err := ctrl.store.FindCases("", "")
+	list, err := ctrl.store.ListCases()
 	if err != nil {
 		Err(w, r, err)
 		return

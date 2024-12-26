@@ -20,7 +20,7 @@ type Asset struct {
 	LastSeen  Time
 }
 
-func (store *Store) FindAssets(cid string, search string, sort string) ([]Asset, error) {
+func (store *Store) ListAssets(cid string) ([]Asset, error) {
 	query := `
 	SELECT id, status, type, name, addr, notes, case_id,
 		(SELECT  min(e.time)
@@ -32,28 +32,11 @@ func (store *Store) FindAssets(cid string, search string, sort string) ([]Asset,
 			LEFT JOIN event_assets ON e.id = event_assets.event_id 
 			WHERE event_assets.asset_id = a.id) AS last_seen
 	FROM assets a
-	WHERE case_id = :cid AND (
-		instr(status, :search) > 0 OR
-		instr(type, :search) > 0 OR
-		instr(name, :search) > 0 OR
-		instr(addr, :search) > 0 OR
-		instr(notes, :search) > 0)
-	ORDER BY
-		CASE WHEN :sort = 'notes'        THEN notes END ASC,
-		CASE WHEN :sort = '-notes'       THEN notes END DESC,
-		CASE WHEN :sort = 'addr'         THEN addr END ASC,
-		CASE WHEN :sort = '-addr'        THEN addr END DESC,
-		CASE WHEN :sort = 'status'         THEN status END ASC,
-		CASE WHEN :sort = '-status'        THEN status END DESC,
-		CASE WHEN :sort = 'type'         THEN type END ASC,
-		CASE WHEN :sort = '-type'        THEN type END DESC,
-		CASE WHEN :sort = '-name'        THEN name END DESC,
-		name ASC`
+	WHERE case_id = :cid
+	ORDER BY name ASC`
 
 	rows, err := store.db.Query(query,
-		sql.Named("cid", cid),
-		sql.Named("search", search),
-		sql.Named("sort", sort))
+		sql.Named("cid", cid))
 	if err != nil {
 		return nil, err
 	}

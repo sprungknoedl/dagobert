@@ -16,28 +16,15 @@ type Task struct {
 	CaseID  string
 }
 
-func (store *Store) FindTasks(cid string, search string, sort string) ([]Task, error) {
+func (store *Store) ListTasks(cid string) ([]Task, error) {
 	query := `
 	SELECT id, type, task, done, owner, date_due, case_id
 	FROM tasks
-	WHERE case_id = :cid AND (
-		instr(type, :search) > 0 OR
-		instr(task, :search) > 0 OR
-		instr(owner, :search) > 0)
-	ORDER BY
-		CASE WHEN :sort = 'type'   THEN type END ASC,
-		CASE WHEN :sort = '-type'  THEN type END DESC,
-		CASE WHEN :sort = 'task'   THEN task END ASC,
-		CASE WHEN :sort = '-task'  THEN task END DESC,
-		CASE WHEN :sort = 'owner'  THEN owner END ASC,
-		CASE WHEN :sort = '-owner' THEN owner END DESC,
-		CASE WHEN :sort = '-due'   THEN date_due END DESC,
-		date_due ASC`
+	WHERE case_id = :cid
+	ORDER BY date_due ASC`
 
 	rows, err := store.db.Query(query,
-		sql.Named("cid", cid),
-		sql.Named("search", search),
-		sql.Named("sort", sort))
+		sql.Named("cid", cid))
 	if err != nil {
 		return nil, err
 	}

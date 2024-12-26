@@ -21,9 +21,7 @@ func NewNoteCtrl(store *model.Store) *NoteCtrl {
 
 func (ctrl NoteCtrl) List(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	sort := r.URL.Query().Get("sort")
-	search := r.URL.Query().Get("search")
-	list, err := ctrl.store.FindNotes(cid, search, sort)
+	list, err := ctrl.store.ListNotes(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -37,7 +35,7 @@ func (ctrl NoteCtrl) List(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl NoteCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.store.FindNotes(cid, "", "")
+	list, err := ctrl.store.ListNotes(cid)
 	if err != nil {
 		Err(w, r, err)
 		return

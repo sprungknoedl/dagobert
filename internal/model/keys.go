@@ -9,20 +9,13 @@ type Key struct {
 	Name string
 }
 
-func (store *Store) FindKeys(search string, sort string) ([]Key, error) {
+func (store *Store) ListKeys() ([]Key, error) {
 	query := `
-	SELECT
-		key, name
-	FROM 
-		keys
-	WHERE 
-		instr(name, :search) > 0
-	ORDER BY
-		name`
+	SELECT key, name
+	FROM keys
+	ORDER BY name`
 
-	rows, err := store.db.Query(query,
-		sql.Named("search", search),
-		sql.Named("sort", sort))
+	rows, err := store.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -34,12 +27,9 @@ func (store *Store) FindKeys(search string, sort string) ([]Key, error) {
 
 func (store *Store) GetKey(key string) (Key, error) {
 	query := `
-	SELECT
-		key, name
-	FROM
-		keys
-	WHERE
-		key = :key`
+	SELECT key, name
+	FROM keys
+	WHERE key = :key`
 
 	rows, err := store.db.Query(query,
 		sql.Named("key", key))
