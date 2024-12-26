@@ -21,9 +21,7 @@ func NewIndicatorCtrl(store *model.Store) *IndicatorCtrl {
 
 func (ctrl IndicatorCtrl) List(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	sort := r.URL.Query().Get("sort")
-	search := r.URL.Query().Get("search")
-	list, err := ctrl.store.FindIndicators(cid, search, sort)
+	list, err := ctrl.store.ListIndicators(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -37,7 +35,7 @@ func (ctrl IndicatorCtrl) List(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl IndicatorCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.store.FindIndicators(cid, "", "")
+	list, err := ctrl.store.ListIndicators(cid)
 	if err != nil {
 		Err(w, r, err)
 		return

@@ -58,7 +58,7 @@ func (e Event) HasIndicator(iid string) bool {
 	return false
 }
 
-func (store *Store) FindEvents(cid string, search string, sort string) ([]Event, error) {
+func (store *Store) ListEvents(cid string) ([]Event, error) {
 	query := `
 	SELECT 
 		e.id, e.time, e.type, e.event, e.raw, e.case_id,
@@ -71,30 +71,11 @@ func (store *Store) FindEvents(cid string, search string, sort string) ([]Event,
 			LEFT JOIN event_indicators ON i.id = event_indicators.indicator_id 
 			WHERE event_indicators.event_id = e.id) AS indicators
 	FROM events e
-	WHERE
-		e.case_id = :cid AND (
-		instr(e.type, :search) > 0 OR
-		instr(e.event, :search) > 0 OR
-		instr(e.raw, :search) > 0)
-		-- instr(assets->>'$.Name', :search) > 0 OR
-		-- instr(indicators->>'$.Value', :search) > 0)
-	ORDER BY
-		CASE WHEN :sort = 'time'        THEN e.time END ASC,
-		CASE WHEN :sort = '-time'       THEN e.time END DESC,
-		CASE WHEN :sort = 'type'        THEN e.type END ASC,
-		CASE WHEN :sort = '-type'       THEN e.type END DESC,
-		CASE WHEN :sort = 'event'       THEN e.event END ASC,
-		CASE WHEN :sort = '-event'      THEN e.event END DESC,
-		-- CASE WHEN :sort = 'assets'      THEN assets->>'$.Name' END ASC,
-		-- CASE WHEN :sort = '-assets'     THEN assets->>'$.Name' END ASC,
-		-- CASE WHEN :sort = 'indicators'  THEN indicators->>'$.Value' END DESC,
-		-- CASE WHEN :sort = '-indicators' THEN indicators->>'$.Value' END DESC,
-		e.time ASC`
+	WHERE e.case_id = :cid
+	ORDER BY e.time ASC`
 
 	rows, err := store.db.Query(query,
-		sql.Named("cid", cid),
-		sql.Named("search", search),
-		sql.Named("sort", sort))
+		sql.Named("cid", cid))
 	if err != nil {
 		return nil, err
 	}

@@ -12,26 +12,15 @@ type Note struct {
 	CaseID      string
 }
 
-func (store *Store) FindNotes(cid string, search string, sort string) ([]Note, error) {
+func (store *Store) ListNotes(cid string) ([]Note, error) {
 	query := `
 	SELECT id, title, category, description, case_id
 	FROM notes
-	WHERE case_id = :cid AND (
-		instr(category, :search) > 0 OR
-		instr(title, :search) > 0 OR
-		instr(description, :search) > 0)
-	ORDER BY
-		CASE WHEN :sort = 'title'        THEN title END ASC,
-		CASE WHEN :sort = '-title'       THEN title END DESC,
-		CASE WHEN :sort = 'description'  THEN description END ASC,
-		CASE WHEN :sort = '-description' THEN description END DESC,
-		CASE WHEN :sort = '-category'    THEN category END DESC,
-		category ASC`
+	WHERE case_id = :cid
+	ORDER BY category ASC`
 
 	rows, err := store.db.Query(query,
-		sql.Named("cid", cid),
-		sql.Named("search", search),
-		sql.Named("sort", sort))
+		sql.Named("cid", cid))
 	if err != nil {
 		return nil, err
 	}

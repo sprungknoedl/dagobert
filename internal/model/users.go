@@ -4,32 +4,24 @@ import (
 	"database/sql"
 )
 
+var UserRoles = []string{"Administrator", "User", "Read-Only"}
+
 type User struct {
-	ID    string
-	Name  string
-	UPN   string
-	Email string
+	ID        string
+	Name      string
+	UPN       string
+	Email     string
+	Role      string
+	LastLogin Time
 }
 
-func (store *Store) FindUsers(search string, sort string) ([]User, error) {
+func (store *Store) ListUsers() ([]User, error) {
 	query := `
-	SELECT id, name, upn, email
+	SELECT id, name, upn, email, role, last_login
 	FROM users
-	WHERE 
-		instr(name, :search) > 0 OR
-		instr(upn, :search) > 0 OR
-		instr(email, :search) > 0
-	ORDER BY
-		CASE WHEN :sort = 'upn'     THEN upn END ASC,
-		CASE WHEN :sort = '-upn'    THEN upn END DESC,
-		CASE WHEN :sort = 'email'      THEN email END ASC,
-		CASE WHEN :sort = '-email'     THEN email END DESC,
-		CASE WHEN :sort = '-name' THEN name END DESC,
-		name ASC`
+	ORDER BY name ASC`
 
-	rows, err := store.db.Query(query,
-		sql.Named("search", search),
-		sql.Named("sort", sort))
+	rows, err := store.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +33,7 @@ func (store *Store) FindUsers(search string, sort string) ([]User, error) {
 
 func (store *Store) GetUser(id string) (User, error) {
 	query := `
-	SELECT id, name, upn, email
+	SELECT id, name, upn, email, role, last_login
 	FROM users
 	WHERE id = :id
 	LIMIT 1`
@@ -59,17 +51,19 @@ func (store *Store) GetUser(id string) (User, error) {
 
 func (store *Store) SaveUser(obj User) error {
 	query := `
-	INSERT INTO users (id, name, upn, email)
-	VALUES (iif(:id != '', :id, lower(hex(randomblob(5)))), :name, :upn, :email)
+	INSERT INTO users (id, name, upn, email, role, last_login)
+	VALUES (:id, :name, :upn, :email, :role, :last_login)
 	ON CONFLICT (id)
-		DO UPDATE SET name=:name, upn=:upn, email=:email
+		DO UPDATE SET name=:name, upn=:upn, email=:email, role=:role, last_login=:last_login
 		WHERE id = :id`
 
 	_, err := store.db.Exec(query,
 		sql.Named("id", obj.ID),
 		sql.Named("name", obj.Name),
 		sql.Named("upn", obj.UPN),
-		sql.Named("email", obj.Email))
+		sql.Named("email", obj.Email),
+		sql.Named("role", obj.Role),
+		sql.Named("last_login", obj.LastLogin))
 	return err
 }
 

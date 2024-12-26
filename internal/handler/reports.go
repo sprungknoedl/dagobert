@@ -46,7 +46,7 @@ func NewReportCtrl(store *model.Store) *ReportCtrl {
 }
 
 func (ctrl ReportCtrl) Dialog(w http.ResponseWriter, r *http.Request) {
-	list, err := ctrl.store.FindReports("", "")
+	list, err := ctrl.store.ListReports()
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -58,9 +58,7 @@ func (ctrl ReportCtrl) Dialog(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ctrl ReportCtrl) List(w http.ResponseWriter, r *http.Request) {
-	sort := r.URL.Query().Get("sort")
-	search := r.URL.Query().Get("search")
-	list, err := ctrl.store.FindReports(search, sort)
+	list, err := ctrl.store.ListReports()
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -211,25 +209,25 @@ func (ctrl ReportCtrl) Generate(w http.ResponseWriter, r *http.Request) {
 	kase, err := ctrl.store.GetCase(cid)
 	accerr = errors.Join(accerr, err)
 
-	kase.Assets, err = ctrl.store.FindAssets(cid, "", "")
+	kase.Assets, err = ctrl.store.ListAssets(cid)
 	accerr = errors.Join(accerr, err)
 
-	kase.Events, err = ctrl.store.FindEvents(cid, "", "")
+	kase.Events, err = ctrl.store.ListEvents(cid)
 	accerr = errors.Join(accerr, err)
 
-	kase.Evidences, err = ctrl.store.FindEvidences(cid, "", "")
+	kase.Evidences, err = ctrl.store.ListEvidences(cid)
 	accerr = errors.Join(accerr, err)
 
-	kase.Indicators, err = ctrl.store.FindIndicators(cid, "", "")
+	kase.Indicators, err = ctrl.store.ListIndicators(cid)
 	accerr = errors.Join(accerr, err)
 
-	kase.Malware, err = ctrl.store.FindMalware(cid, "", "")
+	kase.Malware, err = ctrl.store.ListMalware(cid)
 	accerr = errors.Join(accerr, err)
 
-	kase.Notes, err = ctrl.store.FindNotes(cid, "", "")
+	kase.Notes, err = ctrl.store.ListNotes(cid)
 	accerr = errors.Join(accerr, err)
 
-	kase.Tasks, err = ctrl.store.FindTasks(cid, "", "")
+	kase.Tasks, err = ctrl.store.ListTasks(cid)
 	accerr = errors.Join(accerr, err)
 
 	if accerr != nil {

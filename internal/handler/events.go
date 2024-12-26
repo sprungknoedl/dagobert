@@ -26,9 +26,7 @@ func NewEventCtrl(store *model.Store) *EventCtrl {
 
 func (ctrl EventCtrl) List(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	sort := r.URL.Query().Get("sort")
-	search := r.URL.Query().Get("search")
-	list, err := ctrl.store.FindEvents(cid, search, sort)
+	list, err := ctrl.store.ListEvents(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -53,7 +51,7 @@ func (ctrl EventCtrl) List(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.store.FindEvents(cid, "", "")
+	list, err := ctrl.store.ListEvents(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -173,13 +171,13 @@ func (ctrl EventCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	assets, err := ctrl.store.FindAssets(cid, "", "")
+	assets, err := ctrl.store.ListAssets(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	indicators, err := ctrl.store.FindIndicators(cid, "", "")
+	indicators, err := ctrl.store.ListIndicators(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -250,13 +248,13 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	dto.Assets = fp.Apply(tmp.Assets, func(id string) model.Asset { return model.Asset{ID: id} })
 	dto.Indicators = fp.Apply(tmp.Indicators, func(id string) model.Indicator { return model.Indicator{ID: id} })
 	if vr := ValidateEvent(dto); !vr.Valid() {
-		assets, err := ctrl.store.FindAssets(dto.CaseID, "", "")
+		assets, err := ctrl.store.ListAssets(dto.CaseID)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 
-		indicators, err := ctrl.store.FindIndicators(dto.CaseID, "", "")
+		indicators, err := ctrl.store.ListIndicators(dto.CaseID)
 		if err != nil {
 			Err(w, r, err)
 			return

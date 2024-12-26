@@ -18,9 +18,7 @@ func NewKeyCtrl(store *model.Store) *KeyCtrl {
 }
 
 func (ctrl KeyCtrl) List(w http.ResponseWriter, r *http.Request) {
-	sort := r.URL.Query().Get("sort")
-	search := r.URL.Query().Get("search")
-	list, err := ctrl.store.FindKeys(search, sort)
+	list, err := ctrl.store.ListKeys()
 	if err != nil {
 		Err(w, r, err)
 		return

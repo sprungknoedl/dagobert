@@ -20,9 +20,10 @@ type Indicator struct {
 
 	FirstSeen Time
 	LastSeen  Time
+	Events    int
 }
 
-func (store *Store) FindIndicators(cid string, search string, sort string) ([]Indicator, error) {
+func (store *Store) ListIndicators(cid string) ([]Indicator, error) {
 	query := `
 	SELECT 
 		i.id, i.status, i.type, i.value, i.tlp, i.source, i.notes, i.case_id,
@@ -33,34 +34,17 @@ func (store *Store) FindIndicators(cid string, search string, sort string) ([]In
 		(SELECT  max(e.time)
 			FROM events e
 			LEFT JOIN event_indicators ON e.id = event_indicators.event_id 
-			WHERE event_indicators.indicator_id = i.id) AS last_seen
+			WHERE event_indicators.indicator_id = i.id) AS last_seen,
+		(SELECT  count()
+			FROM events e
+			LEFT JOIN event_indicators ON e.id = event_indicators.event_id 
+			WHERE event_indicators.indicator_id = i.id) AS events
 	FROM indicators i
-	WHERE case_id = :cid AND (
-		instr(status, :search) > 0 OR
-		instr(type, :search) > 0 OR
-		instr(tlp, :search) > 0 OR
-		instr(notes, :search) > 0 OR
-		instr(value, :search) > 0)
-	ORDER BY
-		CASE WHEN :sort = 'source'  THEN i.source END ASC,
-		CASE WHEN :sort = '-source' THEN i.source END DESC,
-		CASE WHEN :sort = 'tlp'     THEN i.tlp END ASC,
-		CASE WHEN :sort = '-tlp'    THEN i.tlp END DESC,
-		CASE WHEN :sort = 'notes'   THEN i.notes END ASC,
-		CASE WHEN :sort = '-notes'  THEN i.notes END DESC,
-		CASE WHEN :sort = 'type'    THEN i.type END ASC,
-		CASE WHEN :sort = '-type'   THEN i.type END DESC,
-		CASE WHEN :sort = 'status'  THEN i.status END ASC,
-		CASE WHEN :sort = '-status' THEN i.status END DESC,
-		CASE WHEN :sort = 'first seen'    THEN 7 END ASC,
-		CASE WHEN :sort = '-first seen'   THEN 7 END DESC,
-		CASE WHEN :sort = '-value'  THEN i.value END DESC,
-		i.value ASC`
+	WHERE case_id = :cid
+	ORDER BY i.type ASC, i.value ASC`
 
 	rows, err := store.db.Query(query,
-		sql.Named("cid", cid),
-		sql.Named("search", search),
-		sql.Named("sort", sort))
+		sql.Named("cid", cid))
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +64,11 @@ func (store *Store) GetIndicator(cid string, id string) (Indicator, error) {
 		(SELECT  max(e.time)
 			FROM events e
 			LEFT JOIN event_indicators ON e.id = event_indicators.event_id 
-			WHERE event_indicators.indicator_id = i.id) AS last_seen
+			WHERE event_indicators.indicator_id = i.id) AS last_seen,
+		(SELECT  count()
+			FROM events e
+			LEFT JOIN event_indicators ON e.id = event_indicators.event_id 
+			WHERE event_indicators.indicator_id = i.id) AS events
 	FROM indicators i
 	WHERE case_id = :cid AND id = :id
 	LIMIT 1`
