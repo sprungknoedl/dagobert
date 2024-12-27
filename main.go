@@ -57,11 +57,16 @@ func main() {
 	}
 
 	// --------------------------------------
+	// Authorization
+	// --------------------------------------
+	acl := handler.NewACL(db)
+
+	// --------------------------------------
 	// Authentication
 	// --------------------------------------
 	issuer, _ := url.Parse(cfg.Issuer)
 	clientUrl, _ := url.Parse(cfg.ClientUrl)
-	auth := handler.NewAuthCtrl(db, handler.OpenIDConfig{
+	auth := handler.NewAuthCtrl(db, acl, handler.OpenIDConfig{
 		ClientId:      cfg.ClientId,
 		ClientSecret:  cfg.ClientSecret,
 		Issuer:        *issuer,
@@ -94,7 +99,7 @@ func main() {
 	mux.HandleFunc("GET /auth/forbidden", auth.Forbidden)
 
 	// cases
-	caseCtrl := handler.NewCaseCtrl(db)
+	caseCtrl := handler.NewCaseCtrl(db, acl)
 	mux.HandleFunc("GET /cases/", caseCtrl.List)
 	mux.HandleFunc("GET /cases/export", caseCtrl.Export)
 	mux.HandleFunc("GET /cases/import", caseCtrl.Import)
@@ -102,23 +107,27 @@ func main() {
 	mux.HandleFunc("GET /cases/{cid}", caseCtrl.Edit)
 	mux.HandleFunc("POST /cases/{cid}", caseCtrl.Save)
 	mux.HandleFunc("DELETE /cases/{cid}", caseCtrl.Delete)
+	mux.HandleFunc("GET /settings/cases/{cid}/acl", caseCtrl.EditACL)
+	mux.HandleFunc("POST /settings/cases/{cid}/acl", caseCtrl.SaveACL)
 
 	// users
-	userCtrl := handler.NewUserCtrl(db)
+	userCtrl := handler.NewUserCtrl(db, acl)
 	mux.HandleFunc("GET /settings/users/", userCtrl.List)
 	mux.HandleFunc("GET /settings/users/{id}", userCtrl.Edit)
 	mux.HandleFunc("POST /settings/users/{id}", userCtrl.Save)
 	mux.HandleFunc("DELETE /settings/users/{id}", userCtrl.Delete)
+	mux.HandleFunc("GET /settings/users/{id}/acl", userCtrl.EditACL)
+	mux.HandleFunc("POST /settings/users/{id}/acl", userCtrl.SaveACL)
 
 	// api keys
-	keyCtrl := handler.NewKeyCtrl(db)
+	keyCtrl := handler.NewKeyCtrl(db, acl)
 	mux.HandleFunc("GET /settings/api-keys/", keyCtrl.List)
 	mux.HandleFunc("GET /settings/api-keys/{key}", keyCtrl.Edit)
 	mux.HandleFunc("POST /settings/api-keys/{key}", keyCtrl.Save)
 	mux.HandleFunc("DELETE /settings/api-keys/{key}", keyCtrl.Delete)
 
 	// templates
-	reportCtrl := handler.NewReportCtrl(db)
+	reportCtrl := handler.NewReportCtrl(db, acl)
 	mux.HandleFunc("GET /settings/reports/", reportCtrl.List)
 	mux.HandleFunc("GET /settings/reports/{id}", reportCtrl.Edit)
 	mux.HandleFunc("POST /settings/reports/{id}", reportCtrl.Save)
@@ -130,7 +139,7 @@ func main() {
 	// Investigation
 	// --------------------------------------
 	// events
-	eventCtrl := handler.NewEventCtrl(db)
+	eventCtrl := handler.NewEventCtrl(db, acl)
 	mux.HandleFunc("GET /cases/{cid}/events/", eventCtrl.List)
 	mux.HandleFunc("GET /cases/{cid}/events/export", eventCtrl.Export)
 	mux.HandleFunc("GET /cases/{cid}/events/import", eventCtrl.Import)
@@ -140,7 +149,7 @@ func main() {
 	mux.HandleFunc("DELETE /cases/{cid}/events/{id}", eventCtrl.Delete)
 
 	// assets
-	assetCtrl := handler.NewAssetCtrl(db)
+	assetCtrl := handler.NewAssetCtrl(db, acl)
 	mux.HandleFunc("GET /cases/{cid}/assets/", assetCtrl.List)
 	mux.HandleFunc("GET /cases/{cid}/assets/export", assetCtrl.Export)
 	mux.HandleFunc("GET /cases/{cid}/assets/import", assetCtrl.Import)
@@ -150,7 +159,7 @@ func main() {
 	mux.HandleFunc("DELETE /cases/{cid}/assets/{id}", assetCtrl.Delete)
 
 	// malware
-	malwareCtrl := handler.NewMalwareCtrl(db)
+	malwareCtrl := handler.NewMalwareCtrl(db, acl)
 	mux.HandleFunc("GET /cases/{cid}/malware/", malwareCtrl.List)
 	mux.HandleFunc("GET /cases/{cid}/malware/export", malwareCtrl.Export)
 	mux.HandleFunc("GET /cases/{cid}/malware/import", malwareCtrl.Import)
@@ -160,7 +169,7 @@ func main() {
 	mux.HandleFunc("DELETE /cases/{cid}/malware/{id}", malwareCtrl.Delete)
 
 	// indicators
-	indicatorCtrl := handler.NewIndicatorCtrl(db)
+	indicatorCtrl := handler.NewIndicatorCtrl(db, acl)
 	mux.HandleFunc("GET /cases/{cid}/indicators/", indicatorCtrl.List)
 	mux.HandleFunc("GET /cases/{cid}/indicators/export", indicatorCtrl.Export)
 	mux.HandleFunc("GET /cases/{cid}/indicators/import", indicatorCtrl.Import)
@@ -170,7 +179,7 @@ func main() {
 	mux.HandleFunc("DELETE /cases/{cid}/indicators/{id}", indicatorCtrl.Delete)
 
 	// evidence
-	evidenceCtrl := handler.NewEvidenceCtrl(db)
+	evidenceCtrl := handler.NewEvidenceCtrl(db, acl)
 	mux.HandleFunc("GET /cases/{cid}/evidences/", evidenceCtrl.List)
 	mux.HandleFunc("GET /cases/{cid}/evidences/export", evidenceCtrl.Export)
 	mux.HandleFunc("GET /cases/{cid}/evidences/import", evidenceCtrl.Import)
@@ -183,7 +192,7 @@ func main() {
 	mux.HandleFunc("DELETE /cases/{cid}/evidences/{id}", evidenceCtrl.Delete)
 
 	// tasks
-	taskCtrl := handler.NewTaskCtrl(db)
+	taskCtrl := handler.NewTaskCtrl(db, acl)
 	mux.HandleFunc("GET /cases/{cid}/tasks/", taskCtrl.List)
 	mux.HandleFunc("GET /cases/{cid}/tasks/export", taskCtrl.Export)
 	mux.HandleFunc("GET /cases/{cid}/tasks/import", taskCtrl.Import)
@@ -193,7 +202,7 @@ func main() {
 	mux.HandleFunc("DELETE /cases/{cid}/tasks/{id}", taskCtrl.Delete)
 
 	// notes
-	noteCtrl := handler.NewNoteCtrl(db)
+	noteCtrl := handler.NewNoteCtrl(db, acl)
 	mux.HandleFunc("GET /cases/{cid}/notes/", noteCtrl.List)
 	mux.HandleFunc("GET /cases/{cid}/notes/export", noteCtrl.Export)
 	mux.HandleFunc("GET /cases/{cid}/notes/import", noteCtrl.Import)
@@ -211,7 +220,7 @@ func main() {
 	// --------------------------------------
 	// Initialize Dagobert
 	// --------------------------------------
-	err = InitializeDagobert(db, auth, cfg)
+	err = InitializeDagobert(db, acl, cfg)
 	if err != nil {
 		log.Fatalf("Failed to initialize dagobert: %v", err)
 	}
@@ -223,7 +232,7 @@ func main() {
 	}
 }
 
-func InitializeDagobert(store *model.Store, auth *handler.AuthCtrl, cfg Configuration) error {
+func InitializeDagobert(store *model.Store, acl *handler.ACL, cfg Configuration) error {
 	users, err := store.ListUsers()
 	if err != nil {
 		return err
@@ -249,7 +258,7 @@ func InitializeDagobert(store *model.Store, auth *handler.AuthCtrl, cfg Configur
 				return err
 			}
 
-			err = auth.SaveRoleAssignment(value, "Administrator")
+			err = acl.SaveUserRole(value, "Administrator")
 			if err != nil {
 				return err
 			}

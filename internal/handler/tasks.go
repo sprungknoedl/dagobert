@@ -15,10 +15,11 @@ import (
 
 type TaskCtrl struct {
 	store *model.Store
+	acl   *ACL
 }
 
-func NewTaskCtrl(store *model.Store) *TaskCtrl {
-	return &TaskCtrl{store}
+func NewTaskCtrl(store *model.Store, acl *ACL) *TaskCtrl {
+	return &TaskCtrl{store, acl}
 }
 
 func (ctrl TaskCtrl) List(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +30,7 @@ func (ctrl TaskCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(ctrl.store, w, r, http.StatusOK, "internal/views/tasks-many.html", map[string]any{
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/tasks-many.html", map[string]any{
 		"title": "Tasks",
 		"rows":  list,
 	})
@@ -66,7 +67,7 @@ func (ctrl TaskCtrl) Export(w http.ResponseWriter, r *http.Request) {
 func (ctrl TaskCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/tasks/", cid)
-	ImportCSV(ctrl.store, w, r, uri, 6, func(rec []string) {
+	ImportCSV(ctrl.store, ctrl.acl, w, r, uri, 6, func(rec []string) {
 		done, err := strconv.ParseBool(cmp.Or(rec[3], "false"))
 		if err != nil {
 			Warn(w, r, err)
@@ -105,7 +106,7 @@ func (ctrl TaskCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(ctrl.store, w, r, http.StatusOK, "internal/views/tasks-one.html", map[string]any{
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/tasks-one.html", map[string]any{
 		"obj":   obj,
 		"valid": valid.Result{},
 	})
@@ -119,7 +120,7 @@ func (ctrl TaskCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if vr := ValidateTask(dto); !vr.Valid() {
-		Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/tasks-one.html", map[string]any{
+		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/tasks-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,
 		})
@@ -140,7 +141,7 @@ func (ctrl TaskCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s/tasks/%s?confirm=yes", cid, id)
-		Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
+		Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
 		return

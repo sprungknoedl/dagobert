@@ -67,7 +67,7 @@
         <!-- search input -->
          {{ if not .hideSearch }}
         <label class="w-96 input input-bordered flex items-center gap-2">
-            <input type="search" name="search" value="{{ .env.Search }}" class="grow" placeholder="Search ..." />
+            <input type="search" name="search" class="grow" placeholder="Search ..." />
             <svg class="w-6 h-6 opacity-70" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
             </svg>
@@ -76,39 +76,47 @@
 
         <!-- buttons -->
         <div class="join" role="group">
+            {{if allowed ($url := print .env.ActiveRoute "import") "POST"}}
             {{ if not .hideImport }}
-            <a class="join-item btn" href="import"
+            <a class="join-item btn" href="{{ $url }}"
                 up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}"
                 @keydown.i.ctrl.window="$el.click()">
                 {{ template "icon-arrow-up-tray" "inline-block mr-1 w-6 h-6" }}
                 Import CSV
             </a>
             {{ end }}
+            {{ end }}
 
+            {{if allowed ($url := print .env.ActiveRoute "export") "GET"}}
             {{ if not .hideExport }}
-            <a class="join-item btn" href="export"
+            <a class="join-item btn" href="{{ $url }}"
                 @keydown.e.ctrl.window="$el.click()">
                 {{ template "icon-arrow-down-tray" "inline-block mr-1 w-6 h-6" }}
                 Export CSV
             </a>
             {{ end }}
+            {{ end }}
 
+            {{if allowed ($url := print .env.ActiveRoute) "GET"}}
             {{ if not .hideRefresh }}
-            <a class="join-item btn" href="./"
+            <a class="join-item btn" href="{{ $url }}"
                 up-target="#list"
                 @keydown.r.ctrl.window="$el.click()">
                 {{ template "icon-arrow-path" "inline-block mr-1 w-6 h-6" }}
                 Refresh
             </a>
             {{ end }}
+            {{ end }}
 
+            {{if allowed ($url := print .env.ActiveRoute "new") "POST"}}
             {{ if not .hideAdd }}
-            <a class="join-item btn btn-accent" href="new"
+            <a class="join-item btn btn-accent" href="{{ $url }}"
                 up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}"
                 @keydown.n.ctrl.window="$el.click()">
                 {{ template "icon-plus" "inline-block mr-1 w-6 h-6" }}
                 Add
             </a>
+            {{ end }}
             {{ end }}
         </div>
 
@@ -124,27 +132,27 @@
 
     <div class="divider"></div>
     <ul class="menu gap-2">
-		<li><a href="/" title="Cases" class='{{ if eq .title "Cases" }}active{{ end }}'> {{ template "icon-briefcase" "w-6 h-6" }} </a></li>
-		<li><a href="/settings/users/" title="Users" class='{{ if eq .title "Users" }}active{{ end }}'> {{ template "icon-users" "w-6 h-6" }} </a></li>
-		<li><a href="/settings/api-keys/" title="API Keys" class='{{ if eq .title "API Keys" }}active{{ end }}'> {{ template "icon-beaker" "w-6 h-6" }} </a></li>
-		<li><a href="/settings/reports/" title="Report Templates" class='{{ if eq .title "Report Templates" }}active{{ end }}'> {{ template "icon-document-text" "w-6 h-6" }} </a></li>
+		{{if allowed ($url := "/") "GET"}}                  <li><a href="{{ $url }}" title="Cases" class='{{ if eq .title "Cases" }}active{{ end }}'> {{ template "icon-briefcase" "w-6 h-6" }} </a></li>{{ end }}
+		{{if allowed ($url := "/settings/users/") "GET"}}   <li><a href="{{ $url }}" title="Users" class='{{ if eq .title "Users" }}active{{ end }}'> {{ template "icon-users" "w-6 h-6" }} </a></li>{{ end }}
+		{{if allowed ($url := "/settings/api-keys/") "GET"}}<li><a href="{{ $url }}" title="API Keys" class='{{ if eq .title "API Keys" }}active{{ end }}'> {{ template "icon-beaker" "w-6 h-6" }} </a></li>{{ end }}
+		{{if allowed ($url := "/settings/reports/") "GET"}} <li><a href="{{ $url }}" title="Report Templates" class='{{ if eq .title "Report Templates" }}active{{ end }}'> {{ template "icon-document-text" "w-6 h-6" }} </a></li>{{ end }}
     </ul>
 
     {{ if ne .env.ActiveCase.ID "" }}
     <div class="divider"></div>
     <ul class="menu gap-2">
-		<li><a href="/cases/{{ .env.ActiveCase.ID }}/events/" title="Timeline" class='{{ if eq .title "Timeline" }}active{{ end }}'> {{ template "icon-clock" "w-6 h-6" }} </a></li>
-		<li><a href="/cases/{{ .env.ActiveCase.ID }}/assets/" title="Assets" class='{{ if eq .title "Assets" }}active{{ end }}'> {{ template "icon-desktop" "w-6 h-6" }} </a></li>
-		<li><a href="/cases/{{ .env.ActiveCase.ID }}/indicators/" title="Indicators" class='{{ if eq .title "Indicators" }}active{{ end }}'> {{ template "icon-fingerprint" "w-6 h-6" }} </a></li>
-		<li><a href="/cases/{{ .env.ActiveCase.ID }}/malware/" title="Malware" class='{{ if eq .title "Malware" }}active{{ end }}'> {{ template "icon-bug" "w-6 h-6" }} </a></li>
-		<li><a href="/cases/{{ .env.ActiveCase.ID }}/evidences/" title="Evidences" class='{{ if eq .title "Evidences" }}active{{ end }}'> {{ template "icon-cube" "w-6 h-6" }} </a></li>
-		<li><a href="/cases/{{ .env.ActiveCase.ID }}/tasks/" title="Tasks" class='{{ if eq .title "Tasks" }}active{{ end }}'> {{ template "icon-clipboard-check" "w-6 h-6" }} </a></li>
-		<li><a href="/cases/{{ .env.ActiveCase.ID }}/notes/" title="Notes" class='{{ if eq .title "Notes" }}active{{ end }}'> {{ template "icon-chat-bubble" "w-6 h-6" }} </a></li>
+		{{if allowed ($url := print "/cases/" .env.CID "/events/") "GET"}}    <li><a href="{{ $url }}" title="Timeline" class='{{ if eq .title "Timeline" }}active{{ end }}'> {{ template "icon-clock" "w-6 h-6" }} </a></li> {{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/assets/") "GET"}}    <li><a href="{{ $url }}" title="Assets" class='{{ if eq .title "Assets" }}active{{ end }}'> {{ template "icon-desktop" "w-6 h-6" }} </a></li> {{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/indicators/") "GET"}}<li><a href="{{ $url }}" title="Indicators" class='{{ if eq .title "Indicators" }}active{{ end }}'> {{ template "icon-fingerprint" "w-6 h-6" }} </a></li> {{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/malware/") "GET"}}   <li><a href="{{ $url }}" title="Malware" class='{{ if eq .title "Malware" }}active{{ end }}'> {{ template "icon-bug" "w-6 h-6" }} </a></li> {{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/evidences/") "GET"}} <li><a href="{{ $url }}" title="Evidences" class='{{ if eq .title "Evidences" }}active{{ end }}'> {{ template "icon-cube" "w-6 h-6" }} </a></li> {{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/tasks/") "GET"}}     <li><a href="{{ $url }}" title="Tasks" class='{{ if eq .title "Tasks" }}active{{ end }}'> {{ template "icon-clipboard-check" "w-6 h-6" }} </a></li> {{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/notes/") "GET"}}     <li><a href="{{ $url }}" title="Notes" class='{{ if eq .title "Notes" }}active{{ end }}'> {{ template "icon-chat-bubble" "w-6 h-6" }} </a></li> {{ end }}
     </ul>
 
     <div class="divider"></div>
     <ul class="menu gap-2">
-		<li><a href="/cases/{{ .env.ActiveCase.ID }}/reports" title="Report" class='' up-layer="new drawer"> {{ template "icon-document-arrow-down" "w-6 h-6" }} </a></li>
+		{{if allowed ($url := print "/cases/" .env.CID "/reports") "GET"}}<li><a href="{{ $url }}" title="Report" class='' up-layer="new drawer"> {{ template "icon-document-arrow-down" "w-6 h-6" }} </a></li>{{ end }}
     </ul>
     {{ end }}
 
@@ -154,14 +162,6 @@
 		<li><a href="/auth/logout" title="Logout" class=''> {{ template "icon-logout" "w-6 h-6" }} </a></li>
     </ul>
 </aside>
-{{ end }}
-
-{{ define "table-th" }}
-<th @click="toggle()" x-data="{ toggle(event) { sort_by = (sort_by == '{{ .name }}') ? '-{{ .name }}' : '{{ .name }}' } }">
-    {{ if eq .sort .name }}          {{ template "icon-chevron-up" "w-6 h-6 inline-block" }}
-    {{ else if eq .sort (print "-" .name) }} {{ template "icon-chevron-down" "w-6 h-6 inline-block" }} {{ end }}
-    {{ title .name }}
-</th>
 {{ end }}
 
 {{ define "format-time" }}

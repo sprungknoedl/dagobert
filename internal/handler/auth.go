@@ -38,10 +38,10 @@ type AuthCtrl struct {
 	verifier      *oidc.IDTokenVerifier
 	autoProvision bool
 	store         *model.Store
-	acl           *casbin.Enforcer
+	acl           *ACL
 }
 
-func NewAuthCtrl(store *model.Store, cfg OpenIDConfig) *AuthCtrl {
+func NewAuthCtrl(store *model.Store, acl *ACL, cfg OpenIDConfig) *AuthCtrl {
 	providerCtx := context.Background()
 	provider, err := oidc.NewProvider(providerCtx, cfg.Issuer.String())
 	if err != nil {
@@ -61,20 +61,13 @@ func NewAuthCtrl(store *model.Store, cfg OpenIDConfig) *AuthCtrl {
 		Scopes:       cfg.Scopes,
 	}
 
-	enforcer, err := casbin.NewEnforcer("files/model.conf", store)
-	if err != nil {
-		log.Fatalf("Failed to init Casbin enforcer: %v \n", err.Error())
-	}
-
-	enforcer.EnableAutoSave(true)
-
 	return &AuthCtrl{
 		openidConfig:  cfg,
 		oauthConfig:   config,
 		verifier:      verifier,
 		autoProvision: cfg.AutoProvision,
 		store:         store,
-		acl:           enforcer,
+		acl:           acl,
 	}
 }
 
@@ -88,10 +81,9 @@ func (ctrl AuthCtrl) isAuthorized(r *http.Request) bool {
 
 	res, err := ctrl.acl.Enforce(sub, obj, act)
 	if err != nil {
-		log.Printf("|%s| failed to authorize: %v", tty.Yellow(" WAR "), err)
+		log.Printf("|%s| failed to authorize: %v", tty.Yellow("WARN "), err)
 	}
 
-	log.Printf("|%s| sub:%q -> obj:%q with act:%q = %v", tty.Cyan("INFO "), sub, obj, act, res)
 	return res
 }
 
@@ -245,16 +237,55 @@ func (ctrl AuthCtrl) Callback(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ctrl AuthCtrl) Forbidden(w http.ResponseWriter, r *http.Request) {
-	Render(ctrl.store, w, r, http.StatusForbidden, "internal/views/auth-forbidden.html", map[string]any{})
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusForbidden, "internal/views/auth-forbidden.html", map[string]any{})
 }
 
-func (ctrl AuthCtrl) SaveRoleAssignment(uid string, role string) error {
-	_, err := ctrl.acl.DeleteRolesForUser(uid)
+type ACL struct {
+	db       *model.Store
+	enforcer *casbin.Enforcer
+}
+
+func NewACL(db *model.Store) *ACL {
+	enforcer, err := casbin.NewEnforcer("files/model.conf", db)
+	if err != nil {
+		log.Fatalf("Failed to init Casbin enforcer: %v \n", err.Error())
+	}
+
+	enforcer.EnableAutoSave(true)
+	return &ACL{db, enforcer}
+}
+
+// Enforce decides whether a "subject" can access a "object" with the operation "action", input parameters are usually: (sub, obj, act).
+func (acl *ACL) Enforce(rvals ...interface{}) (bool, error) {
+	return acl.enforcer.Enforce(rvals...)
+}
+
+func (acl *ACL) Allowed(uid string, url string, method string) bool {
+	ok, _ := acl.Enforce(uid, url, method)
+	return ok
+}
+
+func (acl *ACL) DeleteUser(uid string) error {
+	if _, err := acl.enforcer.DeleteRolesForUser(uid); err != nil {
+		return err
+	}
+	if _, err := acl.enforcer.DeletePermissionForUser(uid); err != nil {
+		return err
+	}
+	if _, err := acl.enforcer.DeleteUser(uid); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (acl *ACL) SaveUserRole(uid string, role string) error {
+	_, err := acl.enforcer.DeleteRolesForUser(uid)
 	if err != nil {
 		return err
 	}
 
-	_, err = ctrl.acl.AddRoleForUser(uid, "role::"+role)
+	_, err = acl.enforcer.AddRoleForUser(uid, "role::"+role)
 	if err != nil {
 		return err
 	}
@@ -262,8 +293,8 @@ func (ctrl AuthCtrl) SaveRoleAssignment(uid string, role string) error {
 	return nil
 }
 
-func (ctrl AuthCtrl) SaveCaseAssignments(uid string, role string, cases []string) error {
-	_, err := ctrl.acl.DeletePermissionsForUser(uid)
+func (acl *ACL) SaveUserPermissions(uid string, role string, cases []string) error {
+	_, err := acl.enforcer.DeletePermissionsForUser(uid)
 	if err != nil {
 		return err
 	}
@@ -271,10 +302,35 @@ func (ctrl AuthCtrl) SaveCaseAssignments(uid string, role string, cases []string
 	for _, c := range cases {
 		obj := fmt.Sprintf("/cases/%s/*", c)
 		act := fp.If(role == "Read-Only", http.MethodGet, "*")
-		_, err := ctrl.acl.AddPermissionForUser(uid, obj, act)
+		_, err := acl.enforcer.AddPermissionForUser(uid, obj, act)
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (acl *ACL) SaveCasePermissions(cid string, users []string) error {
+	obj := fmt.Sprintf("/cases/%s/*", cid)
+	if err := acl.db.RemoveFilteredPolicy("p", "p", 1, obj); err != nil {
+		return err
+	}
+
+	for _, uid := range users {
+		user, err := acl.db.GetUser(uid)
+		if err != nil {
+			return err
+		}
+
+		act := fp.If(user.Role == "Read-Only", http.MethodGet, "*")
+		if err := acl.db.AddPolicy("p", "p", []string{user.ID, obj, act}); err != nil {
+			return err
+		}
+	}
+
+	if err := acl.enforcer.LoadPolicy(); err != nil {
+		return err
 	}
 
 	return nil

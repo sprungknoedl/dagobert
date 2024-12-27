@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+{{ template "layout-head" }}
+<body>
+    <main>
+    <form method="post" action="/settings/cases/{{ .obj.ID }}/acl" up-submit>
+        <!-- Modal header -->
+        <h3 class="font-bold text-lg mb-4">
+            Access control
+        </h3>
+
+        <!-- Modal body -->
+        <div class="mb-4">
+            <p class="mb-2">The following users are allowed to access <strong>{{ .obj.Name }}</strong>:</p>
+
+            {{ range .users }}
+            {{ if ne .Role "Administrator" }}
+            <div class="form-control mb-2">
+                <label class="label cursor-pointer justify-start gap-2">
+                    <input name="Users" value="{{ .ID }}" type="checkbox" class="checkbox" {{ if contains $.perms .ID }}checked{{ end }}/>
+                    {{ .Name }} ({{ .UPN }})
+                </label>
+            </div>
+            {{ end }}
+            {{ end }}
+
+            <p class="mb-2"><strong class="text-accent">Note:</strong> Administrators have access to all cases and are not shown here.</p>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="flex gap-2 items-center">
+            <button type="submit" class="btn btn-primary"> Save </button>
+            <a class="btn" up-dismiss> Cancel </a>
+        </div>
+    </form>
+    </main>
+</body>

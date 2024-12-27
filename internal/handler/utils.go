@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"cmp"
 	"encoding/csv"
 	"errors"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/template"
 	"time"
@@ -26,9 +28,9 @@ var decoder = schema.NewDecoder()
 var SessionName = "default"
 var SessionStore = sessions.NewCookieStore([]byte(os.Getenv("WEB_SESSION_SECRET")))
 
-func ImportCSV(store *model.Store, w http.ResponseWriter, r *http.Request, uri string, numFields int, cb func(rec []string)) {
+func ImportCSV(store *model.Store, acl *ACL, w http.ResponseWriter, r *http.Request, uri string, numFields int, cb func(rec []string)) {
 	if r.Method == http.MethodGet {
-		Render(store, w, r, http.StatusOK, "internal/views/utils-import.html", map[string]any{})
+		Render(store, acl, w, r, http.StatusOK, "internal/views/utils-import.html", map[string]any{})
 		return
 	}
 
@@ -76,7 +78,8 @@ func Err(w http.ResponseWriter, r *http.Request, err error) {
 	render(w, http.StatusInternalServerError, "internal/views/toasts-error.html", map[string]any{"err": err})
 }
 
-func Render(store *model.Store, w http.ResponseWriter, r *http.Request, status int, name string, values map[string]any) {
+func Render(store *model.Store, acl *ACL, w http.ResponseWriter, r *http.Request, status int, name string, values map[string]any) {
+	values["acl"] = acl
 	values["env"] = GetEnv(store, r)
 	values["model"] = map[string]any{
 		"AssetStatus":     model.AssetStatus,
@@ -97,10 +100,12 @@ func Render(store *model.Store, w http.ResponseWriter, r *http.Request, status i
 }
 
 func render(w http.ResponseWriter, status int, name string, values map[string]any) {
+
 	tpl, err := template.New(filepath.Base(name)).Funcs(template.FuncMap{
-		"lower": strings.ToLower,
-		"upper": strings.ToUpper,
-		"title": strings.Title,
+		"lower":    strings.ToLower,
+		"upper":    strings.ToUpper,
+		"title":    strings.Title,
+		"contains": slices.Contains[[]string],
 		"dict": func(values ...interface{}) (map[string]interface{}, error) {
 			if len(values)%2 != 0 {
 				return nil, errors.New("invalid dict call")
@@ -114,6 +119,16 @@ func render(w http.ResponseWriter, status int, name string, values map[string]an
 				dict[key] = values[i+1]
 			}
 			return dict, nil
+		},
+		"allowed": func(url, method string) bool {
+			acl, ok1 := values["acl"].(*ACL)
+			env, ok2 := values["env"].(Env)
+			if !ok1 || !ok2 || acl == nil {
+				return false
+			}
+
+			res := acl.Allowed(env.UID, url, method)
+			return res
 		},
 	}).ParseFiles(
 		name,
@@ -148,11 +163,10 @@ func Decode(r *http.Request, dst any) error {
 }
 
 type Env struct {
-	Username    string
+	UID         string
+	CID         string
 	ActiveRoute string
 	ActiveCase  model.Case
-	Search      string
-	Sort        string
 }
 
 func GetEnv(store *model.Store, r *http.Request) Env {
@@ -161,14 +175,13 @@ func GetEnv(store *model.Store, r *http.Request) Env {
 
 	sess, _ := SessionStore.Get(r, SessionName)
 	claims, _ := sess.Values["oidcClaims"].(map[string]interface{})
-	user, _ := claims["sub"].(string)
+	uid, _ := claims[cmp.Or(os.Getenv("OIDC_ID_CLAIM"), "sub")].(string)
 
 	return Env{
-		Username:    user,
+		UID:         uid,
+		CID:         kase.ID,
 		ActiveRoute: r.URL.Path,
 		ActiveCase:  kase,
-		Search:      r.URL.Query().Get("search"),
-		Sort:        r.URL.Query().Get("sort"),
 	}
 }
 

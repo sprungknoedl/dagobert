@@ -296,6 +296,10 @@ CREATE TABLE IF NOT EXISTS policies (
 INSERT INTO policies (ptype, v0, v1, v2) VALUES 
 	('p', '*', '/auth/*', '*'),
 	('p', '*', '/dist/*', '*'),
+	('p', 'role::User', '/', 'GET'),
+	('p', 'role::User', '/cases/', 'GET'),
+	('p', 'role::Read-Only', '/', 'GET'),
+	('p', 'role::Read-Only', '/cases/', 'GET'),
 	('p', 'role::Administrator', '*', '*')
 	ON CONFLICT DO NOTHING;
 `

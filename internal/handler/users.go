@@ -10,10 +10,11 @@ import (
 
 type UserCtrl struct {
 	store *model.Store
+	acl   *ACL
 }
 
-func NewUserCtrl(store *model.Store) *UserCtrl {
-	return &UserCtrl{store: store}
+func NewUserCtrl(store *model.Store, acl *ACL) *UserCtrl {
+	return &UserCtrl{store, acl}
 }
 
 func (ctrl UserCtrl) List(w http.ResponseWriter, r *http.Request) {
@@ -23,7 +24,7 @@ func (ctrl UserCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(ctrl.store, w, r, http.StatusOK, "internal/views/users-many.html", map[string]any{
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/users-many.html", map[string]any{
 		"title": "Users",
 		"rows":  list,
 	})
@@ -41,7 +42,7 @@ func (ctrl UserCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(ctrl.store, w, r, http.StatusOK, "internal/views/users-one.html", map[string]any{
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/users-one.html", map[string]any{
 		"obj":   obj,
 		"valid": valid.Result{},
 	})
@@ -55,14 +56,32 @@ func (ctrl UserCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if vr := ValidateUser(dto); !vr.Valid() {
-		Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/users-one.html", map[string]any{
+		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/users-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,
 		})
 		return
 	}
 
+	// Update user
 	if err := ctrl.store.SaveUser(dto); err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	// Update role in casbin
+	if err := ctrl.acl.SaveUserRole(dto.ID, dto.Role); err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	// Update permissions casbin, those need to be changed when a role change happens
+	perms, err := ctrl.store.GetUserPermissions(dto.ID)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+	if err := ctrl.acl.SaveUserPermissions(dto.ID, dto.Role, perms); err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -74,7 +93,7 @@ func (ctrl UserCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/users/%s?confirm=yes", id)
-		Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
+		Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
 		return
@@ -85,9 +104,64 @@ func (ctrl UserCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if GetEnv(ctrl.store, r).Username == id {
+	if err := ctrl.acl.DeleteUser(id); err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	if GetEnv(ctrl.store, r).UID == id {
 		http.Redirect(w, r, "/auth/logout", http.StatusSeeOther)
 	} else {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
+}
+
+func (ctrl UserCtrl) EditACL(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	obj, err := ctrl.store.GetUser(id)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	cases, err := ctrl.store.ListCases()
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	perms, err := ctrl.store.GetUserPermissions(id)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/users-acl.html", map[string]any{
+		"obj":   obj,
+		"perms": perms,
+		"cases": cases,
+		"valid": valid.Result{},
+	})
+}
+
+func (ctrl UserCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	obj, err := ctrl.store.GetUser(id)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	form := struct{ Cases []string }{}
+	if err := Decode(r, &form); err != nil {
+		Warn(w, r, err)
+		return
+	}
+
+	if err := ctrl.acl.SaveUserPermissions(obj.ID, obj.Role, form.Cases); err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	http.Redirect(w, r, "/settings/users/", http.StatusSeeOther)
 }

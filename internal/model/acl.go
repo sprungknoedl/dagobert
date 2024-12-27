@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/casbin/casbin/v2/model"
 	"github.com/casbin/casbin/v2/persist"
@@ -173,4 +174,56 @@ func (store *Store) RemoveFilteredPolicy(sec string, ptype string, fieldIndex in
 	}
 
 	return nil
+}
+
+func (store *Store) GetUserPermissions(uid string) ([]string, error) {
+	query := `
+	SELECT rowid, ptype, v0, v1, v2, v3, v4, v5
+	FROM policies
+	WHERE ptype = "p" AND v0 = :uid
+	`
+
+	rows, err := store.db.Query(query, sql.Named("uid", uid))
+	if err != nil {
+		return nil, err
+	}
+
+	var list []Policy
+	err = ScanAll(rows, &list)
+	if err != nil {
+		return nil, err
+	}
+
+	cases := make([]string, 0, len(list))
+	for _, row := range list {
+		if strings.HasPrefix(row.V1, "/cases/") {
+			kase, _, _ := strings.Cut(strings.TrimPrefix(row.V1, "/cases/"), "/")
+			cases = append(cases, kase)
+		}
+	}
+
+	return cases, nil
+}
+
+func (store *Store) GetCasePermissions(cid string) ([]string, error) {
+	query := `
+	SELECT rowid, ptype, v0, v1, v2, v3, v4, v5
+	FROM policies
+	WHERE ptype = "p" AND v1 = :obj
+	`
+
+	obj := fmt.Sprintf("/cases/%s/*", cid)
+	rows, err := store.db.Query(query, sql.Named("obj", obj))
+	if err != nil {
+		return nil, err
+	}
+
+	var list []Policy
+	err = ScanAll(rows, &list)
+	if err != nil {
+		return nil, err
+	}
+
+	users := fp.Apply(list, func(p Policy) string { return p.V0 })
+	return users, nil
 }
