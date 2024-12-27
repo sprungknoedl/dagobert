@@ -1,6 +1,6 @@
 tmp
 dagobert
-*.env
 .DS_Store
 files
+configs/*.env
 node_modules
