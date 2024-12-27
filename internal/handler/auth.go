@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/casbin/casbin/v2"
+	cm "github.com/casbin/casbin/v2/model"
 	"github.com/coreos/go-oidc"
 	"github.com/sprungknoedl/dagobert/internal/fp"
 	"github.com/sprungknoedl/dagobert/internal/model"
@@ -246,7 +247,14 @@ type ACL struct {
 }
 
 func NewACL(db *model.Store) *ACL {
-	enforcer, err := casbin.NewEnforcer("files/model.conf", db)
+	m := cm.NewModel()
+	m.AddDef("r", "r", "sub, obj, act")
+	m.AddDef("p", "p", "sub, obj, act")
+	m.AddDef("g", "g", "_, _")
+	m.AddDef("e", "e", "some(where (p.eft == allow))")
+	m.AddDef("m", "m", `(g(r.sub, p.sub) || p.sub == "*") && keyMatch(r.obj, p.obj) && (r.act == p.act || p.act == "*")`)
+
+	enforcer, err := casbin.NewEnforcer(m, db)
 	if err != nil {
 		log.Fatalf("Failed to init Casbin enforcer: %v \n", err.Error())
 	}
