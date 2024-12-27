@@ -35,20 +35,26 @@
 						<td> {{ .Role }} </td>
 						<td> {{ template "format-time" .LastLogin }} </td>
                         <td class="px-6 py-2 flex justify-end join">
+                            {{ if allowed ($url := print "/settings/users/" .ID "/acl") "GET" }}
 							{{ if ne .Role "Administrator" }}
-							<a class="join-item btn btn-sm" href="/settings/users/{{ .ID }}/acl"
+							<a class="join-item btn btn-sm" href="{{ $url }}"
 								up-method="get" up-layer="new drawer" up-accept-location="/settings/users/">
 								ACL
 							</a>
 							{{ end }}
-                            <a class="join-item btn btn-sm" href="/settings/users/{{ .ID }}"
+							{{ end }}
+                            {{ if allowed ($url := print "/settings/users/" .ID) "POST" }}
+                            <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="/settings/users/">
                                 {{ template "icon-pencil" "w-5 h-5"}}
                             </a>
-                            <a class="join-item btn btn-sm" href="/settings/users/{{ .ID }}"
+							{{ end }}
+                            {{ if allowed ($url := print "/settings/users/" .ID) "DELETE" }}
+                            <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="/settings/users/">
                                 {{ template "icon-trash" "w-5 h-5"}}
                             </a>
+							{{ end }}
                         </td>
 					</tr>
 					{{ end }}

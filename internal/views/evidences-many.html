@@ -43,22 +43,31 @@
                         <td> {{ .Source }} </td>
                         <td> {{ .Notes }} </td>
                         <td class="px-6 py-2 flex justify-end join">
-                            <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/evidences/{{ .ID }}/download"
+                            &nbsp;
+                            {{ if allowed ($url := print "/cases/" .CaseID "/evidences/" .ID "/download") "GET" }}
+                            <a class="join-item btn btn-sm" href="{{ $url }}"
                                 @click.stop >
                                 {{ template "icon-arrow-down-tray" "w-5 h-5"}}
                             </a>
-                            <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/evidences/{{ .ID }}/run"
+                            {{ end }}
+                            {{ if allowed ($url := print "/cases/" .CaseID "/evidences/" .ID "/run") "POST" }}
+                            <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
                                 {{ template "icon-bolt" "w-5 h-5"}}
                             </a>
-                            <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/evidences/{{ .ID }}"
+                            {{ end }}
+                            {{ if allowed ($url := print "/cases/" .CaseID "/evidences/" .ID) "POST" }}
+                            <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
                                 {{ template "icon-pencil" "w-5 h-5"}}
                             </a>
-                            <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/evidences/{{ .ID }}"
+                            {{ end }}
+                            {{ if allowed ($url := print "/cases/" .CaseID "/evidences/" .ID) "DELETE" }}
+                            <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
                                 {{ template "icon-trash" "w-5 h-5"}}
                             </a>
+                            {{ end }}
                         </td>
                     </tr>
                     {{ end }}

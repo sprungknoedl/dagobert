@@ -152,7 +152,7 @@
 
     <div class="divider"></div>
     <ul class="menu gap-2">
-		{{if allowed ($url := print "/cases/" .env.CID "/reports") "GET"}}<li><a href="{{ $url }}" title="Report" class='' up-layer="new drawer"> {{ template "icon-document-arrow-down" "w-6 h-6" }} </a></li>{{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/reports") "POST"}}<li><a href="{{ $url }}" title="Report" class='' up-layer="new drawer"> {{ template "icon-document-arrow-down" "w-6 h-6" }} </a></li>{{ end }}
     </ul>
     {{ end }}
 
