@@ -1,0 +1,15 @@
+volumes:
+  data:
+
+services:
+  app:
+    image: sprungknoedl/dagobert
+    restart: unless-stopped
+    volumes:
+      - data:/app/files/
+      # uncomment if you want dagobert extensions to run other containers
+      # - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+      - dagobert.env
+    ports:
+      - 8080:8080
