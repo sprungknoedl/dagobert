@@ -94,6 +94,6 @@ func ValidateReport(dto model.Report) valid.Result {
 func ValidateUser(dto model.User) valid.Result {
 	return valid.Check([]valid.Condition{
 		{Name: "ID", Missing: dto.ID == ""},
-		{Name: "Role", Message: "Invalid role"},
+		{Name: "Role", Message: "Invalid role", Invalid: !slices.Contains(model.UserRoles, dto.Role)},
 	})
 }

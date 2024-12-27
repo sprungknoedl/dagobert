@@ -36,10 +36,10 @@
 						<td> {{ template "format-time" .LastLogin }} </td>
                         <td class="px-6 py-2 flex justify-end join">
 							{{ if ne .Role "Administrator" }}
-								<a class="join-item btn btn-sm" href="/settings/users/{{ .ID }}"
-									up-method="get" up-layer="new drawer" up-accept-location="/settings/users/">
-									ACL
-								</a>
+							<a class="join-item btn btn-sm" href="/settings/users/{{ .ID }}/acl"
+								up-method="get" up-layer="new drawer" up-accept-location="/settings/users/">
+								ACL
+							</a>
 							{{ end }}
                             <a class="join-item btn btn-sm" href="/settings/users/{{ .ID }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="/settings/users/">

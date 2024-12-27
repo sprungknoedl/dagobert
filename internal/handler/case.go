@@ -15,10 +15,11 @@ import (
 
 type CaseCtrl struct {
 	store *model.Store
+	acl   *ACL
 }
 
-func NewCaseCtrl(store *model.Store) *CaseCtrl {
-	return &CaseCtrl{store}
+func NewCaseCtrl(store *model.Store, acl *ACL) *CaseCtrl {
+	return &CaseCtrl{store, acl}
 }
 
 func (ctrl CaseCtrl) List(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +29,7 @@ func (ctrl CaseCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(ctrl.store, w, r, http.StatusOK, "internal/views/cases-many.html", map[string]any{
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/cases-many.html", map[string]any{
 		"title": "Cases",
 		"rows":  list,
 	})
@@ -64,7 +65,7 @@ func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	uri := "/"
-	ImportCSV(ctrl.store, w, r, uri, 7, func(rec []string) {
+	ImportCSV(ctrl.store, ctrl.acl, w, r, uri, 7, func(rec []string) {
 		closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
 		if err != nil {
 			Warn(w, r, err)
@@ -99,7 +100,7 @@ func (ctrl CaseCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(ctrl.store, w, r, http.StatusOK, "internal/views/cases-one.html", map[string]any{
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/cases-one.html", map[string]any{
 		"obj":   obj,
 		"valid": valid.Result{},
 	})
@@ -113,7 +114,7 @@ func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if vr := ValidateCase(dto); !vr.Valid() {
-		Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/cases-one.html", map[string]any{
+		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/cases-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,
 		})
@@ -133,7 +134,7 @@ func (ctrl CaseCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s?confirm=yes", cid)
-		Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
+		Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
 		return
@@ -145,4 +146,54 @@ func (ctrl CaseCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (ctrl CaseCtrl) EditACL(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	obj, err := ctrl.store.GetCase(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	users, err := ctrl.store.ListUsers()
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	perms, err := ctrl.store.GetCasePermissions(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/cases-acl.html", map[string]any{
+		"obj":   obj,
+		"perms": perms,
+		"users": users,
+		"valid": valid.Result{},
+	})
+}
+
+func (ctrl CaseCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	obj, err := ctrl.store.GetCase(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	form := struct{ Users []string }{}
+	if err := Decode(r, &form); err != nil {
+		Warn(w, r, err)
+		return
+	}
+
+	if err := ctrl.acl.SaveCasePermissions(obj.ID, form.Users); err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	http.Redirect(w, r, "/cases/", http.StatusSeeOther)
 }

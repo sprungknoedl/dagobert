@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+{{ template "layout-head" }}
+<body>
+    <main>
+    <form method="post" action="/settings/users/{{ .obj.ID }}/acl" up-submit>
+        <!-- Modal header -->
+        <h3 class="font-bold text-lg mb-4">
+            Access control
+        </h3>
+
+        <!-- Modal body -->
+        <div class="mb-4">
+            <p class="mb-2">User <strong>{{ .obj.Name }} ({{ .obj.UPN }})</strong> is allowed to access the following cases:</p>
+
+            {{ range .cases }}
+            <div class="form-control mb-2">
+                <label class="label cursor-pointer justify-start gap-2">
+                    <input name="Cases" value="{{ .ID }}" type="checkbox" class="checkbox" {{ if contains $.perms .ID }}checked{{ end }}/>
+                    {{ .Name }}
+                </label>
+            </div>
+            {{ end }}
+        </div>
+
+        <!-- Modal footer -->
+        <div class="flex gap-2 items-center">
+            <button type="submit" class="btn btn-primary"> Save </button>
+            <a class="btn" up-dismiss> Cancel </a>
+        </div>
+    </form>
+    </main>
+</body>

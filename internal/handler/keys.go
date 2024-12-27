@@ -11,10 +11,11 @@ import (
 
 type KeyCtrl struct {
 	store *model.Store
+	acl   *ACL
 }
 
-func NewKeyCtrl(store *model.Store) *KeyCtrl {
-	return &KeyCtrl{store}
+func NewKeyCtrl(store *model.Store, acl *ACL) *KeyCtrl {
+	return &KeyCtrl{store, acl}
 }
 
 func (ctrl KeyCtrl) List(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +25,7 @@ func (ctrl KeyCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(ctrl.store, w, r, http.StatusOK, "internal/views/keys-many.html", map[string]any{
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/keys-many.html", map[string]any{
 		"title": "API Keys",
 		"rows":  list,
 	})
@@ -42,7 +43,7 @@ func (ctrl KeyCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(ctrl.store, w, r, http.StatusOK, "internal/views/keys-one.html", map[string]any{
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/keys-one.html", map[string]any{
 		"obj":   obj,
 		"valid": valid.Result{},
 	})
@@ -56,7 +57,7 @@ func (ctrl KeyCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if vr := ValidateKey(dto); !vr.Valid() {
-		Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/keys-one.html", map[string]any{
+		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/keys-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,
 		})
@@ -76,7 +77,7 @@ func (ctrl KeyCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	key := r.PathValue("key")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/api-keys/%s?confirm=yes", key)
-		Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
+		Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
 		return

@@ -39,10 +39,11 @@ func LoadTemplate(name string) (doct.Template, error) {
 
 type ReportCtrl struct {
 	store *model.Store
+	acl   *ACL
 }
 
-func NewReportCtrl(store *model.Store) *ReportCtrl {
-	return &ReportCtrl{store}
+func NewReportCtrl(store *model.Store, acl *ACL) *ReportCtrl {
+	return &ReportCtrl{store, acl}
 }
 
 func (ctrl ReportCtrl) Dialog(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +53,7 @@ func (ctrl ReportCtrl) Dialog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(ctrl.store, w, r, http.StatusOK, "internal/views/reports-dialog.html", map[string]any{
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/reports-dialog.html", map[string]any{
 		"rows": list,
 	})
 }
@@ -64,7 +65,7 @@ func (ctrl ReportCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(ctrl.store, w, r, http.StatusOK, "internal/views/reports-many.html", map[string]any{
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/reports-many.html", map[string]any{
 		"title": "Report Templates",
 		"rows":  list,
 	})
@@ -82,7 +83,7 @@ func (ctrl ReportCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(ctrl.store, w, r, http.StatusOK, "internal/views/reports-one.html", map[string]any{
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/reports-one.html", map[string]any{
 		"obj":   obj,
 		"valid": valid.Result{},
 	})
@@ -99,7 +100,7 @@ func (ctrl ReportCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	// validate form
 	dto.Name = filepath.Base(dto.Name) // sanitize name
 	if vr := ValidateReport(dto); !vr.Valid() {
-		Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/reports-one.html", map[string]any{
+		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/reports-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,
 		})
@@ -270,7 +271,7 @@ func (ctrl ReportCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/reports/%s?confirm=yes", id)
-		Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
+		Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
 		return

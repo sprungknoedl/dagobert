@@ -24,23 +24,36 @@
 
                 <tbody>
                     {{ range .rows }}
+                    {{ if allowed ($url := print "/cases/" .ID "/events/") "GET" }}
                     <tr class="hover">
-                        <td> <a class="link" href="/cases/{{ .ID }}/events/">{{ .ID }}</a> </td>
-                        <td> <a class="link" href="/cases/{{ .ID }}/events/">{{ .Name }}</a> </td>
+                        <td> <a class="link" href="{{ $url }}">{{ .ID }}</a> </td>
+                        <td> <a class="link" href="{{ $url }}">{{ .Name }}</a> </td>
                         <td> {{ .Classification }} </td>
                         <td> {{ .Severity }} </td>
                         <td> {{ .Outcome }} </td>
                         <td class="px-6 py-2 flex justify-end join">
-                            <a class="join-item btn btn-sm" href="/cases/{{ .ID }}"
+                            &nbsp;
+                            {{ if allowed ($url := print "/settings/cases/" .ID "/acl") "POST" }}
+							<a class="join-item btn btn-sm" href="{{ $url }}"
+								up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
+								ACL
+							</a>
+                            {{ end }}
+                            {{ if allowed ($url := print "/cases/" .ID) "POST" }}
+                            <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
                                 {{ template "icon-pencil" "w-5 h-5"}}
                             </a>
-                            <a class="join-item btn btn-sm" href="/cases/{{ .ID }}"
+                            {{ end }}
+                            {{ if allowed ($url := print "/cases/" .ID) "DELETE" }}
+                            <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
                                 {{ template "icon-trash" "w-5 h-5"}}
                             </a>
+                            {{ end }}
                         </td>
                     </tr>
+                    {{ end }}
                     {{ end }}
                 </tbody>
             </table>

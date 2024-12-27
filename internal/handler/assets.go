@@ -13,10 +13,11 @@ import (
 
 type AssetCtrl struct {
 	store *model.Store
+	acl   *ACL
 }
 
-func NewAssetCtrl(store *model.Store) *AssetCtrl {
-	return &AssetCtrl{store}
+func NewAssetCtrl(store *model.Store, acl *ACL) *AssetCtrl {
+	return &AssetCtrl{store, acl}
 }
 
 func (ctrl AssetCtrl) List(w http.ResponseWriter, r *http.Request) {
@@ -27,7 +28,7 @@ func (ctrl AssetCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(ctrl.store, w, r, http.StatusOK, "internal/views/assets-many.html", map[string]any{
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/assets-many.html", map[string]any{
 		"title": "Assets",
 		"rows":  list,
 	})
@@ -64,7 +65,7 @@ func (ctrl AssetCtrl) Export(w http.ResponseWriter, r *http.Request) {
 func (ctrl AssetCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/assets/", cid)
-	ImportCSV(ctrl.store, w, r, uri, 6, func(rec []string) {
+	ImportCSV(ctrl.store, ctrl.acl, w, r, uri, 6, func(rec []string) {
 		obj := model.Asset{
 			ID:     rec[0],
 			CaseID: cid,
@@ -94,7 +95,7 @@ func (ctrl AssetCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(ctrl.store, w, r, http.StatusOK, "internal/views/assets-one.html", map[string]any{
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/assets-one.html", map[string]any{
 		"obj":   obj,
 		"valid": valid.Result{},
 	})
@@ -108,7 +109,7 @@ func (ctrl AssetCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if vr := ValidateAsset(dto); !vr.Valid() {
-		Render(ctrl.store, w, r, http.StatusUnprocessableEntity, "internal/views/assets-one.html", map[string]any{
+		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/assets-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,
 		})
@@ -129,7 +130,7 @@ func (ctrl AssetCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s/assets/%s?confirm=yes", cid, id)
-		Render(ctrl.store, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
+		Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
 			"dst": uri,
 		})
 		return
