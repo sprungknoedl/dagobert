@@ -62,23 +62,28 @@
                         <td class="truncate"> {{ template "format-time" .LastSeen }} </td>
                         <td> {{ .Events }} </td>
                         <td class="px-6 py-2 flex justify-end join">
-                            {{ if eq .Type "IP" }}
+                            &nbsp;
+                            {{ if and (eq .Type "IP") (ne .TLP "TLP:RED")}}
                             <a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
-                            {{ else if eq .Type "Domain" }}
+                            {{ else if and (eq .Type "Domain") (ne .TLP "TLP:RED") }}
                             <a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
-                            {{ else if eq .Type "Hash" }}
+                            {{ else if and (eq .Type "Hash") (ne .TLP "TLP:RED") }}
                             <a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
                             <a class="join-item btn btn-sm" target="_blank" href="https://www.hybrid-analysis.com/search?query={{ .Value }}">HA</a>
                             {{ end }}
 
-                            <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/indicators/{{ .ID }}"
+                            {{ if allowed ($url := print "/cases/" .CaseID "/indicators/" .ID) "POST" }}
+                            <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
                                 {{ template "icon-pencil" "w-5 h-5"}}
                             </a>
-                            <a class="join-item btn btn-sm" href="/cases/{{ .CaseID }}/indicators/{{ .ID }}"
+                            {{ end }}
+                            {{ if allowed ($url := print "/cases/" .CaseID "/indicators/" .ID) "DELETE" }}
+                            <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
                                 {{ template "icon-trash" "w-5 h-5"}}
                             </a>
+                            {{ end }}
                         </td>
                     </tr>
                     {{ end }}
