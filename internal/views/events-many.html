@@ -37,7 +37,7 @@
                     {{ end }}
                     -->
 
-                    <tr class='hover {{ if .Starred }}bg-important{{ else if eq .Type "Remediation"}}bg-good{{ else if eq .Type "Legitimate"}}bg-good{{ end }}'>
+                    <tr class='hover {{ if .Flagged }}bg-flagged{{ else if eq .Type "Remediation"}}bg-good{{ else if eq .Type "Legitimate"}}bg-good{{ end }}'>
                         <td class="truncate"> {{ template "format-time" .Time }}</span> </td>
                         <td class="truncate">
                             {{ if eq .Type "Reconnaissance" }}            {{ template "icon-magnifying-glass" "w-5 h-5 inline-block" }}
@@ -91,8 +91,12 @@
                         <td class="px-6 py-2 flex justify-end join">
                             &nbsp;
                             {{ if allowed ($url := print "/cases/" .CaseID "/events/" .ID) "POST" }}
-                            <a class="join-item btn btn-sm" href="{{ $url }}"
-                                up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
+                            {{ if .Flagged }}
+                            <a class="join-item btn btn-sm btn-flagged" title="Flagged event" href="{{ $url }}" up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
+                                {{ template "icon-flag-solid" "w-5 h-5"}}
+                            </a>
+                            {{ end }}
+                            <a class="join-item btn btn-sm" href="{{ $url }}" up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
                                 {{ template "icon-pencil" "w-5 h-5"}}
                             </a>
                             {{ end }}

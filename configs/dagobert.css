@@ -14,8 +14,12 @@ html {
     @apply bg-emerald-950 !important;
 }
 
-.bg-important {
+.bg-flagged {
     @apply bg-sky-950 !important;
+}
+
+.btn-flagged {
+    @apply text-sky-800 !important;
 }
 
 /*
