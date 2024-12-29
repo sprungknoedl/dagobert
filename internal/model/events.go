@@ -32,7 +32,7 @@ type Event struct {
 	Type          string
 	Event         string
 	Raw           string
-	Starred       bool
+	Flagged       bool
 	CaseID        string
 	RawAssets     []byte
 	RawIndicators []byte
@@ -62,7 +62,7 @@ func (e Event) HasIndicator(iid string) bool {
 func (store *Store) ListEvents(cid string) ([]Event, error) {
 	query := `
 	SELECT 
-		e.id, e.time, e.type, e.event, e.raw, e.starred, e.case_id,
+		e.id, e.time, e.type, e.event, e.raw, e.flagged, e.case_id,
 		(SELECT json_group_array(json_object('ID', a.id, 'Type', a.type, 'Name', a.name))
 			FROM assets a
 			LEFT JOIN event_assets ON a.id = event_assets.asset_id 
@@ -110,7 +110,7 @@ func (store *Store) ListEvents(cid string) ([]Event, error) {
 func (store *Store) GetEvent(cid string, id string) (Event, error) {
 	query := `
 	SELECT 
-		e.id, e.time, e.type, e.event, e.raw, e.starred, e.case_id,
+		e.id, e.time, e.type, e.event, e.raw, e.flagged, e.case_id,
 		(SELECT json_group_array(json_object('ID', a.id, 'Type', a.type, 'Name', a.name))
 			FROM assets a
 			LEFT JOIN event_assets ON a.id = event_assets.asset_id 
@@ -151,12 +151,12 @@ func (store *Store) GetEvent(cid string, id string) (Event, error) {
 
 func (store *Store) SaveEvent(cid string, obj Event) error {
 	query := `
-	INSERT INTO events (id, time, type, event, raw, starred, case_id)
-	VALUES (:id, :time, :type, :event, :raw, :starred, :cid)
+	INSERT INTO events (id, time, type, event, raw, flagged, case_id)
+	VALUES (:id, :time, :type, :event, :raw, :flagged, :cid)
 	ON CONFLICT (id)
-		DO UPDATE SET time=:time, type=:type, event=:event, raw=:raw, starred=:starred
+		DO UPDATE SET time=:time, type=:type, event=:event, raw=:raw, flagged=:flagged
 		WHERE id = :id
-	RETURNING id, time, type, event, raw, starred, case_id`
+	RETURNING id, time, type, event, raw, flagged, case_id`
 
 	// assets
 	query2 := `
@@ -187,7 +187,7 @@ func (store *Store) SaveEvent(cid string, obj Event) error {
 		sql.Named("type", obj.Type),
 		sql.Named("event", obj.Event),
 		sql.Named("raw", obj.Raw),
-		sql.Named("starred", obj.Starred))
+		sql.Named("flagged", obj.Flagged))
 	if err != nil {
 		return err
 	}
