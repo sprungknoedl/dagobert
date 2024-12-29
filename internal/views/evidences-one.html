@@ -3,9 +3,7 @@
 {{ template "layout-head" }}
 <body>
     <main>
-    <form method="post" action="/cases/{{ .obj.CaseID }}/evidences/{{ .obj.ID }}" up-submit
-        enctype="multipart/form-data"
-        x-data="{ filename: '{{ .obj.Name }}' }" >
+    <form method="post" action="/cases/{{ .obj.CaseID }}/evidences/{{ .obj.ID }}" up-submit enctype="multipart/form-data">
         <!-- Modal header -->
         <h3 class="font-bold text-lg mb-4">
             {{ if eq .obj.ID "new" }} Add evidence
@@ -23,9 +21,7 @@
                     File
                     <span class="text-accent">*</span>
                 </label>
-				<input name="File" type="file" class="file-input file-input-bordered w-full"
-                    @change="filename = Object.values($event.target.files).map(file => file.name).join(', ')"
-                    x-init="setTimeout(() => $el.focus(), 100)" />
+				<input name="File" type="file" class="file-input file-input-bordered w-full" />
 			</div>
 
 			<div class="form-control mb-2">
@@ -35,9 +31,7 @@
 				    {{ if .valid.Name }}<span class="ml-2 text-sm text-error">{{ .valid.Name }}</span>{{ end }}
 				</label>
 
-				<input name="Name" type="text" class="input input-bordered"
-                    value="{{ .obj.Name }}"
-                    x-model="filename" />
+				<input name="Name" type="text" class="input input-bordered" value="{{ .obj.Name }}" />
 			</div>
 
             <div class="form-control mb-2">
@@ -81,10 +75,16 @@
         </div>
 
         <script>
-            document.querySelectorAll('.tom').forEach((el)=>{ new TomSelect(el, {
-                create: true,
-                sortField: { field: "text", direction: "asc" },
-            }); });
+            document.querySelectorAll('.tom').forEach( (el) =>{
+                new TomSelect(el, {
+                    create: true,
+                    sortField: { field: "text", direction: "asc" },
+                });
+            });
+
+            document.querySelector('input[name="File"]').onchange = (e) => {
+                document.querySelector('input[name="Name"]').value = e.target.value.replace(/.*(\/|\\)/, '');
+            };
         </script>
     </form>
     </main>
