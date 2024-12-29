@@ -3,19 +3,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dagobert</title>
-    <link href="/dist/tom-select.css" rel="stylesheet" />
-    <link href="/dist/unpoly.min.css" rel="stylesheet" />
-    <link href="/dist/dagobert.css" rel="stylesheet" />
     <link href="/dist/dataTables-2.1.8.min.css" rel="stylesheet" />
+    <link href="/dist/tom-select-2.4.1.css" rel="stylesheet" />
+    <link href="/dist/unpoly-3.9.5.min.css" rel="stylesheet" />
+    <link href="/dist/dagobert.css" rel="stylesheet" />
 
     <script src="/dist/jquery-3.7.1.min.js" defer></script>
-    <script src="/dist/alpine.min.js" defer></script>
-    <script src="/dist/unpoly.min.js" defer></script>
-    <script src="/dist/tom-select.base.js" defer></script>
     <script src="/dist/dataTables-2.1.8.min.js" defer></script>
+    <script src="/dist/tom-select-2.4.1.min.js" defer></script>
+    <script src="/dist/unpoly-3.9.5.min.js" defer></script>
     <script>
     onload = (event) => {
-        up.log.enable();
+        // up.log.enable();
+        up.log.disable();
         up.network.config.autoCache = (request) => false;
         up.network.config.wrapMethod = false;
         up.layer.config.drawer.position = 'right';
@@ -78,9 +78,7 @@
         <div class="join" role="group">
             {{if allowed ($url := print .env.ActiveRoute "import") "POST"}}
             {{ if not .hideImport }}
-            <a class="join-item btn" href="{{ $url }}"
-                up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}"
-                @keydown.i.ctrl.window="$el.click()">
+            <a class="join-item btn" href="{{ $url }}" up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}">
                 {{ template "icon-arrow-up-tray" "inline-block mr-1 w-6 h-6" }}
                 Import CSV
             </a>
@@ -89,8 +87,7 @@
 
             {{if allowed ($url := print .env.ActiveRoute "export") "GET"}}
             {{ if not .hideExport }}
-            <a class="join-item btn" href="{{ $url }}"
-                @keydown.e.ctrl.window="$el.click()">
+            <a class="join-item btn" href="{{ $url }}">
                 {{ template "icon-arrow-down-tray" "inline-block mr-1 w-6 h-6" }}
                 Export CSV
             </a>
@@ -99,9 +96,7 @@
 
             {{if allowed ($url := print .env.ActiveRoute) "GET"}}
             {{ if not .hideRefresh }}
-            <a class="join-item btn" href="{{ $url }}"
-                up-target="#list"
-                @keydown.r.ctrl.window="$el.click()">
+            <a class="join-item btn" href="{{ $url }}" up-target="#list">
                 {{ template "icon-arrow-path" "inline-block mr-1 w-6 h-6" }}
                 Refresh
             </a>
@@ -110,9 +105,7 @@
 
             {{if allowed ($url := print .env.ActiveRoute "new") "POST"}}
             {{ if not .hideAdd }}
-            <a class="join-item btn btn-accent" href="{{ $url }}"
-                up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}"
-                @keydown.n.ctrl.window="$el.click()">
+            <a class="join-item btn btn-accent" href="{{ $url }}" up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}">
                 {{ template "icon-plus" "inline-block mr-1 w-6 h-6" }}
                 Add
             </a>
