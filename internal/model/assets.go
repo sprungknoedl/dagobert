@@ -92,16 +92,15 @@ func (store *Store) GetAssetByName(cid string, name string) (Asset, error) {
 	return obj, err
 }
 
-func (store *Store) SaveAsset(cid string, obj Asset) (Asset, error) {
+func (store *Store) SaveAsset(cid string, obj Asset) error {
 	query := `
 	INSERT INTO assets (id, status, type, name, addr, notes, case_id)
 	VALUES (iif(:id != '', :id, lower(hex(randomblob(5)))), :status, :type, :name, :addr, :notes, :cid)
 	ON CONFLICT (id) 
 		DO UPDATE SET status=:status, type=:type, name=:name, addr=:addr, notes=:notes
-		WHERE id = :id
-	RETURNING id, status, type, name, addr, notes, case_id`
+		WHERE id = :id`
 
-	rows, err := store.db.Query(query,
+	_, err := store.db.Exec(query,
 		sql.Named("cid", cid),
 		sql.Named("id", obj.ID),
 		sql.Named("status", obj.Status),
@@ -109,12 +108,7 @@ func (store *Store) SaveAsset(cid string, obj Asset) (Asset, error) {
 		sql.Named("name", obj.Name),
 		sql.Named("addr", obj.Addr),
 		sql.Named("notes", obj.Notes))
-	if err != nil {
-		return Asset{}, err
-	}
-
-	err = ScanOne(rows, &obj)
-	return obj, err
+	return err
 }
 
 func (store *Store) DeleteAsset(cid string, id string) error {

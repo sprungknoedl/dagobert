@@ -68,7 +68,7 @@ func (ctrl IndicatorCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	uri := fmt.Sprintf("/cases/%s/indicators/", cid)
 	ImportCSV(ctrl.store, ctrl.acl, w, r, uri, 7, func(rec []string) {
 		obj := model.Indicator{
-			ID:     rec[0],
+			ID:     fp.If(rec[0] == "", random(10), rec[0]),
 			Status: rec[1],
 			Type:   rec[2],
 			Value:  rec[3],
@@ -78,8 +78,12 @@ func (ctrl IndicatorCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			CaseID: cid,
 		}
 
-		_, err := ctrl.store.SaveIndicator(cid, obj)
-		Err(w, r, err)
+		if err := ctrl.store.SaveIndicator(cid, obj); err != nil {
+			Err(w, r, err)
+			return
+		}
+
+		Audit(ctrl.store, r, "indicator:"+obj.ID, "Imported indicator: %s=%v", obj.Type, obj.Value)
 	})
 }
 
@@ -117,12 +121,14 @@ func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto.ID = fp.If(dto.ID == "new", random(10), dto.ID)
-	if _, err := ctrl.store.SaveIndicator(dto.CaseID, dto); err != nil {
+	new := dto.ID == "new"
+	dto.ID = fp.If(new, random(10), dto.ID)
+	if err := ctrl.store.SaveIndicator(dto.CaseID, dto); err != nil {
 		Err(w, r, err)
 		return
 	}
 
+	Audit(ctrl.store, r, "indicator:"+dto.ID, fp.If(new, "Added indicator: %s=%v", "Updated indicator: %s=%v"), dto.Type, dto.Value)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/indicators/", dto.CaseID), http.StatusSeeOther)
 }
 
@@ -137,11 +143,18 @@ func (ctrl IndicatorCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := ctrl.store.DeleteIndicator(cid, id)
+	obj, err := ctrl.store.GetIndicator(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
+	err = ctrl.store.DeleteIndicator(cid, id)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	Audit(ctrl.store, r, "indicator:"+obj.ID, "Deleted indicator: %s=%v", obj.Type, obj.Value)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/indicators/", cid), http.StatusSeeOther)
 }

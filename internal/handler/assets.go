@@ -67,7 +67,7 @@ func (ctrl AssetCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	uri := fmt.Sprintf("/cases/%s/assets/", cid)
 	ImportCSV(ctrl.store, ctrl.acl, w, r, uri, 6, func(rec []string) {
 		obj := model.Asset{
-			ID:     rec[0],
+			ID:     fp.If(rec[0] == "", random(10), rec[0]),
 			CaseID: cid,
 			Status: rec[1],
 			Type:   rec[2],
@@ -76,9 +76,12 @@ func (ctrl AssetCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Notes:  rec[5],
 		}
 
-		if _, err := ctrl.store.SaveAsset(cid, obj); err != nil {
+		if err := ctrl.store.SaveAsset(cid, obj); err != nil {
 			Err(w, r, err)
+			return
 		}
+
+		Audit(ctrl.store, r, "asset:"+obj.ID, "Imported asset %q", obj.Name)
 	})
 }
 
@@ -116,12 +119,14 @@ func (ctrl AssetCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto.ID = fp.If(dto.ID == "new", random(10), dto.ID)
-	if _, err := ctrl.store.SaveAsset(dto.CaseID, dto); err != nil {
+	new := dto.ID == "new"
+	dto.ID = fp.If(new, random(10), dto.ID)
+	if err := ctrl.store.SaveAsset(dto.CaseID, dto); err != nil {
 		Err(w, r, err)
 		return
 	}
 
+	Audit(ctrl.store, r, "asset:"+dto.ID, fp.If(new, "Added asset %q", "Updated asset %q"), dto.Name)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/assets/", dto.CaseID), http.StatusSeeOther)
 }
 
@@ -136,11 +141,18 @@ func (ctrl AssetCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := ctrl.store.DeleteAsset(cid, id)
+	obj, err := ctrl.store.GetAsset(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
+	err = ctrl.store.DeleteAsset(cid, id)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	Audit(ctrl.store, r, "asset:"+obj.ID, "Deleted asset %q", obj.Name)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/assets/", cid), http.StatusSeeOther)
 }

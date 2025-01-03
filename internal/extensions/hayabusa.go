@@ -3,6 +3,7 @@ package extensions
 import (
 	"bufio"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -12,27 +13,28 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/model"
 )
 
-func RunHayabusa(store model.Store, obj model.Evidence) error {
+func RunHayabusa(store *model.Store, kase model.Case, obj model.Evidence) error {
 	zip := filepath.Ext(obj.Name) == ".zip"
 	name := strings.TrimSuffix(obj.Name, filepath.Ext(obj.Name))
 	dst := filepath.Join("files", "evidences", obj.CaseID, name+".hayabusa.jsonl")
 
 	var src string
+	var err error
 	if zip {
-		src, err := unpack(obj)
+		src, err = unpack(obj)
 		if err != nil {
 			return err
 		}
 		defer os.RemoveAll(src)
 	} else {
-		src, err := clone(obj)
+		src, err = clone(obj)
 		if err != nil {
 			return err
 		}
 		defer os.Remove(src)
 	}
 
-	err := runDocker(src, dst, "sprungknoedl/hayabusa", []string{
+	if err := runDocker(src, dst, "sprungknoedl/hayabusa", []string{
 		"json-timeline",
 		"--JSONL-output",
 		"--RFC-3339",
@@ -42,22 +44,25 @@ func RunHayabusa(store model.Store, obj model.Evidence) error {
 		"--profile", "timesketch-verbose",
 		fp.If(zip, "--directory", "--file"), fp.If(zip, "/in/", "/in/"+filepath.Base(src)),
 		"--output", "/out/" + filepath.Base(dst),
-	})
-
-	if err != nil {
+	}); err != nil {
 		// try to clean up
 		os.Remove(dst)
 		return err
 	}
 
-	return addFromFS(store, model.Evidence{
+	if err := addFromFS("Hayabusa", store, kase, model.Evidence{
+		ID:       random(10),
+		CaseID:   obj.CaseID,
 		Type:     "Logs",
 		Name:     filepath.Base(dst),
 		Source:   obj.Source,
 		Notes:    "ext-hayabusa",
 		Location: filepath.Base(dst),
-		CaseID:   obj.CaseID,
-	})
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type HayabusaRecord struct {
@@ -76,7 +81,7 @@ type HayabusaRecord struct {
 	EvtxFile       string
 }
 
-func IngestHayabusa(store model.Store, obj model.Evidence) error {
+func IngestHayabusa(store *model.Store, kase model.Case, obj model.Evidence) error {
 	src := filepath.Join("files", "evidences", obj.CaseID, obj.Location)
 	fh, err := os.Open(src)
 	if err != nil {
@@ -96,19 +101,21 @@ func IngestHayabusa(store model.Store, obj model.Evidence) error {
 			continue
 		}
 
-		// TODO: map computer to assets
+		// map computer to assets
 		asset, _ := store.GetAssetByName(obj.CaseID, record.Computer)
 		if asset.ID == "" {
-			asset, err = store.SaveAsset(obj.CaseID, model.Asset{
+			asset := model.Asset{
 				ID:     random(10),
 				CaseID: obj.CaseID,
 				Name:   record.Computer,
 				Status: "Under investigation",
 				Type:   "Other",
-			})
-			if err != nil {
+			}
+			if err := store.SaveAsset(obj.CaseID, asset); err != nil {
 				return err
 			}
+
+			store.SaveAuditlog(model.User{Name: "Hayabusa", UPN: "Extension"}, kase, "asset:"+asset.ID, fmt.Sprintf("Added asset (hayabusa ingest) %q", obj.Name))
 		}
 
 		// translate mitre tactics
@@ -136,18 +143,19 @@ func IngestHayabusa(store model.Store, obj model.Evidence) error {
 
 		e := model.Event{
 			ID:     random(10),
+			CaseID: obj.CaseID,
 			Time:   model.Time(t),
 			Type:   translator[record.MitreTactics[0]],
 			Event:  record.Message,
 			Raw:    scanner.Text(),
-			CaseID: obj.CaseID,
 			Assets: []model.Asset{asset},
 		}
 
-		err = store.SaveEvent(obj.CaseID, e)
-		if err != nil {
+		if err := store.SaveEvent(obj.CaseID, e); err != nil {
 			return err
 		}
+
+		store.SaveAuditlog(model.User{Name: "Hayabusa", UPN: "Extension"}, kase, "event:"+obj.ID, fmt.Sprintf("Added event %q", obj.Name))
 	}
 
 	return nil

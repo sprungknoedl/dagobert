@@ -129,6 +129,14 @@ const schema = `
 PRAGMA foreign_keys = ON;
 PRAGMA journal_mode = WAL;
 
+CREATE TABLE IF NOT EXISTS auditlog (
+	time     DATETIME NOT NULL,
+	user      TEXT NOT NULL,
+	kase     TEXT NOT NULL,
+	object   TEXT NOT NULL,
+	activity TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS cases (
 	id             TEXT NOT NULL PRIMARY KEY,
 	name           TEXT NOT NULL,

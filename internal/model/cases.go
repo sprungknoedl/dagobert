@@ -2,6 +2,7 @@ package model
 
 import (
 	"database/sql"
+	"fmt"
 )
 
 var CaseSeverities = FromEnv("VALUES_CASE_SEVERITIES", []string{"", "Low", "Medium", "High"})
@@ -23,6 +24,14 @@ type Case struct {
 	Malware    []Malware
 	Notes      []Note
 	Tasks      []Task
+}
+
+func (c Case) String() string {
+	if c.ID != "" {
+		return fmt.Sprintf("#%s - %s", c.ID, c.Name)
+	} else {
+		return ""
+	}
 }
 
 func (store *Store) ListCases() ([]Case, error) {
@@ -75,8 +84,7 @@ func (store *Store) SaveCase(obj Case) error {
 	VALUES (iif(:id != '', :id, lower(hex(randomblob(5)))), :name, :closed, :classification, :severity, :outcome, :summary)
 	ON CONFLICT (id)
 		DO UPDATE SET name=:name, closed=:closed, classification=:classification, severity=:severity, outcome=:outcome, summary=:summary
-		WHERE id = :id
-	`
+		WHERE id = :id`
 
 	_, err := store.db.Exec(query,
 		sql.Named("id", obj.ID),

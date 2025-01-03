@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+{{ template "layout-head" }}
+<body>
+    <main>
+        <!-- Modal header -->
+        <h3 class="font-bold text-lg mb-4">
+            {{ .title }}
+        </h3>
+
+        <!-- Modal body -->
+        <div class="mb-4">
+            <table id="auditlog" class="table w-full dataTable min-w-full text-sm align-middle">
+                <thead>
+                    <tr>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Time</th>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">User</th>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Activity</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {{ range .rows }}
+                    <tr class="hover">
+                        <td class="truncate"> {{ template "format-time" .Time }}</span> </td>
+                        <td class="truncate"> {{ .User }}</td>
+                        <td class=""> {{ .Activity }}</td>
+                    </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Modal footer -->
+        <div class="flex gap-2 items-center">
+            <a class="btn" up-dismiss> Close </a>
+        </div>
+    </main>
+</body>

@@ -155,8 +155,7 @@ func (store *Store) SaveEvent(cid string, obj Event) error {
 	VALUES (:id, :time, :type, :event, :raw, :flagged, :cid)
 	ON CONFLICT (id)
 		DO UPDATE SET time=:time, type=:type, event=:event, raw=:raw, flagged=:flagged
-		WHERE id = :id
-	RETURNING id, time, type, event, raw, flagged, case_id`
+		WHERE id = :id`
 
 	// assets
 	query2 := `
@@ -180,7 +179,7 @@ func (store *Store) SaveEvent(cid string, obj Event) error {
 	}
 	defer tx.Rollback()
 
-	rows, err := tx.Query(query,
+	_, err = tx.Exec(query,
 		sql.Named("cid", cid),
 		sql.Named("id", obj.ID),
 		sql.Named("time", obj.Time),
@@ -189,10 +188,6 @@ func (store *Store) SaveEvent(cid string, obj Event) error {
 		sql.Named("raw", obj.Raw),
 		sql.Named("flagged", obj.Flagged))
 	if err != nil {
-		return err
-	}
-
-	if err = ScanOne(rows, &obj); err != nil {
 		return err
 	}
 
@@ -226,7 +221,8 @@ func (store *Store) SaveEvent(cid string, obj Event) error {
 		}
 	}
 
-	return tx.Commit()
+	err = tx.Commit()
+	return err
 }
 
 func (store *Store) DeleteEvent(cid string, id string) error {

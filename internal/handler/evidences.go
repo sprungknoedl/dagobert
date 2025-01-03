@@ -91,7 +91,7 @@ func (ctrl EvidenceCtrl) Import(w http.ResponseWriter, r *http.Request) {
 		}
 
 		obj := model.Evidence{
-			ID:       rec[0],
+			ID:       fp.If(rec[0] == "", random(10), rec[0]),
 			CaseID:   cid,
 			Type:     rec[1],
 			Name:     rec[2],
@@ -101,8 +101,12 @@ func (ctrl EvidenceCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Location: loc,
 		}
 
-		err = ctrl.store.SaveEvidence(cid, obj)
-		Err(w, r, err)
+		if err := ctrl.store.SaveEvidence(cid, obj); err != nil {
+			Err(w, r, err)
+			return
+		}
+
+		Audit(ctrl.store, r, "evidence:"+obj.ID, "Imported evidence %q", obj.Name)
 	})
 }
 
@@ -201,12 +205,14 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		dto.Location = obj.Location
 	}
 
-	dto.ID = fp.If(dto.ID == "new", random(10), dto.ID)
+	new := dto.ID == "new"
+	dto.ID = fp.If(new, random(10), dto.ID)
 	if err := ctrl.store.SaveEvidence(dto.CaseID, dto); err != nil {
 		Err(w, r, err)
 		return
 	}
 
+	Audit(ctrl.store, r, "evidence:"+dto.ID, fp.If(new, "Added evidence %q", "Updated evidence %q"), dto.Name)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/", dto.CaseID), http.StatusSeeOther)
 }
 
@@ -275,7 +281,7 @@ func (ctrl EvidenceCtrl) Run(w http.ResponseWriter, r *http.Request) {
 
 	// start extension in background
 	go func() {
-		err = ext.Run(*ctrl.store, obj)
+		err = ext.Run(ctrl.store, GetCase(ctrl.store, r), obj)
 		if err == nil {
 			// record success
 			err = ctrl.store.SaveRun(id, model.Run{
@@ -300,6 +306,7 @@ func (ctrl EvidenceCtrl) Run(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
+	Audit(ctrl.store, r, "evidence:"+obj.ID, "Run extension %q on evidence %q", ext.Name, obj.Name)
 	// http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/process", cid), http.StatusSeeOther)
 	ctrl.Extensions(w, r)
 }
@@ -327,6 +334,7 @@ func (ctrl EvidenceCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	Audit(ctrl.store, r, "evidence:"+obj.ID, "Deleted evidence %q", obj.Name)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/", cid), http.StatusSeeOther)
 }
 

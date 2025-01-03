@@ -30,6 +30,10 @@ up-drawer-box {
     @apply bg-base-200 text-base-content;
 }
 
+up-drawer[size=large] up-drawer-box {
+    width: 66% !important;
+  }
+
 /*
 TOM SELECT
 */

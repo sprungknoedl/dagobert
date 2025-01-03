@@ -104,16 +104,15 @@ func (store *Store) GetIndicatorByValue(cid string, value string) (Indicator, er
 	return obj, err
 }
 
-func (store *Store) SaveIndicator(cid string, obj Indicator) (Indicator, error) {
+func (store *Store) SaveIndicator(cid string, obj Indicator) error {
 	query := `
 	INSERT INTO indicators (id, status, type, value, tlp, source, notes, case_id)
 	VALUES (iif(:id != '', :id, lower(hex(randomblob(5)))), :status, :type, :value, :tlp, :source, :notes, :cid)
 	ON CONFLICT (id)
 		DO UPDATE SET status=:status, type=:type, value=:value, tlp=:tlp, source=:source, notes=:notes
-		WHERE id = :id
-	RETURNING id, status, type, value, tlp, source, notes, case_id`
+		WHERE id = :id`
 
-	rows, err := store.db.Query(query,
+	_, err := store.db.Exec(query,
 		sql.Named("cid", cid),
 		sql.Named("id", obj.ID),
 		sql.Named("status", obj.Status),
@@ -122,12 +121,7 @@ func (store *Store) SaveIndicator(cid string, obj Indicator) (Indicator, error) 
 		sql.Named("tlp", obj.TLP),
 		sql.Named("source", obj.Source),
 		sql.Named("notes", obj.Notes))
-	if err != nil {
-		return Indicator{}, err
-	}
-
-	err = ScanOne(rows, &obj)
-	return obj, err
+	return err
 }
 
 func (store *Store) DeleteIndicator(cid string, id string) error {
