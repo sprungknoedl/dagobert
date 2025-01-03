@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/sprungknoedl/dagobert/internal/extensions"
@@ -214,8 +215,8 @@ func main() {
 	// --------------------------------------
 	// Static Assets
 	// --------------------------------------
-	mux.Handle("GET /favicon.ico", handler.ServeFile("dist/favicon.ico"))
-	mux.Handle("GET /dist/", handler.ServeDir("/dist/", cfg.AssetsFolder))
+	mux.Handle("GET /favicon.ico", handler.ServeFile(filepath.Join(cfg.AssetsFolder, "favicon.ico")))
+	mux.Handle("GET /web/", handler.ServeDir("/web/", cfg.AssetsFolder))
 
 	// --------------------------------------
 	// Initialize Dagobert
