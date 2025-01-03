@@ -111,7 +111,7 @@ func (ctrl AuthCtrl) Protect(next http.Handler) http.Handler {
 		authenticated := sess.Values["oidcAuthenticated"]
 		if authenticated != nil && authenticated.(bool) ||
 			strings.HasPrefix(r.URL.Path, "/auth/") ||
-			strings.HasPrefix(r.URL.Path, "/dist/") {
+			strings.HasPrefix(r.URL.Path, "/web/") {
 			if ctrl.isAuthorized(r) {
 				next.ServeHTTP(w, r)
 			} else {
