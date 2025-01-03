@@ -2,6 +2,7 @@ package model
 
 import (
 	"database/sql"
+	"fmt"
 )
 
 var UserRoles = []string{"Administrator", "User", "Read-Only"}
@@ -13,6 +14,10 @@ type User struct {
 	Email     string
 	Role      string
 	LastLogin Time
+}
+
+func (u User) String() string {
+	return fmt.Sprintf("%s (%s)", u.Name, u.UPN)
 }
 
 func (store *Store) ListUsers() ([]User, error) {

@@ -8,7 +8,7 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/model"
 )
 
-func RunPlaso(store model.Store, obj model.Evidence) error {
+func RunPlaso(store *model.Store, kase model.Case, obj model.Evidence) error {
 	name := strings.TrimSuffix(obj.Name, filepath.Ext(obj.Name))
 	dst := filepath.Join("files", "evidences", obj.CaseID, name+".plaso")
 	src, err := clone(obj)
@@ -35,24 +35,26 @@ func RunPlaso(store model.Store, obj model.Evidence) error {
 		return err
 	}
 
-	if err := addFromFS(store, model.Evidence{
+	if err := addFromFS("Plaso", store, kase, model.Evidence{
+		ID:       random(10),
+		CaseID:   obj.CaseID,
 		Type:     "Other",
 		Name:     filepath.Base(dst),
 		Source:   obj.Source,
 		Notes:    "ext-plaso",
 		Location: filepath.Base(dst),
-		CaseID:   obj.CaseID,
 	}); err != nil {
 		return err
 	}
 
-	if err := addFromFS(store, model.Evidence{
+	if err := addFromFS("Plaso", store, kase, model.Evidence{
+		ID:       random(10),
+		CaseID:   obj.CaseID,
 		Type:     "Other",
 		Name:     filepath.Base(dst) + ".csv",
 		Source:   obj.Source,
 		Notes:    "ext-plaso",
 		Location: filepath.Base(dst) + ".csv",
-		CaseID:   obj.CaseID,
 	}); err != nil {
 		return err
 	}

@@ -115,6 +115,7 @@ func (ctrl ReportCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// process file if present
+	new := dto.ID == "new"
 	fileUpload := fh != nil && fh.Size > 0
 	if fileUpload {
 		// prepare location for Report storage
@@ -141,7 +142,7 @@ func (ctrl ReportCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// cleanup old file (if new report was uploaded)
-	if fileUpload && dto.ID != "new" {
+	if fileUpload && !new {
 		obj, err := ctrl.store.GetReport(dto.ID)
 		if err != nil {
 			Err(w, r, err)
@@ -159,7 +160,7 @@ func (ctrl ReportCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// rename file
-	if !fileUpload && dto.ID != "new" {
+	if !fileUpload && !new {
 		obj, err := ctrl.store.GetReport(dto.ID)
 		if err != nil {
 			Err(w, r, err)
@@ -178,12 +179,13 @@ func (ctrl ReportCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// finally save database object
-	dto.ID = fp.If(dto.ID == "new", random(10), dto.ID)
+	dto.ID = fp.If(new, random(10), dto.ID)
 	if err := ctrl.store.SaveReport(dto); err != nil {
 		Err(w, r, err)
 		return
 	}
 
+	Audit(ctrl.store, r, "report:"+dto.ID, fp.If(new, "Added report template %q", "Updated report template %q"), dto.Name)
 	http.Redirect(w, r, "/settings/reports/", http.StatusSeeOther)
 }
 
@@ -240,6 +242,12 @@ func (ctrl ReportCtrl) Generate(w http.ResponseWriter, r *http.Request) {
 	// process report template
 	// ---
 	name := r.FormValue("Template")
+	obj, err := ctrl.store.GetReportByName(name)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
 	tpl, err := LoadTemplate(name)
 	if err != nil {
 		Warn(w, r, err)
@@ -252,7 +260,7 @@ func (ctrl ReportCtrl) Generate(w http.ResponseWriter, r *http.Request) {
 		"Now":  time.Now(),
 	})
 	if err != nil {
-		Err(w, r, err)
+		Warn(w, r, err)
 		return
 	}
 
@@ -264,7 +272,10 @@ func (ctrl ReportCtrl) Generate(w http.ResponseWriter, r *http.Request) {
 
 	if _, err = io.Copy(w, buf); err != nil {
 		Err(w, r, err)
+		return
 	}
+
+	Audit(ctrl.store, r, "report:"+obj.ID, "Generated report %q from template %q", filename, obj.Name)
 }
 
 func (ctrl ReportCtrl) Delete(w http.ResponseWriter, r *http.Request) {
@@ -289,5 +300,6 @@ func (ctrl ReportCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	Audit(ctrl.store, r, "report:"+obj.ID, "Deleted report template %q", obj.Name)
 	http.Redirect(w, r, "/settings/reports/", http.StatusSeeOther)
 }

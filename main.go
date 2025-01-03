@@ -136,6 +136,11 @@ func main() {
 	mux.HandleFunc("GET /cases/{cid}/reports", reportCtrl.Dialog)
 	mux.HandleFunc("POST /cases/{cid}/render", reportCtrl.Generate)
 
+	// auditlog
+	auditlogCtrl := handler.NewAuditlogCtrl(db, acl)
+	mux.HandleFunc("GET /settings/auditlog/", auditlogCtrl.List)
+	mux.HandleFunc("GET /settings/auditlog/{oid}", auditlogCtrl.ListForObject)
+
 	// --------------------------------------
 	// Investigation
 	// --------------------------------------

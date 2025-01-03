@@ -65,15 +65,19 @@ func (ctrl NoteCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	uri := fmt.Sprintf("/cases/%s/notes/", cid)
 	ImportCSV(ctrl.store, ctrl.acl, w, r, uri, 4, func(rec []string) {
 		obj := model.Note{
-			ID:          rec[0],
+			ID:          fp.If(rec[0] == "", random(10), rec[0]),
 			Title:       rec[1],
 			Category:    rec[2],
 			Description: rec[3],
 			CaseID:      cid,
 		}
 
-		err := ctrl.store.SaveNote(cid, obj)
-		Err(w, r, err)
+		if err := ctrl.store.SaveNote(cid, obj); err != nil {
+			Err(w, r, err)
+			return
+		}
+
+		Audit(ctrl.store, r, "note:"+obj.ID, "Imported note %q", obj.Title)
 	})
 }
 
@@ -111,12 +115,14 @@ func (ctrl NoteCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto.ID = fp.If(dto.ID == "new", random(10), dto.ID)
+	new := dto.ID == "new"
+	dto.ID = fp.If(new, random(10), dto.ID)
 	if err := ctrl.store.SaveNote(dto.CaseID, dto); err != nil {
 		Err(w, r, err)
 		return
 	}
 
+	Audit(ctrl.store, r, "note:"+dto.ID, fp.If(new, "Added note %q", "Updated note %q"), dto.Title)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/notes/", dto.CaseID), http.StatusSeeOther)
 }
 
@@ -131,11 +137,18 @@ func (ctrl NoteCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := ctrl.store.DeleteNote(cid, id)
+	obj, err := ctrl.store.GetNote(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
+	err = ctrl.store.DeleteNote(cid, id)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	Audit(ctrl.store, r, "note:"+obj.ID, "Deleted note %q", obj.Title)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/notes/", cid), http.StatusSeeOther)
 }

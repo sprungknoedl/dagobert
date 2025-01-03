@@ -44,6 +44,24 @@ func (store *Store) GetReport(id string) (Report, error) {
 	return obj, err
 }
 
+func (store *Store) GetReportByName(name string) (Report, error) {
+	query := `
+	SELECT id, name, notes
+	FROM reports
+	WHERE name = :name
+	LIMIT 1`
+
+	rows, err := store.db.Query(query,
+		sql.Named("name", name))
+	if err != nil {
+		return Report{}, err
+	}
+
+	var obj Report
+	err = ScanOne(rows, &obj)
+	return obj, err
+}
+
 func (store *Store) SaveReport(obj Report) error {
 	query := `
 	INSERT INTO reports (id, name, notes)

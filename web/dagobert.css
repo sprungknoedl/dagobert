@@ -2900,6 +2900,10 @@ up-drawer-box {
   color: var(--fallback-bc,oklch(var(--bc)/var(--tw-text-opacity)));
 }
 
+up-drawer[size=large] up-drawer-box {
+  width: 66% !important;
+}
+
 /*
 TOM SELECT
 */

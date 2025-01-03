@@ -43,6 +43,14 @@
                 table.search($(this).val()).draw();
             });
         });
+
+        up.compiler('#auditlog', (elem, data) => {
+            let table = new DataTable('#auditlog', {
+                paging: false,
+                searching: true,
+                layout: { topStart: null, topEnd: null, bottomStart: null, bottomEnd: null }
+            });
+        });
     };
     </script>
 </head>
@@ -129,6 +137,7 @@
 		{{if allowed ($url := "/settings/users/") "GET"}}   <li><a href="{{ $url }}" title="Users" class='{{ if eq .title "Users" }}active{{ end }}'> {{ template "icon-users" "w-6 h-6" }} </a></li>{{ end }}
 		{{if allowed ($url := "/settings/api-keys/") "GET"}}<li><a href="{{ $url }}" title="API Keys" class='{{ if eq .title "API Keys" }}active{{ end }}'> {{ template "icon-beaker" "w-6 h-6" }} </a></li>{{ end }}
 		{{if allowed ($url := "/settings/reports/") "GET"}} <li><a href="{{ $url }}" title="Report Templates" class='{{ if eq .title "Report Templates" }}active{{ end }}'> {{ template "icon-document-text" "w-6 h-6" }} </a></li>{{ end }}
+		{{if allowed ($url := "/settings/auditlog/") "GET"}} <li><a href="{{ $url }}" title="Audit Log" class='{{ if eq .title "Audit Log" }}active{{ end }}'> {{ template "icon-scale" "w-6 h-6" }} </a></li>{{ end }}
     </ul>
 
     {{ if ne .env.ActiveCase.ID "" }}
@@ -137,7 +146,7 @@
 		{{if allowed ($url := print "/cases/" .env.CID "/events/") "GET"}}    <li><a href="{{ $url }}" title="Timeline" class='{{ if eq .title "Timeline" }}active{{ end }}'> {{ template "icon-clock" "w-6 h-6" }} </a></li> {{ end }}
 		{{if allowed ($url := print "/cases/" .env.CID "/assets/") "GET"}}    <li><a href="{{ $url }}" title="Assets" class='{{ if eq .title "Assets" }}active{{ end }}'> {{ template "icon-desktop" "w-6 h-6" }} </a></li> {{ end }}
 		{{if allowed ($url := print "/cases/" .env.CID "/indicators/") "GET"}}<li><a href="{{ $url }}" title="Indicators" class='{{ if eq .title "Indicators" }}active{{ end }}'> {{ template "icon-fingerprint" "w-6 h-6" }} </a></li> {{ end }}
-		{{if allowed ($url := print "/cases/" .env.CID "/malware/") "GET"}}   <li><a href="{{ $url }}" title="Malware" class='{{ if eq .title "Malware" }}active{{ end }}'> {{ template "icon-bug" "w-6 h-6" }} </a></li> {{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/malware/") "GET"}}   <li><a href="{{ $url }}" title="Malware/Tools" class='{{ if eq .title "Malware/Tools" }}active{{ end }}'> {{ template "icon-bug" "w-6 h-6" }} </a></li> {{ end }}
 		{{if allowed ($url := print "/cases/" .env.CID "/evidences/") "GET"}} <li><a href="{{ $url }}" title="Evidences" class='{{ if eq .title "Evidences" }}active{{ end }}'> {{ template "icon-cube" "w-6 h-6" }} </a></li> {{ end }}
 		{{if allowed ($url := print "/cases/" .env.CID "/tasks/") "GET"}}     <li><a href="{{ $url }}" title="Tasks" class='{{ if eq .title "Tasks" }}active{{ end }}'> {{ template "icon-clipboard-check" "w-6 h-6" }} </a></li> {{ end }}
 		{{if allowed ($url := print "/cases/" .env.CID "/notes/") "GET"}}     <li><a href="{{ $url }}" title="Notes" class='{{ if eq .title "Notes" }}active{{ end }}'> {{ template "icon-chat-bubble" "w-6 h-6" }} </a></li> {{ end }}

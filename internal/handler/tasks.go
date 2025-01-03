@@ -79,7 +79,7 @@ func (ctrl TaskCtrl) Import(w http.ResponseWriter, r *http.Request) {
 		}
 
 		obj := model.Task{
-			ID:      rec[0],
+			ID:      fp.If(rec[0] == "", random(10), rec[0]),
 			Type:    rec[1],
 			Task:    rec[2],
 			Done:    done, // 3
@@ -88,8 +88,12 @@ func (ctrl TaskCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			CaseID:  cid,
 		}
 
-		err = ctrl.store.SaveTask(cid, obj)
-		Err(w, r, err)
+		if err := ctrl.store.SaveTask(cid, obj); err != nil {
+			Err(w, r, err)
+			return
+		}
+
+		Audit(ctrl.store, r, "task:"+obj.ID, "Imported task %q", obj.Task)
 	})
 }
 
@@ -127,12 +131,14 @@ func (ctrl TaskCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto.ID = fp.If(dto.ID == "new", random(10), dto.ID)
+	new := dto.ID == "new"
+	dto.ID = fp.If(new, random(10), dto.ID)
 	if err := ctrl.store.SaveTask(dto.CaseID, dto); err != nil {
 		Err(w, r, err)
 		return
 	}
 
+	Audit(ctrl.store, r, "task:"+dto.ID, fp.If(new, "Added task %q", "Updated task %q"), dto.Task)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/tasks/", dto.CaseID), http.StatusSeeOther)
 }
 
@@ -147,11 +153,18 @@ func (ctrl TaskCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := ctrl.store.DeleteTask(cid, id)
+	obj, err := ctrl.store.GetTask(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
+	err = ctrl.store.DeleteTask(cid, id)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	Audit(ctrl.store, r, "task:"+obj.ID, "Deleted task %q", obj.Task)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/tasks/", cid), http.StatusSeeOther)
 }

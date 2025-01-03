@@ -68,7 +68,7 @@ func runDocker(src string, dst string, container string, args []string) error {
 	return cmd.Run()
 }
 
-func addFromFS(store model.Store, obj model.Evidence) error {
+func addFromFS(ext string, store *model.Store, kase model.Case, obj model.Evidence) error {
 	src := filepath.Join("files", "evidences", obj.CaseID, obj.Location)
 	fr, err := os.Open(src)
 	if err != nil {
@@ -88,7 +88,12 @@ func addFromFS(store model.Store, obj model.Evidence) error {
 
 	obj.Size = stat.Size()
 	obj.Hash = fmt.Sprintf("%x", hasher.Sum(nil))
-	return store.SaveEvidence(obj.CaseID, obj)
+	if err := store.SaveEvidence(obj.CaseID, obj); err != nil {
+		return err
+	}
+
+	store.SaveAuditlog(model.User{Name: ext, UPN: "Extension"}, kase, "evidence:"+obj.ID, fmt.Sprintf("Added evidence %q", obj.Name))
+	return nil
 }
 
 func clone(obj model.Evidence) (string, error) {

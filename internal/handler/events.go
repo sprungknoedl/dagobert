@@ -99,15 +99,19 @@ func (ctrl EventCtrl) Import(w http.ResponseWriter, r *http.Request) {
 				Err(w, r, fmt.Errorf("get asset by name: %w", err))
 				return
 			} else if err != nil && err == sql.ErrNoRows {
-				obj, err = ctrl.store.SaveAsset(cid, model.Asset{
+				obj = model.Asset{
+					ID:     random(10),
+					CaseID: cid,
 					Name:   asset,
 					Status: "Under investigation",
 					Type:   "Other",
-				})
-				if err != nil {
+				}
+				if err := ctrl.store.SaveAsset(cid, obj); err != nil {
 					Err(w, r, fmt.Errorf("save asset: %w", err))
 					return
 				}
+
+				Audit(ctrl.store, r, "asset:"+obj.ID, "Added asset (event import) %q", obj.Name)
 			}
 
 			assets = append(assets, obj)
@@ -125,16 +129,20 @@ func (ctrl EventCtrl) Import(w http.ResponseWriter, r *http.Request) {
 				Err(w, r, err)
 				return
 			} else if err != nil && err == sql.ErrNoRows {
-				obj, err = ctrl.store.SaveIndicator(cid, model.Indicator{
+				obj := model.Indicator{
+					ID:     random(10),
+					CaseID: cid,
 					Value:  indicator,
 					Status: "Under investigation",
 					Type:   "Other",
 					TLP:    "TLP:RED",
-				})
-				if err != nil {
+				}
+				if err := ctrl.store.SaveIndicator(cid, obj); err != nil {
 					Err(w, r, err)
 					return
 				}
+
+				Audit(ctrl.store, r, "indicator:"+obj.ID, "Added indicator (event import): %s=%q", obj.Type, obj.Value)
 			}
 
 			indicators = append(indicators, obj)
@@ -153,6 +161,8 @@ func (ctrl EventCtrl) Import(w http.ResponseWriter, r *http.Request) {
 
 		if err = ctrl.store.SaveEvent(cid, obj); err != nil {
 			Err(w, r, err)
+		} else {
+			Audit(ctrl.store, r, "event:"+obj.ID, "Imported event %q", obj.Event)
 		}
 	})
 }
@@ -210,16 +220,19 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	// create any newly specified assets
 	for i, elem := range tmp.Assets {
 		if strings.HasPrefix(elem, "new:") {
-			obj, err := ctrl.store.SaveAsset(dto.CaseID, model.Asset{
+			obj := model.Asset{
+				ID:     random(10),
+				CaseID: dto.CaseID,
 				Name:   strings.TrimPrefix(elem, "new:"),
 				Status: "Under investigation",
 				Type:   "Other",
-			})
-			if err != nil {
+			}
+			if err := ctrl.store.SaveAsset(dto.CaseID, obj); err != nil {
 				Err(w, r, err)
 				return
 			}
 
+			Audit(ctrl.store, r, "asset:"+obj.ID, "Added asset (event save) %q", obj.Name)
 			tmp.Assets[i] = obj.ID
 		}
 
@@ -228,17 +241,20 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	// create any newly specified indicators
 	for i, elem := range tmp.Indicators {
 		if strings.HasPrefix(elem, "new:") {
-			obj, err := ctrl.store.SaveIndicator(dto.CaseID, model.Indicator{
+			obj := model.Indicator{
+				ID:     random(10),
+				CaseID: dto.CaseID,
 				Value:  strings.TrimPrefix(elem, "new:"),
 				Status: "Under investigation",
 				Type:   "Other",
 				TLP:    "TLP:RED",
-			})
-			if err != nil {
+			}
+			if err := ctrl.store.SaveIndicator(dto.CaseID, obj); err != nil {
 				Err(w, r, err)
 				return
 			}
 
+			Audit(ctrl.store, r, "indicator:"+obj.ID, "Added indicator (event save): %s=%q", obj.Type, obj.Value)
 			tmp.Indicators[i] = obj.ID
 		}
 
@@ -268,12 +284,14 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto.ID = fp.If(dto.ID == "new", random(10), dto.ID)
+	new := dto.ID == "new"
+	dto.ID = fp.If(new, random(10), dto.ID)
 	if err := ctrl.store.SaveEvent(dto.CaseID, dto); err != nil {
 		Err(w, r, err)
 		return
 	}
 
+	Audit(ctrl.store, r, "event:"+dto.ID, fp.If(new, "Added event %q", "Updated event %q"), dto.Event)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/events/", dto.CaseID), http.StatusSeeOther)
 }
 
@@ -288,12 +306,19 @@ func (ctrl EventCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := ctrl.store.DeleteEvent(cid, id)
+	obj, err := ctrl.store.GetEvent(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
+	err = ctrl.store.DeleteEvent(cid, id)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	Audit(ctrl.store, r, "event:"+obj.ID, "Deleted event %q", obj.Event)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/events/", cid), http.StatusSeeOther)
 }
 

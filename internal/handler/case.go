@@ -73,7 +73,7 @@ func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 		}
 
 		obj := model.Case{
-			ID:             rec[0],
+			ID:             fp.If(rec[0] == "", random(10), rec[0]),
 			Name:           rec[1],
 			Severity:       rec[2],
 			Classification: rec[3],
@@ -84,7 +84,10 @@ func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 
 		if err = ctrl.store.SaveCase(obj); err != nil {
 			Err(w, r, err)
+			return
 		}
+
+		Audit(ctrl.store, r, "case:"+obj.ID, "Imported case #%s - %s", obj.ID, obj.Name)
 	})
 }
 
@@ -121,13 +124,15 @@ func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto.ID = fp.If(dto.ID == "new", random(10), dto.ID)
+	new := dto.ID == "new"
+	dto.ID = fp.If(new, random(10), dto.ID)
 	if err := ctrl.store.SaveCase(dto); err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	Audit(ctrl.store, r, "case:"+dto.ID, fp.If(new, "Added case #%s - %s", "Updated case #%s - %s"), dto.ID, dto.Name)
+	http.Redirect(w, r, "/cases/", http.StatusSeeOther)
 }
 
 func (ctrl CaseCtrl) Delete(w http.ResponseWriter, r *http.Request) {
@@ -140,11 +145,18 @@ func (ctrl CaseCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	obj, err := ctrl.store.GetCase(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
 	if err := ctrl.store.DeleteCase(cid); err != nil {
 		Err(w, r, err)
 		return
 	}
 
+	Audit(ctrl.store, r, "case:"+obj.ID, "Deleted case #%s - %s", obj.ID, obj.Name)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
@@ -195,5 +207,6 @@ func (ctrl CaseCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	Audit(ctrl.store, r, "case:"+obj.ID, "Allowed access to %v", form.Users)
 	http.Redirect(w, r, "/cases/", http.StatusSeeOther)
 }

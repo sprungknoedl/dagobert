@@ -17,7 +17,7 @@ type Extension struct {
 	Name        string
 	Description string
 	Supports    func(Evidence) bool
-	Run         func(Store, Evidence) error
+	Run         func(*Store, Case, Evidence) error
 }
 
 type Run struct {

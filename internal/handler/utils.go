@@ -170,24 +170,34 @@ type Env struct {
 }
 
 func GetEnv(store *model.Store, r *http.Request) Env {
-	cid := r.PathValue("cid")
-	kase, _ := store.GetCase(cid)
-
-	sess, _ := SessionStore.Get(r, SessionName)
-	claims, _ := sess.Values["oidcClaims"].(map[string]interface{})
-	uid, _ := claims[cmp.Or(os.Getenv("OIDC_ID_CLAIM"), "sub")].(string)
+	kase := GetCase(store, r)
+	user := GetUser(store, r)
 
 	return Env{
-		UID:         uid,
+		UID:         user.ID,
 		CID:         kase.ID,
 		ActiveRoute: r.URL.Path,
 		ActiveCase:  kase,
 	}
 }
 
+func GetUser(store *model.Store, r *http.Request) model.User {
+	sess, _ := SessionStore.Get(r, SessionName)
+	claims, _ := sess.Values["oidcClaims"].(map[string]interface{})
+	uid, _ := claims[cmp.Or(os.Getenv("OIDC_ID_CLAIM"), "sub")].(string)
+	user, _ := store.GetUser(uid)
+	return user
+}
+
+func GetCase(store *model.Store, r *http.Request) model.Case {
+	cid := r.PathValue("cid")
+	kase, _ := store.GetCase(cid)
+	return kase
+}
+
 func ServeDir(prefix string, dir string) http.Handler {
 	fs := http.FileServer(http.Dir(dir))
-	return http.StripPrefix("/dist/", fs)
+	return http.StripPrefix("/web/", fs)
 }
 
 func ServeFile(name string) http.Handler {

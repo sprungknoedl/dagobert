@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+{{ template "layout-head" }}
+<body>
+    <div class="drawer-content flex">
+        <div up-flashes></div>
+        {{ template "sidebar" . }}
+
+        <main class="pl-20 p-4 grow max-w-full">
+            {{ template "navbar" dict "env" .env "title" .title }}
+
+            <table id="list" class="table w-full dataTable min-w-full text-sm align-middle">
+                <thead>
+                    <tr>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Time</th>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">User</th>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Case</th>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Activity</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {{ range .rows }}
+                    <tr class="hover">
+                        <td class="truncate"> {{ template "format-time" .Time }}</span> </td>
+                        <td class="truncate"> {{ .User }}</td>
+                        <td class="truncate"> {{ .Kase }}</td>
+                        <td class=""> {{ .Activity }}</td>
+                    </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+        </main>
+    </div>
+</body>

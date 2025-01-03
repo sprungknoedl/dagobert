@@ -33,6 +33,12 @@
                                 {{ template "icon-arrow-down-tray" "w-5 h-5"}}
                             </a>
                             {{ end }}
+                            {{ if allowed ($url := print "/settings/auditlog/report:" .ID) "GET" }}
+							<a class="join-item btn btn-sm" href="{{ $url }}" title="Audit Log"
+								up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
+                                {{ template "icon-scale" "w-5 h-5"}}
+							</a>
+                            {{ end }}
                             {{ if allowed ($url := print "/settings/reports/" .ID) "POST" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">

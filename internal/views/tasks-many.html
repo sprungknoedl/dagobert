@@ -44,6 +44,12 @@
                         </td>
                         <td class="px-6 py-2 flex justify-end join">
                             &nbsp;
+                            {{ if allowed ($url := print "/settings/auditlog/task:" .ID) "GET" }}
+							<a class="join-item btn btn-sm" href="{{ $url }}" title="Audit Log"
+								up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
+                                {{ template "icon-scale" "w-5 h-5"}}
+							</a>
+                            {{ end }}
                             {{ if allowed ($url := print "/cases/" .CaseID "/tasks/" .ID) "POST" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
