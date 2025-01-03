@@ -7,7 +7,10 @@
         {{ template "sidebar" . }}
 
         <main class="pl-20 p-4 grow max-w-full">
-            {{ template "navbar" dict "env" .env "title" .title }}
+            {{ template "navbar" dict "env" .env "title" .title
+                "hideImport" true
+                "hideExport" true
+                "hideAdd"    true }}
 
             <table id="list" class="table w-full dataTable min-w-full text-sm align-middle">
                 <thead>
