@@ -10,17 +10,17 @@
         <main class="pl-20 p-4 grow max-w-full">
             {{ template "navbar" dict "env" .env "title" .title }}
 
-            <table id="list" class="table w-full grow">
+            <table id="list" class="table w-full dataTable min-w-full text-sm align-middle">
                 <thead>
                     <tr>
-                        <th>Status</th>
-                        <th>Type</th>
-                        <th>Value</th>
-                        <th>TLP</th>
-                        <th>Source</th>
-                        <th>First seen</th>
-                        <th>Last seen</th>
-                        <th>Events</th>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Status</th>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Type</th>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Value</th>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">TLP</th>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Source</th>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">First seen</th>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Last seen</th>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Events</th>
                         <th style="width: 7rem"></th>
                     </tr>
                 </thead>
