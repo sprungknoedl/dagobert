@@ -3203,3 +3203,19 @@ div.dt-scroll-body>table.dataTable>thead>tr>td {
 :root[data-bs-theme=dark] table.dataTable thead>tr>td.dt-orderable-desc:hover {
   outline: 2px solid rgba(255, 255, 255, 0.05);
 }
+
+.dtfh-floatingparent {
+  top: 48px !important;
+}
+
+table.fixedHeader-floating,table.fixedHeader-locked {
+  position:relative !important;
+  --tw-bg-opacity: 1;
+  background-color: var(--fallback-b1,oklch(var(--b1)/var(--tw-bg-opacity)));
+}
+
+@media print{
+  table.fixedHeader-floating{
+    display:none
+  }
+}
