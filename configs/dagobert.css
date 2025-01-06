@@ -240,3 +240,18 @@ div.dt-scroll-body>table.dataTable>thead>tr>td {
 :root[data-bs-theme=dark] table.dataTable thead>tr>td.dt-orderable-desc:hover {
     outline: 2px solid rgba(255, 255, 255, 0.05);
 }
+
+.dtfh-floatingparent {
+    top: 48px !important;
+}
+
+table.fixedHeader-floating,table.fixedHeader-locked {
+    position:relative !important;
+    @apply bg-base-100;
+}
+    
+@media print{
+    table.fixedHeader-floating{
+        display:none
+    }
+}
