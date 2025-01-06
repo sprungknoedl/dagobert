@@ -60,7 +60,7 @@
                             {{ end  }}
                             {{ .Type }}
                         </td>
-                        <td> {{ .Event }} </td>
+                        <td> {{ call $.highlight . }} </td>
                         <td>
                             {{ range .Assets }}
                             <div class="text-success truncate">
