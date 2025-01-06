@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/csv"
 	"fmt"
+	"html/template"
 	"math"
 	"net/http"
 	"strings"
@@ -31,6 +32,18 @@ func (ctrl EventCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	assets, err := ctrl.store.ListAssets(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	indicators, err := ctrl.store.ListIndicators(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
 	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/events-many.html", map[string]any{
 		"title": "Timeline",
 		"rows":  list,
@@ -44,6 +57,32 @@ func (ctrl EventCtrl) List(w http.ResponseWriter, r *http.Request) {
 			}
 
 			return ""
+		},
+		"highlight": func(ev model.Event) template.HTML {
+			html := template.HTMLEscapeString(ev.Event)
+			// first highlight linked indicators, then any
+			for _, x := range ev.Indicators {
+				html = strings.ReplaceAll(html, x.Value, "<span class='text-error'>"+template.HTMLEscapeString(x.Value)+"</span>")
+			}
+			for _, x := range indicators {
+				html = strings.ReplaceAll(html, x.Value, "<span class='text-error'>"+template.HTMLEscapeString(x.Value)+"</span>")
+			}
+
+			// first highlight linked assets, then any
+			for _, x := range ev.Assets {
+				html = strings.ReplaceAll(html, x.Name, "<span class='text-success'>"+template.HTMLEscapeString(x.Name)+"</span>")
+				if x.Addr != "" {
+					html = strings.ReplaceAll(html, x.Addr, "<span class='text-success'>"+template.HTMLEscapeString(x.Addr)+"</span>")
+				}
+			}
+			for _, x := range assets {
+				html = strings.ReplaceAll(html, x.Name, "<span class='text-success'>"+template.HTMLEscapeString(x.Name)+"</span>")
+				if x.Addr != "" {
+					html = strings.ReplaceAll(html, x.Addr, "<span class='text-success'>"+template.HTMLEscapeString(x.Addr)+"</span>")
+				}
+			}
+
+			return template.HTML(html)
 		},
 	})
 }
