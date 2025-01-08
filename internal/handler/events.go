@@ -188,7 +188,7 @@ func (ctrl EventCtrl) Import(w http.ResponseWriter, r *http.Request) {
 		}
 
 		obj := model.Event{
-			ID:         rec[0],
+			ID:         fp.If(rec[0] == "", random(10), rec[0]),
 			CaseID:     cid,
 			Time:       model.Time(t),
 			Type:       rec[2],
