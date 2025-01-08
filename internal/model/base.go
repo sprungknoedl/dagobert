@@ -173,7 +173,6 @@ CREATE TABLE IF NOT EXISTS events (
 );
 
 CREATE TABLE IF NOT EXISTS event_assets (
-	id       TEXT NOT NULL PRIMARY KEY,
 	event_id TEXT NOT NULL,
 	asset_id TEXT NOT NULL,
 
