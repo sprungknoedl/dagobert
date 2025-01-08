@@ -32,5 +32,5 @@ jobs:
           context: .
           file: ./configs/Dockerfile
           push: true
-          tags: latest
+          tags: sprungknoedl/dagobert:latest
           labels: ${{ steps.meta.outputs.labels }}
