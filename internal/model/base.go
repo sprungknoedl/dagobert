@@ -181,7 +181,6 @@ CREATE TABLE IF NOT EXISTS event_assets (
 );
 
 CREATE TABLE IF NOT EXISTS event_indicators (
-	id           TEXT NOT NULL PRIMARY KEY,
 	event_id     TEXT NOT NULL,
 	indicator_id TEXT NOT NULL,
 
