@@ -19,8 +19,7 @@
                     <span class="text-accent">*</span>
 				    {{ if .valid.ID }}<span class="ml-2 text-sm text-error">{{ .valid.ID }}</span>{{ end }}
                 </label>
-                <input name="ID" type="text" class="input input-bordered" value="{{ .obj.ID }}"
-                    x-init="setTimeout(() => $el.focus(), 100)" />
+                <input name="ID" type="text" class="input input-bordered" value="{{ .obj.ID }}" />
             </div>
 
             <div class="form-control mb-2">
@@ -29,8 +28,7 @@
                     <span class="text-accent">*</span>
 				    {{ if .valid.Role }}<span class="ml-2 text-sm text-error">{{ .valid.Role }}</span>{{ end }}
                 </label>
-                <select name="Role" class="select select-bordered"
-                    x-init="setTimeout(() => $el.focus(), 100)">
+                <select name="Role" class="select select-bordered">
                     <option disabled value="" {{ if eq .obj.Role "" }}selected{{ end }}>Select an option</option>
                     {{ range .model.UserRoles }}
                         <option {{ if eq $.obj.Role . }}selected{{ end }}>{{ . }}</option>

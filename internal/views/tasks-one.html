@@ -22,8 +22,7 @@
                     <span class="text-accent">*</span>
 				    {{ if .valid.Type }}<span class="ml-2 text-sm text-error">{{ .valid.Type }}</span>{{ end }}
                 </label>
-                <select name="Type" class="select select-bordered"
-                    x-init="setTimeout(() => $el.focus(), 100)">
+                <select name="Type" class="select select-bordered">
                     <option disabled value="" {{ if eq .obj.Type "" }}selected{{ end }}>Select an option</option>
                     {{ range .model.TaskTypes }}
                         <option {{ if eq $.obj.Type . }}selected{{ end }}>{{ . }}</option>

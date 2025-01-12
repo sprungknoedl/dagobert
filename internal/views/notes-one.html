@@ -22,8 +22,7 @@
                     <span class="text-accent">*</span>
 				    {{ if .valid.Category }}<span class="ml-2 text-sm text-error">{{ .valid.Category }}</span>{{ end }}
                 </label>
-                <input name="Category" type="text" class="input input-bordered" value="{{ .obj.Category }}"
-                    x-init="setTimeout(() => $el.focus(), 100)" />
+                <input name="Category" type="text" class="input input-bordered" value="{{ .obj.Category }}" />
             </div>
 
             <div class="form-control mb-2">

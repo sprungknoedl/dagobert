@@ -22,8 +22,7 @@
                     <span class="text-accent">*</span>
                     {{ if .valid.Time }}<span class="ml-2 text-sm text-error">{{ .valid.Time }}</span>{{ end }}
                 </label>
-                <input name="Time" type="text" class="input input-bordered" value="{{ .obj.Time.Format "2006-01-02T15:04:05Z07:00" }}"
-                    x-init="setTimeout(() => $el.focus(), 100)" />
+                <input name="Time" type="text" class="input input-bordered" value="{{ .obj.Time.Format "2006-01-02T15:04:05Z07:00" }}" />
             </div>
 
             <div class="form-control mb-2">
@@ -67,7 +66,7 @@
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Assets
-                    {{ if .valid.System }}<span class="ml-2 text-sm text-error">{{ .valid.Assets }}</span>{{ end }}
+                    {{ if .valid.Assets }}<span class="ml-2 text-sm text-error">{{ .valid.Assets }}</span>{{ end }}
                 </label>
                 <select multiple name="Assets" class="tom select select-bordered">
                     {{ range .assets }}
@@ -79,7 +78,7 @@
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Indicators
-                    {{ if .valid.System }}<span class="ml-2 text-sm text-error">{{ .valid.Indicators }}</span>{{ end }}
+                    {{ if .valid.Indicators }}<span class="ml-2 text-sm text-error">{{ .valid.Indicators }}</span>{{ end }}
                 </label>
                 <select multiple name="Indicators" class="tom select select-bordered">
                     {{ range .indicators }}
