@@ -246,7 +246,6 @@ CREATE TABLE IF NOT EXISTS malware (
 	asset_id TEXT NOT NULL,
 	case_id  TEXT NOT NULL,
 	status   TEXT NOT NULL,
-	name     TEXT NOT NULL,
 	path     TEXT NOT NULL,
 	hash     TEXT NOT NULL,
 	notes    TEXT NOT NULL,

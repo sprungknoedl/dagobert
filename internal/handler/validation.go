@@ -60,7 +60,7 @@ func ValidateKey(dto model.Key) valid.Result {
 
 func ValidateMalware(dto model.Malware) valid.Result {
 	return valid.Check([]valid.Condition{
-		{Name: "Name", Missing: dto.Name == ""},
+		{Name: "Path", Missing: dto.Path == ""},
 		{Name: "Source", Missing: dto.Asset.ID == ""},
 		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !slices.Contains(model.MalwareStatus, dto.Status)},
 	})
