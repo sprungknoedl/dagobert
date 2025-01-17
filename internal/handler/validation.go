@@ -25,6 +25,7 @@ func ValidateCase(dto model.Case) valid.Result {
 		{Name: "Name", Missing: dto.Name == ""},
 		{Name: "Severity", Message: "Invalid value.", Invalid: !slices.Contains(model.CaseSeverities, dto.Severity)},
 		{Name: "Outcome", Message: "Invalid value.", Invalid: !slices.Contains(model.CaseOutcomes, dto.Outcome)},
+		{Name: "SketchID", Message: "Invalid value. Must be positive.", Invalid: dto.SketchID < 0},
 	})
 }
 
