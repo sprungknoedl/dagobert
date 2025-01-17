@@ -10,6 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/sqlite"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/sprungknoedl/dagobert/internal/extensions"
 	"github.com/sprungknoedl/dagobert/internal/handler"
 	"github.com/sprungknoedl/dagobert/internal/model"
@@ -47,6 +50,11 @@ func main() {
 	db, err := model.Connect(cfg.Database)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	err = InitializeDatabase(db)
+	if err != nil {
+		log.Fatalf("Failed to run database migrations: %v", err)
 	}
 
 	// --------------------------------------
@@ -236,6 +244,36 @@ func main() {
 	if err != nil {
 		fmt.Printf("| %s | %v\n", tty.Red("ERR"), err)
 	}
+}
+
+func InitializeDatabase(store *model.Store) error {
+	db, err := sqlite.WithInstance(store.DB, &sqlite.Config{})
+	if err != nil {
+		return err
+	}
+
+	source, err := iofs.New(model.Migrations, "migrations")
+	if err != nil {
+		return err
+	}
+
+	m, err := migrate.NewWithInstance("iofs", source, "sqlite", db)
+	if err != nil {
+		return err
+	}
+
+	err = m.Up()
+	if err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+
+	v, _, err := m.Version()
+	if err != nil && err != migrate.ErrNoChange {
+		return err
+	}
+
+	log.Printf("Migrated database to version %d", v)
+	return nil
 }
 
 func InitializeDagobert(store *model.Store, acl *handler.ACL, cfg Configuration) error {

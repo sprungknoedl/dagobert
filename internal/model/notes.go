@@ -19,7 +19,7 @@ func (store *Store) ListNotes(cid string) ([]Note, error) {
 	WHERE case_id = :cid
 	ORDER BY category ASC`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("cid", cid))
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func (store *Store) GetNote(cid string, id string) (Note, error) {
 	WHERE case_id = :cid AND id = :id
 	LIMIT 1`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("cid", cid),
 		sql.Named("id", id))
 	if err != nil {
@@ -57,7 +57,7 @@ func (store *Store) SaveNote(cid string, obj Note) error {
 		DO UPDATE SET title=:title, category=:category, description=:description
 		WHERE id = :id`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("cid", cid),
 		sql.Named("id", obj.ID),
 		sql.Named("title", obj.Title),
@@ -71,7 +71,7 @@ func (store *Store) DeleteNote(cid string, id string) error {
 	DELETE FROM notes
 	WHERE id = :id`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("id", id))
 	return err
 }

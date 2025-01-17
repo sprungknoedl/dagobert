@@ -35,7 +35,7 @@ func (store *Store) GetRuns(base []Extension, eid string) ([]Run, error) {
 	FROM runs
 	WHERE evidence_id = :eid`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("eid", eid))
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func (store *Store) SaveRun(eid string, obj Run) error {
 	REPLACE INTO runs (evidence_id, name, description, status, error, ttl)
 	VALUES (:evidence_id, :name, :description, :status, :error, :ttl)`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("evidence_id", eid),
 		sql.Named("name", obj.Name),
 		sql.Named("description", obj.Description),

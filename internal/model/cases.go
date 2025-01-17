@@ -40,7 +40,7 @@ func (store *Store) ListCases() ([]Case, error) {
 	FROM cases
 	ORDER BY name ASC`
 
-	rows, err := store.db.Query(query)
+	rows, err := store.DB.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (store *Store) GetCase(cid string) (Case, error) {
 	FROM cases
 	WHERE id = :cid`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("cid", cid))
 	if err != nil {
 		return Case{}, err
@@ -86,7 +86,7 @@ func (store *Store) SaveCase(obj Case) error {
 		DO UPDATE SET name=:name, closed=:closed, classification=:classification, severity=:severity, outcome=:outcome, summary=:summary
 		WHERE id = :id`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("id", obj.ID),
 		sql.Named("name", obj.Name),
 		sql.Named("closed", obj.Closed),
@@ -102,7 +102,7 @@ func (store *Store) DeleteCase(cid string) error {
 	DELETE FROM cases
 	WHERE id = :cid`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("cid", cid))
 	return err
 }

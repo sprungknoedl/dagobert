@@ -75,7 +75,7 @@ func (store *Store) ListEvents(cid string) ([]Event, error) {
 	WHERE e.case_id = :cid
 	ORDER BY e.time ASC`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("cid", cid))
 	if err != nil {
 		return nil, err
@@ -123,7 +123,7 @@ func (store *Store) GetEvent(cid string, id string) (Event, error) {
 	WHERE e.id = :id
 	LIMIT 1`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("cid", cid),
 		sql.Named("id", id))
 	if err != nil {
@@ -173,7 +173,7 @@ func (store *Store) SaveEvent(cid string, obj Event) error {
 	REPLACE INTO event_indicators (event_id, indicator_id)
 	VALUES (:eid, :iid)`
 
-	tx, err := store.db.Begin()
+	tx, err := store.DB.Begin()
 	if err != nil {
 		return err
 	}
@@ -230,7 +230,7 @@ func (store *Store) DeleteEvent(cid string, id string) error {
 	DELETE FROM events
 	WHERE events.id = :id`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("id", id))
 	return err
 }

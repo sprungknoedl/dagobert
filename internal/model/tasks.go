@@ -23,7 +23,7 @@ func (store *Store) ListTasks(cid string) ([]Task, error) {
 	WHERE case_id = :cid
 	ORDER BY date_due ASC`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("cid", cid))
 	if err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func (store *Store) GetTask(cid string, id string) (Task, error) {
 	WHERE case_id = :cid AND id = :id
 	LIMIT 1`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("cid", cid),
 		sql.Named("id", id))
 	if err != nil {
@@ -61,7 +61,7 @@ func (store *Store) SaveTask(cid string, obj Task) error {
 		DO UPDATE SET type=:type, task=:task, done=:done, owner=:owner, date_due=:datedue
 		WHERE id = :id`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("cid", cid),
 		sql.Named("id", obj.ID),
 		sql.Named("type", obj.Type),
@@ -77,7 +77,7 @@ func (store *Store) DeleteTask(cid string, id string) error {
 	DELETE FROM tasks
 	WHERE id = :id`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("id", id))
 	return err
 }
