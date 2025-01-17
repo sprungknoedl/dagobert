@@ -71,6 +71,15 @@
                 </label>
             </div>
 
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Timesketch Sketch ID
+				    {{ if .valid.SketchID }}<span class="ml-2 text-sm text-error">{{ .valid.SketchID }}</span>{{ end }}
+                </label>
+                <input name="SketchID" type="number" class="input input-bordered" value="{{ .obj.SketchID }}" />
+            </div>
+
+
             <p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
         </div>
 

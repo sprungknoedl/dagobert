@@ -1,6 +1,7 @@
 package extensions
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -19,7 +20,11 @@ func UploadToTimesketch() (func(store *model.Store, kase model.Case, obj model.E
 	}
 
 	return func(store *model.Store, kase model.Case, obj model.Evidence) error {
+		if kase.SketchID == 0 {
+			return errors.New("no timesketch sketch id set")
+		}
+
 		src := filepath.Join("files", "evidences", obj.CaseID, obj.Location)
-		return client.Upload(1, src)
+		return client.Upload(kase.SketchID, src)
 	}, nil
 }
