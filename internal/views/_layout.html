@@ -3,6 +3,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Dagobert</title>
+    <link href="/web/heroicons-outline-405db23.css" rel="stylesheet" />
     <link href="/web/tom-select-2.4.1.css" rel="stylesheet" />
     <link href="/web/unpoly-3.9.5.min.css" rel="stylesheet" />
     <link href="/web/dagobert.css" rel="stylesheet" />
@@ -12,6 +13,7 @@
     <script src="/web/dataTables.tailwindcss-2.1.8.js" defer></script>
     <script src="/web/dataTables.fixedHeader-4.0.1.min.js" defer></script>
     <script src="/web/tom-select-2.4.1.min.js" defer></script>
+    <script src="/web/vis-network-9.1.9.min.js"></script>
     <script src="/web/unpoly-3.9.5.min.js" defer></script>
     <script>
     onload = (event) => {
@@ -159,6 +161,7 @@
 
     <div class="divider"></div>
     <ul class="menu gap-2">
+		{{if allowed ($url := print "/cases/" .env.CID "/vis/network") "GET"}}<li><a href="{{ $url }}" title="Lateral Movement" class='{{ if eq .title "Lateral Movement" }}active{{ end }}'> {{ template "icon-share" "w-6 h-6" }} </a></li>{{ end }}
 		{{if allowed ($url := print "/cases/" .env.CID "/reports") "POST"}}<li><a href="{{ $url }}" title="Report" class='' up-layer="new drawer"> {{ template "icon-document-arrow-down" "w-6 h-6" }} </a></li>{{ end }}
     </ul>
     {{ end }}

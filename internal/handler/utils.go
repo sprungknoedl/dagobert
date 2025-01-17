@@ -3,6 +3,7 @@ package handler
 import (
 	"cmp"
 	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"io"
 	"log"
@@ -106,6 +107,10 @@ func render(w http.ResponseWriter, status int, name string, values map[string]an
 		"upper":    strings.ToUpper,
 		"title":    strings.Title,
 		"contains": slices.Contains[[]string],
+		"json": func(value any) string {
+			out, _ := json.Marshal(value)
+			return string(out)
+		},
 		"dict": func(values ...interface{}) (map[string]interface{}, error) {
 			if len(values)%2 != 0 {
 				return nil, errors.New("invalid dict call")
