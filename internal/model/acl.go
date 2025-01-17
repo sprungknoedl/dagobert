@@ -31,7 +31,7 @@ func (store *Store) LoadPolicy(model model.Model) error {
 	FROM policies
 	`
 
-	rows, err := store.db.Query(query)
+	rows, err := store.DB.Query(query)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (store *Store) SavePolicy(model model.Model) error {
 		}
 	}
 
-	tx, err := store.db.Begin()
+	tx, err := store.DB.Begin()
 	if err != nil {
 		return err
 	}
@@ -117,7 +117,7 @@ func (store *Store) AddPolicy(sec string, ptype string, rule []string) error {
 
 	v := make([]string, 6)
 	copy(v, rule) // resize rule (if necessary)
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("ptype", ptype),
 		sql.Named("v0", v[0]),
 		sql.Named("v1", v[1]),
@@ -146,7 +146,7 @@ func (store *Store) RemovePolicy(sec string, ptype string, rule []string) error 
 
 	v := make([]string, 6)
 	copy(v, rule) // resize rule (if necessary)
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("ptype", ptype),
 		sql.Named("v0", v[0]),
 		sql.Named("v1", v[1]),
@@ -165,7 +165,7 @@ func (store *Store) RemoveFilteredPolicy(sec string, ptype string, fieldIndex in
 	WHERE ptype = :ptype AND v%d = :value`, fieldIndex)
 
 	for _, v := range fieldValues {
-		_, err := store.db.Exec(query,
+		_, err := store.DB.Exec(query,
 			sql.Named("ptype", ptype),
 			sql.Named("value", v))
 		if err != nil {
@@ -183,7 +183,7 @@ func (store *Store) GetUserPermissions(uid string) ([]string, error) {
 	WHERE ptype = "p" AND v0 = :uid
 	`
 
-	rows, err := store.db.Query(query, sql.Named("uid", uid))
+	rows, err := store.DB.Query(query, sql.Named("uid", uid))
 	if err != nil {
 		return nil, err
 	}
@@ -213,7 +213,7 @@ func (store *Store) GetCasePermissions(cid string) ([]string, error) {
 	`
 
 	obj := fmt.Sprintf("/cases/%s/*", cid)
-	rows, err := store.db.Query(query, sql.Named("obj", obj))
+	rows, err := store.DB.Query(query, sql.Named("obj", obj))
 	if err != nil {
 		return nil, err
 	}

@@ -26,7 +26,7 @@ func (store *Store) ListUsers() ([]User, error) {
 	FROM users
 	ORDER BY name ASC`
 
-	rows, err := store.db.Query(query)
+	rows, err := store.DB.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (store *Store) GetUser(id string) (User, error) {
 	WHERE id = :id
 	LIMIT 1`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("id", id))
 	if err != nil {
 		return User{}, err
@@ -62,7 +62,7 @@ func (store *Store) SaveUser(obj User) error {
 		DO UPDATE SET name=:name, upn=:upn, email=:email, role=:role, last_login=:last_login
 		WHERE id = :id`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("id", obj.ID),
 		sql.Named("name", obj.Name),
 		sql.Named("upn", obj.UPN),
@@ -77,7 +77,7 @@ func (store *Store) DeleteUser(id string) error {
 	DELETE FROM users
 	WHERE id = :id`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("id", id))
 	return err
 }

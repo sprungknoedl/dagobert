@@ -43,7 +43,7 @@ func (store *Store) ListIndicators(cid string) ([]Indicator, error) {
 	WHERE case_id = :cid
 	ORDER BY i.type ASC, i.value ASC`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("cid", cid))
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func (store *Store) GetIndicator(cid string, id string) (Indicator, error) {
 	WHERE case_id = :cid AND id = :id
 	LIMIT 1`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("cid", cid),
 		sql.Named("id", id))
 	if err != nil {
@@ -92,7 +92,7 @@ func (store *Store) GetIndicatorByValue(cid string, value string) (Indicator, er
 	WHERE case_id = :cid AND value = :value
 	LIMIT 1`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("cid", cid),
 		sql.Named("value", value))
 	if err != nil {
@@ -112,7 +112,7 @@ func (store *Store) SaveIndicator(cid string, obj Indicator) error {
 		DO UPDATE SET status=:status, type=:type, value=:value, tlp=:tlp, source=:source, notes=:notes
 		WHERE id = :id`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("cid", cid),
 		sql.Named("id", obj.ID),
 		sql.Named("status", obj.Status),
@@ -129,7 +129,7 @@ func (store *Store) DeleteIndicator(cid string, id string) error {
 	DELETE FROM indicators
 	WHERE id = :id`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("id", id))
 	return err
 }

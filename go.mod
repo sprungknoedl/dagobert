@@ -1,6 +1,8 @@
 module github.com/sprungknoedl/dagobert
 
-go 1.22
+go 1.22.0
+
+toolchain go1.23.5
 
 require (
 	github.com/casbin/casbin/v2 v2.102.0
@@ -10,6 +12,13 @@ require (
 	go.arsenm.dev/pcre v0.0.0-20220530205550-74594f6c8b0e
 	golang.org/x/oauth2 v0.21.0
 	modernc.org/sqlite v1.30.2
+)
+
+require (
+	github.com/golang-migrate/migrate/v4 v4.18.1 // indirect
+	github.com/hashicorp/errwrap v1.1.0 // indirect
+	github.com/hashicorp/go-multierror v1.1.1 // indirect
+	go.uber.org/atomic v1.7.0 // indirect
 )
 
 require (
@@ -24,7 +33,7 @@ require (
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/pquerna/cachecontrol v0.2.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
+	github.com/stretchr/testify v1.9.0 // indirect
 	golang.org/x/crypto v0.32.0 // indirect
 	golang.org/x/net v0.34.0
 	golang.org/x/sys v0.29.0 // indirect

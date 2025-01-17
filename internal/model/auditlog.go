@@ -20,7 +20,7 @@ func (store *Store) ListAuditlog() ([]Auditlog, error) {
 	ORDER BY time ASC
 	LIMIT 1000`
 
-	rows, err := store.db.Query(query)
+	rows, err := store.DB.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (store *Store) ListAuditlogForObject(object string) ([]Auditlog, error) {
 	ORDER BY time ASC
 	LIMIT 1000`
 
-	rows, err := store.db.Query(query, sql.Named("object", object))
+	rows, err := store.DB.Query(query, sql.Named("object", object))
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (store *Store) ListAuditlogForUser(user string) ([]Auditlog, error) {
 	ORDER BY time ASC
 	LIMIT 1000`
 
-	rows, err := store.db.Query(query, sql.Named("user", user))
+	rows, err := store.DB.Query(query, sql.Named("user", user))
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func (store *Store) SaveAuditlog(user User, kase Case, obj string, activity stri
 	INSERT INTO auditlog (time, user, kase, object, activity)
 	VALUES (:time, :user, :kase, :object, :activity)`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("time", act.Time),
 		sql.Named("user", act.User),
 		sql.Named("kase", act.Kase),

@@ -25,7 +25,7 @@ func (store *Store) ListEvidences(cid string) ([]Evidence, error) {
 	WHERE case_id = :cid
 	ORDER BY name ASC`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("cid", cid))
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func (store *Store) GetEvidence(cid string, id string) (Evidence, error) {
 	WHERE case_id = :cid AND id = :id
 	LIMIT 1`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("cid", cid),
 		sql.Named("id", id))
 	if err != nil {
@@ -63,7 +63,7 @@ func (store *Store) SaveEvidence(cid string, obj Evidence) error {
 		DO UPDATE SET type=:type, name=:name, source=:source, notes=:notes
 		WHERE id = :id`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("cid", cid),
 		sql.Named("id", obj.ID),
 		sql.Named("type", obj.Type),
@@ -81,7 +81,7 @@ func (store *Store) DeleteEvidence(cid string, id string) error {
 	DELETE FROM evidences
 	WHERE id = :id`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("id", id))
 	return err
 }

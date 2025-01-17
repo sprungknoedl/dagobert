@@ -35,7 +35,7 @@ func (store *Store) ListAssets(cid string) ([]Asset, error) {
 	WHERE case_id = :cid
 	ORDER BY name ASC`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("cid", cid))
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func (store *Store) GetAsset(cid string, id string) (Asset, error) {
 	WHERE case_id = :cid AND id = :id
 	LIMIT 1`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("cid", cid),
 		sql.Named("id", id))
 	if err != nil {
@@ -80,7 +80,7 @@ func (store *Store) GetAssetByName(cid string, name string) (Asset, error) {
 	WHERE case_id = :cid AND name = :name
 	LIMIT 1`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("cid", cid),
 		sql.Named("name", name))
 	if err != nil {
@@ -100,7 +100,7 @@ func (store *Store) SaveAsset(cid string, obj Asset) error {
 		DO UPDATE SET status=:status, type=:type, name=:name, addr=:addr, notes=:notes
 		WHERE id = :id`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("cid", cid),
 		sql.Named("id", obj.ID),
 		sql.Named("status", obj.Status),
@@ -116,7 +116,7 @@ func (store *Store) DeleteAsset(cid string, id string) error {
 	DELETE FROM assets
 	WHERE id = :id`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("id", id))
 	return err
 }

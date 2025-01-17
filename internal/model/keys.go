@@ -15,7 +15,7 @@ func (store *Store) ListKeys() ([]Key, error) {
 	FROM keys
 	ORDER BY name`
 
-	rows, err := store.db.Query(query)
+	rows, err := store.DB.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func (store *Store) GetKey(key string) (Key, error) {
 	FROM keys
 	WHERE key = :key`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("key", key))
 	if err != nil {
 		return Key{}, err
@@ -50,7 +50,7 @@ func (store *Store) SaveKey(obj Key) error {
 		DO UPDATE SET name=:name
 		WHERE key = :key`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("key", obj.Key),
 		sql.Named("name", obj.Name))
 	return err
@@ -61,7 +61,7 @@ func (store *Store) DeleteKey(id string) error {
 	DELETE FROM keys
 	WHERE key = :key`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("key", id))
 	return err
 }

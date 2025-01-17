@@ -16,7 +16,7 @@ func (store *Store) ListReports() ([]Report, error) {
 	FROM reports
 	ORDER BY name ASC`
 
-	rows, err := store.db.Query(query)
+	rows, err := store.DB.Query(query)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +33,7 @@ func (store *Store) GetReport(id string) (Report, error) {
 	WHERE id = :id
 	LIMIT 1`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("id", id))
 	if err != nil {
 		return Report{}, err
@@ -51,7 +51,7 @@ func (store *Store) GetReportByName(name string) (Report, error) {
 	WHERE name = :name
 	LIMIT 1`
 
-	rows, err := store.db.Query(query,
+	rows, err := store.DB.Query(query,
 		sql.Named("name", name))
 	if err != nil {
 		return Report{}, err
@@ -70,7 +70,7 @@ func (store *Store) SaveReport(obj Report) error {
 		DO UPDATE SET name=:name, notes=:notes
 		WHERE id = :id`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("id", obj.ID),
 		sql.Named("name", obj.Name),
 		sql.Named("notes", obj.Notes))
@@ -82,7 +82,7 @@ func (store *Store) DeleteReport(id string) error {
 	DELETE FROM reports
 	WHERE id = :id`
 
-	_, err := store.db.Exec(query,
+	_, err := store.DB.Exec(query,
 		sql.Named("id", id))
 	return err
 }
