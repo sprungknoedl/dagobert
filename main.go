@@ -225,6 +225,11 @@ func main() {
 	mux.HandleFunc("POST /cases/{cid}/notes/{id}", noteCtrl.Save)
 	mux.HandleFunc("DELETE /cases/{cid}/notes/{id}", noteCtrl.Delete)
 
+	// visualizations
+	visualsCtrl := handler.NewVisualsCtrl(db, acl)
+	mux.HandleFunc("GET /cases/{cid}/vis/network", visualsCtrl.Network)
+	mux.HandleFunc("GET /cases/{cid}/vis/timeline", visualsCtrl.Timeline)
+
 	// --------------------------------------
 	// Static Assets
 	// --------------------------------------

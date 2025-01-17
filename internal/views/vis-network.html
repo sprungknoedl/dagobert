@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+{{ template "layout-head" }}
+<body>
+    <div class="drawer-content flex">
+        <div up-flashes></div>
+        {{ template "sidebar" . }}
+
+        <main class="pl-20 p-4 grow max-w-full flex flex-col h-screen">
+            {{ template "navbar" dict "env" .env "title" .title
+                "hideRefresh" true
+                "hideSearch" true
+                "hideImport" true
+                "hideExport" true
+                "hideAdd"    true }}
+
+            <div id="mynetwork" class="h-full"></div>
+
+        </main>
+        
+        <script>
+        const options = {
+        edges: {
+            color: {
+                color: "oklch(0.7451 0.167 183.61)",
+                highlight: "oklch(0.6569 0.196 275.75)",
+            },
+            smooth: {
+                forceDirection: "vertical"
+            }
+        },
+        nodes: {
+            shape: "icon",
+            margin: 10,
+            font: { 
+                color: "oklch(0.746477 0.0216 264.436)", 
+                background: "oklch(0.253267 0.015896 252.418)",
+            },
+            icon: {
+                face: "'heroicons-outline'",
+            },
+        },
+        groups: {
+            // Assets
+            AssetServer:  {icon: {code: "\ue9fb", size: 50, color: "oklch(0.746477 0.0216 264.436)" }},
+            AssetDesktop: {icon: {code: "\ue97d", size: 50, color: "oklch(0.746477 0.0216 264.436)" }},
+            AssetAccount: {icon: {code: "\uea1a", size: 50, color: "oklch(0.746477 0.0216 264.436)" }},
+            AssetOther:   {icon: {code: "\ue9ef", size: 50, color: "oklch(0.746477 0.0216 264.436)" }},
+
+            // Indicators
+            IndicatorIP:      {icon: {code: "\ue9cc", size: 32, color: "oklch(0.7176 0.221 22.18)" }},
+            IndicatorDomain:  {icon: {code: "\ue9b3", size: 32, color: "oklch(0.7176 0.221 22.18)" }},
+            IndicatorURL:     {icon: {code: "\ue9c4", size: 32, color: "oklch(0.7176 0.221 22.18)" }},
+            IndicatorPath:    {icon: {code: "\ue9a8", size: 32, color: "oklch(0.7176 0.221 22.18)" }},
+            IndicatorHash:    {icon: {code: "\ue9a3", size: 32, color: "oklch(0.7176 0.221 22.18)" }},
+            IndicatorService: {icon: {code: "\ue97c", size: 32, color: "oklch(0.7176 0.221 22.18)" }},
+            IndicatorOther:   {icon: {code: "\ue9ef", size: 32, color: "oklch(0.7176 0.221 22.18)" }},
+        },
+        "physics": {
+            "repulsion": {
+                "centralGravity": 0.25,
+                "springLength": 150,
+                "nodeDistance": 175,
+                "damping": 0.15
+            },
+            "minVelocity": 0.75,
+            "solver": "repulsion"
+        }
+        };
+
+        var nodes = new vis.DataSet({{ json .nodes }});
+        var edges = new vis.DataSet({{ json .edges }});
+
+        // create a network
+        var container = document.getElementById("mynetwork");
+        var data = {
+            nodes: nodes,
+            edges: edges,
+        };
+
+        var network = new vis.Network(container, data, options);
+        </script>
+    </div>
+</body>
