@@ -51,7 +51,8 @@
 
         up.compiler('.tom', (elem, data) => {
             new TomSelect(elem, {
-                create: function(input){ return {value:'new:'+input, text:input} }
+                create: function(input){ return {value:'new:'+input, text:input} },
+                createOnBlur: true,
             });
         });
     };
