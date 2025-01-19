@@ -138,7 +138,6 @@ func render(w http.ResponseWriter, status int, name string, values map[string]an
 	}).ParseFiles(
 		name,
 		"internal/views/_layout.html",
-		"internal/views/_icons.html",
 	)
 	if err != nil {
 		log.Printf("| %s | %v", tty.Red("ERR"), err)

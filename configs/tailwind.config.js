@@ -1,7 +1,10 @@
 module.exports = {
   content: ["./internal/**/*.html"],
 
-  plugins: [require("daisyui")],
+  plugins: [
+    require("daisyui"),
+    require("postcss-import")
+  ],
 
   daisyui: {
     themes: [

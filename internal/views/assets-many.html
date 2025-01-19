@@ -28,18 +28,18 @@
                     {{ range .rows }}
                     <tr class="hover">
                         <td class="truncate">
-                            {{ if eq .Status "Compromised" }} <span class="text-error">{{ template "icon-bug" "inline-block w-5 h-5" }} {{ .Status }}
-                            {{ else if eq .Status "Accessed" }} <span class="text-warning">{{ template "icon-command-line" "inline-block w-5 h-5" }} {{ .Status }}
-                            {{ else if eq .Status "No sign of compromise" }} <span class="text-success">{{ template "icon-check-circle" "inline-block w-5 h-5" }} {{ .Status }}
+                            {{ if eq .Status "Compromised" }} <span class="text-error"><i class="hio-5 hio-bug-ant inline-block"></i> {{ .Status }}
+                            {{ else if eq .Status "Accessed" }} <span class="text-warning"><i class="hio-5 hio-command-line inline-block"></i> {{ .Status }}
+                            {{ else if eq .Status "No sign of compromise" }} <span class="text-success"><i class="hio-5 hio-check-circle inline-block"></i> {{ .Status }}
                             {{ else }}
                             {{ .Status }}
                             {{ end }}
                         </td>
                         <td class="truncate">
-                            {{ if eq .Type "Account" }}      {{ template "icon-user" "inline-block w-5 h-5" }}
-                            {{ else if eq .Type "Desktop" }} {{ template "icon-desktop" "inline-block w-5 h-5" }}
-                            {{ else if eq .Type "Server" }}  {{ template "icon-server" "inline-block w-5 h-5" }}
-                            {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-5 h-5" }}
+                            {{ if eq .Type "Account" }}      <i class="hio-5 hio-user inline-block"></i>
+                            {{ else if eq .Type "Desktop" }} <i class="hio-5 hio-computer-desktop inline-block"></i>
+                            {{ else if eq .Type "Server" }}  <i class="hio-5 hio-server inline-block"></i>
+                            {{ else }}                       <i class="hio-5 hio-question-mark-circle inline-block"></i>
                             {{ end }}
                             {{ .Type }}
                         </td>
@@ -53,19 +53,19 @@
                             {{ if allowed ($url := print "/settings/auditlog/asset:" .ID) "GET" }}
 							<a class="join-item btn btn-sm" href="{{ $url }}" title="Audit Log"
 								up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-scale" "w-5 h-5"}}
+                                <i class="hio-5 hio-scale"></i>
 							</a>
                             {{ end }}
                             {{ if allowed ($url := print "/cases/" .CaseID "/assets/" .ID) "POST" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-pencil" "w-5 h-5"}}
+                                <i class="hio-5 hio-pencil"></i>
                             </a>
                             {{ end }}
                             {{ if allowed ($url := print "/cases/" .CaseID "/assets/" .ID) "DELETE" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-trash" "w-5 h-5"}}
+                                <i class="hio-5 hio-trash"></i>
                             </a>
                             {{ end }}
                         </td>

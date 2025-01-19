@@ -5,7 +5,7 @@
     <main>
     <div class="alert alert-warning w-[42rem] m-4" up-flashes
         @click="$el.remove()">
-        {{ template "icon-exclamation-circle-filled" "w-8 h-8" }}
+        <i class="hio hio-exclamation-circle-filled w-8 h-8"></i>
         <div>
             <h3 class="font-bold">Bad request.</h3>
             <div class="text-cs">{{ .err }}</div>

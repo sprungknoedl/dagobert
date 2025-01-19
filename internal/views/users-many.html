@@ -47,19 +47,19 @@
 							{{ if allowed ($url := print "/settings/auditlog/user:" .ID) "GET" }}
 							<a class="join-item btn btn-sm" href="{{ $url }}" title="Audit Log"
 								up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-scale" "w-5 h-5"}}
+                                <i class="hio-5 hio-scale"></i>
 							</a>
                             {{ end }}
                             {{ if allowed ($url := print "/settings/users/" .ID) "POST" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="/settings/users/">
-                                {{ template "icon-pencil" "w-5 h-5"}}
+                                <i class="hio-5 hio-pencil"></i>
                             </a>
 							{{ end }}
                             {{ if allowed ($url := print "/settings/users/" .ID) "DELETE" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="/settings/users/">
-                                {{ template "icon-trash" "w-5 h-5"}}
+                                <i class="hio-5 hio-trash"></i>
                             </a>
 							{{ end }}
                         </td>

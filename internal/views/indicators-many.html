@@ -30,21 +30,21 @@
                     {{ range .rows }}
                     <tr class="hover">
                         <td class="truncate">
-                            {{ if eq .Status "Confirmed" }} <span class="text-error">{{ template "icon-bug" "inline-block w-5 h-5" }} {{ .Status }}</span>
-                            {{ else if eq .Status "Suspicious" }} <span class="text-warning">{{ template "icon-fingerprint" "inline-block w-5 h-5" }} {{ .Status }}</span>
-                            {{ else if eq .Status "Unrelated" }} <span class="text-success">{{ template "icon-check-circle" "inline-block w-5 h-5" }} {{ .Status }}</span>
+                            {{ if eq .Status "Confirmed" }} <span class="text-error"><i class="hio-5 hio-bug inline-block"></i> {{ .Status }}</span>
+                            {{ else if eq .Status "Suspicious" }} <span class="text-warning"><i class="hio-5 hio-fingerprint inline-block"></i> {{ .Status }}</span>
+                            {{ else if eq .Status "Unrelated" }} <span class="text-success"><i class="hio-5 hio-check-circle inline-block"></i> {{ .Status }}</span>
                             {{ else }}
                             {{ .Status }}
                             {{ end }}
                         </td>
                         <td class="truncate">
-                            {{ if eq .Type "IP" }}           {{ template "icon-map-pin" "inline-block w-5 h-5" }}
-                            {{ else if eq .Type "Domain" }}  {{ template "icon-globe-europe" "inline-block w-5 h-5" }}
-                            {{ else if eq .Type "URL" }}     {{ template "icon-link" "inline-block w-5 h-5" }}
-                            {{ else if eq .Type "Path" }}    {{ template "icon-folder-open" "inline-block w-5 h-5" }}
-                            {{ else if eq .Type "Hash" }}    {{ template "icon-fingerprint" "inline-block w-5 h-5" }}
-                            {{ else if eq .Type "Service" }} {{ template "icon-command-line" "inline-block w-5 h-5" }}
-                            {{ else }}                       {{ template "icon-question-mark-circle" "inline-block w-5 h-5" }}
+                            {{ if eq .Type "IP" }}           <i class="hio-5 hio-map-pin inline-block"></i>
+                            {{ else if eq .Type "Domain" }}  <i class="hio-5 hio-globe-europe-africa inline-block"></i>
+                            {{ else if eq .Type "URL" }}     <i class="hio-5 hio-link inline-block"></i>
+                            {{ else if eq .Type "Path" }}    <i class="hio-5 hio-folder-open inline-block"></i>
+                            {{ else if eq .Type "Hash" }}    <i class="hio-5 hio-finger-print inline-block"></i>
+                            {{ else if eq .Type "Service" }} <i class="hio-5 hio-command-line inline-block"></i>
+                            {{ else }}                       <i class="hio-5 hio-question-mark-circle inline-block"></i>
                             {{ end }}
                             {{ .Type }}
                         </td>
@@ -76,19 +76,19 @@
                             {{ if allowed ($url := print "/settings/auditlog/indicator:" .ID) "GET" }}
 							<a class="join-item btn btn-sm" href="{{ $url }}" title="Audit Log"
 								up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-scale" "w-5 h-5"}}
+                                <i class="hio-5 hio-scale"></i>
 							</a>
                             {{ end }}
                             {{ if allowed ($url := print "/cases/" .CaseID "/indicators/" .ID) "POST" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-pencil" "w-5 h-5"}}
+                                <i class="hio-5 hio-pencil"></i>
                             </a>
                             {{ end }}
                             {{ if allowed ($url := print "/cases/" .CaseID "/indicators/" .ID) "DELETE" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                {{ template "icon-trash" "w-5 h-5"}}
+                                <i class="hio-5 hio-trash"></i>
                             </a>
                             {{ end }}
                         </td>
