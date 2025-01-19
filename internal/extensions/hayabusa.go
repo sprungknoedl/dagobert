@@ -155,7 +155,7 @@ func IngestHayabusa(store *model.Store, kase model.Case, obj model.Evidence) err
 			return err
 		}
 
-		store.SaveAuditlog(model.User{Name: "Hayabusa", UPN: "Extension"}, kase, "event:"+obj.ID, fmt.Sprintf("Added event %q", obj.Name))
+		store.SaveAuditlog(model.User{Name: "Hayabusa", UPN: "Extension"}, kase, "event:"+obj.ID, fmt.Sprintf("Added event %q", e.Event))
 	}
 
 	return nil
