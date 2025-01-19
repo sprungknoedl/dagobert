@@ -10,13 +10,14 @@
         <main class="pl-20 p-4 grow max-w-full">
             {{ template "navbar" dict "env" .env "title" .title }}
 
-            <table id="list" class="table w-full dataTable min-w-full text-sm align-middle">
+            <div id="list">
+            <table class="table w-full dataTable min-w-full text-sm align-middle">
                 <thead>
                     <tr>
                         <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Category</th>
                         <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Title</th>
                         <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Description</th>
-                        <td style="width: 7rem"></td>
+                        <th style="width: 7rem"></th>
                     </tr>
                 </thead>
 
@@ -51,6 +52,7 @@
                     {{ end }}
                 </tbody>
             </table>
+            </div>
         </main>
     </div>
 </body>
