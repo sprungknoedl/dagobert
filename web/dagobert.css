@@ -2852,6 +2852,7 @@ TOM SELECT
 }
 
 .ts-control {
+  padding: 0.25rem;
   color: unset !important;
   border: unset !important;
   background: unset !important;
@@ -2918,7 +2919,7 @@ TOM SELECT
   padding: 0px;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
-  height: unset;
+  height: 26px;
   line-height: unset;
 }
 
@@ -2968,7 +2969,12 @@ TOM SELECT
 }
 
 .ts-wrapper.multi .ts-control>.item.active {
-  height: unset;
+  margin: 0px;
+  margin-right: 0.5rem;
+  padding: 0px;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  height: 26px;
   line-height: unset;
 }
 

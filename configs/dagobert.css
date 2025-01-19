@@ -43,6 +43,7 @@ TOM SELECT
 }
 
 .ts-control {
+    @apply p-1;
     color: unset !important;
     border: unset !important;
     background: unset !important;
@@ -60,13 +61,14 @@ TOM SELECT
 .ts-wrapper.multi .ts-control>.item {
     @apply badge badge-neutral;
     @apply p-0 px-2 m-0 mr-2;
-    height: unset;
+    height: 26px;
     line-height: unset;
 }
 
 .ts-wrapper.multi .ts-control>.item.active {
     @apply badge badge-secondary;
-    height: unset;
+    @apply p-0 px-2 m-0 mr-2;
+    height: 26px;
     line-height: unset;
 }
 
