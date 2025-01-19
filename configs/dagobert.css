@@ -1,3 +1,9 @@
+@import "dataTables-2.1.8.min.css";
+@import "dataTables.tailwindcss-2.1.8.css";
+@import "heroicons-outline-405db23.css";
+@import "tom-select-2.4.1.css";
+@import "unpoly-3.9.5.min.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -35,6 +41,21 @@ up-drawer[size=large] up-drawer-box {
   }
 
 /*
+HERO ICONS
+*/
+.hio-5 {
+    @apply hio;
+    font-size: 15px;
+    line-height: 15px;
+}
+
+.hio-6 {
+    @apply hio;
+    font-size: 18px;
+    line-height: 18px;
+}
+
+/*
 TOM SELECT
 */
 
@@ -43,7 +64,7 @@ TOM SELECT
 }
 
 .ts-control {
-    @apply p-1;
+    @apply py-1 px-0;
     color: unset !important;
     border: unset !important;
     background: unset !important;
@@ -55,7 +76,7 @@ TOM SELECT
 }
 
 .ts-wrapper {
-    @apply p-0 m-0;
+    @apply py-0 px-4 m-0;
 }
 
 .ts-wrapper.multi .ts-control>.item {

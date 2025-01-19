@@ -6,7 +6,7 @@
         <!-- Modal header -->
         <h3 class="font-bold text-lg mb-4">
             Process evidence
-            <a class="ml-2" href="{{ .env.ActiveRoute }}" up-follow> {{ template "icon-arrow-path" "inline-block mr-1 w-5 h-5" }} </a>
+            <a class="ml-2" href="{{ .env.ActiveRoute }}" up-follow> <i class="hio-5 hio-arrow-path inline-block mr-1"></i> </a>
         </h3>
 
         <!-- Modal body -->
@@ -26,12 +26,12 @@
                     </div>
                 {{ else if eq .Status "Running" }}
                     <p class="text-warning font-bold">
-		                {{ template "icon-information-circle" "inline-block w-5 h-5" }}
+		                <i class="hio-5 hio-information-circle inline-block"></i>
                         Extension currently running
                     </p>
                 {{ else if eq .Status "Success" }}
                     <p class="text-success font-bold">
-		                {{ template "icon-check-circle" "inline-block w-5 h-5" }}
+		                <i class="hio-5 hio-check-circle inline-block"></i>
                         Extension ran successfully.
                     </p>
                     <div class="card-actions justify-end">
@@ -42,7 +42,7 @@
                     </div>
                 {{ else if eq .Status "Timeout" }}
                     <p class="text-error font-bold">
-		                {{ template "icon-x-circle-filled" "inline-block w-5 h-5" }}
+		                <i class="hio-5 hio-x-circle-filled inline-block"></i>
                         Extension timed out.
                     </p>
                     <div class="card-actions justify-end">
@@ -53,7 +53,7 @@
                     </div>
                 {{ else if eq .Status "Failed" }}
                     <p class="text-error font-bold">
-		                {{ template "icon-x-circle-filled" "inline-block w-5 h-5" }}
+		                <i class="hio-5 hio-x-circle-filled inline-block"></i>
                         Error: {{ .Error }}
                     </p>
                     <div class="card-actions justify-end">
