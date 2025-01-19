@@ -51,13 +51,6 @@
         </div>
 
         <script>
-            document.querySelectorAll('.tom').forEach( (el) => {
-                new TomSelect(el, {
-                    create: true,
-                    sortField: { field: "text", direction: "asc" },
-                });
-            });
-
             document.querySelector('input[name="File"]').onchange = (e) => {
                 document.querySelector('input[name="Name"]').value = e.target.value.replace(/.*(\/|\\)/, '');
             };

@@ -25,17 +25,7 @@
         up.layer.config.drawer.size = 'large';
 
         up.compiler('#list', (elem, data) => {
-            // cleanup old datatables wrapper
-            let wrapper = document.getElementById("list_wrapper");
-            if (wrapper != null) {
-                wrapper.replaceWith(elem);
-            }
-
-            // auto reload #list when server returns it in an overlay
-            elem.setAttribute('up-hungry', '');
-            elem.setAttribute('up-if-layer', 'subtree')
-
-            let table = new DataTable('#list', {
+            let table = new DataTable("#list>table", {
                 paging: false,
                 searching: true,
                 scrollX: true,
@@ -56,6 +46,12 @@
                 scrollX: true,
                 fixedHeader: true,
                 layout: { topStart: null, topEnd: null, bottomStart: null, bottomEnd: null }
+            });
+        });
+
+        up.compiler('.tom', (elem, data) => {
+            new TomSelect(elem, {
+                create: function(input){ return {value:'new:'+input, text:input} }
             });
         });
     };

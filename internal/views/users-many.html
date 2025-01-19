@@ -12,7 +12,8 @@
                 "hideImport" true
                 "hideExport" true }}
 
-			<table id="list" class="table w-full dataTable min-w-full text-sm align-middle">
+			<div id="list">
+			<table class="table w-full dataTable min-w-full text-sm align-middle">
 				<thead>
 					<tr>
 						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">ID</th>
@@ -21,7 +22,7 @@
 						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Email</th>
 						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Role</th>
 						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Last login</th>
-                        <td style="width: 7rem"></td>
+                        <th style="width: 7rem"></th>
 					</tr>
 				</thead>
 
@@ -66,6 +67,7 @@
 					{{ end }}
 				</tbody>
 			</table>
+			</div>
         </main>
     </div>
 </body>
