@@ -1,6 +1,3 @@
-PRAGMA foreign_keys = ON;
-PRAGMA journal_mode = WAL;
-
 CREATE TABLE IF NOT EXISTS auditlog (
 	time     DATETIME NOT NULL,
 	user     TEXT NOT NULL,
