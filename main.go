@@ -38,7 +38,7 @@ func main() {
 	cfg := Configuration{
 		AssetsFolder:   cmp.Or(os.Getenv("FS_ASSETS_FOLDER"), "./web"),
 		EvidenceFolder: cmp.Or(os.Getenv("FS_EVIDENCE_FOLDER"), "./files/evidences"),
-		Database:       cmp.Or(os.Getenv("DB_URL"), "./files/dagobert.db"),
+		Database:       cmp.Or(os.Getenv("DB_URL"), "file:files/dagobert.db?_pragma=foreign_keys(ON)&_pragma=journal_mode(WAL)"),
 		ClientId:       os.Getenv("OIDC_CLIENT_ID"),
 		ClientSecret:   os.Getenv("OIDC_CLIENT_SECRET"),
 		ClientUrl:      os.Getenv("OIDC_CLIENT_URL"),
