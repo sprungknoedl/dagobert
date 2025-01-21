@@ -31,7 +31,7 @@ func (store *Store) ListEvidences(cid string) ([]Evidence, error) {
 		return nil, err
 	}
 
-	var list []Evidence
+	list := []Evidence{}
 	err = ScanAll(rows, &list)
 	return list, err
 }
@@ -50,7 +50,7 @@ func (store *Store) GetEvidence(cid string, id string) (Evidence, error) {
 		return Evidence{}, err
 	}
 
-	var obj Evidence
+	obj := Evidence{}
 	err = ScanOne(rows, &obj)
 	return obj, err
 }

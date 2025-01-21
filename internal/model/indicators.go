@@ -49,7 +49,7 @@ func (store *Store) ListIndicators(cid string) ([]Indicator, error) {
 		return nil, err
 	}
 
-	var list []Indicator
+	list := []Indicator{}
 	err = ScanAll(rows, &list)
 	return list, err
 }
@@ -80,7 +80,7 @@ func (store *Store) GetIndicator(cid string, id string) (Indicator, error) {
 		return Indicator{}, err
 	}
 
-	var obj Indicator
+	obj := Indicator{}
 	err = ScanOne(rows, &obj)
 	return obj, err
 }
@@ -99,7 +99,7 @@ func (store *Store) GetIndicatorByValue(cid string, value string) (Indicator, er
 		return Indicator{}, err
 	}
 
-	var obj Indicator
+	obj := Indicator{}
 	err = ScanOne(rows, &obj)
 	return obj, err
 }

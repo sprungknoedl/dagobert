@@ -20,7 +20,7 @@ func (store *Store) ListKeys() ([]Key, error) {
 		return nil, err
 	}
 
-	var list []Key
+	list := []Key{}
 	err = ScanAll(rows, &list)
 	return list, err
 }
@@ -37,7 +37,7 @@ func (store *Store) GetKey(key string) (Key, error) {
 		return Key{}, err
 	}
 
-	var obj Key
+	obj := Key{}
 	err = ScanOne(rows, &obj)
 	return obj, err
 }

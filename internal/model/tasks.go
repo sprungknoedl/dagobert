@@ -29,7 +29,7 @@ func (store *Store) ListTasks(cid string) ([]Task, error) {
 		return nil, err
 	}
 
-	var list []Task
+	list := []Task{}
 	err = ScanAll(rows, &list)
 	return list, err
 }
@@ -48,7 +48,7 @@ func (store *Store) GetTask(cid string, id string) (Task, error) {
 		return Task{}, err
 	}
 
-	var obj Task
+	obj := Task{}
 	err = ScanOne(rows, &obj)
 	return obj, err
 }

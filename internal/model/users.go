@@ -31,7 +31,7 @@ func (store *Store) ListUsers() ([]User, error) {
 		return nil, err
 	}
 
-	var list []User
+	list := []User{}
 	err = ScanAll(rows, &list)
 	return list, err
 }
@@ -49,7 +49,7 @@ func (store *Store) GetUser(id string) (User, error) {
 		return User{}, err
 	}
 
-	var obj User
+	obj := User{}
 	err = ScanOne(rows, &obj)
 	return obj, err
 }

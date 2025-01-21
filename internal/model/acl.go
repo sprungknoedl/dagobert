@@ -36,7 +36,7 @@ func (store *Store) LoadPolicy(model model.Model) error {
 		return err
 	}
 
-	var list []Policy
+	list := []Policy{}
 	err = ScanAll(rows, &list)
 	if err != nil {
 		return err
@@ -188,7 +188,7 @@ func (store *Store) GetUserPermissions(uid string) ([]string, error) {
 		return nil, err
 	}
 
-	var list []Policy
+	list := []Policy{}
 	err = ScanAll(rows, &list)
 	if err != nil {
 		return nil, err
@@ -218,7 +218,7 @@ func (store *Store) GetCasePermissions(cid string) ([]string, error) {
 		return nil, err
 	}
 
-	var list []Policy
+	list := []Policy{}
 	err = ScanAll(rows, &list)
 	if err != nil {
 		return nil, err

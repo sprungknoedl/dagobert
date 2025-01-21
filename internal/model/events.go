@@ -81,7 +81,7 @@ func (store *Store) ListEvents(cid string) ([]Event, error) {
 		return nil, err
 	}
 
-	var list []Event
+	list := []Event{}
 	err = ScanAll(rows, &list)
 	if err != nil {
 		return nil, err
@@ -130,7 +130,7 @@ func (store *Store) GetEvent(cid string, id string) (Event, error) {
 		return Event{}, err
 	}
 
-	var obj Event
+	obj := Event{}
 	err = ScanOne(rows, &obj)
 	if err != nil {
 		return Event{}, err

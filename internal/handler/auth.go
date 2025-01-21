@@ -238,7 +238,9 @@ func (ctrl AuthCtrl) Callback(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ctrl AuthCtrl) Forbidden(w http.ResponseWriter, r *http.Request) {
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusForbidden, "internal/views/auth-forbidden.html", map[string]any{})
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusForbidden, "internal/views/auth-forbidden.html", map[string]any{
+		"err": errors.New("forbidden"),
+	})
 }
 
 type ACL struct {

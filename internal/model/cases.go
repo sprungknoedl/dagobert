@@ -47,7 +47,7 @@ func (store *Store) ListCases() ([]Case, error) {
 		return nil, err
 	}
 
-	var list []Case
+	list := []Case{}
 	err = ScanAll(rows, &list)
 	return list, err
 }
@@ -64,7 +64,7 @@ func (store *Store) GetCase(cid string) (Case, error) {
 		return Case{}, err
 	}
 
-	var obj Case
+	obj := Case{}
 	err = ScanOne(rows, &obj)
 	return obj, err
 }
