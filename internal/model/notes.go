@@ -25,7 +25,7 @@ func (store *Store) ListNotes(cid string) ([]Note, error) {
 		return nil, err
 	}
 
-	var list []Note
+	list := []Note{}
 	err = ScanAll(rows, &list)
 	return list, err
 }
@@ -44,7 +44,7 @@ func (store *Store) GetNote(cid string, id string) (Note, error) {
 		return Note{}, err
 	}
 
-	var obj Note
+	obj := Note{}
 	err = ScanOne(rows, &obj)
 	return obj, err
 }

@@ -25,7 +25,7 @@ func (store *Store) ListAuditlog() ([]Auditlog, error) {
 		return nil, err
 	}
 
-	var list []Auditlog
+	list := []Auditlog{}
 	err = ScanAll(rows, &list)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func (store *Store) ListAuditlogForObject(object string) ([]Auditlog, error) {
 		return nil, err
 	}
 
-	var list []Auditlog
+	list := []Auditlog{}
 	err = ScanAll(rows, &list)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (store *Store) ListAuditlogForUser(user string) ([]Auditlog, error) {
 		return nil, err
 	}
 
-	var list []Auditlog
+	list := []Auditlog{}
 	err = ScanAll(rows, &list)
 	if err != nil {
 		return nil, err

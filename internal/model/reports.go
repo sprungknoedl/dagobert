@@ -21,7 +21,7 @@ func (store *Store) ListReports() ([]Report, error) {
 		return nil, err
 	}
 
-	var list []Report
+	list := []Report{}
 	err = ScanAll(rows, &list)
 	return list, err
 }
@@ -39,7 +39,7 @@ func (store *Store) GetReport(id string) (Report, error) {
 		return Report{}, err
 	}
 
-	var obj Report
+	obj := Report{}
 	err = ScanOne(rows, &obj)
 	return obj, err
 }
@@ -57,7 +57,7 @@ func (store *Store) GetReportByName(name string) (Report, error) {
 		return Report{}, err
 	}
 
-	var obj Report
+	obj := Report{}
 	err = ScanOne(rows, &obj)
 	return obj, err
 }

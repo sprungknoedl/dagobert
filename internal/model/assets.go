@@ -41,7 +41,7 @@ func (store *Store) ListAssets(cid string) ([]Asset, error) {
 		return nil, err
 	}
 
-	var list []Asset
+	list := []Asset{}
 	err = ScanAll(rows, &list)
 	return list, err
 }
@@ -68,7 +68,7 @@ func (store *Store) GetAsset(cid string, id string) (Asset, error) {
 		return Asset{}, err
 	}
 
-	var obj Asset
+	obj := Asset{}
 	err = ScanOne(rows, &obj)
 	return obj, err
 }
@@ -87,7 +87,7 @@ func (store *Store) GetAssetByName(cid string, name string) (Asset, error) {
 		return Asset{}, err
 	}
 
-	var obj Asset
+	obj := Asset{}
 	err = ScanOne(rows, &obj)
 	return obj, err
 }

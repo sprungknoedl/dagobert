@@ -41,7 +41,7 @@ func (store *Store) GetRuns(base []Extension, eid string) ([]Run, error) {
 		return nil, err
 	}
 
-	var list []Run
+	list := []Run{}
 	err = ScanAll(rows, &list)
 	if err != nil {
 		return nil, err
