@@ -14,10 +14,13 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/fp"
 	"golang.org/x/net/html"
 )
+
+var ErrNoRows = errors.New("timesketch: no rows in result set")
 
 type Client struct {
 	BaseURL  string
@@ -38,18 +41,90 @@ type Response[T any] struct {
 		PrevPage    string `json:"prev_page"`
 		TotalItems  int    `json:"total_items"`
 		TotalPages  int    `json:"total_pages"`
+
+		Attributes map[string]struct {
+			Ontology string `json:"ontology"`
+			Values   []struct {
+				Type        string   `json:"type"`
+				IOC         string   `json:"ioc"`
+				Tags        []string `json:"tags"`
+				ExternalURI string   `json:"externalURI"`
+			} `json:"values"`
+		} `json:"attributes"`
+
+		Mappings []Field `json:"mappings"`
 	} `json:"meta"`
 	Objects []T `json:"objects"`
 }
 
 type Sketch struct {
-	ID           int    `json:"id"`
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	User         string `json:"user"`
-	Status       string `json:"status"`
-	CreatedAt    string `json:"created_at"`
-	LastActivity string `json:"last_activity"`
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	// User         string `json:"user"`
+	// Status       string `json:"status"`
+	// CreatedAt    string `json:"created_at"`
+	// LastActivity string `json:"last_activity"`
+
+	Timelines []Timeline `json:"timelines"`
+
+	// copied over from meta
+	Mappings   []Field `json:"mappings"`
+	Attributes map[string]struct {
+		Ontology string `json:"ontology"`
+		Values   []struct {
+			Type        string   `json:"type"`
+			IOC         string   `json:"ioc"`
+			Tags        []string `json:"tags"`
+			ExternalURI string   `json:"externalURI"`
+		} `json:"values"`
+	} `json:"attributes"`
+}
+
+type Timeline struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
+type Event struct {
+	ID     string         `json:"_id"`
+	Index  string         `json:"_index"`
+	Score  string         `json:"_score"`
+	Source map[string]any `json:"_source"`
+
+	// copied over from source
+	Message       string
+	Datetime      time.Time
+	TimestampDesc string
+}
+
+type Filter struct {
+	Size    int     `json:"size"`
+	Indices []int   `json:"indices"`
+	Order   string  `json:"order"`
+	Chips   []Chip  `json:"chips"`
+	Fields  []Field `json:"fields"`
+}
+
+type Chip struct {
+	Type     string `json:"type"`
+	Field    string `json:"field"`
+	Value    string `json:"value"`
+	Operator string `json:"operator"`
+	Active   bool   `json:"active"`
+}
+
+type Field struct {
+	Field string `json:"field"`
+	Type  string `json:"type"`
+}
+
+var StarredEventsChip = Chip{
+	Type:     "label",
+	Field:    "label",
+	Value:    "__ts_star",
+	Operator: "must",
+	Active:   true,
 }
 
 func NewClient(uri, username, password string) (*Client, error) {
@@ -130,7 +205,61 @@ func (client Client) ListSketches() ([]Sketch, error) {
 	return carrier.Objects, err
 }
 
-func (client Client) GetSketch(id int) ([]Sketch, error) { return nil, nil }
+func (client Client) GetSketch(id int) (Sketch, error) {
+	resp, err := client.client.Get(client.BaseURL + "/api/v1/sketches/" + strconv.Itoa(id))
+	if err != nil {
+		return Sketch{}, err
+	}
+
+	carrier := Response[Sketch]{}
+	err = json.NewDecoder(resp.Body).Decode(&carrier)
+	if len(carrier.Objects) < 1 {
+		return Sketch{}, ErrNoRows
+	}
+
+	sketch := carrier.Objects[0]
+	sketch.Attributes = carrier.Meta.Attributes
+	sketch.Mappings = carrier.Meta.Mappings
+	return sketch, err
+}
+
+func (client Client) Explore(id int, query string, filter Filter) ([]Event, error) {
+	client.csrf()
+
+	body := &bytes.Buffer{}
+	err := json.NewEncoder(body).Encode(map[string]any{
+		"query":  query,
+		"filter": filter,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, client.BaseURL+"/api/v1/sketches/"+strconv.Itoa(id)+"/explore/", body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	req.Header.Set("X-CSRFToken", client.csrfToken)
+	resp, err := client.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to explore: %s", resp.Status)
+	}
+
+	carrier := Response[Event]{}
+	err = json.NewDecoder(resp.Body).Decode(&carrier)
+	return fp.Apply(carrier.Objects, func(obj Event) Event {
+		datetime, _ := obj.Source["datetime"].(string)
+		obj.Datetime, _ = time.Parse(time.RFC3339, datetime)
+		obj.Message, _ = obj.Source["message"].(string)
+		obj.TimestampDesc, _ = obj.Source["timestamp_desc"].(string)
+		return obj
+	}), err
+}
 
 func (client Client) Upload(sketch int, path string) error {
 	client.csrf()

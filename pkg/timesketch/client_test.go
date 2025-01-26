@@ -1,6 +1,10 @@
 package timesketch
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/sprungknoedl/dagobert/internal/fp"
+)
 
 func TestNewClient(t *testing.T) {
 	c, err := NewClient("https://timesketch.lolcathost.io", "tom", "fZabMXXw-abbNd6j")
@@ -36,5 +40,32 @@ func TestUpload(t *testing.T) {
 	err = c.Upload(1, "/Users/tom/Downloads/dummy.jsonl")
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestExplore(t *testing.T) {
+	c, err := NewClient("https://timesketch.lolcathost.io", "tom", "fZabMXXw-abbNd6j")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sketch, err := c.GetSketch(1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	events, err := c.Explore(1, "*", Filter{
+		Size:    1024,
+		Order:   "asc",
+		Indices: fp.Apply(sketch.Timelines, func(t Timeline) int { return t.ID }),
+		Chips:   []Chip{StarredEventsChip},
+		Fields:  sketch.Mappings,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(events) < 10 {
+		t.Errorf("expected >%d events, got %d", 10, len(events))
 	}
 }
