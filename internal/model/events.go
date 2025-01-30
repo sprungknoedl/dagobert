@@ -149,13 +149,19 @@ func (store *Store) GetEvent(cid string, id string) (Event, error) {
 	return obj, nil
 }
 
-func (store *Store) SaveEvent(cid string, obj Event) error {
+func (store *Store) SaveEvent(cid string, obj Event, override bool) error {
 	query := `
 	INSERT INTO events (id, time, type, event, raw, flagged, case_id)
 	VALUES (:id, :time, :type, :event, :raw, :flagged, :cid)
-	ON CONFLICT (id)
+	ON CONFLICT (id) `
+	if override {
+		query += `
 		DO UPDATE SET time=:time, type=:type, event=:event, raw=:raw, flagged=:flagged
 		WHERE id = :id`
+	} else {
+		query += `
+		DO NOTHING`
+	}
 
 	// assets
 	query2 := `

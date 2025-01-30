@@ -1,17 +1,22 @@
 package handler
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/csv"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"math"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/fp"
 	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
@@ -116,7 +121,7 @@ func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	cw.Flush()
 }
 
-func (ctrl EventCtrl) Import(w http.ResponseWriter, r *http.Request) {
+func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/events/", cid)
 	ImportCSV(ctrl.store, ctrl.acl, w, r, uri, 7, func(rec []string) {
@@ -176,7 +181,7 @@ func (ctrl EventCtrl) Import(w http.ResponseWriter, r *http.Request) {
 					Type:   "Other",
 					TLP:    "TLP:RED",
 				}
-				if err := ctrl.store.SaveIndicator(cid, obj); err != nil {
+				if err := ctrl.store.SaveIndicator(cid, obj, false); err != nil {
 					Err(w, r, err)
 					return
 				}
@@ -198,12 +203,80 @@ func (ctrl EventCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Raw:        rec[6],
 		}
 
-		if err = ctrl.store.SaveEvent(cid, obj); err != nil {
+		if err = ctrl.store.SaveEvent(cid, obj, true); err != nil {
 			Err(w, r, err)
 		} else {
 			Audit(ctrl.store, r, "event:"+obj.ID, "Imported event %q", obj.Event)
 		}
 	})
+}
+
+func (ctrl EventCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	kase, err := ctrl.store.GetCase(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	client, err := timesketch.NewClient(
+		os.Getenv("TIMESKETCH_URL"),
+		os.Getenv("TIMESKETCH_USER"),
+		os.Getenv("TIMESKETCH_PASS"),
+	)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	if kase.SketchID == 0 {
+		Err(w, r, errors.New("no timesketch sketch id set"))
+		return
+	}
+
+	sketch, err := client.GetSketch(kase.SketchID)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	events, err := client.Explore(1, "*", timesketch.Filter{
+		Size:    1024,
+		Order:   "asc",
+		Indices: fp.Apply(sketch.Timelines, func(t timesketch.Timeline) int { return t.ID }),
+		Chips:   []timesketch.Chip{timesketch.StarredEventsChip},
+		Fields:  sketch.Mappings,
+	})
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	for _, ev := range events {
+		buf := &bytes.Buffer{}
+		enc := json.NewEncoder(buf)
+		enc.SetIndent("", "  ")
+		enc.Encode(ev.Source) // FIXME: ignore json errors?
+
+		obj := model.Event{
+			ID:     "_ts_" + ev.ID,
+			CaseID: cid,
+			Type:   "Other",
+			Time:   model.Time(ev.Datetime),
+			Event:  ev.Message,
+			Raw:    buf.String(),
+		}
+
+		if err = ctrl.store.SaveEvent(cid, obj, false); err != nil {
+			Err(w, r, err)
+			return
+		} else {
+			Audit(ctrl.store, r, "event:"+obj.ID, "Imported event from timesketch %q", obj.Event)
+		}
+	}
+
+	uri := fmt.Sprintf("/cases/%s/events/", cid)
+	http.Redirect(w, r, uri, http.StatusSeeOther)
 }
 
 func (ctrl EventCtrl) Edit(w http.ResponseWriter, r *http.Request) {
@@ -288,7 +361,7 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 				Type:   "Other",
 				TLP:    "TLP:RED",
 			}
-			if err := ctrl.store.SaveIndicator(dto.CaseID, obj); err != nil {
+			if err := ctrl.store.SaveIndicator(dto.CaseID, obj, false); err != nil {
 				Err(w, r, err)
 				return
 			}
@@ -325,7 +398,7 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, random(10), dto.ID)
-	if err := ctrl.store.SaveEvent(dto.CaseID, dto); err != nil {
+	if err := ctrl.store.SaveEvent(dto.CaseID, dto, true); err != nil {
 		Err(w, r, err)
 		return
 	}

@@ -8,6 +8,14 @@
         {{ template "sidebar" . }}
 
         <main class="pl-20 p-4 grow max-w-full">
+            {{ define "navbar-extra-buttons" }}
+                {{if allowed ($url := print .env.ActiveRoute "timesketch") "POST"}}
+                <a class="join-item btn" href="{{ $url }}" up-follow  up-method="post">
+                    <i class="hio-6 hio-bars-arrow-up inline-block mr-1"></i>
+                    Import Timesketch
+                </a>
+                {{ end }}
+            {{ end }}
             {{ template "navbar" dict "env" .env "title" .title }}
 
             <div id="list">
