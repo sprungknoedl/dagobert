@@ -35,7 +35,7 @@
 						<td> {{ .Email }} </td>
 						<td> {{ .Role }} </td>
 						<td> {{ template "format-time" .LastLogin }} </td>
-                        <td class="px-6 py-2 flex justify-end join">
+                        <td class="text-right"><div class="join">
                             {{ if allowed ($url := print "/settings/users/" .ID "/acl") "GET" }}
 							{{ if ne .Role "Administrator" }}
 							<a class="join-item btn btn-sm" href="{{ $url }}"
@@ -62,7 +62,7 @@
                                 <i class="hio-5 hio-trash"></i>
                             </a>
 							{{ end }}
-                        </td>
+                        </div></td>
 					</tr>
 					{{ end }}
 				</tbody>

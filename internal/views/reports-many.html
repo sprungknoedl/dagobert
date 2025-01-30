@@ -27,8 +27,7 @@
                     <tr class="hover">
                         <td> {{ .Name }} </td>
                         <td> {{ .Notes }} </td>
-                        <td class="px-6 py-2 flex justify-end join">
-                            &nbsp;
+                        <td class="text-right"><div class="join">
                             {{ if allowed ($url := print "/settings/reports/" .ID "/download") "GET" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}" >
                                 <i class="hio-5 hio-arrow-down-tray"></i>
@@ -52,7 +51,7 @@
                                 <i class="hio-5 hio-trash"></i>
                             </a>
                             {{ end }}
-                        </td>
+                        </div></td>
                     </tr>
                     {{ end }}
                 </tbody>
