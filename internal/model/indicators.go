@@ -104,13 +104,19 @@ func (store *Store) GetIndicatorByValue(cid string, value string) (Indicator, er
 	return obj, err
 }
 
-func (store *Store) SaveIndicator(cid string, obj Indicator) error {
+func (store *Store) SaveIndicator(cid string, obj Indicator, override bool) error {
 	query := `
 	INSERT INTO indicators (id, status, type, value, tlp, source, notes, case_id)
 	VALUES (iif(:id != '', :id, lower(hex(randomblob(5)))), :status, :type, :value, :tlp, :source, :notes, :cid)
-	ON CONFLICT (id)
+	ON CONFLICT `
+	if override {
+		query += `
 		DO UPDATE SET status=:status, type=:type, value=:value, tlp=:tlp, source=:source, notes=:notes
-		WHERE id = :id`
+		WHERE id = :id OR (case_id = :cid AND type = :type AND value = :value)`
+	} else {
+		query += `
+		DO NOTHING`
+	}
 
 	_, err := store.DB.Exec(query,
 		sql.Named("cid", cid),

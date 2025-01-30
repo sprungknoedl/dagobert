@@ -151,7 +151,7 @@ func IngestHayabusa(store *model.Store, kase model.Case, obj model.Evidence) err
 			Assets: []model.Asset{asset},
 		}
 
-		if err := store.SaveEvent(obj.CaseID, e); err != nil {
+		if err := store.SaveEvent(obj.CaseID, e, true); err != nil {
 			return err
 		}
 

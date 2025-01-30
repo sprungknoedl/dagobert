@@ -44,12 +44,14 @@ type Response[T any] struct {
 
 		Attributes map[string]struct {
 			Ontology string `json:"ontology"`
-			Values   []struct {
-				Type        string   `json:"type"`
-				IOC         string   `json:"ioc"`
-				Tags        []string `json:"tags"`
-				ExternalURI string   `json:"externalURI"`
-			} `json:"values"`
+			Values   struct {
+				Data []struct {
+					Type        string   `json:"type"`
+					IOC         string   `json:"ioc"`
+					Tags        []string `json:"tags"`
+					ExternalURI string   `json:"externalURI"`
+				} `json:"data"`
+			} `json:"value"`
 		} `json:"attributes"`
 
 		Mappings []Field `json:"mappings"`
@@ -72,12 +74,14 @@ type Sketch struct {
 	Mappings   []Field `json:"mappings"`
 	Attributes map[string]struct {
 		Ontology string `json:"ontology"`
-		Values   []struct {
-			Type        string   `json:"type"`
-			IOC         string   `json:"ioc"`
-			Tags        []string `json:"tags"`
-			ExternalURI string   `json:"externalURI"`
-		} `json:"values"`
+		Values   struct {
+			Data []struct {
+				Type        string   `json:"type"`
+				IOC         string   `json:"ioc"`
+				Tags        []string `json:"tags"`
+				ExternalURI string   `json:"externalURI"`
+			} `json:"data"`
+		} `json:"value"`
 	} `json:"attributes"`
 }
 
