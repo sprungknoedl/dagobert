@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"net/http"
 	"slices"
+	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/fp"
 	"github.com/sprungknoedl/dagobert/internal/model"
@@ -21,8 +22,17 @@ type Node struct {
 }
 
 type Edge struct {
-	From string `json:"from"`
-	To   string `json:"to"`
+	From   string `json:"from"`
+	To     string `json:"to"`
+	Dashes bool   `json:"dashes"`
+}
+
+type DataItem struct {
+	ID      string `json:"id"`
+	Content string `json:"content"`
+	Title   string `json:"title"`
+	Start   string `json:"start"`
+	Group   string `json:"group"`
 }
 
 func NewVisualsCtrl(store *model.Store, acl *ACL) *VisualsCtrl {
@@ -45,14 +55,6 @@ func (ctrl VisualsCtrl) Network(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		for _, x := range ev.Indicators {
-			nodes[x.ID] = Node{
-				ID:    x.ID,
-				Label: x.Value,
-				Group: "Indicator" + x.Type,
-			}
-		}
-
 		for _, x := range ev.Assets {
 			nodes[x.ID] = Node{
 				ID:    x.ID,
@@ -61,7 +63,13 @@ func (ctrl VisualsCtrl) Network(w http.ResponseWriter, r *http.Request) {
 			}
 
 			for _, y := range ev.Indicators {
-				edges = append(edges, Edge{From: y.ID, To: x.ID})
+				nodes[y.ID] = Node{
+					ID:    y.ID,
+					Label: y.Value,
+					Group: "Indicator" + y.Type,
+				}
+
+				edges = append(edges, Edge{From: y.ID, To: x.ID, Dashes: true})
 			}
 		}
 
@@ -88,13 +96,38 @@ func (ctrl VisualsCtrl) Network(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	_, err := ctrl.store.ListEvents(cid)
+	events, err := ctrl.store.ListEvents(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
+	items := []DataItem{}
+	groups := map[string]DataItem{}
+	for _, ev := range events {
+		if !ev.Flagged {
+			continue
+		}
+
+		for _, g := range ev.Assets {
+			groups[g.Name] = DataItem{
+				ID:      g.Name,
+				Content: g.Name,
+			}
+
+			items = append(items, DataItem{
+				ID:      ev.ID + "_" + g.ID,
+				Content: ev.Event,
+				Title:   ev.Time.Format(time.RFC3339) + " - " + ev.Event,
+				Start:   ev.Time.Format(time.RFC3339),
+				Group:   g.Name,
+			})
+		}
+	}
+
 	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/vis-timeline.html", map[string]any{
-		"title": "Visual Timeline",
+		"title":  "Visual Timeline",
+		"items":  items,
+		"groups": fp.ToList(groups),
 	})
 }

@@ -3,6 +3,7 @@
 @import "heroicons-outline-405db23.css";
 @import "tom-select-2.4.1.css";
 @import "unpoly-3.9.5.min.css";
+@import "vis-timeline-7.7.3.css";
 
 @tailwind base;
 @tailwind components;
@@ -25,7 +26,7 @@ html {
 }
 
 .btn-flagged {
-    @apply text-sky-800 !important;
+    @apply text-yellow-500 !important;
 }
 
 /*
@@ -277,4 +278,65 @@ table.fixedHeader-floating,table.fixedHeader-locked {
     table.fixedHeader-floating{
         display:none
     }
+}
+
+table.dataTable tbody > tr.selected > * {
+    background-color: oklch(var(--pc)) !important;
+    box-shadow: unset !important;
+}
+
+table.dataTable > tbody > tr.selected a.btn {
+    color: unset !important;
+}
+
+/*
+VIS TIMELINE
+*/
+.vis-timeline {
+    border: none !important;
+}
+
+.vis-time-axis .vis-grid.vis-minor {
+    border-color: oklch(var(--n)) !important;
+}
+
+.vis-time-axis .vis-grid.vis-major {
+    border-color: oklch(var(--nc)) !important;
+}
+
+.vis-foreground .vis-group {
+    border-bottom: 1px solid oklch(var(--n)) !important;
+}
+
+.vis-item {
+    color: oklch(var(--a)) !important;
+    border-color: oklch(var(--a)) !important;
+    background-color: oklch(var(--ac)) !important;
+}
+
+.vis-item.vis-selected {
+    color: oklch(var(--p)) !important;
+    border-color: oklch(var(--p)) !important;
+    background-color: oklch(var(--pc)) !important;
+}
+
+.vis-labelset .vis-label {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem !important;
+    color: oklch(var(--nc)) !important;
+    border-bottom: 1px solid oklch(var(--n)) !important;
+}
+
+.vis-time-axis .vis-text {
+    color: oklch(var(--nc)) !important;
+    padding: 0.5rem !important;
+}
+
+.vis-current-time {
+    background-color: oklch(var(--p)) !important;
+}
+
+.vis-group:hover {
+    background-color: oklch(var(--b2));
 }
