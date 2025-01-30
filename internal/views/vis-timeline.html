@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+{{ template "layout-head" }}
+<body>
+    <div class="drawer-content flex">
+        <div up-flashes></div>
+        {{ template "sidebar" . }}
+
+        <main class="pl-20 p-4 grow max-w-full flex flex-col h-screen">
+            {{ template "navbar" dict "env" .env "title" .title
+                "hideRefresh" true
+                "hideSearch" true
+                "hideImport" true
+                "hideExport" true
+                "hideAdd"    true }}
+
+            <div id="visjs" class="h-full"></div>
+
+        </main>
+        
+        <script src="/web/vis-timeline-7.7.3.min.js"></script>
+        <script>
+        const options = {
+            orientation: 'top',
+            height: '100%',
+        };
+
+        var items = new vis.DataSet({{ json .items }});
+        var groups = new vis.DataSet({{ json .groups }});
+
+        var container = document.getElementById("visjs");
+
+        var timeline = new vis.Timeline(container, items, groups, options);
+        </script>
+    </div>
+</body>
