@@ -53,7 +53,7 @@
                             {{ range .Assets }}
                             <div class="text-success truncate">
                                 {{ if eq .Type "Account" }}      <i class="hio-5 hio-user inline-block"></i>
-                                {{ else if eq .Type "Desktop" }} <i class="hio-5 hio-desktop inline-block"></i>
+                                {{ else if eq .Type "Desktop" }} <i class="hio-5 hio-computer-desktop inline-block"></i>
                                 {{ else if eq .Type "Server" }}  <i class="hio-5 hio-server inline-block"></i>
                                 {{ else }}                       <i class="hio-5 hio-question-mark-circle inline-block"></i>
                                 {{ end }}
@@ -76,11 +76,10 @@
                             </div>
                             {{ end }}
                         </td>
-                        <td class="px-6 py-2 flex justify-end join">
-                            &nbsp;
+                        <td data-search='{{ if .Flagged }}flagged:true{{ end }}' class="text-right"><div class="join">
                             {{ if allowed ($url := print "/cases/" .CaseID "/events/" .ID) "POST" }} {{ if .Flagged }}
                             <a class="join-item btn btn-sm btn-flagged" title="Flagged event" href="{{ $url }}" up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio-5 hio-flag-solid"></i>
+                                <i class="hio-5 hio-flag"></i>
                             </a>
                             {{ end }} {{ end }}
                             {{ if allowed ($url := print "/settings/auditlog/event:" .ID) "GET" }}
@@ -100,7 +99,7 @@
                                 <i class="hio-5 hio-trash"></i>
                             </a>
                             {{ end }}
-                        </td>
+                        </div></td>
                     </tr>
                     {{ end }}
                 </tbody>

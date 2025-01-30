@@ -62,8 +62,7 @@
                         <td class="truncate"> {{ template "format-time" .FirstSeen }} </td>
                         <td class="truncate"> {{ template "format-time" .LastSeen }} </td>
                         <td> {{ .Events }} </td>
-                        <td class="px-6 py-2 flex justify-end join">
-                            &nbsp;
+                        <td class="text-right"><div class="join">
                             {{ if and (eq .Type "IP") (ne .TLP "TLP:RED")}}
                             <a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
                             {{ else if and (eq .Type "Domain") (ne .TLP "TLP:RED") }}
@@ -91,7 +90,7 @@
                                 <i class="hio-5 hio-trash"></i>
                             </a>
                             {{ end }}
-                        </td>
+                        </div></td>
                     </tr>
                     {{ end }}
                 </tbody>

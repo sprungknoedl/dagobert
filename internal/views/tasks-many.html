@@ -43,8 +43,7 @@
                             {{ else }} <i class="hio-5 hio-x-circle text-red-500"></i>
                             {{ end }}
                         </td>
-                        <td class="px-6 py-2 flex justify-end join">
-                            &nbsp;
+                        <td class="text-right"><div class="join">
                             {{ if allowed ($url := print "/settings/auditlog/task:" .ID) "GET" }}
 							<a class="join-item btn btn-sm" href="{{ $url }}" title="Audit Log"
 								up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
@@ -63,7 +62,7 @@
                                 <i class="hio-5 hio-trash"></i>
                             </a>
                             {{ end }}
-                        </td>
+                        </div></td>
                     </tr>
                     {{ end }}
                 </tbody>
