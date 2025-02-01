@@ -10,16 +10,18 @@ import (
 
 	"github.com/sprungknoedl/dagobert/internal/fp"
 	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type CaseCtrl struct {
 	store *model.Store
 	acl   *ACL
+	ts    *timesketch.Client
 }
 
-func NewCaseCtrl(store *model.Store, acl *ACL) *CaseCtrl {
-	return &CaseCtrl{store, acl}
+func NewCaseCtrl(store *model.Store, acl *ACL, ts *timesketch.Client) *CaseCtrl {
+	return &CaseCtrl{store, acl, ts}
 }
 
 func (ctrl CaseCtrl) List(w http.ResponseWriter, r *http.Request) {
@@ -103,9 +105,15 @@ func (ctrl CaseCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	var sketches []timesketch.Sketch
+	if ctrl.ts != nil {
+		sketches, _ = ctrl.ts.ListSketches()
+	}
+
 	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/cases-one.html", map[string]any{
-		"obj":   obj,
-		"valid": valid.Result{},
+		"obj":      obj,
+		"valid":    valid.Result{},
+		"sketches": sketches,
 	})
 }
 
