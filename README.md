@@ -2,56 +2,103 @@
 
 ![Dagobert Logo](web/favicon.svg)
 
-Dagobert - Collaborative Incident Response Platform
+**Dagobert** is a collaborative platform designed to assist incident responders in sharing technical details during investigations and creating more effective incident response documentation. Inspired by the "Spreadsheet of Doom" utilized in the SANS FOR508 class and software like [IRIS](https://dfir-iris.org/) and [Aurora Incident Response](https://github.com/cyb3rfox/Aurora-Incident-Response), Dagobert takes incident response collaboration to the next level.
 
-## Overview
+## ✨ Key Features
 
-Dagobert is a collaborative platform designed to assist incident responders in sharing technical details during investigations and creating more effective incident response documentation. Inspired by the "Spreadsheet of Doom" utilized in the SANS FOR508 class and software like [IRIS](https://dfir-iris.org/) and [Aurora Incident Response](https://github.com/cyb3rfox/Aurora-Incident-Response), Dagobert takes incident response collaboration to the next level.
+**🔄 Real-time Collaboration**
+* Simultaneous multi-user editing for live teamwork during investigations
+* Audit trail for traceable decision-making
 
-## Getting Started
+**🔌 Evidence ProcessingPlugins**
+*  Extensible plugin architecture for automated evidence handling:
+    * EVTX log parsers ([Hayabusa](https://github.com/Yamato-Security/hayabusa))
+    * Timeline creation ([Plaso](https://github.com/log2timeline/plaso))
 
-Dagobert ships no built-in user authentication and instead relies on the presence of an OpenID Connect provider like [Keycloack](https://www.keycloak.org/), [authentik](https://goauthentik.io/), [Microsoft Entra](https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc), [Google Cloud](https://cloud.google.com/identity-platform/docs/web/oidc). You need to configure your identity platform first for Dagobert to verify the identity of the user.
+**⏱️ Timesketch integration**
+* One-click timeline uploads to Timesketch instances
+* Automatic event import from Timesketch
+* Bidirection synchronization of indicators (cooming soon)
+
+**📊 Office Report Generation**
+* Native support for DOCX/ODT report and XLSX/ODS spreadsheet templates
+* Dynamic data binding for:
+    * Executive summaries
+    * Technical IOC tables
+    * Investigation timelines
+* Style-preserving exports to Microsoft Word and LibreOffice
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+* Docker and Docker Compose (v2+)
+* Configurred OpenID Connect provder (e.g. [Keycloack](https://www.keycloak.org/), [Authentik](https://goauthentik.io/), [Microsoft Entra](https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc) or [Google Cloud](https://cloud.google.com/identity-platform/docs/web/oidc))
+
+Dagobert ships no built-in user authentication and instead relies on the presence of an OpenID Connect provider. You need to configure your identity platform first for Dagobert to verify the identity of the user.
+
+### Installation
 
 To ease the installation and upgrades, Dagobert is shipped in Docker containers. Thanks to Docker Compose, it can be ready in a few minutes.
 
-```sh
-#  Clone repository
-git clone https://github.com/sprungknoedl/dagobert
-cd dagobert
+1. Clone the repository
 
-# Copy & adapt environment file 
-cp env.model .env
-nano env.model
+    ```sh
+    git clone https://github.com/sprungknoedl/dagobert
+    cd dagobert
+    ```
 
-# Run dagobert 
-docker compose up
-```
+2. Configure environment
 
-Dagobert and the Docker Compose file listens by default on port 8080/tcp. For production setups, a HTTPS proxy like apache, nginx or traefik should be configured.
+    ```sh
+    cp env.model .env
+    nano .env # update settings (see 📝 Configuration below)
+    ```
 
-## Configuration
+3. Start the stack
+
+    ```sh
+    docker compose up -d
+    ```
+
+    Access the app at [http://localhost:8080].
+
+**Production Note:** Always deploy behind a HTTPS proxy like Apache, nginx or traefik.
+
+## 📝 Configuration
 Dagobert uses environment variables for all runtime configuration.
 
-The OpenID section has the following variables:
+### OpenID Connect (OIDC)
 
-* `OIDC_ISSUER`: OpenID Connect discovery base URL of the idendity provider
-* `OIDC_CLIENT_ID`: Client ID assigned to Dagobert by the idendity proivder
-* `OIDC_CLIENT_SECRET`: Client secret assigned to Dagobert by the idendity provider
-* `OIDC_CLIENT_URL`: URL of Dagobert, used to tell the idendity provider where to send users after authentication
-* `OIDC_ID_CLAIM`; Which claim to use as the user ID, normally this should be `sub`. For Microsoft Entra I recomment to use `oid`, as it matches the Object ID found in Entra UI (see also [Use claims to reliably identify a user](https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference#use-claims-to-reliably-identify-a-user))
+| Variable | Description | Example |
+| -------- | ----------- | ------- |
+| `OIDC_ISSUER` | OpenID Connect discovery base URL of the identity provider | `https://auth.example.com/realms/dagobert` |
+| `OIDC_CLIENT_ID` | Client ID assigned to Dagobert by the identity proivder | `dagobert-client` |
+| `OIDC_CLIENT_SECRET` | Client secret assigned to Dagobert by the identity provider | `supersecret123` |
+| `OIDC_CLIENT_URL` | Dagobert's base URL (for OIDC callback) | `https://dagobert.example.com/` |
+| `OIDC_ID_CLAIM` | Claim to use as the user ID (`sub` or `oid` for [Microsoft Entra](https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference#use-claims-to-reliably-identify-a-user)) | `sub` |
 
-The web section has the following variables:
+### Web server
 
-* `WEB_SESSION_SECRET`: Secret key used to encrypt session cookies
+| Variable | Description | Example |
+| -------- | ----------- | ------- |
+| `WEB_SESSION_SECRET` | Secret key used to encrypt session cookies | Generate e.g. with `openssl rand -hex 32` |
 
-To configure default administrators that should be populated on first startup, the following variables can be used:
+### Admins
+Add initial admins using their OIDC identity claim:
 
-* `DAGOBERT_ADMIN_0`: OpenID idendity claim (see above) of first administrative user
-* `DAGOBERT_ADMIN_N`: Any number of administrators can be populated, as long as the env variable starts with `DAGOBERT_ADMIN_`
+| Variable | Description | Example |
+| -------- | ----------- | ------- |
+| `DAGOBERT_ADMIN_0` | First administrative user | `a5fad3d3-559c-4578-a3f9-ec907ec0ddb9` |
+| `DAGOBERT_ADMIN_N` | Any number of administrators can be added; variable must start with `DAGOBERT_ADMIN_` | |
 
 ## Contributing
 
-We welcome contributions! Please follow our Contribution Guidelines (TBD) to get started.
+All contributions in any form (be it code, documentation, design) is highly welcome!
+
+1. Fork the repository/
+2. Create a feature branch: `git checkout -b feat/your-idea`.
+3. Submit a PR with a clear description.
 
 ## License
 
