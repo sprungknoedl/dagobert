@@ -239,7 +239,7 @@ func (ctrl EvidenceCtrl) Extensions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	exts := fp.Filter(extensions.Extensions, func(p model.Extension) bool { return p.Supports(obj) })
+	exts := fp.Filter(extensions.List, func(p model.Extension) bool { return p.Supports(obj) })
 	runs, err := ctrl.store.GetRuns(exts, obj.ID)
 	if err != nil {
 		Err(w, r, err)

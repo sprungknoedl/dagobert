@@ -10,7 +10,6 @@ import (
 	"html/template"
 	"math"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -23,10 +22,11 @@ import (
 type EventCtrl struct {
 	store *model.Store
 	acl   *ACL
+	ts    *timesketch.Client
 }
 
-func NewEventCtrl(store *model.Store, acl *ACL) *EventCtrl {
-	return &EventCtrl{store, acl}
+func NewEventCtrl(store *model.Store, acl *ACL, ts *timesketch.Client) *EventCtrl {
+	return &EventCtrl{store, acl, ts}
 }
 
 func (ctrl EventCtrl) List(w http.ResponseWriter, r *http.Request) {
@@ -219,28 +219,18 @@ func (ctrl EventCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client, err := timesketch.NewClient(
-		os.Getenv("TIMESKETCH_URL"),
-		os.Getenv("TIMESKETCH_USER"),
-		os.Getenv("TIMESKETCH_PASS"),
-	)
+	if ctrl.ts == nil || kase.SketchID == 0 {
+		Err(w, r, errors.New("invalid timesketch configuration"))
+		return
+	}
+
+	sketch, err := ctrl.ts.GetSketch(kase.SketchID)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	if kase.SketchID == 0 {
-		Err(w, r, errors.New("no timesketch sketch id set"))
-		return
-	}
-
-	sketch, err := client.GetSketch(kase.SketchID)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	events, err := client.Explore(1, "*", timesketch.Filter{
+	events, err := ctrl.ts.Explore(1, "*", timesketch.Filter{
 		Size:    1024,
 		Order:   "asc",
 		Indices: fp.Apply(sketch.Timelines, func(t timesketch.Timeline) int { return t.ID }),

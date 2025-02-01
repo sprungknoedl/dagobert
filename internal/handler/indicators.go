@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/fp"
@@ -17,10 +16,11 @@ import (
 type IndicatorCtrl struct {
 	store *model.Store
 	acl   *ACL
+	ts    *timesketch.Client
 }
 
-func NewIndicatorCtrl(store *model.Store, acl *ACL) *IndicatorCtrl {
-	return &IndicatorCtrl{store, acl}
+func NewIndicatorCtrl(store *model.Store, acl *ACL, ts *timesketch.Client) *IndicatorCtrl {
+	return &IndicatorCtrl{store, acl, ts}
 }
 
 func (ctrl IndicatorCtrl) List(w http.ResponseWriter, r *http.Request) {
@@ -98,22 +98,12 @@ func (ctrl IndicatorCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	client, err := timesketch.NewClient(
-		os.Getenv("TIMESKETCH_URL"),
-		os.Getenv("TIMESKETCH_USER"),
-		os.Getenv("TIMESKETCH_PASS"),
-	)
-	if err != nil {
-		Err(w, r, err)
+	if ctrl.ts == nil || kase.SketchID == 0 {
+		Err(w, r, errors.New("invalid timesketch configuration"))
 		return
 	}
 
-	if kase.SketchID == 0 {
-		Err(w, r, errors.New("no timesketch sketch id set"))
-		return
-	}
-
-	sketch, err := client.GetSketch(kase.SketchID)
+	sketch, err := ctrl.ts.GetSketch(kase.SketchID)
 	if err != nil {
 		Err(w, r, err)
 		return
