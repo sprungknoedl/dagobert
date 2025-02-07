@@ -78,10 +78,31 @@ func main() {
 	})
 
 	extensions.List = append(extensions.List, model.Extension{
-		Name:        "Plaso",
+		Name:        "Plaso (Windows Preset)",
 		Description: "Plaso (Plaso Langar Að Safna Öllu), or super timeline all the things, is a Python-based engine used by several tools for automatic creation of timelines.",
 		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
-		Run:         extensions.RunPlaso,
+		Run:         extensions.RunPlasoWindows,
+	})
+
+	extensions.List = append(extensions.List, model.Extension{
+		Name:        "Plaso (Linux Preset)",
+		Description: "Plaso (Plaso Langar Að Safna Öllu), or super timeline all the things, is a Python-based engine used by several tools for automatic creation of timelines.",
+		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
+		Run:         extensions.RunPlasoLinux,
+	})
+
+	extensions.List = append(extensions.List, model.Extension{
+		Name:        "Plaso (MacOS Preset)",
+		Description: "Plaso (Plaso Langar Að Safna Öllu), or super timeline all the things, is a Python-based engine used by several tools for automatic creation of timelines.",
+		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
+		Run:         extensions.RunPlasoMacOS,
+	})
+
+	extensions.List = append(extensions.List, model.Extension{
+		Name:        "Plaso (Filesystem Timeline)",
+		Description: "Run Plaso with the parser for NTFS $MFT metadata files to create a file system timeline that gives great insight into actions that occurred on the filesystem.",
+		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
+		Run:         extensions.RunPlasoMFT,
 	})
 
 	extensions.List = append(extensions.List, model.Extension{
