@@ -8,9 +8,9 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/model"
 )
 
-func RunPlaso(store *model.Store, kase model.Case, obj model.Evidence) error {
+func runPlaso(store *model.Store, kase model.Case, obj model.Evidence, parsers string, ext string) error {
 	name := strings.TrimSuffix(obj.Name, filepath.Ext(obj.Name))
-	dst := filepath.Join("files", "evidences", obj.CaseID, name+".plaso")
+	dst := filepath.Join("files", "evidences", obj.CaseID, name+ext)
 	src, err := clone(obj)
 	if err != nil {
 		return err
@@ -20,8 +20,7 @@ func RunPlaso(store *model.Store, kase model.Case, obj model.Evidence) error {
 	err = runDocker(src, dst, "log2timeline/plaso", []string{
 		"psteal.py",
 		"--unattended",
-		// CDQR 'datt' parser set
-		"--parsers", "text/bash_history,bencode,czip,esedb,filestat,lnk,mcafee_protection,olecf,pe,prefetch,recycle_bin,recycle_bin_info2,text/sccm,text/sophos_av,sqlite,symantec_scanlog,winevt,winevtx,webhist,text/winfirewall,winjob,winreg,text/zsh_extended_history",
+		"--parsers", parsers,
 		"--output-format", "dynamic",
 		"--source", "/in/" + filepath.Base(src),
 		"--storage-file", "/out/" + filepath.Base(dst),
@@ -60,4 +59,20 @@ func RunPlaso(store *model.Store, kase model.Case, obj model.Evidence) error {
 	}
 
 	return nil
+}
+
+func RunPlasoWindows(store *model.Store, kase model.Case, obj model.Evidence) error {
+	return runPlaso(store, kase, obj, "win7", ".plaso")
+}
+
+func RunPlasoLinux(store *model.Store, kase model.Case, obj model.Evidence) error {
+	return runPlaso(store, kase, obj, "linux", ".plaso")
+}
+
+func RunPlasoMacOS(store *model.Store, kase model.Case, obj model.Evidence) error {
+	return runPlaso(store, kase, obj, "macos", ".plaso")
+}
+
+func RunPlasoMFT(store *model.Store, kase model.Case, obj model.Evidence) error {
+	return runPlaso(store, kase, obj, "mft", ".mft.plaso")
 }
