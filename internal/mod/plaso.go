@@ -8,6 +8,37 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/model"
 )
 
+func init() {
+	Register(model.Mod{
+		Name:        "Plaso (Windows Preset)",
+		Description: "Plaso (Plaso Langar Að Safna Öllu), or super timeline all the things, is a Python-based engine used by several tools for automatic creation of timelines.",
+		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
+		Run:         RunPlasoWindows,
+	})
+
+	Register(model.Mod{
+		Name:        "Plaso (Linux Preset)",
+		Description: "Plaso (Plaso Langar Að Safna Öllu), or super timeline all the things, is a Python-based engine used by several tools for automatic creation of timelines.",
+		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
+		Run:         RunPlasoLinux,
+	})
+
+	Register(model.Mod{
+		Name:        "Plaso (MacOS Preset)",
+		Description: "Plaso (Plaso Langar Að Safna Öllu), or super timeline all the things, is a Python-based engine used by several tools for automatic creation of timelines.",
+		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
+		Run:         RunPlasoMacOS,
+	})
+
+	Register(model.Mod{
+		Name:        "Plaso (Filesystem Timeline)",
+		Description: "Run Plaso with the parser for NTFS $MFT metadata files to create a file system timeline that gives great insight into actions that occurred on the filesystem.",
+		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
+		Run:         RunPlasoMFT,
+	})
+
+}
+
 func runPlaso(store *model.Store, kase model.Case, obj model.Evidence, parsers string, ext string) error {
 	name := strings.TrimSuffix(obj.Name, filepath.Ext(obj.Name))
 	dst := filepath.Join("files", "evidences", obj.CaseID, name+ext)
