@@ -6,14 +6,14 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/fp"
 )
 
-var ExtensionStatus = []string{
+var ModStatus = []string{
 	"Running",
 	"Timeout",
 	"Failed",
 	"Success",
 }
 
-type Extension struct {
+type Mod struct {
 	Name        string
 	Description string
 	Supports    func(Evidence) bool
@@ -29,7 +29,7 @@ type Run struct {
 	TTL         Time
 }
 
-func (store *Store) GetRuns(base []Extension, eid string) ([]Run, error) {
+func (store *Store) GetRuns(base []Mod, eid string) ([]Run, error) {
 	query := `
 	SELECT evidence_id, name, description, status, error, ttl
 	FROM runs
@@ -48,7 +48,7 @@ func (store *Store) GetRuns(base []Extension, eid string) ([]Run, error) {
 	}
 
 	m := fp.ToMap(list, func(obj Run) string { return obj.Name })
-	return fp.Apply(base, func(obj Extension) Run {
+	return fp.Apply(base, func(obj Mod) Run {
 		return Run{
 			Name:        obj.Name,
 			Description: obj.Description,

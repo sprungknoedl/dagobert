@@ -1,4 +1,4 @@
-package extensions
+package mod
 
 import (
 	"archive/zip"
@@ -18,10 +18,10 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/tty"
 )
 
-var List = []model.Extension{}
+var List = []model.Mod{}
 
-func Get(name string) (model.Extension, error) {
-	plugin, ok := fp.ToMap(List, func(p model.Extension) string { return p.Name })[name]
+func Get(name string) (model.Mod, error) {
+	plugin, ok := fp.ToMap(List, func(p model.Mod) string { return p.Name })[name]
 	return plugin, fp.If(!ok, fmt.Errorf("invalid extension: %s", name), nil)
 }
 
