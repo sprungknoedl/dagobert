@@ -14,6 +14,7 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/sqlite"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/sprungknoedl/dagobert/internal/handler"
+	"github.com/sprungknoedl/dagobert/internal/mod"
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/tty"
@@ -247,6 +248,11 @@ func main() {
 		log.Fatalf("Failed to initialize dagobert: %v", err)
 	}
 
+	err = InitializeMods(db)
+	if err != nil {
+		log.Fatalf("Failed to initialize mods: %v", err)
+	}
+
 	log.Printf("Ready to receive requests. Listening on :8080 ...")
 	err = http.ListenAndServe(":8080", srv)
 	if err != nil {
@@ -317,5 +323,15 @@ func InitializeDagobert(store *model.Store, acl *handler.ACL, cfg Configuration)
 		}
 	}
 
+	return nil
+}
+
+func InitializeMods(store *model.Store) error {
+	err := mod.RestartRuns(store)
+	if err != nil {
+		return err
+	}
+
+	go mod.BackgroundCleaner(store)
 	return nil
 }

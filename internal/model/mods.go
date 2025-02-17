@@ -21,17 +21,18 @@ type Mod struct {
 }
 
 type Run struct {
+	CaseID      string
 	EvidenceID  string
 	Name        string
 	Description string
 	Status      string
 	Error       string
-	TTL         Time
+	Token       string
 }
 
 func (store *Store) GetRuns(base []Mod, eid string) ([]Run, error) {
 	query := `
-	SELECT evidence_id, name, description, status, error, ttl
+	SELECT case_id, evidence_id, name, description, status, error, token
 	FROM runs
 	WHERE evidence_id = :eid`
 
@@ -58,17 +59,62 @@ func (store *Store) GetRuns(base []Mod, eid string) ([]Run, error) {
 	}), nil
 }
 
-func (store *Store) SaveRun(eid string, obj Run) error {
+func (store *Store) GetActiveRuns() ([]Run, error) {
 	query := `
-	REPLACE INTO runs (evidence_id, name, description, status, error, ttl)
-	VALUES (:evidence_id, :name, :description, :status, :error, :ttl)`
+	SELECT case_id, evidence_id, name, description, status, error, token
+	FROM runs
+	WHERE status = :status`
+
+	rows, err := store.DB.Query(query,
+		sql.Named("status", "Running"))
+	if err != nil {
+		return nil, err
+	}
+
+	list := []Run{}
+	err = ScanAll(rows, &list)
+	if err != nil {
+		return nil, err
+	}
+
+	return list, nil
+}
+
+func (store *Store) GetStaleRuns(token string) ([]Run, error) {
+	query := `
+	SELECT case_id, evidence_id, name, description, status, error, token
+	FROM runs
+	WHERE token != :token
+	AND status = :status`
+
+	rows, err := store.DB.Query(query,
+		sql.Named("status", "Running"),
+		sql.Named("token", token))
+	if err != nil {
+		return nil, err
+	}
+
+	list := []Run{}
+	err = ScanAll(rows, &list)
+	if err != nil {
+		return nil, err
+	}
+
+	return list, nil
+}
+
+func (store *Store) SaveRun(obj Run) error {
+	query := `
+	REPLACE INTO runs (case_id, evidence_id, name, description, status, error, token)
+	VALUES (:case_id, :evidence_id, :name, :description, :status, :error, :token)`
 
 	_, err := store.DB.Exec(query,
-		sql.Named("evidence_id", eid),
+		sql.Named("case_id", obj.CaseID),
+		sql.Named("evidence_id", obj.EvidenceID),
 		sql.Named("name", obj.Name),
 		sql.Named("description", obj.Description),
 		sql.Named("status", obj.Status),
 		sql.Named("error", obj.Error),
-		sql.Named("ttl", obj.TTL))
+		sql.Named("token", obj.Token))
 	return err
 }
