@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"math"
 	"net/http"
 	"os"
@@ -17,7 +16,6 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/fp"
 	"github.com/sprungknoedl/dagobert/internal/mod"
 	"github.com/sprungknoedl/dagobert/internal/model"
-	"github.com/sprungknoedl/dagobert/pkg/tty"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
@@ -239,7 +237,7 @@ func (ctrl EvidenceCtrl) Mods(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	exts := fp.Filter(mod.List, func(p model.Mod) bool { return p.Supports(obj) })
+	exts := mod.Supported(obj)
 	runs, err := ctrl.store.GetRuns(exts, obj.ID)
 	if err != nil {
 		Err(w, r, err)
@@ -262,51 +260,19 @@ func (ctrl EvidenceCtrl) Run(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ext, err := mod.Get(name)
+	kase, err := ctrl.store.GetCase(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	// record progress
-	err = ctrl.store.SaveRun(id, model.Run{
-		Name:   ext.Name,
-		Status: "Running",
-		TTL:    model.Time(time.Now().Add(1 * time.Hour)),
-	})
+	err = mod.Run(ctrl.store, name, kase, obj)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	// start extension in background
-	go func() {
-		err = ext.Run(ctrl.store, GetCase(ctrl.store, r), obj)
-		if err == nil {
-			// record success
-			err = ctrl.store.SaveRun(id, model.Run{
-				Name:   ext.Name,
-				Status: "Success",
-			})
-			if err != nil {
-				log.Printf("|%s| %v", tty.Red(" ERR "), err)
-			}
-		} else {
-			log.Printf("|%s| plugin %q failed with: %v", tty.Yellow(" WAR "), ext.Name, err)
-
-			// record failure
-			err = ctrl.store.SaveRun(id, model.Run{
-				Name:   ext.Name,
-				Status: "Failed",
-				Error:  err.Error(),
-			})
-			if err != nil {
-				log.Printf("|%s| %v", tty.Red(" ERR "), err)
-			}
-		}
-	}()
-
-	Audit(ctrl.store, r, "evidence:"+obj.ID, "Run extension %q on evidence %q", ext.Name, obj.Name)
+	Audit(ctrl.store, r, "evidence:"+obj.ID, "Run extension %q on evidence %q", name, obj.Name)
 	// http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/process", cid), http.StatusSeeOther)
 	ctrl.Mods(w, r)
 }

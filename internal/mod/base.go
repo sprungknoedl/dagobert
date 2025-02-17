@@ -20,21 +20,74 @@ import (
 )
 
 var mu = sync.Mutex{}
-var List = []model.Mod{}
+var list = []model.Mod{}
 
 func Get(name string) (model.Mod, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	plugin, ok := fp.ToMap(List, func(p model.Mod) string { return p.Name })[name]
+	plugin, ok := fp.ToMap(list, func(p model.Mod) string { return p.Name })[name]
 	return plugin, fp.If(!ok, fmt.Errorf("invalid extension: %s", name), nil)
+}
+
+func Supported(obj model.Evidence) []model.Mod {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return fp.Filter(list, func(p model.Mod) bool { return p.Supports(obj) })
 }
 
 func Register(mod model.Mod) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	List = append(List, mod)
+	list = append(list, mod)
+}
+
+func Run(db *model.Store, name string, kase model.Case, obj model.Evidence) error {
+	ext, err := Get(name)
+	if err != nil {
+		return err
+	}
+
+	// record progress
+	err = db.SaveRun(obj.ID, model.Run{
+		Name:   ext.Name,
+		Status: "Running",
+		TTL:    model.Time(time.Now().Add(1 * time.Hour)),
+	})
+	if err != nil {
+		return err
+	}
+
+	// start extension in background
+	go func() {
+		err = ext.Run(db, kase, obj)
+		if err == nil {
+			// record success
+			err = db.SaveRun(obj.ID, model.Run{
+				Name:   ext.Name,
+				Status: "Success",
+			})
+			if err != nil {
+				log.Printf("|%s| %v", tty.Red(" ERR "), err)
+			}
+		} else {
+			log.Printf("|%s| plugin %q failed with: %v", tty.Yellow(" WAR "), ext.Name, err)
+
+			// record failure
+			err = db.SaveRun(obj.ID, model.Run{
+				Name:   ext.Name,
+				Status: "Failed",
+				Error:  err.Error(),
+			})
+			if err != nil {
+				log.Printf("|%s| %v", tty.Red(" ERR "), err)
+			}
+		}
+	}()
+
+	return nil
 }
 
 func runDocker(src string, dst string, container string, args []string) error {
