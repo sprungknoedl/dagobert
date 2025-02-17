@@ -3,6 +3,7 @@ package mod
 import (
 	"archive/zip"
 	"crypto/sha1"
+	"database/sql"
 	"fmt"
 	"io"
 	"log"
@@ -21,6 +22,48 @@ import (
 
 var mu = sync.Mutex{}
 var list = []model.Mod{}
+var token = random(20)
+
+func BackgroundCleaner(db *model.Store) {
+	for {
+		// Prevents new runs from being started
+		mu.Lock()
+
+		// Cleanup any leftover tmp files, but only if no mods are running
+		runs, err := db.GetActiveRuns()
+		if err != nil && len(runs) == 0 {
+			tmp := filepath.Join("files", "tmp")
+			os.RemoveAll(tmp)
+			os.MkdirAll(tmp, 0755)
+		}
+
+		mu.Unlock()
+		time.Sleep(5 * time.Minute)
+	}
+}
+
+func RestartRuns(db *model.Store) error {
+	runs, err := db.GetStaleRuns(token)
+	if err != nil && err != sql.ErrNoRows {
+		return err
+	}
+
+	for _, run := range runs {
+		kase, err := db.GetCase(run.CaseID)
+		if err != nil {
+			return err
+		}
+
+		obj, err := db.GetEvidence(run.CaseID, run.EvidenceID)
+		if err != nil {
+			return err
+		}
+
+		Run(db, run.Name, kase, obj)
+	}
+
+	return nil
+}
 
 func Get(name string) (model.Mod, error) {
 	mu.Lock()
@@ -51,10 +94,12 @@ func Run(db *model.Store, name string, kase model.Case, obj model.Evidence) erro
 	}
 
 	// record progress
-	err = db.SaveRun(obj.ID, model.Run{
-		Name:   ext.Name,
-		Status: "Running",
-		TTL:    model.Time(time.Now().Add(1 * time.Hour)),
+	err = db.SaveRun(model.Run{
+		CaseID:     kase.ID,
+		EvidenceID: obj.ID,
+		Name:       ext.Name,
+		Status:     "Running",
+		Token:      token,
 	})
 	if err != nil {
 		return err
@@ -65,9 +110,11 @@ func Run(db *model.Store, name string, kase model.Case, obj model.Evidence) erro
 		err = ext.Run(db, kase, obj)
 		if err == nil {
 			// record success
-			err = db.SaveRun(obj.ID, model.Run{
-				Name:   ext.Name,
-				Status: "Success",
+			err = db.SaveRun(model.Run{
+				CaseID:     kase.ID,
+				EvidenceID: obj.ID,
+				Name:       ext.Name,
+				Status:     "Success",
 			})
 			if err != nil {
 				log.Printf("|%s| %v", tty.Red(" ERR "), err)
@@ -76,10 +123,13 @@ func Run(db *model.Store, name string, kase model.Case, obj model.Evidence) erro
 			log.Printf("|%s| plugin %q failed with: %v", tty.Yellow(" WAR "), ext.Name, err)
 
 			// record failure
-			err = db.SaveRun(obj.ID, model.Run{
-				Name:   ext.Name,
-				Status: "Failed",
-				Error:  err.Error(),
+			err = db.SaveRun(model.Run{
+				CaseID:     kase.ID,
+				EvidenceID: obj.ID,
+				Name:       ext.Name,
+				Status:     "Failed",
+				Error:      err.Error(),
+				Token:      token,
 			})
 			if err != nil {
 				log.Printf("|%s| %v", tty.Red(" ERR "), err)
