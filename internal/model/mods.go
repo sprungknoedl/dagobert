@@ -8,7 +8,6 @@ import (
 
 var ModStatus = []string{
 	"Running",
-	"Timeout",
 	"Failed",
 	"Success",
 }

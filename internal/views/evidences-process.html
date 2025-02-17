@@ -11,7 +11,7 @@
 
         <!-- Modal body -->
         <div class="mb-4">
-            <p class="mb-4">You may have to refresh the evidence list to see the updated results after running an extension.</p>
+            <p class="mb-4">You may have to refresh the evidence list to see the updated results after running a mod.</p>
             {{ range .runs }}
             <div class="card bg-base-100 mb-4">
             <div class="card-body p-4">
@@ -27,28 +27,17 @@
                 {{ else if eq .Status "Running" }}
                     <p class="text-warning font-bold">
 		                <i class="hio-5 hio-information-circle inline-block"></i>
-                        Extension currently running
+                        Mod currently running
                     </p>
                 {{ else if eq .Status "Success" }}
                     <p class="text-success font-bold">
 		                <i class="hio-5 hio-check-circle inline-block"></i>
-                        Extension ran successfully.
+                        Mod ran successfully.
                     </p>
                     <div class="card-actions justify-end">
                         <form method="post" up-submit>
                         <input type="hidden" name="name" value="{{ .Name }}" />
                         <button class="btn btn-neutral" type="submit">Rerun</button>
-                        </form>
-                    </div>
-                {{ else if eq .Status "Timeout" }}
-                    <p class="text-error font-bold">
-		                <i class="hio-5 hio-x-circle-filled inline-block"></i>
-                        Extension timed out.
-                    </p>
-                    <div class="card-actions justify-end">
-                        <form method="post" up-submit>
-                        <input type="hidden" name="name" value="{{ .Name }}" />
-                        <button class="btn btn-primary" type="submit">Run</button>
                         </form>
                     </div>
                 {{ else if eq .Status "Failed" }}
@@ -68,7 +57,7 @@
             {{ else }}
             <div class="card bg-base-100 mb-4">
                 <div class="card-body p-4">
-                    <p class="text-warning"> Evidence type not supported by any extension. </p>
+                    <p class="text-warning"> Evidence type not supported by any mods. </p>
                 </div>
             </div>
             {{ end }}
