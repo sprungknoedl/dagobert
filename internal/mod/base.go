@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/fp"
@@ -18,11 +19,22 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/tty"
 )
 
+var mu = sync.Mutex{}
 var List = []model.Mod{}
 
 func Get(name string) (model.Mod, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	plugin, ok := fp.ToMap(List, func(p model.Mod) string { return p.Name })[name]
 	return plugin, fp.If(!ok, fmt.Errorf("invalid extension: %s", name), nil)
+}
+
+func Register(mod model.Mod) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	List = append(List, mod)
 }
 
 func runDocker(src string, dst string, container string, args []string) error {
