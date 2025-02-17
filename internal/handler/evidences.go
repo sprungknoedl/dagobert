@@ -230,7 +230,7 @@ func (ctrl EvidenceCtrl) Download(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filepath.Join("files", "evidences", obj.CaseID, obj.Location))
 }
 
-func (ctrl EvidenceCtrl) Extensions(w http.ResponseWriter, r *http.Request) {
+func (ctrl EvidenceCtrl) Mods(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
 	obj, err := ctrl.store.GetEvidence(cid, id)
@@ -308,7 +308,7 @@ func (ctrl EvidenceCtrl) Run(w http.ResponseWriter, r *http.Request) {
 
 	Audit(ctrl.store, r, "evidence:"+obj.ID, "Run extension %q on evidence %q", ext.Name, obj.Name)
 	// http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/process", cid), http.StatusSeeOther)
-	ctrl.Extensions(w, r)
+	ctrl.Mods(w, r)
 }
 
 func (ctrl EvidenceCtrl) Delete(w http.ResponseWriter, r *http.Request) {

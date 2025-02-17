@@ -203,7 +203,7 @@ func main() {
 	mux.HandleFunc("POST /cases/{cid}/evidences/import", evidenceCtrl.Import)
 	mux.HandleFunc("GET /cases/{cid}/evidences/{id}", evidenceCtrl.Edit)
 	mux.HandleFunc("GET /cases/{cid}/evidences/{id}/download", evidenceCtrl.Download)
-	mux.HandleFunc("GET /cases/{cid}/evidences/{id}/run", evidenceCtrl.Extensions)
+	mux.HandleFunc("GET /cases/{cid}/evidences/{id}/run", evidenceCtrl.Mods)
 	mux.HandleFunc("POST /cases/{cid}/evidences/{id}/run", evidenceCtrl.Run)
 	mux.HandleFunc("POST /cases/{cid}/evidences/{id}", evidenceCtrl.Save)
 	mux.HandleFunc("DELETE /cases/{cid}/evidences/{id}", evidenceCtrl.Delete)
