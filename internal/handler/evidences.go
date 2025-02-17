@@ -14,8 +14,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/sprungknoedl/dagobert/internal/extensions"
 	"github.com/sprungknoedl/dagobert/internal/fp"
+	"github.com/sprungknoedl/dagobert/internal/mod"
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/pkg/tty"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
@@ -239,7 +239,7 @@ func (ctrl EvidenceCtrl) Extensions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	exts := fp.Filter(extensions.List, func(p model.Extension) bool { return p.Supports(obj) })
+	exts := fp.Filter(mod.List, func(p model.Mod) bool { return p.Supports(obj) })
 	runs, err := ctrl.store.GetRuns(exts, obj.ID)
 	if err != nil {
 		Err(w, r, err)
@@ -262,7 +262,7 @@ func (ctrl EvidenceCtrl) Run(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ext, err := extensions.Get(name)
+	ext, err := mod.Get(name)
 	if err != nil {
 		Err(w, r, err)
 		return
