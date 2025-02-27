@@ -38,8 +38,8 @@
                     {{ range .rows }}
                     <tr class="hover">
                         <td class="truncate">
-                            {{ if eq .Status "Confirmed" }} <span class="text-error"><i class="hio-5 hio-bug inline-block"></i> {{ .Status }}</span>
-                            {{ else if eq .Status "Suspicious" }} <span class="text-warning"><i class="hio-5 hio-fingerprint inline-block"></i> {{ .Status }}</span>
+                            {{ if eq .Status "Confirmed" }} <span class="text-error"><i class="hio-5 hio-bug-ant inline-block"></i> {{ .Status }}</span>
+                            {{ else if eq .Status "Suspicious" }} <span class="text-warning"><i class="hio-5 hio-finger-print inline-block"></i> {{ .Status }}</span>
                             {{ else if eq .Status "Unrelated" }} <span class="text-success"><i class="hio-5 hio-check-circle inline-block"></i> {{ .Status }}</span>
                             {{ else }}
                             {{ .Status }}
