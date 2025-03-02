@@ -6615,11 +6615,6 @@ html{
   margin-right: auto
 }
 
-.my-5{
-  margin-top: 1.25rem;
-  margin-bottom: 1.25rem
-}
-
 .-mt-4{
   margin-top: -1rem
 }
@@ -6632,8 +6627,8 @@ html{
   margin-bottom: 1rem
 }
 
-.mb-5{
-  margin-bottom: 1.25rem
+.mb-6{
+  margin-bottom: 1.5rem
 }
 
 .ml-2{
@@ -6642,6 +6637,10 @@ html{
 
 .mr-1{
   margin-right: 0.25rem
+}
+
+.mt-6{
+  margin-top: 1.5rem
 }
 
 .block{
@@ -6668,10 +6667,6 @@ html{
   display: none
 }
 
-.h-12{
-  height: 3rem
-}
-
 .h-6{
   height: 1.5rem
 }
@@ -6686,10 +6681,6 @@ html{
 
 .h-screen{
   height: 100vh
-}
-
-.w-12{
-  width: 3rem
 }
 
 .w-52{
@@ -6823,6 +6814,10 @@ html{
   text-align: left
 }
 
+.text-center{
+  text-align: center
+}
+
 .text-right{
   text-align: right
 }
@@ -6836,6 +6831,11 @@ html{
   line-height: 2rem
 }
 
+.text-8xl{
+  font-size: 6rem;
+  line-height: 1
+}
+
 .text-lg{
   font-size: 1.125rem;
   line-height: 1.75rem
@@ -6844,6 +6844,11 @@ html{
 .text-sm{
   font-size: 0.875rem;
   line-height: 1.25rem
+}
+
+.text-xl{
+  font-size: 1.25rem;
+  line-height: 1.75rem
 }
 
 .text-xs{
@@ -6877,6 +6882,11 @@ html{
 .text-neutral-content{
   --tw-text-opacity: 1;
   color: var(--fallback-nc,oklch(var(--nc)/var(--tw-text-opacity)))
+}
+
+.text-primary{
+  --tw-text-opacity: 1;
+  color: var(--fallback-p,oklch(var(--p)/var(--tw-text-opacity)))
 }
 
 .text-primary-content{
