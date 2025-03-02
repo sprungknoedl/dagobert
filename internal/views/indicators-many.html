@@ -1,27 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
-{{ template "layout-head" }}
-<body>
-    <div class="drawer-content flex">
-        <div up-flashes></div>
+	{{ template "layout-head" }}
+	<body>
+		<div class="drawer-content flex">
+			<div up-flashes></div>
 
-        {{ template "sidebar" . }}
+			{{ template "sidebar" . }}
 
-        <main class="pl-20 p-4 grow max-w-full">
-            {{ define "navbar-extra-buttons" }}
-                {{if allowed ($url := print .env.ActiveRoute "timesketch") "POST"}}
-                <a class="join-item btn" href="{{ $url }}" up-follow  up-method="post">
-                    <i class="hio-6 hio-bars-arrow-up inline-block mr-1"></i>
-                    Import Timesketch
-                </a>
-                {{ end }}
-            {{ end }}
-            {{ template "navbar" dict "env" .env "title" .title }}
+			<main class="pl-20 p-4 grow max-w-full">
+				{{ define "navbar-extra-buttons" }}
+					{{if allowed ($url := print .env.ActiveRoute "import") "POST"}}
+					<details class="dropdown">
+						<summary class="btn join-item">
+							<i class="hio-6 hio-bars-arrow-up inline-block mr-1"></i> Import
+						</summary>
+						<ul style="position: absolute" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow">
+							<li><a href="{{ $url }}/csv" up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}">from CSV</a></li>
+							<li><a href="{{ $url }}/timesketch" up-follow up-method="post">from Timesketch</a></li>
+						</ul>
+					</details>
+					{{ end }}
+					{{if allowed ($url := print .env.ActiveRoute "export") "GET"}}
+					<details class="dropdown">
+						<summary class="btn join-item">
+							<i class="hio-6 hio-bars-arrow-down inline-block mr-1"></i> Export
+						</summary>
+						<ul style="position: absolute" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow">
+							<li><a href="{{ $url }}">as CSV</a></li>
+							<li><a href="{{ $url }}/ioc">as OpenIOC</a></li>
+							<li><a href="{{ $url }}/stix">as STIX</a></li>
+						</ul>
+					</details>
+					{{ end }}
+				{{ end }}
+				{{ template "navbar" dict "env" .env "title" .title "hideImport" true "hideExport" true }}
 
-            <div id="list">
-            <table class="table w-full dataTable min-w-full text-sm align-middle">
-                <thead>
-                    <tr>
+				<div id="list">
+					<table class="table w-full dataTable min-w-full text-sm align-middle">
+						<thead>
+							<tr>
                         <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Status</th>
                         <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Type</th>
                         <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Value</th>
@@ -30,22 +47,22 @@
                         <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">First seen</th>
                         <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Last seen</th>
                         <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Events</th>
-                        <th style="width: 7rem"></th>
-                    </tr>
-                </thead>
+								<th style="width: 7rem"></th>
+							</tr>
+						</thead>
 
-                <tbody>
-                    {{ range .rows }}
-                    <tr class="hover">
-                        <td class="truncate">
+						<tbody>
+							{{ range .rows }}
+							<tr class="hover">
+								<td class="truncate">
                             {{ if eq .Status "Confirmed" }} <span class="text-error"><i class="hio-5 hio-bug-ant inline-block"></i> {{ .Status }}</span>
                             {{ else if eq .Status "Suspicious" }} <span class="text-warning"><i class="hio-5 hio-finger-print inline-block"></i> {{ .Status }}</span>
                             {{ else if eq .Status "Unrelated" }} <span class="text-success"><i class="hio-5 hio-check-circle inline-block"></i> {{ .Status }}</span>
                             {{ else }}
                             {{ .Status }}
                             {{ end }}
-                        </td>
-                        <td class="truncate">
+								</td>
+								<td class="truncate">
                             {{ if eq .Type "IP" }}           <i class="hio-5 hio-map-pin inline-block"></i>
                             {{ else if eq .Type "Domain" }}  <i class="hio-5 hio-globe-europe-africa inline-block"></i>
                             {{ else if eq .Type "URL" }}     <i class="hio-5 hio-link inline-block"></i>
@@ -55,55 +72,55 @@
                             {{ else }}                       <i class="hio-5 hio-question-mark-circle inline-block"></i>
                             {{ end }}
                             {{ .Type }}
-                        </td>
+								</td>
                         <td>
                             {{ .Value }}
                         </td>
-                        <td>
+								<td>
                             {{ if eq .TLP "TLP:RED" }}        <span class="text-error">{{ .TLP }}</span>
                             {{ else if eq .TLP "TLP:AMBER" }} <span class="text-warning">{{ .TLP }}</span>
                             {{ else if eq .TLP "TLP:GREEN" }} <span class="text-success">{{ .TLP }}</span>
                             {{ else }}                        <span>{{ .TLP }}</span>
-                            {{ end }}
-                        </td>
+									{{ end }}
+								</td>
                         <td> {{ .Source }} </td>
                         <td class="truncate"> {{ template "format-time" .FirstSeen }} </td>
                         <td class="truncate"> {{ template "format-time" .LastSeen }} </td>
                         <td> {{ .Events }} </td>
                         <td class="text-right"><div class="join">
                             {{ if and (eq .Type "IP") (ne .TLP "TLP:RED")}}
-                            <a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
-                            {{ else if and (eq .Type "Domain") (ne .TLP "TLP:RED") }}
-                            <a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
-                            {{ else if and (eq .Type "Hash") (ne .TLP "TLP:RED") }}
-                            <a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
-                            <a class="join-item btn btn-sm" target="_blank" href="https://www.hybrid-analysis.com/search?query={{ .Value }}">HA</a>
-                            {{ end }}
+										<a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
+										{{ else if and (eq .Type "Domain") (ne .TLP "TLP:RED") }}
+										<a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
+										{{ else if and (eq .Type "Hash") (ne .TLP "TLP:RED") }}
+										<a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
+										<a class="join-item btn btn-sm" target="_blank" href="https://www.hybrid-analysis.com/search?query={{ .Value }}">HA</a>
+										{{ end }}
 
-                            {{ if allowed ($url := print "/settings/auditlog/indicator:" .ID) "GET" }}
+										{{ if allowed ($url := print "/settings/auditlog/indicator:" .ID) "GET" }}
 							<a class="join-item btn btn-sm" href="{{ $url }}" title="Audit Log"
 								up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
                                 <i class="hio-5 hio-scale"></i>
 							</a>
-                            {{ end }}
-                            {{ if allowed ($url := print "/cases/" .CaseID "/indicators/" .ID) "POST" }}
+										{{ end }}
+										{{ if allowed ($url := print "/cases/" .CaseID "/indicators/" .ID) "POST" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
                                 <i class="hio-5 hio-pencil"></i>
                             </a>
-                            {{ end }}
-                            {{ if allowed ($url := print "/cases/" .CaseID "/indicators/" .ID) "DELETE" }}
+										{{ end }}
+										{{ if allowed ($url := print "/cases/" .CaseID "/indicators/" .ID) "DELETE" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
                                 <i class="hio-5 hio-trash"></i>
                             </a>
-                            {{ end }}
+										{{ end }}
                         </div></td>
-                    </tr>
-                    {{ end }}
-                </tbody>
-            </table>
-            </div>
-        </main>
-    </div>
-</body>
+							</tr>
+							{{ end }}
+						</tbody>
+					</table>
+				</div>
+			</main>
+		</div>
+	</body>
