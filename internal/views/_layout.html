@@ -145,7 +145,7 @@
 		{{if allowed ($url := "/") "GET"}}                   <li><a href="{{ $url }}" title="Cases" class='{{ if eq .title "Cases" }}active{{ end }}'> <i class="hio-6 hio-briefcase"></i> </a></li>{{ end }}
 		{{if allowed ($url := "/settings/users/") "GET"}}    <li><a href="{{ $url }}" title="Users" class='{{ if eq .title "Users" }}active{{ end }}'> <i class="hio-6 hio-users"></i> </a></li>{{ end }}
 		{{if allowed ($url := "/settings/api-keys/") "GET"}} <li><a href="{{ $url }}" title="API Keys" class='{{ if eq .title "API Keys" }}active{{ end }}'> <i class="hio-6 hio-beaker"></i> </a></li>{{ end }}
-		{{if allowed ($url := "/settings/reports/") "GET"}}  <li><a href="{{ $url }}" title="Report Templates" class='{{ if eq .title "Report Templates" }}active{{ end }}'> <i class="hio-6 hio-document-text"></i> </a></li>{{ end }}
+		{{if allowed ($url := "/settings/") "GET"}}  <li><a href="{{ $url }}" title="Settings" class='{{ if eq .title "Settings" }}active{{ end }}'> <i class="hio-6 hio-cog-6-tooth"></i> </a></li>{{ end }}
 		{{if allowed ($url := "/settings/auditlog/") "GET"}} <li><a href="{{ $url }}" title="Audit Log" class='{{ if eq .title "Audit Log" }}active{{ end }}'> <i class="hio-6 hio-scale"></i> </a></li>{{ end }}
     </ul>
 

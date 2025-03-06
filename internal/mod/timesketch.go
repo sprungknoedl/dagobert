@@ -23,7 +23,7 @@ func init() {
 			return
 		}
 
-		Register(model.Mod{
+		Register(Mod{
 			Name:        "Upload Timeline to Timesketch",
 			Description: "Timesketch is an open-source tool for collaborative forensic timeline analysis. Using sketches you and your collaborators can organize and work together.",
 			Supports: func(e model.Evidence) bool {
@@ -34,8 +34,13 @@ func init() {
 	}
 }
 
-func UploadToTimesketch(ts *timesketch.Client) func(store *model.Store, kase model.Case, obj model.Evidence) error {
-	return func(store *model.Store, kase model.Case, obj model.Evidence) error {
+func UploadToTimesketch(ts *timesketch.Client) func(store *model.Store, obj model.Evidence) error {
+	return func(store *model.Store, obj model.Evidence) error {
+		kase, err := store.GetCase(obj.CaseID)
+		if err != nil {
+			return err
+		}
+
 		if ts == nil || kase.SketchID == 0 {
 			return errors.New("invalid timesketch configuration")
 		}

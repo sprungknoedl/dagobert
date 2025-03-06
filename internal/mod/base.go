@@ -21,8 +21,25 @@ import (
 )
 
 var mu = sync.Mutex{}
-var list = []model.Mod{}
+var list = []Mod{}
 var token = random(20)
+
+type Mod struct {
+	Name        string
+	Description string
+	Supports    func(model.Evidence) bool
+	Run         func(*model.Store, model.Evidence) error
+}
+
+func InitializeMods(store *model.Store) error {
+	err := RestartRuns(store)
+	if err != nil {
+		return err
+	}
+
+	go BackgroundCleaner(store)
+	return nil
+}
 
 func BackgroundCleaner(db *model.Store) {
 	for {
@@ -49,27 +66,29 @@ func RestartRuns(db *model.Store) error {
 	}
 
 	for _, run := range runs {
-		kase, err := db.GetCase(run.CaseID)
-		if err != nil {
-			return err
-		}
-
 		obj, err := db.GetEvidence(run.CaseID, run.EvidenceID)
 		if err != nil {
 			return err
 		}
 
-		Run(db, run.Name, kase, obj)
+		Run(db, run.Name, obj)
 	}
 
 	return nil
 }
 
-func Get(name string) (model.Mod, error) {
+func List() []Mod {
 	mu.Lock()
 	defer mu.Unlock()
 
-	plugin, ok := fp.ToMap(list, func(p model.Mod) string { return p.Name })[name]
+	return list
+}
+
+func Get(name string) (Mod, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	plugin, ok := fp.ToMap(list, func(p Mod) string { return p.Name })[name]
 	return plugin, fp.If(!ok, fmt.Errorf("invalid extension: %s", name), nil)
 }
 
@@ -77,17 +96,22 @@ func Supported(obj model.Evidence) []model.Mod {
 	mu.Lock()
 	defer mu.Unlock()
 
-	return fp.Filter(list, func(p model.Mod) bool { return p.Supports(obj) })
+	return fp.Apply(fp.Filter(list, func(p Mod) bool { return p.Supports(obj) }), func(m Mod) model.Mod {
+		return model.Mod{
+			Name:        m.Name,
+			Description: m.Description,
+		}
+	})
 }
 
-func Register(mod model.Mod) {
+func Register(mod Mod) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	list = append(list, mod)
 }
 
-func Run(db *model.Store, name string, kase model.Case, obj model.Evidence) error {
+func Run(db *model.Store, name string, obj model.Evidence) error {
 	ext, err := Get(name)
 	if err != nil {
 		return err
@@ -95,7 +119,7 @@ func Run(db *model.Store, name string, kase model.Case, obj model.Evidence) erro
 
 	// record progress
 	err = db.SaveRun(model.Run{
-		CaseID:     kase.ID,
+		CaseID:     obj.CaseID,
 		EvidenceID: obj.ID,
 		Name:       ext.Name,
 		Status:     "Running",
@@ -107,11 +131,11 @@ func Run(db *model.Store, name string, kase model.Case, obj model.Evidence) erro
 
 	// start extension in background
 	go func() {
-		err = ext.Run(db, kase, obj)
+		err = ext.Run(db, obj)
 		if err == nil {
 			// record success
 			err = db.SaveRun(model.Run{
-				CaseID:     kase.ID,
+				CaseID:     obj.CaseID,
 				EvidenceID: obj.ID,
 				Name:       ext.Name,
 				Status:     "Success",
@@ -124,7 +148,7 @@ func Run(db *model.Store, name string, kase model.Case, obj model.Evidence) erro
 
 			// record failure
 			err = db.SaveRun(model.Run{
-				CaseID:     kase.ID,
+				CaseID:     obj.CaseID,
 				EvidenceID: obj.ID,
 				Name:       ext.Name,
 				Status:     "Failed",
@@ -158,7 +182,7 @@ func runDocker(src string, dst string, container string, args []string) error {
 	return cmd.Run()
 }
 
-func addFromFS(ext string, store *model.Store, kase model.Case, obj model.Evidence) error {
+func addFromFS(ext string, store *model.Store, obj model.Evidence) error {
 	src := filepath.Join("files", "evidences", obj.CaseID, obj.Location)
 	fr, err := os.Open(src)
 	if err != nil {
@@ -182,7 +206,10 @@ func addFromFS(ext string, store *model.Store, kase model.Case, obj model.Eviden
 		return err
 	}
 
-	store.SaveAuditlog(model.User{Name: ext, UPN: "Extension"}, kase, "evidence:"+obj.ID, fmt.Sprintf("Added evidence %q", obj.Name))
+	// trigger registered hooks
+	TriggerOnEvidenceAdded(store, obj)
+
+	store.SaveAuditlog(model.User{Name: ext, UPN: "Extension"}, model.Case{}, "evidence:"+obj.ID, fmt.Sprintf("Added evidence %q", obj.Name))
 	return nil
 }
 
