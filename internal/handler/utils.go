@@ -95,6 +95,7 @@ func Render(store *model.Store, acl *ACL, w http.ResponseWriter, r *http.Request
 		"MalwareStatus":   model.MalwareStatus,
 		"TaskTypes":       model.TaskTypes,
 		"UserRoles":       model.UserRoles,
+		"HookTrigger":     model.HookTrigger,
 	}
 
 	render(w, r, status, name, values)

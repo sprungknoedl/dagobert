@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/fp"
+	"github.com/sprungknoedl/dagobert/internal/mod"
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/pkg/doct"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
@@ -37,41 +39,119 @@ func LoadTemplate(name string) (doct.Template, error) {
 	}
 }
 
-type ReportCtrl struct {
+type SettingsCtrl struct {
 	store *model.Store
 	acl   *ACL
 }
 
-func NewReportCtrl(store *model.Store, acl *ACL) *ReportCtrl {
-	return &ReportCtrl{store, acl}
+func NewSettingsCtrl(store *model.Store, acl *ACL) *SettingsCtrl {
+	return &SettingsCtrl{store, acl}
 }
 
-func (ctrl ReportCtrl) Dialog(w http.ResponseWriter, r *http.Request) {
-	list, err := ctrl.store.ListReports()
+func (ctrl SettingsCtrl) List(w http.ResponseWriter, r *http.Request) {
+	hooks, err := ctrl.store.ListHooks()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/reports-dialog.html", map[string]any{
-		"rows": list,
-	})
-}
-
-func (ctrl ReportCtrl) List(w http.ResponseWriter, r *http.Request) {
-	list, err := ctrl.store.ListReports()
+	reports, err := ctrl.store.ListReports()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/reports-many.html", map[string]any{
-		"title": "Report Templates",
-		"rows":  list,
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/settings-many.html", map[string]any{
+		"title":   "Settings",
+		"hooks":   hooks,
+		"reports": reports,
 	})
 }
 
-func (ctrl ReportCtrl) Edit(w http.ResponseWriter, r *http.Request) {
+func (ctrl SettingsCtrl) EditHook(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Edit Hook #1")
+	id := r.PathValue("id")
+	obj := model.Hook{ID: id}
+	if id != "new" {
+		var err error
+		obj, err = ctrl.store.GetHook(id)
+		if err != nil {
+			Err(w, r, err)
+			return
+		}
+	}
+
+	log.Printf("Edit Hook #2")
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/hooks-one.html", map[string]any{
+		"obj":   obj,
+		"mods":  mod.List(),
+		"valid": valid.Result{},
+	})
+}
+
+func (ctrl SettingsCtrl) SaveHook(w http.ResponseWriter, r *http.Request) {
+	// deocde form
+	dto := model.Hook{ID: r.PathValue("id")}
+	if err := Decode(r, &dto); err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	// validate form
+	if vr := ValidateHook(dto); !vr.Valid() {
+		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/hooks-one.html", map[string]any{
+			"obj":   dto,
+			"mods":  mod.List(),
+			"valid": vr,
+		})
+		return
+	}
+
+	// save database object
+	new := dto.ID == "new"
+	dto.ID = fp.If(new, random(10), dto.ID)
+	if err := ctrl.store.SaveHook(dto); err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	// reload hooks
+	mod.InitializeHooks(ctrl.store)
+
+	Audit(ctrl.store, r, "hook:"+dto.ID, fp.If(new, "Added hook %q -> %q", "Updated hook %q -> %q"), dto.Name, dto.Mod)
+	http.Redirect(w, r, "/settings/", http.StatusSeeOther)
+}
+
+func (ctrl SettingsCtrl) DeleteHook(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if r.URL.Query().Get("confirm") != "yes" {
+		uri := fmt.Sprintf("/settings/hooks/%s?confirm=yes", id)
+		Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/utils-confirm.html", map[string]any{
+			"dst": uri,
+		})
+		return
+	}
+
+	obj, err := ctrl.store.GetHook(id)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	err = ctrl.store.DeleteHook(id)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	// reload hooks
+	mod.InitializeHooks(ctrl.store)
+
+	Audit(ctrl.store, r, "report:"+obj.ID, "Deleted hook %q -> %q", obj.Name, obj.Mod)
+	http.Redirect(w, r, "/settings/", http.StatusSeeOther)
+}
+
+func (ctrl SettingsCtrl) EditReport(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	obj := model.Report{ID: id}
 	if id != "new" {
@@ -89,7 +169,7 @@ func (ctrl ReportCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (ctrl ReportCtrl) Save(w http.ResponseWriter, r *http.Request) {
+func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 	// deocde form
 	dto := model.Report{ID: r.PathValue("id")}
 	if err := Decode(r, &dto); err != nil {
@@ -186,10 +266,10 @@ func (ctrl ReportCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Audit(ctrl.store, r, "report:"+dto.ID, fp.If(new, "Added report template %q", "Updated report template %q"), dto.Name)
-	http.Redirect(w, r, "/settings/reports/", http.StatusSeeOther)
+	http.Redirect(w, r, "/settings/", http.StatusSeeOther)
 }
 
-func (ctrl ReportCtrl) Download(w http.ResponseWriter, r *http.Request) {
+func (ctrl SettingsCtrl) DownloadReport(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	obj, err := ctrl.store.GetReport(id)
 	if err != nil {
@@ -202,7 +282,19 @@ func (ctrl ReportCtrl) Download(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, filepath.Join("files", "templates", obj.Name))
 }
 
-func (ctrl ReportCtrl) Generate(w http.ResponseWriter, r *http.Request) {
+func (ctrl SettingsCtrl) ReportsDialog(w http.ResponseWriter, r *http.Request) {
+	list, err := ctrl.store.ListReports()
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/reports-dialog.html", map[string]any{
+		"rows": list,
+	})
+}
+
+func (ctrl SettingsCtrl) GenerateReport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 
 	// ---
@@ -278,7 +370,7 @@ func (ctrl ReportCtrl) Generate(w http.ResponseWriter, r *http.Request) {
 	Audit(ctrl.store, r, "report:"+obj.ID, "Generated report %q from template %q", filename, obj.Name)
 }
 
-func (ctrl ReportCtrl) Delete(w http.ResponseWriter, r *http.Request) {
+func (ctrl SettingsCtrl) DeleteReport(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/reports/%s?confirm=yes", id)
@@ -301,5 +393,5 @@ func (ctrl ReportCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	Audit(ctrl.store, r, "report:"+obj.ID, "Deleted report template %q", obj.Name)
-	http.Redirect(w, r, "/settings/reports/", http.StatusSeeOther)
+	http.Redirect(w, r, "/settings/", http.StatusSeeOther)
 }

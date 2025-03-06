@@ -9,28 +9,28 @@ import (
 )
 
 func init() {
-	Register(model.Mod{
+	Register(Mod{
 		Name:        "Plaso (Windows Preset)",
 		Description: "Plaso (Plaso Langar Að Safna Öllu), or super timeline all the things, is a Python-based engine used by several tools for automatic creation of timelines.",
 		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
 		Run:         RunPlasoWindows,
 	})
 
-	Register(model.Mod{
+	Register(Mod{
 		Name:        "Plaso (Linux Preset)",
 		Description: "Plaso (Plaso Langar Að Safna Öllu), or super timeline all the things, is a Python-based engine used by several tools for automatic creation of timelines.",
 		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
 		Run:         RunPlasoLinux,
 	})
 
-	Register(model.Mod{
+	Register(Mod{
 		Name:        "Plaso (MacOS Preset)",
 		Description: "Plaso (Plaso Langar Að Safna Öllu), or super timeline all the things, is a Python-based engine used by several tools for automatic creation of timelines.",
 		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
 		Run:         RunPlasoMacOS,
 	})
 
-	Register(model.Mod{
+	Register(Mod{
 		Name:        "Plaso (Filesystem Timeline)",
 		Description: "Run Plaso with the parser for NTFS $MFT metadata files to create a file system timeline that gives great insight into actions that occurred on the filesystem.",
 		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
@@ -39,7 +39,7 @@ func init() {
 
 }
 
-func runPlaso(store *model.Store, kase model.Case, obj model.Evidence, parsers string, ext string) error {
+func runPlaso(store *model.Store, obj model.Evidence, parsers string, ext string) error {
 	name := strings.TrimSuffix(obj.Name, filepath.Ext(obj.Name))
 	dst := filepath.Join("files", "evidences", obj.CaseID, name+ext)
 	src, err := clone(obj)
@@ -65,7 +65,7 @@ func runPlaso(store *model.Store, kase model.Case, obj model.Evidence, parsers s
 		return err
 	}
 
-	if err := addFromFS("Plaso", store, kase, model.Evidence{
+	if err := addFromFS("Plaso", store, model.Evidence{
 		ID:       random(10),
 		CaseID:   obj.CaseID,
 		Type:     "Other",
@@ -77,7 +77,7 @@ func runPlaso(store *model.Store, kase model.Case, obj model.Evidence, parsers s
 		return err
 	}
 
-	if err := addFromFS("Plaso", store, kase, model.Evidence{
+	if err := addFromFS("Plaso", store, model.Evidence{
 		ID:       random(10),
 		CaseID:   obj.CaseID,
 		Type:     "Other",
@@ -92,18 +92,18 @@ func runPlaso(store *model.Store, kase model.Case, obj model.Evidence, parsers s
 	return nil
 }
 
-func RunPlasoWindows(store *model.Store, kase model.Case, obj model.Evidence) error {
-	return runPlaso(store, kase, obj, "win7", ".plaso")
+func RunPlasoWindows(store *model.Store, obj model.Evidence) error {
+	return runPlaso(store, obj, "win7", ".plaso")
 }
 
-func RunPlasoLinux(store *model.Store, kase model.Case, obj model.Evidence) error {
-	return runPlaso(store, kase, obj, "linux", ".plaso")
+func RunPlasoLinux(store *model.Store, obj model.Evidence) error {
+	return runPlaso(store, obj, "linux", ".plaso")
 }
 
-func RunPlasoMacOS(store *model.Store, kase model.Case, obj model.Evidence) error {
-	return runPlaso(store, kase, obj, "macos", ".plaso")
+func RunPlasoMacOS(store *model.Store, obj model.Evidence) error {
+	return runPlaso(store, obj, "macos", ".plaso")
 }
 
-func RunPlasoMFT(store *model.Store, kase model.Case, obj model.Evidence) error {
-	return runPlaso(store, kase, obj, "mft", ".mft.plaso")
+func RunPlasoMFT(store *model.Store, obj model.Evidence) error {
+	return runPlaso(store, obj, "mft", ".mft.plaso")
 }

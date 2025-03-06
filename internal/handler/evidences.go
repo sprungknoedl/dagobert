@@ -210,6 +210,11 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// trigger registered hooks
+	if new {
+		mod.TriggerOnEvidenceAdded(ctrl.store, dto)
+	}
+
 	Audit(ctrl.store, r, "evidence:"+dto.ID, fp.If(new, "Added evidence %q", "Updated evidence %q"), dto.Name)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/", dto.CaseID), http.StatusSeeOther)
 }
@@ -237,8 +242,8 @@ func (ctrl EvidenceCtrl) Mods(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	exts := mod.Supported(obj)
-	runs, err := ctrl.store.GetRuns(exts, obj.ID)
+	mods := mod.Supported(obj)
+	runs, err := ctrl.store.GetRuns(mods, obj.ID)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -260,13 +265,7 @@ func (ctrl EvidenceCtrl) Run(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	kase, err := ctrl.store.GetCase(cid)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	err = mod.Run(ctrl.store, name, kase, obj)
+	err = mod.Run(ctrl.store, name, obj)
 	if err != nil {
 		Err(w, r, err)
 		return

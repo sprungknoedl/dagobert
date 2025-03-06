@@ -98,3 +98,7 @@ func ValidateUser(dto model.User) valid.Result {
 		{Name: "Role", Message: "Invalid role", Invalid: !slices.Contains(model.UserRoles, dto.Role)},
 	})
 }
+
+func ValidateHook(dto model.Hook) valid.Result {
+	return valid.Check([]valid.Condition{})
+}

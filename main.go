@@ -137,14 +137,17 @@ func main() {
 	mux.HandleFunc("POST /settings/api-keys/{key}", keyCtrl.Save)
 	mux.HandleFunc("DELETE /settings/api-keys/{key}", keyCtrl.Delete)
 
-	// templates
-	reportCtrl := handler.NewReportCtrl(db, acl)
-	mux.HandleFunc("GET /settings/reports/", reportCtrl.List)
-	mux.HandleFunc("GET /settings/reports/{id}", reportCtrl.Edit)
-	mux.HandleFunc("POST /settings/reports/{id}", reportCtrl.Save)
-	mux.HandleFunc("DELETE /settings/reports/{id}", reportCtrl.Delete)
-	mux.HandleFunc("GET /cases/{cid}/reports", reportCtrl.Dialog)
-	mux.HandleFunc("POST /cases/{cid}/render", reportCtrl.Generate)
+	// settings (templates & hooks)
+	settingsCtrl := handler.NewSettingsCtrl(db, acl)
+	mux.HandleFunc("GET /settings/{$}", settingsCtrl.List)
+	mux.HandleFunc("GET /settings/hooks/{id}", settingsCtrl.EditHook)
+	mux.HandleFunc("POST /settings/hooks/{id}", settingsCtrl.SaveHook)
+	mux.HandleFunc("DELETE /settings/hooks/{id}", settingsCtrl.DeleteHook)
+	mux.HandleFunc("GET /settings/reports/{id}", settingsCtrl.EditReport)
+	mux.HandleFunc("POST /settings/reports/{id}", settingsCtrl.SaveReport)
+	mux.HandleFunc("DELETE /settings/reports/{id}", settingsCtrl.DeleteReport)
+	mux.HandleFunc("GET /cases/{cid}/reports", settingsCtrl.ReportsDialog)
+	mux.HandleFunc("POST /cases/{cid}/render", settingsCtrl.GenerateReport)
 
 	// auditlog
 	auditlogCtrl := handler.NewAuditlogCtrl(db, acl)
@@ -250,9 +253,14 @@ func main() {
 		log.Fatalf("Failed to initialize dagobert: %v", err)
 	}
 
-	err = InitializeMods(db)
+	err = mod.InitializeMods(db)
 	if err != nil {
 		log.Fatalf("Failed to initialize mods: %v", err)
+	}
+
+	err = mod.InitializeHooks(db)
+	if err != nil {
+		log.Fatalf("Failed to initialize hooks: %v", err)
 	}
 
 	log.Printf("Ready to receive requests. Listening on :8080 ...")
@@ -325,15 +333,5 @@ func InitializeDagobert(store *model.Store, acl *handler.ACL, cfg Configuration)
 		}
 	}
 
-	return nil
-}
-
-func InitializeMods(store *model.Store) error {
-	err := mod.RestartRuns(store)
-	if err != nil {
-		return err
-	}
-
-	go mod.BackgroundCleaner(store)
 	return nil
 }
