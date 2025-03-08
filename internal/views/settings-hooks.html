@@ -41,7 +41,7 @@
                 <label class="label justify-start gap-2">
                     Condition
                     <span class="text-accent">*</span>
-				    {{ if .valid.Condition }}<span class="ml-2 text-sm text-error">{{ .valid.Condition }}</span>{{ end }}
+				    {{ if .valid.Condition }}<pre class="ml-2 text-sm text-error">{{ .valid.Condition }}</pre>{{ end }}
                 </label>
                 <input name="Condition" type="text" class="input input-bordered" value='{{ .obj.Condition }}' />
                 <!-- TODO: explain condition language -->

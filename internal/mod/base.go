@@ -182,7 +182,7 @@ func runDocker(src string, dst string, container string, args []string) error {
 	return cmd.Run()
 }
 
-func addFromFS(ext string, store *model.Store, obj model.Evidence) error {
+func AddFromFS(ext string, store *model.Store, obj model.Evidence) error {
 	src := filepath.Join("files", "evidences", obj.CaseID, obj.Location)
 	fr, err := os.Open(src)
 	if err != nil {

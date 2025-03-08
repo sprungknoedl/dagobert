@@ -5,6 +5,9 @@ import (
 	"regexp"
 	"slices"
 
+	"github.com/expr-lang/expr"
+	"github.com/sprungknoedl/dagobert/internal/fp"
+	"github.com/sprungknoedl/dagobert/internal/mod"
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -100,5 +103,23 @@ func ValidateUser(dto model.User) valid.Result {
 }
 
 func ValidateHook(dto model.Hook) valid.Result {
-	return valid.Check([]valid.Condition{})
+	mods := fp.Apply(mod.List(), func(m mod.Mod) string { return m.Name })
+
+	// compile condition
+	msg := ""
+	_, err := expr.Compile(dto.Condition,
+		expr.AsBool(),
+		expr.Env(map[string]any{
+			"evidence": model.Evidence{},
+		}))
+	if err != nil {
+		msg = err.Error()
+	}
+
+	return valid.Check([]valid.Condition{
+		{Name: "ID", Missing: dto.ID == ""},
+		{Name: "Trigger", Message: "Invalid trigger", Invalid: !slices.Contains(model.HookTrigger, dto.Trigger)},
+		{Name: "Mod", Message: "Invalid mod", Invalid: !slices.Contains(mods, dto.Mod)},
+		{Name: "Condition", Message: msg, Invalid: err != nil},
+	})
 }

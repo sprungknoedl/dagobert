@@ -65,7 +65,7 @@ func runPlaso(store *model.Store, obj model.Evidence, parsers string, ext string
 		return err
 	}
 
-	if err := addFromFS("Plaso", store, model.Evidence{
+	if err := AddFromFS("Plaso", store, model.Evidence{
 		ID:       random(10),
 		CaseID:   obj.CaseID,
 		Type:     "Other",
@@ -77,7 +77,7 @@ func runPlaso(store *model.Store, obj model.Evidence, parsers string, ext string
 		return err
 	}
 
-	if err := addFromFS("Plaso", store, model.Evidence{
+	if err := AddFromFS("Plaso", store, model.Evidence{
 		ID:       random(10),
 		CaseID:   obj.CaseID,
 		Type:     "Other",

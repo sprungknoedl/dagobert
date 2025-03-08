@@ -66,7 +66,7 @@ func RunHayabusa(store *model.Store, obj model.Evidence) error {
 		return err
 	}
 
-	if err := addFromFS("Hayabusa", store, model.Evidence{
+	if err := AddFromFS("Hayabusa", store, model.Evidence{
 		ID:       random(10),
 		CaseID:   obj.CaseID,
 		Type:     "Logs",
