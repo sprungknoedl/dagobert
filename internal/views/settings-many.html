@@ -7,7 +7,7 @@
 
         {{ template "sidebar" . }}
 
-        <main class="pl-20 p-4 grow max-w-full">
+        <main id="list" class="pl-20 p-4 grow max-w-full">
             {{ template "navbar" dict "env" .env "title" .title 
                 "hideAdd" true
                 "hideSearch" true

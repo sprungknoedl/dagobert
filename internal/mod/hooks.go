@@ -16,7 +16,7 @@ type Hook struct {
 	Mod       *Mod
 }
 
-func Compile(def model.Hook) (Hook, error) {
+func compile(def model.Hook) (Hook, error) {
 	hook := Hook{Name: def.Name}
 
 	// search mod
@@ -31,7 +31,7 @@ func Compile(def model.Hook) (Hook, error) {
 	}
 
 	// compile condition
-	program, err := expr.Compile(`evidence.Name endsWith ".evtx"`,
+	program, err := expr.Compile(def.Condition,
 		expr.AsBool(),
 		expr.Env(map[string]any{
 			"evidence": model.Evidence{},
@@ -72,7 +72,7 @@ func InitializeHooks(store *model.Store) error {
 			continue
 		}
 
-		hook, err := Compile(def)
+		hook, err := compile(def)
 		if err != nil {
 			log.Printf("error compiling hook %q (%s): %v", def.Name, def.Condition, err)
 			continue
@@ -92,7 +92,6 @@ func TriggerOnEvidenceAdded(store *model.Store, obj model.Evidence) {
 		if hook.Condition(obj) {
 			log.Printf("running %s -> %s", hook.Name, hook.Mod.Name)
 			go Run(store, hook.Mod.Name, obj)
-			// go hook.Mod.Run(store, obj)
 		}
 	}
 }

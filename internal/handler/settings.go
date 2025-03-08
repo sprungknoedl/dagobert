@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -69,7 +68,6 @@ func (ctrl SettingsCtrl) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ctrl SettingsCtrl) EditHook(w http.ResponseWriter, r *http.Request) {
-	log.Printf("Edit Hook #1")
 	id := r.PathValue("id")
 	obj := model.Hook{ID: id}
 	if id != "new" {
@@ -81,8 +79,7 @@ func (ctrl SettingsCtrl) EditHook(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	log.Printf("Edit Hook #2")
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/hooks-one.html", map[string]any{
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/settings-hooks.html", map[string]any{
 		"obj":   obj,
 		"mods":  mod.List(),
 		"valid": valid.Result{},
@@ -99,7 +96,7 @@ func (ctrl SettingsCtrl) SaveHook(w http.ResponseWriter, r *http.Request) {
 
 	// validate form
 	if vr := ValidateHook(dto); !vr.Valid() {
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/hooks-one.html", map[string]any{
+		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/settings-hooks.html", map[string]any{
 			"obj":   dto,
 			"mods":  mod.List(),
 			"valid": vr,
@@ -163,7 +160,7 @@ func (ctrl SettingsCtrl) EditReport(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/reports-one.html", map[string]any{
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/settings-reports.html", map[string]any{
 		"obj":   obj,
 		"valid": valid.Result{},
 	})
@@ -180,7 +177,7 @@ func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 	// validate form
 	dto.Name = filepath.Base(dto.Name) // sanitize name
 	if vr := ValidateReport(dto); !vr.Valid() {
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/reports-one.html", map[string]any{
+		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/settings-reports.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,
 		})
