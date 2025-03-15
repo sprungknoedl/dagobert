@@ -7,8 +7,8 @@ import (
 
 	"github.com/expr-lang/expr"
 	"github.com/sprungknoedl/dagobert/internal/fp"
-	"github.com/sprungknoedl/dagobert/internal/mod"
 	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/worker"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
@@ -103,7 +103,7 @@ func ValidateUser(dto model.User) valid.Result {
 }
 
 func ValidateHook(dto model.Hook) valid.Result {
-	mods := fp.Apply(mod.List(), func(m mod.Mod) string { return m.Name })
+	mods := fp.Apply(worker.List, func(m worker.Module) string { return m.Name })
 
 	// compile condition
 	msg := ""

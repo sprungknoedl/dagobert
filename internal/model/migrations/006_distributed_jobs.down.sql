@@ -1,0 +1,7 @@
+ALTER TABLE jobs RENAME to runs;
+ALTER TABLE runs DROP COLUMN id;
+ALTER TABLE runs DROP COLUMN server_token;
+ALTER TABLE runs DROP COLUMN worker_token;
+ALTER TABLE runs ADD COLUMN token TEXT NOT NULL DEFAULT '<default>';
+
+ALTER TABLE evidences ADD COLUMN location TEXT NOT NULL DEFAULT name;
