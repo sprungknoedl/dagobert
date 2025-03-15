@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/fp"
-	"github.com/sprungknoedl/dagobert/internal/mod"
 	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/worker"
 	"github.com/sprungknoedl/dagobert/pkg/doct"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -81,7 +81,7 @@ func (ctrl SettingsCtrl) EditHook(w http.ResponseWriter, r *http.Request) {
 
 	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/settings-hooks.html", map[string]any{
 		"obj":   obj,
-		"mods":  mod.List(),
+		"mods":  worker.List,
 		"valid": valid.Result{},
 	})
 }
@@ -98,7 +98,7 @@ func (ctrl SettingsCtrl) SaveHook(w http.ResponseWriter, r *http.Request) {
 	if vr := ValidateHook(dto); !vr.Valid() {
 		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/settings-hooks.html", map[string]any{
 			"obj":   dto,
-			"mods":  mod.List(),
+			"mods":  worker.List,
 			"valid": vr,
 		})
 		return
@@ -113,7 +113,7 @@ func (ctrl SettingsCtrl) SaveHook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// reload hooks
-	mod.InitializeHooks(ctrl.store)
+	LoadHooks(ctrl.store)
 
 	Audit(ctrl.store, r, "hook:"+dto.ID, fp.If(new, "Added hook %q -> %q", "Updated hook %q -> %q"), dto.Name, dto.Mod)
 	http.Redirect(w, r, "/settings/", http.StatusSeeOther)
@@ -142,7 +142,7 @@ func (ctrl SettingsCtrl) DeleteHook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// reload hooks
-	mod.InitializeHooks(ctrl.store)
+	LoadHooks(ctrl.store)
 
 	Audit(ctrl.store, r, "report:"+obj.ID, "Deleted hook %q -> %q", obj.Name, obj.Mod)
 	http.Redirect(w, r, "/settings/", http.StatusSeeOther)

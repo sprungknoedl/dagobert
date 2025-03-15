@@ -1,0 +1,7 @@
+ALTER TABLE runs RENAME TO jobs;
+ALTER TABLE jobs DROP COLUMN token;
+ALTER TABLE jobs ADD COLUMN id TEXT NOT NULL DEFAULT '<default>';
+ALTER TABLE jobs ADD COLUMN server_token TEXT NOT NULL DEFAULT '<default>';
+ALTER TABLE jobs ADD COLUMN worker_token TEXT NOT NULL DEFAULT '<default>';
+
+ALTER TABLE evidences DROP COLUMN location;

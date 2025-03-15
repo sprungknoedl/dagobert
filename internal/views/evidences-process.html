@@ -24,15 +24,20 @@
                         <button class="btn btn-primary" type="submit">Run</button>
                         </form>
                     </div>
+                {{ else if eq .Status "Scheduled" }}
+                    <p class="text-warning font-bold">
+		                <i class="hio-5 hio-information-circle inline-block"></i>
+                        Job currently scheduled
+                    </p>
                 {{ else if eq .Status "Running" }}
                     <p class="text-warning font-bold">
 		                <i class="hio-5 hio-information-circle inline-block"></i>
-                        Mod currently running
+                        Job currently running
                     </p>
                 {{ else if eq .Status "Success" }}
                     <p class="text-success font-bold">
 		                <i class="hio-5 hio-check-circle inline-block"></i>
-                        Mod ran successfully.
+                        Job ran successfully.
                     </p>
                     <div class="card-actions justify-end">
                         <form method="post" up-submit>
@@ -43,7 +48,7 @@
                 {{ else if eq .Status "Failed" }}
                     <p class="text-error font-bold">
 		                <i class="hio-5 hio-x-circle-filled inline-block"></i>
-                        Error: {{ .Error }}
+                        Job failed: {{ .Error }}
                     </p>
                     <div class="card-actions justify-end">
                         <form method="post" up-submit>

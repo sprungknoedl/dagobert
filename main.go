@@ -14,8 +14,8 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/sqlite"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/sprungknoedl/dagobert/internal/handler"
-	"github.com/sprungknoedl/dagobert/internal/mod"
 	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/worker"
 	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/tty"
 )
@@ -36,6 +36,14 @@ type Configuration struct {
 }
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "worker" {
+		worker.StartWorker()
+	} else {
+		StartUI()
+	}
+}
+
+func StartUI() {
 	cfg := Configuration{
 		AssetsFolder:   cmp.Or(os.Getenv("FS_ASSETS_FOLDER"), "./web"),
 		EvidenceFolder: cmp.Or(os.Getenv("FS_EVIDENCE_FOLDER"), "./files/evidences"),
@@ -209,10 +217,15 @@ func main() {
 	mux.HandleFunc("POST /cases/{cid}/evidences/import", evidenceCtrl.Import)
 	mux.HandleFunc("GET /cases/{cid}/evidences/{id}", evidenceCtrl.Edit)
 	mux.HandleFunc("GET /cases/{cid}/evidences/{id}/download", evidenceCtrl.Download)
-	mux.HandleFunc("GET /cases/{cid}/evidences/{id}/run", evidenceCtrl.Mods)
-	mux.HandleFunc("POST /cases/{cid}/evidences/{id}/run", evidenceCtrl.Run)
 	mux.HandleFunc("POST /cases/{cid}/evidences/{id}", evidenceCtrl.Save)
 	mux.HandleFunc("DELETE /cases/{cid}/evidences/{id}", evidenceCtrl.Delete)
+
+	// evidence processing jobs
+	jobCtrl := handler.NewJobCtrl(db, acl)
+	mux.HandleFunc("GET /internal/jobs", jobCtrl.PopJob)
+	mux.HandleFunc("POST /internal/jobs/ack", jobCtrl.AckJob)
+	mux.HandleFunc("GET /cases/{cid}/evidences/{id}/run", jobCtrl.ListMods)
+	mux.HandleFunc("POST /cases/{cid}/evidences/{id}/run", jobCtrl.PushJob)
 
 	// tasks
 	taskCtrl := handler.NewTaskCtrl(db, acl)
@@ -253,14 +266,14 @@ func main() {
 		log.Fatalf("Failed to initialize dagobert: %v", err)
 	}
 
-	err = mod.InitializeMods(db)
+	err = handler.LoadHooks(db)
 	if err != nil {
-		log.Fatalf("Failed to initialize mods: %v", err)
+		log.Fatalf("Failed to load hooks: %v", err)
 	}
 
-	err = mod.InitializeHooks(db)
+	err = db.RescheduleStaleJobs(handler.ServerToken)
 	if err != nil {
-		log.Fatalf("Failed to initialize hooks: %v", err)
+		log.Fatalf("Failed to reschedule state jobs: %v", err)
 	}
 
 	log.Printf("Ready to receive requests. Listening on :8080 ...")

@@ -2,11 +2,10 @@ package model
 
 import (
 	"database/sql"
-
-	"github.com/sprungknoedl/dagobert/internal/fp"
 )
 
-var ModStatus = []string{
+var JobStatus = []string{
+	"Scheduled",
 	"Running",
 	"Failed",
 	"Success",
@@ -16,19 +15,17 @@ var HookTrigger = []string{
 	"OnEvidenceAdded",
 }
 
-type Mod struct {
-	Name        string
-	Description string
-}
-
-type Run struct {
+type Job struct {
+	ID          string
 	CaseID      string
 	EvidenceID  string
 	Name        string
-	Description string
 	Status      string
 	Error       string
-	Token       string
+	ServerToken string
+	WorkerToken string
+
+	Description string
 }
 
 type Hook struct {
@@ -40,10 +37,10 @@ type Hook struct {
 	Enabled   bool
 }
 
-func (store *Store) GetRuns(base []Mod, eid string) ([]Run, error) {
+func (store *Store) GetJobs(eid string) ([]Job, error) {
 	query := `
-	SELECT case_id, evidence_id, name, description, status, error, token
-	FROM runs
+	SELECT id, case_id, evidence_id, name, status, error, server_token, worker_token
+	FROM jobs
 	WHERE evidence_id = :eid`
 
 	rows, err := store.DB.Query(query,
@@ -52,27 +49,15 @@ func (store *Store) GetRuns(base []Mod, eid string) ([]Run, error) {
 		return nil, err
 	}
 
-	list := []Run{}
+	list := []Job{}
 	err = ScanAll(rows, &list)
-	if err != nil {
-		return nil, err
-	}
-
-	m := fp.ToMap(list, func(obj Run) string { return obj.Name })
-	return fp.Apply(base, func(obj Mod) Run {
-		return Run{
-			Name:        obj.Name,
-			Description: obj.Description,
-			Status:      m[obj.Name].Status,
-			Error:       m[obj.Name].Error,
-		}
-	}), nil
+	return list, err
 }
 
-func (store *Store) GetActiveRuns() ([]Run, error) {
+func (store *Store) GetRunningJobs() ([]Job, error) {
 	query := `
-	SELECT case_id, evidence_id, name, description, status, error, token
-	FROM runs
+	SELECT id, case_id, evidence_id, name, status, error, server_token, worker_token
+	FROM jobs
 	WHERE status = :status`
 
 	rows, err := store.DB.Query(query,
@@ -81,7 +66,7 @@ func (store *Store) GetActiveRuns() ([]Run, error) {
 		return nil, err
 	}
 
-	list := []Run{}
+	list := []Job{}
 	err = ScanAll(rows, &list)
 	if err != nil {
 		return nil, err
@@ -90,42 +75,86 @@ func (store *Store) GetActiveRuns() ([]Run, error) {
 	return list, nil
 }
 
-func (store *Store) GetStaleRuns(token string) ([]Run, error) {
+func (store *Store) SaveJob(obj Job) error {
 	query := `
-	SELECT case_id, evidence_id, name, description, status, error, token
-	FROM runs
-	WHERE token != :token
-	AND status = :status`
-
-	rows, err := store.DB.Query(query,
-		sql.Named("status", "Running"),
-		sql.Named("token", token))
-	if err != nil {
-		return nil, err
-	}
-
-	list := []Run{}
-	err = ScanAll(rows, &list)
-	if err != nil {
-		return nil, err
-	}
-
-	return list, nil
-}
-
-func (store *Store) SaveRun(obj Run) error {
-	query := `
-	REPLACE INTO runs (case_id, evidence_id, name, description, status, error, token)
-	VALUES (:case_id, :evidence_id, :name, :description, :status, :error, :token)`
+	REPLACE INTO jobs (id, case_id, evidence_id, name, status, error, server_token, worker_token)
+	VALUES (:id, :case_id, :evidence_id, :name, :status, :error, :stoken, :wtoken)`
 
 	_, err := store.DB.Exec(query,
+		sql.Named("id", obj.ID),
 		sql.Named("case_id", obj.CaseID),
 		sql.Named("evidence_id", obj.EvidenceID),
 		sql.Named("name", obj.Name),
-		sql.Named("description", obj.Description),
 		sql.Named("status", obj.Status),
 		sql.Named("error", obj.Error),
-		sql.Named("token", obj.Token))
+		sql.Named("stoken", obj.ServerToken),
+		sql.Named("wtoken", obj.WorkerToken))
+	return err
+}
+
+func (store *Store) PushJob(obj Job) error { return store.SaveJob(obj) }
+func (store *Store) PopJob(workerid string) (Job, error) {
+	query := `
+	UPDATE jobs
+	SET status = :status_after, worker_token = :wtoken
+	WHERE rowid = (
+		SELECT min(rowid)
+		FROM jobs
+		WHERE status = :status_before )
+	RETURNING id, case_id, evidence_id, name, status, error, server_token, worker_token;
+	`
+
+	rows, err := store.DB.Query(query,
+		sql.Named("status_before", "Scheduled"),
+		sql.Named("status_after", "Running"),
+		sql.Named("wtoken", workerid))
+	if err != nil {
+		return Job{}, err
+	}
+
+	obj := Job{}
+	err = ScanOne(rows, &obj)
+	return obj, err
+}
+
+func (store *Store) AckJob(id string, status string, errmsg string) error {
+	query := `
+	UPDATE jobs
+	SET status = :status, error = :error
+	WHERE id == :id`
+
+	_, err := store.DB.Exec(query,
+		sql.Named("id", id),
+		sql.Named("status", status),
+		sql.Named("error", errmsg))
+	return err
+}
+
+func (store *Store) RescheduleWorkerJobs(workerToken string) error {
+	query := `
+	UPDATE jobs
+	SET status = :status_after, worker_token = ''
+	WHERE worker_token == :wtoken
+	AND status = :status_before`
+
+	_, err := store.DB.Exec(query,
+		sql.Named("status_before", "Running"),
+		sql.Named("status_after", "Scheduled"),
+		sql.Named("wtoken", workerToken))
+	return err
+}
+
+func (store *Store) RescheduleStaleJobs(serverToken string) error {
+	query := `
+	UPDATE jobs
+	SET status = :status_after, server_token = :stoken, worker_token = ''
+	WHERE server_token != :stoken
+	AND status = :status_before`
+
+	_, err := store.DB.Exec(query,
+		sql.Named("status_before", "Running"),
+		sql.Named("status_after", "Scheduled"),
+		sql.Named("stoken", serverToken))
 	return err
 }
 

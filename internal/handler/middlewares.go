@@ -48,12 +48,14 @@ func Logger(next http.Handler) http.Handler {
 
 // LoggingResponseWriter struct is used to log the response
 type LoggingResponseWriter struct {
-	w      http.ResponseWriter
-	Bytes  int
-	Status int
+	w             http.ResponseWriter
+	Bytes         int
+	Status        int
+	HeaderWritten bool
 }
 
 func (w *LoggingResponseWriter) Write(buf []byte) (int, error) {
+	w.HeaderWritten = true
 	n, err := w.w.Write(buf)
 	w.Bytes += n
 	return n, err
@@ -64,8 +66,16 @@ func (w *LoggingResponseWriter) Header() http.Header {
 }
 
 func (w *LoggingResponseWriter) WriteHeader(statusCode int) {
-	w.Status = statusCode
 	w.w.WriteHeader(statusCode)
+
+	if !w.HeaderWritten {
+		w.Status = statusCode
+		w.HeaderWritten = true
+	}
+}
+
+func (w *LoggingResponseWriter) Unwrap() http.ResponseWriter {
+	return w.w
 }
 
 func statusColor(status int) tty.Fn {
