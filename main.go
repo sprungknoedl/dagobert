@@ -4,15 +4,18 @@ import (
 	"cmp"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
+	"github.com/lmittmann/tint"
 	"github.com/sprungknoedl/dagobert/internal/handler"
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/internal/worker"
@@ -36,6 +39,22 @@ type Configuration struct {
 }
 
 func main() {
+	slog.SetDefault(slog.New(
+		tint.NewHandler(os.Stdout, &tint.Options{
+			Level:      slog.LevelInfo,
+			TimeFormat: time.DateTime,
+			ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+				// write all errors in red
+				if err, ok := a.Value.Any().(error); ok {
+					aErr := tint.Err(err)
+					aErr.Key = a.Key
+					return aErr
+				}
+				return a
+			},
+		}),
+	))
+
 	if len(os.Args) > 1 && os.Args[1] == "worker" {
 		worker.StartWorker()
 	} else {
