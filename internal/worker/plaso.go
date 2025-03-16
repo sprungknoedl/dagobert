@@ -26,14 +26,17 @@ func ValidatePlaso() bool {
 
 	slog.Info("validating module prerequisites", "module", "plaso")
 	cmd := exec.Command(argsPlaso[0], append(argsPlaso[1:], "-V")...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err = cmd.Run(); err != nil {
+	if out, err := cmd.CombinedOutput(); err != nil {
 		slog.Error("validating module prerequisites failed", "module", "plaso", "step", "cmd running", "err", err)
+		os.Stderr.Write(out)
 		return false
 	}
 
+	modules = append(modules,
+		"Plaso (Windows Preset)",
+		"Plaso (Linux Preset)",
+		"Plaso (MacOS Preset)",
+		"Plaso (Filesystem Timeline)")
 	return true
 }
 

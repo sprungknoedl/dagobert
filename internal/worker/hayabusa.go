@@ -26,14 +26,13 @@ func ValidateHayabusa() bool {
 
 	slog.Info("validating module prerequisites", "module", "hayabusa")
 	cmd := exec.Command(argsHayabusa[0], append(argsHayabusa[1:], "help")...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err = cmd.Run(); err != nil {
+	if out, err := cmd.CombinedOutput(); err != nil {
 		slog.Error("validating module prerequisites failed", "module", "hayabusa", "step", "cmd running", "err", err)
+		os.Stderr.Write(out)
 		return false
 	}
 
+	modules = append(modules, "Hayabusa")
 	return true
 }
 

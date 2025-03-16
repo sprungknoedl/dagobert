@@ -25,14 +25,13 @@ func ValidateTimesketch() bool {
 
 	slog.Info("validating module prerequisites", "module", "timesketch")
 	cmd := exec.Command(argsTimesketch[0], append(argsTimesketch[1:], "--version")...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err = cmd.Run(); err != nil {
+	if out, err := cmd.CombinedOutput(); err != nil {
 		slog.Error("validating module prerequisites failed", "module", "timesketch", "step", "cmd running", "err", err)
+		os.Stderr.Write(out)
 		return false
 	}
 
+	modules = append(modules, "Timesketch Importer")
 	return true
 }
 

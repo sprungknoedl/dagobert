@@ -25,9 +25,13 @@ func (ctrl KeyCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	workermu.Lock()
+	defer workermu.Unlock()
+
 	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/keys-many.html", map[string]any{
-		"title": "API Keys",
-		"rows":  list,
+		"title":   "API Keys",
+		"keys":    list,
+		"workers": Workers,
 	})
 }
 

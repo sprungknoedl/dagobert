@@ -21,14 +21,24 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/model"
 )
 
+var modules = []string{}
+
 func StartWorker() {
-	rdy := ValidateHayabusa() && ValidatePlaso() && ValidateTimesketch()
-	if !rdy {
+	ValidateHayabusa()
+	ValidatePlaso()
+	ValidateTimesketch()
+	if len(modules) == 0 {
 		slog.Error("worker not ready")
 		return
 	}
 
-	client := http.Client{}
+	// dagobert client
+	tr := http.DefaultTransport.(*http.Transport).Clone()
+	tr.TLSClientConfig.InsecureSkipVerify = os.Getenv("DAGOBERT_SKIP_VERIFY_TLS") == "true"
+
+	client := http.Client{
+		Transport: tr,
+	}
 	req, err := http.NewRequest(http.MethodGet, os.Getenv("DAGOBERT_URL")+"/internal/jobs", nil)
 	if err != nil {
 		slog.Error("failed to create request", "err", err)
@@ -40,9 +50,15 @@ func StartWorker() {
 	req.Header.Set("Connection", "keep-alive")
 	req.Header.Set("X-API-Key", os.Getenv("DAGOBERT_API_KEY"))
 
+	q := req.URL.Query()
+	q.Add("modules", strings.Join(modules, ","))
+	req.URL.RawQuery = q.Encode()
+
+	slog.Info("worker is ready", "upstream", os.Getenv("DAGOBERT_URL"), "modules", strings.Join(modules, ","))
 	resp, err := client.Do(req)
 	if err != nil {
 		slog.Error("failed to send request", "err", err)
+		return
 	}
 
 	dec := json.NewDecoder(resp.Body)
@@ -62,6 +78,9 @@ func StartWorker() {
 func DispatchJob(ctx context.Context, job Job) {
 	var err error
 	switch job.Name {
+	case "keep-alive":
+		slog.Debug("received keep-alive")
+		return
 	case "Hayabusa":
 		err = RunHayabusa(ctx, job)
 	case "Plaso (Windows Preset)":

@@ -6,6 +6,8 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/fp"
@@ -13,13 +15,21 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/worker"
 )
 
+var workermu sync.Mutex
 var ServerToken = random(20)
+var Workers = map[string]Worker{}
 
 type Module struct {
 	Name        string
 	Description string
 	Status      string
 	Error       string
+}
+
+type Worker struct {
+	WorkerID   string
+	RemoteAddr string
+	Modules    []string
 }
 
 type JobCtrl struct {
@@ -77,15 +87,43 @@ func (ctrl JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 	t := time.NewTicker(time.Second)
 	defer t.Stop()
 
+	ka := time.NewTicker(time.Minute)
+	defer ka.Stop()
+
 	// create worker id
 	workerid := random(20)
 	log.Printf("worker %q started", workerid)
+
+	// register worker
+	workermu.Lock()
+	Workers[workerid] = Worker{
+		WorkerID:   workerid,
+		RemoteAddr: r.RemoteAddr,
+		Modules:    strings.Split(r.URL.Query().Get("modules"), ","),
+	}
+	workermu.Unlock()
 
 	for {
 		select {
 		case <-gone:
 			log.Println("client disconnected")
 			goto cleanup
+
+		case <-ka.C:
+			err := json.NewEncoder(w).Encode(worker.Job{
+				Name:        "keep-alive",
+				WorkerToken: workerid,
+			})
+			if err != nil {
+				log.Printf("error encoding job: %v", err)
+				goto cleanup
+			}
+
+			err = rc.Flush()
+			if err != nil {
+				log.Printf("error flushing job: %v", err)
+				goto cleanup
+			}
 
 		case <-t.C:
 			job, err := ctrl.store.PopJob(workerid)
@@ -126,6 +164,10 @@ func (ctrl JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 	}
 
 cleanup:
+	workermu.Lock()
+	delete(Workers, workerid)
+	workermu.Unlock()
+
 	log.Printf("worker %q quit", workerid)
 	err := ctrl.store.RescheduleWorkerJobs(workerid)
 	if err != nil {
