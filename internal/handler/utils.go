@@ -7,6 +7,7 @@ import (
 	"errors"
 	"io"
 	"log"
+	"log/slog"
 	"math/rand"
 	"net/http"
 	"os"
@@ -66,7 +67,11 @@ func Warn(w http.ResponseWriter, r *http.Request, err error) {
 		return
 	}
 
-	log.Printf("|%s| %v", tty.Yellow(" WAR "), err)
+	slog.Warn("400: Bad Request",
+		"err", err,
+		"raddr", r.RemoteAddr,
+		"method", r.Method,
+		"url", r.URL)
 	render(w, r, http.StatusBadRequest, "internal/views/toasts-warning.html", map[string]any{"err": err})
 }
 
@@ -75,7 +80,11 @@ func Err(w http.ResponseWriter, r *http.Request, err error) {
 		return
 	}
 
-	log.Printf("|%s| %v", tty.Red(" ERR "), err)
+	slog.Error("500: Internal Server Error",
+		"err", err,
+		"raddr", r.RemoteAddr,
+		"method", r.Method,
+		"url", r.URL)
 	render(w, r, http.StatusInternalServerError, "internal/views/toasts-error.html", map[string]any{"err": err})
 }
 
