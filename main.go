@@ -344,6 +344,25 @@ func InitializeDagobert(store *model.Store, acl *handler.ACL, cfg Configuration)
 				return err
 			}
 		}
+
+		// initialize api keys
+		log.Printf("Initializing api keys")
+		for _, env := range os.Environ() {
+			if !strings.HasPrefix(env, "DAGOBERT_KEY_") {
+				continue
+			}
+
+			key, value, _ := strings.Cut(env, "=")
+			log.Printf("  Adding %q as api key", value)
+			err = store.SaveKey(model.Key{
+				Type: "Dagobert",
+				Key:  value,
+				Name: key,
+			})
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
