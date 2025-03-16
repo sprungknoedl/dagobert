@@ -44,12 +44,6 @@
 							</a>
 							{{ end }}
 							{{ end }}
-							{{ if allowed ($url := print "/settings/auditlog/user:" .ID) "GET" }}
-							<a class="join-item btn btn-sm" href="{{ $url }}" title="Audit Log"
-								up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio-5 hio-scale"></i>
-							</a>
-                            {{ end }}
                             {{ if allowed ($url := print "/settings/users/" .ID) "POST" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="/settings/users/">
