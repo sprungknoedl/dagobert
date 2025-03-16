@@ -17,6 +17,20 @@
 
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
+                    Type
+                    <span class="text-accent">*</span>
+				    {{ if .valid.Type }}<span class="ml-2 text-sm text-error">{{ .valid.Type }}</span>{{ end }}
+                </label>
+                <select name="Type" class="select select-bordered">
+                    <option disabled value="" {{ if eq .obj.Type "" }}selected{{ end }}>Select an option</option>
+                    {{ range .model.KeyTypes }}
+                        <option {{ if eq $.obj.Type . }}selected{{ end }}>{{ . }}</option>
+                    {{ end }}
+                </select>
+            </div>
+
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
                     Name
                     <span class="text-accent">*</span>
 				    {{ if .valid.Name }}<span class="ml-2 text-sm text-error">{{ .valid.Name }}</span>{{ end }}

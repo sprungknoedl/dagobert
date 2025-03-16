@@ -16,6 +16,7 @@
             <table class="table w-full dataTable min-w-full text-sm align-middle">
                 <thead>
                     <tr>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Type</th>
                         <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Name</th>
                         <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Key</th>
                         <th style="width: 7rem"></th>
@@ -25,6 +26,13 @@
                 <tbody>
                     {{ range .rows }}
                     <tr class="hover">
+                        <td class="truncate">
+                            {{ if eq .Type "Dagobert" }}     <i class="hio-5 hio-bolt inline-block"></i>
+                            {{ else if eq .Type "Donald" }}  <i class="hio-5 hio-camera inline-block"></i>
+                            {{ else }}                       <i class="hio-5 hio-beaker inline-block"></i>
+                            {{ end }}
+                            {{ .Type }}
+                        </td>
                         <td> {{ .Name }} </td>
                         <td> {{ .Key }} </td>
                         <td class="text-right"><div class="join">

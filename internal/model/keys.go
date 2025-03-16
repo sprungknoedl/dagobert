@@ -4,14 +4,17 @@ import (
 	"database/sql"
 )
 
+var KeyTypes = []string{"API", "Dagobert", "Donald"}
+
 type Key struct {
+	Type string
 	Key  string
 	Name string
 }
 
 func (store *Store) ListKeys() ([]Key, error) {
 	query := `
-	SELECT key, name
+	SELECT type, key, name
 	FROM keys
 	ORDER BY name`
 
@@ -27,7 +30,7 @@ func (store *Store) ListKeys() ([]Key, error) {
 
 func (store *Store) GetKey(key string) (Key, error) {
 	query := `
-	SELECT key, name
+	SELECT type, key, name
 	FROM keys
 	WHERE key = :key`
 
@@ -44,13 +47,14 @@ func (store *Store) GetKey(key string) (Key, error) {
 
 func (store *Store) SaveKey(obj Key) error {
 	query := `
-	INSERT INTO keys (key, name)
-	VALUES (:key, :name)
+	INSERT INTO keys (type, key, name)
+	VALUES (:type, :key, :name)
 	ON CONFLICT (key)
-		DO UPDATE SET name=:name
+		DO UPDATE SET type=:type, name=:name
 		WHERE key = :key`
 
 	_, err := store.DB.Exec(query,
+		sql.Named("type", obj.Type),
 		sql.Named("key", obj.Key),
 		sql.Named("name", obj.Name))
 	return err
