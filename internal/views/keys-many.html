@@ -7,12 +7,16 @@
 
         {{ template "sidebar" . }}
 
-        <main class="pl-20 p-4 grow max-w-full">
-            {{ template "navbar" dict "env" .env "title" "API Keys"
+        <main id="list" class="pl-20 p-4 grow max-w-full">
+            {{ template "navbar" dict "env" .env "title" .title 
+                "hideExport" true
                 "hideImport" true
-                "hideExport" true }}
+                "hideSearch" true
+            }}
 
-            <div id="list">
+            <h2 class="text-primary text-xl font-bold p-2">Keys</h2>
+
+            <div id="keys">
             <table class="table w-full dataTable min-w-full text-sm align-middle">
                 <thead>
                     <tr>
@@ -24,7 +28,7 @@
                 </thead>
 
                 <tbody>
-                    {{ range .rows }}
+                    {{ range .keys }}
                     <tr class="hover">
                         <td class="truncate">
                             {{ if eq .Type "Dagobert" }}     <i class="hio-5 hio-bolt inline-block"></i>
@@ -56,6 +60,35 @@
                             {{ end }}
                         </div></td>
                     </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+            </div>
+
+            <!-- ======= -->
+
+            <h2 class="text-primary text-xl font-bold p-2 mt-6">Workers </h2>
+
+            <div id="keys">
+            <table class="table w-full dataTable min-w-full text-sm align-middle">
+                <thead>
+                    <tr>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">ID</th>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Remote Addr</th>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Modules</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {{ range .workers }}
+                    <tr class="hover">
+                        <td class="truncate"> {{ .WorkerID }} </td>
+                        <td> {{ .RemoteAddr }} </td>
+                        <td> 
+                            <ul>
+                            {{ range .Modules }} <li>{{ . }}</li> {{ end }}
+                            </ul>
+                        </td>
                     {{ end }}
                 </tbody>
             </table>
