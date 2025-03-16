@@ -59,6 +59,7 @@ func ValidateIndicator(dto model.Indicator) valid.Result {
 func ValidateKey(dto model.Key) valid.Result {
 	return valid.Check([]valid.Condition{
 		{Name: "Name", Missing: dto.Name == ""},
+		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !slices.Contains(model.KeyTypes, dto.Type)},
 	})
 }
 

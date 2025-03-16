@@ -92,6 +92,7 @@ func Render(store *model.Store, acl *ACL, w http.ResponseWriter, r *http.Request
 		"IndicatorStatus": model.IndicatorStatus,
 		"IndicatorTLPs":   model.IndicatorTLPs,
 		"IndicatorTypes":  model.IndicatorTypes,
+		"KeyTypes":        model.KeyTypes,
 		"MalwareStatus":   model.MalwareStatus,
 		"TaskTypes":       model.TaskTypes,
 		"UserRoles":       model.UserRoles,
