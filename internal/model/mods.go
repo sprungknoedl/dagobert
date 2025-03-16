@@ -2,6 +2,11 @@ package model
 
 import (
 	"database/sql"
+	"fmt"
+	"regexp"
+	"strings"
+
+	"github.com/sprungknoedl/dagobert/internal/fp"
 )
 
 var JobStatus = []string{
@@ -93,14 +98,26 @@ func (store *Store) SaveJob(obj Job) error {
 }
 
 func (store *Store) PushJob(obj Job) error { return store.SaveJob(obj) }
-func (store *Store) PopJob(workerid string) (Job, error) {
+func (store *Store) PopJob(workerid string, modules []string) (Job, error) {
+	// slices are not supported as parameterized arguments in database/sql and sqlite.
+	// we have to use a workaround to pass the list of modules as a single argument.
+	re := regexp.MustCompile("[a-zA-Z0-9_ ]+")
+	for _, m := range modules {
+		if !re.MatchString(m) {
+			return Job{}, fmt.Errorf("invalid module name: %q", m)
+		}
+	}
+
+	modules = fp.Apply(modules, func(s string) string { return "'" + s + "'" })
+
 	query := `
 	UPDATE jobs
 	SET status = :status_after, worker_token = :wtoken
 	WHERE rowid = (
 		SELECT min(rowid)
 		FROM jobs
-		WHERE status = :status_before )
+		WHERE status = :status_before 
+		AND name IN (` + strings.Join(modules, ", ") + `) )
 	RETURNING id, case_id, evidence_id, name, status, error, server_token, worker_token;
 	`
 

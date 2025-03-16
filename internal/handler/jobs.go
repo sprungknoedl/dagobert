@@ -92,6 +92,7 @@ func (ctrl JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 
 	// create worker id
 	workerid := random(20)
+	modules := strings.Split(r.URL.Query().Get("modules"), ",")
 	log.Printf("worker %q started", workerid)
 
 	// register worker
@@ -99,7 +100,7 @@ func (ctrl JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 	Workers[workerid] = Worker{
 		WorkerID:   workerid,
 		RemoteAddr: r.RemoteAddr,
-		Modules:    strings.Split(r.URL.Query().Get("modules"), ","),
+		Modules:    modules,
 	}
 	workermu.Unlock()
 
@@ -126,7 +127,7 @@ func (ctrl JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 			}
 
 		case <-t.C:
-			job, err := ctrl.store.PopJob(workerid)
+			job, err := ctrl.store.PopJob(workerid, modules)
 			if err != nil && err != sql.ErrNoRows {
 				log.Printf("error fetching job: %v", err)
 				goto cleanup
