@@ -2,6 +2,7 @@ package timesketch
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -137,13 +138,17 @@ func NewClient(uri, username, password string) (*Client, error) {
 		return nil, err
 	}
 
+	tr := http.DefaultTransport.(*http.Transport).Clone()
+	tr.TLSClientConfig = &tls.Config{InsecureSkipVerify: os.Getenv("TIMESKETCH_SKIP_VERIFY_TLS") == "true"}
+
 	client := &Client{
 		BaseURL:  uri,
 		Username: username,
 		Password: password,
 
 		client: &http.Client{
-			Jar: jar,
+			Jar:       jar,
+			Transport: tr,
 		},
 	}
 
