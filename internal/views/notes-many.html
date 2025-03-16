@@ -28,12 +28,6 @@
                         <td> {{ .Title }} </td>
                         <td> {{ .Description }} </td>
                         <td class="text-right"><div class="join">
-                            {{ if allowed ($url := print "/settings/auditlog/note:" .ID) "GET" }}
-							<a class="join-item btn btn-sm" href="{{ $url }}" title="Audit Log"
-								up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio-5 hio-scale"></i>
-							</a>
-                            {{ end }}
                             {{ if allowed ($url := print "/cases/" .CaseID "/notes/" .ID) "POST" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
