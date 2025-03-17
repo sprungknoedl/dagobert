@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 
 	"github.com/mattn/go-shellwords"
@@ -43,6 +44,8 @@ func UploadToTimesketch(ctx context.Context, job Job) error {
 		"-u", os.Getenv("TIMESKETCH_USER"),
 		"-p", os.Getenv("TIMESKETCH_PASS"),
 		"--sketch_id", strconv.Itoa(job.Case.SketchID),
+		"--timeline-name", filepath.Base(src),
+		"--context", "upload of dagobert evidence: "+filepath.Base(src),
 		src,
 	)...)
 
