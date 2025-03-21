@@ -7,7 +7,7 @@ on:
     branches: ['main']
 
 jobs:
-  build:
+  build-web:
     name: Build and push image
     runs-on: ubuntu-22.04
     steps:
@@ -22,6 +22,23 @@ jobs:
         tags: latest ${{ github.sha }}
         containerfiles: ./configs/Dockerfile
 
+    - name: Push To quay.io
+      id: push-to-quay
+      uses: redhat-actions/push-to-registry@v2
+      with:
+        image: ${{ steps.build-image.outputs.image }}
+        tags: ${{ steps.build-image.outputs.tags }}
+        registry: quay.io/sprungknoedl
+        username: ${{ secrets.QUAY_USERNAME }}
+        password: ${{ secrets.QUAY_PASSWORD }}
+
+  build-hayabusa:
+    name: Build and push image
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Check out the repo
+      uses: actions/checkout@v4
+
     - name: Build Image (dagobert-hayabusa)
       id: build-image
       uses: redhat-actions/buildah-build@v2
@@ -29,6 +46,23 @@ jobs:
         image: dagobert-hayabusa
         tags: latest ${{ github.sha }}
         containerfiles: ./configs/Dockerfile-hayabusa
+
+    - name: Push To quay.io
+      id: push-to-quay
+      uses: redhat-actions/push-to-registry@v2
+      with:
+        image: ${{ steps.build-image.outputs.image }}
+        tags: ${{ steps.build-image.outputs.tags }}
+        registry: quay.io/sprungknoedl
+        username: ${{ secrets.QUAY_USERNAME }}
+        password: ${{ secrets.QUAY_PASSWORD }}
+
+  build-plaso:
+    name: Build and push image
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Check out the repo
+      uses: actions/checkout@v4
 
     - name: Build Image (dagobert-plaso)
       id: build-image
@@ -38,16 +72,31 @@ jobs:
         tags: latest ${{ github.sha }}
         containerfiles: ./configs/Dockerfile-plaso
 
+    - name: Push To quay.io
+      id: push-to-quay
+      uses: redhat-actions/push-to-registry@v2
+      with:
+        image: ${{ steps.build-image.outputs.image }}
+        tags: ${{ steps.build-image.outputs.tags }}
+        registry: quay.io/sprungknoedl
+        username: ${{ secrets.QUAY_USERNAME }}
+        password: ${{ secrets.QUAY_PASSWORD }}
+
+  build-timesketch:
+    name: Build and push image
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Check out the repo
+      uses: actions/checkout@v4
+
     - name: Build Image (dagobert-timesketch)
       id: build-image
       uses: redhat-actions/buildah-build@v2
       with:
         image: dagobert-timesketch
         tags: latest ${{ github.sha }}
-        containerfiles: ./configs/Dockerfile-timesketch 
+        containerfiles: ./configs/Dockerfile-timesketch
 
-    # Podman Login action (https://github.com/redhat-actions/podman-login) also be used to log in,
-    # in which case 'username' and 'password' can be omitted.
     - name: Push To quay.io
       id: push-to-quay
       uses: redhat-actions/push-to-registry@v2
