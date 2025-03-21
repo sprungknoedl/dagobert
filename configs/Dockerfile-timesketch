@@ -1,0 +1,22 @@
+FROM golang:1.22 AS app
+WORKDIR /src
+
+COPY go.mod .
+RUN go mod download
+
+COPY . .
+RUN make build-go
+
+# ---------------------------------
+
+FROM debian:12
+WORKDIR /home/sprungknoedl
+
+COPY --from=app /src/dagobert /home/sprungknoedl/dagobert
+RUN apt update && apt install -y ca-certificates python3-pip
+RUN pip3 install --break-system-packages timesketch-import-client
+RUN useradd -l -r -g users sprungknoedl
+
+USER sprungknoedl
+ENV MODULE_TIMESKETCH=/usr/local/bin/timesketch_importer
+CMD [ "/home/sprungknoedl/dagobert", "worker" ]

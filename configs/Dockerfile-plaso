@@ -1,0 +1,16 @@
+FROM golang:1.22 AS app
+WORKDIR /src
+
+COPY go.mod .
+RUN go mod download
+
+COPY . .
+RUN make build-go
+
+# ---------------------------------
+
+FROM log2timeline/plaso
+COPY --from=app /src/dagobert /home/plaso/dagobert
+ENV MODULE_PLASO="/usr/bin/psteal.py --unattended"
+ENTRYPOINT [ "/home/plaso/dagobert" ]
+CMD [ "worker" ]

@@ -10,6 +10,9 @@ build-go:
 
 docker:
 	docker build . -f configs/Dockerfile -t sprungknoedl/dagobert
+	docker build . -f configs/Dockerfile-hayabusa -t sprungknoedl/dagobert-hayabusa
+	docker build . -f configs/Dockerfile-plaso -t sprungknoedl/dagobert-plaso
+	docker build . -f configs/Dockerfile-timesketch -t sprungknoedl/dagobert-timesketch
 
 run:
 	source configs/dagobert.env && air -c configs/air.toml
