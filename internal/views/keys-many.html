@@ -11,7 +11,6 @@
             {{ template "navbar" dict "env" .env "title" .title 
                 "hideExport" true
                 "hideImport" true
-                "hideSearch" true
             }}
 
             <h2 class="text-primary text-xl font-bold p-2">Keys</h2>
@@ -70,6 +69,7 @@
                         <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">ID</th>
                         <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Remote Addr</th>
                         <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Modules</th>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc"># Workers</th>
                     </tr>
                 </thead>
 
@@ -83,6 +83,7 @@
                             {{ range .Modules }} <li>{{ . }}</li> {{ end }}
                             </ul>
                         </td>
+                        <td class="truncate"> {{ .Workers }} </td>
                     {{ end }}
                 </tbody>
             </table>
