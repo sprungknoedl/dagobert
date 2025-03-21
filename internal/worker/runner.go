@@ -3,7 +3,7 @@ package worker
 import (
 	"archive/zip"
 	"bytes"
-	"context"
+	"cmp"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -30,6 +31,19 @@ func StartWorker() {
 	if len(modules) == 0 {
 		slog.Error("worker not ready")
 		return
+	}
+
+	// starting workers
+	num, err := strconv.Atoi(cmp.Or(os.Getenv("DAGOBERT_WORKERS"), "3"))
+	if len(modules) == 0 {
+		slog.Error("invalid number of workers", "err", err)
+		return
+	}
+
+	slog.Info("starting workers", "num", num)
+	ch := make(chan Job)
+	for i := 0; i < num; i++ {
+		go DispatchJob(ch)
 	}
 
 	// dagobert client
@@ -52,6 +66,7 @@ func StartWorker() {
 
 	q := req.URL.Query()
 	q.Add("modules", strings.Join(modules, ","))
+	q.Add("workers", strconv.Itoa(num))
 	req.URL.RawQuery = q.Encode()
 
 	slog.Info("worker is ready", "upstream", os.Getenv("DAGOBERT_URL"), "modules", strings.Join(modules, ","))
@@ -71,46 +86,49 @@ func StartWorker() {
 		}
 
 		slog.Info("received job", "job", job)
-		go DispatchJob(req.Context(), job)
+		job.Ctx = req.Context()
+		ch <- job
 	}
 }
 
-func DispatchJob(ctx context.Context, job Job) {
-	var err error
-	switch job.Name {
-	case "keep-alive":
-		slog.Debug("received keep-alive")
-		return
-	case "Hayabusa":
-		err = RunHayabusa(ctx, job)
-	case "Plaso (Windows Preset)":
-		err = RunPlasoWindows(ctx, job)
-	case "Plaso (Linux Preset)":
-		err = RunPlasoLinux(ctx, job)
-	case "Plaso (MacOS Preset)":
-		err = RunPlasoMacOS(ctx, job)
-	case "Plaso (Filesystem Timeline)":
-		err = RunPlasoMFT(ctx, job)
-	case "Timesketch Importer":
-		err = UploadToTimesketch(ctx, job)
-	default:
-		slog.Error("unknown module name", "job", job.ID, "module", job.Name)
-		return
-	}
+func DispatchJob(ch <-chan Job) {
+	for job := range ch {
+		var err error
+		switch job.Name {
+		case "keep-alive":
+			slog.Debug("received keep-alive")
+			return
+		case "Hayabusa":
+			err = RunHayabusa(job)
+		case "Plaso (Windows Preset)":
+			err = RunPlasoWindows(job)
+		case "Plaso (Linux Preset)":
+			err = RunPlasoLinux(job)
+		case "Plaso (MacOS Preset)":
+			err = RunPlasoMacOS(job)
+		case "Plaso (Filesystem Timeline)":
+			err = RunPlasoMFT(job)
+		case "Timesketch Importer":
+			err = UploadToTimesketch(job)
+		default:
+			slog.Error("unknown module name", "job", job.ID, "module", job.Name)
+			continue
+		}
 
-	errmsg := ""
-	if err != nil {
-		errmsg = err.Error()
-		slog.Warn("failed to process job", "job", job.ID, "module", job.Name, "err", err)
-	}
+		errmsg := ""
+		if err != nil {
+			errmsg = err.Error()
+			slog.Warn("failed to process job", "job", job.ID, "module", job.Name, "err", err)
+		}
 
-	err = AckJob(model.Job{
-		ID:     job.ID,
-		Status: fp.If(err != nil, "Failed", "Success"),
-		Error:  errmsg,
-	})
-	if err != nil {
-		slog.Warn("failed to ack job", "job", job.ID, "module", job.Name, "err", err)
+		err = AckJob(model.Job{
+			ID:     job.ID,
+			Status: fp.If(err != nil, "Failed", "Success"),
+			Error:  errmsg,
+		})
+		if err != nil {
+			slog.Warn("failed to ack job", "job", job.ID, "module", job.Name, "err", err)
+		}
 	}
 }
 

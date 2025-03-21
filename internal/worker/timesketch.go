@@ -1,7 +1,6 @@
 package worker
 
 import (
-	"context"
 	"log"
 	"log/slog"
 	"os"
@@ -36,9 +35,9 @@ func ValidateTimesketch() bool {
 	return true
 }
 
-func UploadToTimesketch(ctx context.Context, job Job) error {
+func UploadToTimesketch(job Job) error {
 	src := Filepath(job.Evidence)
-	cmd := exec.CommandContext(ctx, argsTimesketch[0], append(argsTimesketch[1:],
+	cmd := exec.CommandContext(job.Ctx, argsTimesketch[0], append(argsTimesketch[1:],
 		"--quick",
 		"--host", os.Getenv("TIMESKETCH_URL"),
 		"-u", os.Getenv("TIMESKETCH_USER"),
