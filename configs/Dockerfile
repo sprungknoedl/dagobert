@@ -22,14 +22,15 @@ RUN make build-go
 # ---------------------------------
 
 FROM debian:12-slim
-WORKDIR /app
+WORKDIR /home/sprungknoedl
 
-RUN mkdir -p /app/files
 RUN apt update && apt install -y docker.io
+RUN useradd -l -r -g users sprungknoedl
 
-COPY --from=web /src/web /app/web
-COPY --from=app /src/dagobert /app/dagobert
-COPY --from=app /src/internal/views /app/internal/views
+COPY --from=web /src/web /home/sprungknoedl/web
+COPY --from=app /src/dagobert /home/sprungknoedl/dagobert
+COPY --from=app /src/internal/views /home/sprungknoedl/internal/views
 COPY --from=app /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
-CMD ["/app/dagobert"]
+USER sprungknoedl
+CMD ["/home/sprungknoedl/dagobert"]

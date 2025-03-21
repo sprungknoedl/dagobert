@@ -1,0 +1,27 @@
+FROM golang:1.22 AS app
+WORKDIR /src
+
+COPY go.mod .
+RUN go mod download
+
+COPY . .
+RUN make build-go
+
+# ---------------------------------
+
+FROM debian:12
+WORKDIR /home/sprungknoedl
+
+COPY --from=app /src/dagobert /home/sprungknoedl/dagobert
+ADD https://github.com/Yamato-Security/hayabusa/releases/download/v2.16.0/hayabusa-2.16.0-linux-intel.zip /usr/src/hayabusa-2.16.0-linux-intel.zip
+
+RUN apt update && apt install -y ca-certificates unzip
+RUN useradd -l -r -g users sprungknoedl
+
+RUN unzip /usr/src/hayabusa-2.16.0-linux-intel.zip -d /home/sprungknoedl
+RUN rm hayabusa-2.16.0-lin-x64-gnu && mv hayabusa-2.16.0-lin-x64-musl hayabusa && chmod +x hayabusa
+
+USER sprungknoedl
+RUN ./hayabusa update-rules
+ENV MODULE_HAYABUSA=/home/sprungknoedl/hayabusa
+CMD [ "/home/sprungknoedl/dagobert", "worker" ]
