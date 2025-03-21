@@ -25,12 +25,14 @@ FROM debian:12-slim
 WORKDIR /home/sprungknoedl
 
 RUN apt update && apt install -y docker.io
-RUN useradd -l -r -g users sprungknoedl
+RUN useradd -l -u 1000 -g users sprungknoedl
 
 COPY --from=web /src/web /home/sprungknoedl/web
 COPY --from=app /src/dagobert /home/sprungknoedl/dagobert
 COPY --from=app /src/internal/views /home/sprungknoedl/internal/views
 COPY --from=app /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+RUN mkdir /home/sprungknoedl/files && chown sprungknoedl:users /home/sprungknoedl/files
 
 USER sprungknoedl
 CMD ["/home/sprungknoedl/dagobert"]
