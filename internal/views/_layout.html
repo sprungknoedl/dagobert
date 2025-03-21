@@ -25,18 +25,24 @@
             elem.setAttribute('up-hungry', '');
             elem.setAttribute('up-if-layer', 'subtree')
 
-            let table = new DataTable("#list>table", {
+            let table = new DataTable("#list table", {
                 paging: false,
                 searching: true,
                 scrollX: true,
                 fixedHeader: true,
-                layout: { topStart: null, topEnd: null, bottomStart: null, bottomEnd: null }
+                layout: { topStart: null, topEnd: null, bottomStart: null, bottomEnd: null },
+                language: {
+                    emptyTable: 'No data available in table',
+                    zeroRecords: 'No records to display'
+                }
             });
 
-            table.search($("[name='search']").val()).draw();
-            $("[name='search']").on('keyup', function() {
-                table.search($(this).val()).draw();
-            });
+            if ($("[name='search']").length) {
+                table.search($("[name='search']").val()).draw();
+                $("[name='search']").on('keyup', function() {
+                    table.search($(this).val()).draw();
+                });
+            }
         });
 
         up.compiler('#auditlog', (elem, data) => {
