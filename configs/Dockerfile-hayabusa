@@ -16,10 +16,11 @@ COPY --from=app /src/dagobert /home/sprungknoedl/dagobert
 ADD https://github.com/Yamato-Security/hayabusa/releases/download/v2.16.0/hayabusa-2.16.0-linux-intel.zip /usr/src/hayabusa-2.16.0-linux-intel.zip
 
 RUN apt update && apt install -y ca-certificates unzip
-RUN useradd -l -u 1000 -g users sprungknoedl
-
 RUN unzip /usr/src/hayabusa-2.16.0-linux-intel.zip -d /home/sprungknoedl
 RUN rm hayabusa-2.16.0-lin-x64-gnu && mv hayabusa-2.16.0-lin-x64-musl hayabusa && chmod +x hayabusa
+
+RUN useradd -l -u 1000 -g users sprungknoedl
+RUN mkdir /home/sprungknoedl/files && chown -R sprungknoedl:users /home/sprungknoedl
 
 USER sprungknoedl
 RUN ./hayabusa update-rules
