@@ -19,14 +19,14 @@ func ValidateTimesketch() bool {
 
 	_, argsTimesketch, err = shellwords.ParseWithEnvs(os.Getenv("MODULE_TIMESKETCH"))
 	if err != nil || len(argsTimesketch) < 1 {
-		slog.Error("validating module prerequisites failed", "module", "timesketch", "step", "shell parsing", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", "timesketch", "step", "shell parsing", "err", err)
 		return false
 	}
 
 	slog.Info("validating module prerequisites", "module", "timesketch")
 	cmd := exec.Command(argsTimesketch[0], append(argsTimesketch[1:], "--version")...)
 	if out, err := cmd.CombinedOutput(); err != nil {
-		slog.Error("validating module prerequisites failed", "module", "timesketch", "step", "cmd running", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", "timesketch", "step", "cmd running", "err", err)
 		os.Stderr.Write(out)
 		return false
 	}

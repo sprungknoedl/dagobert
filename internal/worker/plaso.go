@@ -19,14 +19,14 @@ func ValidatePlaso() bool {
 
 	_, argsPlaso, err = shellwords.ParseWithEnvs(os.Getenv("MODULE_PLASO"))
 	if err != nil || len(argsPlaso) < 1 {
-		slog.Error("validating module prerequisites failed", "module", "plaso", "step", "shell parsing", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", "plaso", "step", "shell parsing", "err", err)
 		return false
 	}
 
 	slog.Info("validating module prerequisites", "module", "plaso")
 	cmd := exec.Command(argsPlaso[0], append(argsPlaso[1:], "-V")...)
 	if out, err := cmd.CombinedOutput(); err != nil {
-		slog.Error("validating module prerequisites failed", "module", "plaso", "step", "cmd running", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", "plaso", "step", "cmd running", "err", err)
 		os.Stderr.Write(out)
 		return false
 	}
