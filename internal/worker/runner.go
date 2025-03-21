@@ -97,7 +97,7 @@ func DispatchJob(ch <-chan Job) {
 		switch job.Name {
 		case "keep-alive":
 			slog.Debug("received keep-alive")
-			return
+			continue
 		case "Hayabusa":
 			err = RunHayabusa(job)
 		case "Plaso (Windows Preset)":
