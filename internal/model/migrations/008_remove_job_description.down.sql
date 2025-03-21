@@ -1,0 +1,1 @@
+ALTER TABLE jobs ADD COLUMN description TEXT NOT NULL DEFAULT '<no description>';
