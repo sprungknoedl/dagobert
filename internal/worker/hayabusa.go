@@ -19,14 +19,14 @@ func ValidateHayabusa() bool {
 
 	_, argsHayabusa, err = shellwords.ParseWithEnvs(os.Getenv("MODULE_HAYABUSA"))
 	if err != nil || len(argsHayabusa) < 1 {
-		slog.Error("validating module prerequisites failed", "module", "hayabusa", "step", "shell parsing", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", "hayabusa", "step", "shell parsing", "err", err)
 		return false
 	}
 
 	slog.Info("validating module prerequisites", "module", "hayabusa")
 	cmd := exec.Command(argsHayabusa[0], append(argsHayabusa[1:], "help")...)
 	if out, err := cmd.CombinedOutput(); err != nil {
-		slog.Error("validating module prerequisites failed", "module", "hayabusa", "step", "cmd running", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", "hayabusa", "step", "cmd running", "err", err)
 		os.Stderr.Write(out)
 		return false
 	}
