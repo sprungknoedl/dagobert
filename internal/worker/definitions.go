@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -50,6 +51,8 @@ type Job struct {
 	Name        string
 	Case        model.Case
 	Evidence    model.Evidence
+
+	Ctx context.Context
 }
 
 type Module struct {

@@ -1,7 +1,6 @@
 package worker
 
 import (
-	"context"
 	"log"
 	"log/slog"
 	"os"
@@ -36,11 +35,11 @@ func ValidateHayabusa() bool {
 	return true
 }
 
-func RunHayabusa(ctx context.Context, job Job) error {
+func RunHayabusa(job Job) error {
 	src := Filepath(job.Evidence)
 	dst := src + ".jsonl"
 
-	cmd := exec.CommandContext(ctx, argsHayabusa[0], append(argsHayabusa[1:],
+	cmd := exec.CommandContext(job.Ctx, argsHayabusa[0], append(argsHayabusa[1:],
 		"json-timeline",
 		"--JSONL-output",
 		"--RFC-3339",

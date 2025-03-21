@@ -1,7 +1,6 @@
 package worker
 
 import (
-	"context"
 	"log"
 	"log/slog"
 	"os"
@@ -40,11 +39,11 @@ func ValidatePlaso() bool {
 	return true
 }
 
-func runPlaso(ctx context.Context, job Job, parsers string, ext string) error {
+func runPlaso(job Job, parsers string, ext string) error {
 	src := Filepath(job.Evidence)
 	dst := src + ext
 
-	cmd := exec.CommandContext(ctx, argsPlaso[0], append(argsPlaso[1:],
+	cmd := exec.CommandContext(job.Ctx, argsPlaso[0], append(argsPlaso[1:],
 		"--unattended",
 		"--parsers", parsers,
 		"--output-format", "dynamic",
@@ -89,18 +88,18 @@ func runPlaso(ctx context.Context, job Job, parsers string, ext string) error {
 	return nil
 }
 
-func RunPlasoWindows(ctx context.Context, job Job) error {
-	return runPlaso(ctx, job, "win7", ".plaso")
+func RunPlasoWindows(job Job) error {
+	return runPlaso(job, "win7", ".plaso")
 }
 
-func RunPlasoLinux(ctx context.Context, job Job) error {
-	return runPlaso(ctx, job, "linux", ".plaso")
+func RunPlasoLinux(job Job) error {
+	return runPlaso(job, "linux", ".plaso")
 }
 
-func RunPlasoMacOS(ctx context.Context, job Job) error {
-	return runPlaso(ctx, job, "macos", ".plaso")
+func RunPlasoMacOS(job Job) error {
+	return runPlaso(job, "macos", ".plaso")
 }
 
-func RunPlasoMFT(ctx context.Context, job Job) error {
-	return runPlaso(ctx, job, "mft", ".mft.plaso")
+func RunPlasoMFT(job Job) error {
+	return runPlaso(job, "mft", ".mft.plaso")
 }

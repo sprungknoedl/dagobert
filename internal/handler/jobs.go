@@ -6,6 +6,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -30,6 +31,7 @@ type Worker struct {
 	WorkerID   string
 	RemoteAddr string
 	Modules    []string
+	Workers    int
 }
 
 type JobCtrl struct {
@@ -93,6 +95,7 @@ func (ctrl JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 	// create worker id
 	workerid := random(20)
 	modules := strings.Split(r.URL.Query().Get("modules"), ",")
+	workers, _ := strconv.Atoi(r.URL.Query().Get("workers"))
 	log.Printf("worker %q started", workerid)
 
 	// register worker
@@ -101,6 +104,7 @@ func (ctrl JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 		WorkerID:   workerid,
 		RemoteAddr: r.RemoteAddr,
 		Modules:    modules,
+		Workers:    workers,
 	}
 	workermu.Unlock()
 
