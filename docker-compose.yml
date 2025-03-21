@@ -6,10 +6,59 @@ services:
     image: sprungknoedl/dagobert
     restart: unless-stopped
     volumes:
-      - data:/app/files/
-      # uncomment if you want dagobert extensions to run other containers
-      # - /var/run/docker.sock:/var/run/docker.sock
-    env_file:
-      - dagobert.env
+      - data:/home/sprungknoedl/files
+    environment:
+      # -- OpenID
+      - OIDC_ISSUER=https://login.microsoftonline.com/TENANT_ID/v2.0
+      - OIDC_CLIENT_ID=ClientIdIssuedById
+      - OIDC_CLIENT_SECRET=SecretIssuedByIdp
+      - OIDC_CLIENT_URL=http://localhost:8080
+      - OIDC_ID_CLAIM=oid
+      # -- Web
+      - WEB_SESSION_SECRET=SecretCookieEncryptionKey
+      # -- Default administrators
+      - DAGOBERT_ADMIN_0=IdOfAdministrator1
+      - DAGOBERT_ADMIN_1=IdOfAdministrator2
+      # -- Default api keys
+      - DAGOBERT_KEY_0=PleaseDoNotUseThisKey
+      - DAGOBERT_KEY_1=PleaseDoNotUseThisEither
+      # -- TimeSketch settings
+      - TIMESKETCH_URL=http://timesketch:8080
+      - TIMESKETCH_USER=user
+      - TIMESKETCH_PASS=password
+      - TIMESKETCH_SKIP_VERIFY_TLS=false
     ports:
       - 8080:8080
+
+  worker-hayabusa:
+    image: sprungknoedl/dagobert-hayabusa
+    restart: unless-stopped
+    volumes:
+      - data:/home/sprungknoedl/files
+    environment:
+      - DAGOBERT_WORKERS=3
+      - DAGOBERT_URL=http://app:8080
+      - DAGOBERT_API_KEY=PleaseDoNotUseThisFromAbove
+      - DAGOBERT_SKIP_VERIFY_TLS=false
+
+  worker-plaso:
+    image: sprungknoedl/dagobert-plaso
+    restart: unless-stopped
+    volumes:
+      - data:/home/plaso/files
+    environment:
+      - DAGOBERT_WORKERS=5
+      - DAGOBERT_URL=http://app:8080
+      - DAGOBERT_API_KEY=PleaseDoNotUseThisFromAbove
+      - DAGOBERT_SKIP_VERIFY_TLS=false
+
+  worker-timesketch:
+    image: sprungknoedl/dagobert-timesketch
+    restart: unless-stopped
+    volumes:
+      - data:/home/sprungknoedl/files
+    environment:
+      - DAGOBERT_WORKERS=3
+      - DAGOBERT_URL=http://app:8080
+      - DAGOBERT_API_KEY=PleaseDoNotUseThisFromAbove
+      - DAGOBERT_SKIP_VERIFY_TLS=false
