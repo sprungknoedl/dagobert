@@ -2,8 +2,6 @@ package main
 
 import (
 	"cmp"
-	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -20,7 +18,6 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/internal/worker"
 	"github.com/sprungknoedl/dagobert/pkg/timesketch"
-	"github.com/sprungknoedl/dagobert/pkg/tty"
 )
 
 type Configuration struct {
@@ -75,33 +72,40 @@ func StartUI() {
 		SessionSecret:  os.Getenv("WEB_SESSION_SECRET"),
 	}
 
+	slog.Debug("Connecting to database", "url", cfg.Database)
 	db, err := model.Connect(cfg.Database)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		slog.Error("Failed to connect to database: %v", "err", err)
+		return
 	}
 
+	slog.Debug("Initializing database")
 	err = InitializeDatabase(db)
 	if err != nil {
-		log.Fatalf("Failed to run database migrations: %v", err)
+		slog.Error("Failed to run database migrations: %v", "err", err)
+		return
 	}
 
+	slog.Debug("Creating timesketch client", "url", os.Getenv("TIMESKETCH_URL"))
 	ts, err := timesketch.NewClient(
 		os.Getenv("TIMESKETCH_URL"),
 		os.Getenv("TIMESKETCH_USER"),
 		os.Getenv("TIMESKETCH_PASS"),
 	)
 	if err != nil {
-		log.Printf("Failed to create timesketch client: %v", err)
+		slog.Warn("Failed to create timesketch client: %v", "err", err)
 	}
 
 	// --------------------------------------
 	// Authorization
 	// --------------------------------------
+	slog.Debug("Creating casbin acl model")
 	acl := handler.NewACL(db)
 
 	// --------------------------------------
 	// Authentication
 	// --------------------------------------
+	slog.Debug("Creating oid provider", "url", cfg.Issuer)
 	issuer, _ := url.Parse(cfg.Issuer)
 	clientUrl, _ := url.Parse(cfg.ClientUrl)
 	auth := handler.NewAuthCtrl(db, acl, handler.OpenIDConfig{
@@ -118,6 +122,7 @@ func StartUI() {
 	// --------------------------------------
 	// Router
 	// --------------------------------------
+	slog.Debug("Creating router and registering handlers")
 	mux := http.NewServeMux()
 	srv := handler.Recover(mux)
 	srv = auth.Protect(srv)
@@ -280,25 +285,32 @@ func StartUI() {
 	// --------------------------------------
 	// Initialize Dagobert
 	// --------------------------------------
+	slog.Debug("Initializing dagobert")
 	err = InitializeDagobert(db, acl, cfg)
 	if err != nil {
-		log.Fatalf("Failed to initialize dagobert: %v", err)
+		slog.Error("Failed to initialize dagobert", "err", err)
+		return
 	}
 
+	slog.Debug("Loading hooks")
 	err = handler.LoadHooks(db)
 	if err != nil {
-		log.Fatalf("Failed to load hooks: %v", err)
+		slog.Error("Failed to load hooks", "err", err)
+		return
 	}
 
+	slog.Debug("Rescheduling stale jobs")
 	err = db.RescheduleStaleJobs(handler.ServerToken)
 	if err != nil {
-		log.Fatalf("Failed to reschedule state jobs: %v", err)
+		slog.Error("Failed to reschedule state jobs", "err", err)
 	}
 
-	log.Printf("Ready to receive requests. Listening on :8080 ...")
+	// TODO: make lsiten address configurable
+	slog.Info("Starting web server", "addr", ":8080")
 	err = http.ListenAndServe(":8080", srv)
 	if err != nil {
-		fmt.Printf("| %s | %v\n", tty.Red("ERR"), err)
+		slog.Error("Failed to start web server", "err", err)
+		return
 	}
 }
 
@@ -308,6 +320,7 @@ func InitializeDatabase(store *model.Store) error {
 		return err
 	}
 
+	slog.Debug("Loading database migrations")
 	source, err := iofs.New(model.Migrations, "migrations")
 	if err != nil {
 		return err
@@ -318,17 +331,22 @@ func InitializeDatabase(store *model.Store) error {
 		return err
 	}
 
+	slog.Debug("Applying database migrations")
 	err = m.Up()
 	if err != nil && err != migrate.ErrNoChange {
 		return err
 	}
 
-	v, _, err := m.Version()
+	v, dirty, err := m.Version()
 	if err != nil && err != migrate.ErrNoChange {
 		return err
 	}
 
-	log.Printf("Migrated database to version %d", v)
+	if dirty {
+		slog.Info("Database model migrated", "version", v)
+	} else {
+		slog.Info("Database model current", "version", v)
+	}
 	return nil
 }
 
@@ -338,16 +356,17 @@ func InitializeDagobert(store *model.Store, acl *handler.ACL, cfg Configuration)
 		return err
 	}
 
+	slog.Debug("Initializing dagobert, found users", "count", len(users))
 	if len(users) == 0 {
 		// initialize administrators
-		log.Printf("Initializing administrators")
+		slog.Info("Initializing administrators")
 		for _, env := range os.Environ() {
 			if !strings.HasPrefix(env, "DAGOBERT_ADMIN_") {
 				continue
 			}
 
 			key, value, _ := strings.Cut(env, "=")
-			log.Printf("  Adding %q as administrator", value)
+			slog.Info("Adding administrator", "uid", value)
 			err = store.SaveUser(model.User{
 				ID:   value,
 				UPN:  key,
@@ -363,16 +382,24 @@ func InitializeDagobert(store *model.Store, acl *handler.ACL, cfg Configuration)
 				return err
 			}
 		}
+	}
 
+	keys, err := store.ListKeys()
+	if err != nil {
+		return err
+	}
+
+	slog.Debug("Initializing dagobert, found key", "count", len(keys))
+	if len(keys) == 0 {
 		// initialize api keys
-		log.Printf("Initializing api keys")
+		slog.Info("Initializing api keys")
 		for _, env := range os.Environ() {
 			if !strings.HasPrefix(env, "DAGOBERT_KEY_") {
 				continue
 			}
 
 			key, value, _ := strings.Cut(env, "=")
-			log.Printf("  Adding %q as api key", value)
+			slog.Info("Adding api key", "key", value)
 			err = store.SaveKey(model.Key{
 				Type: "Dagobert",
 				Key:  value,
