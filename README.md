@@ -51,8 +51,8 @@ To ease the installation and upgrades, Dagobert is shipped in Docker containers.
 2. Configure environment
 
     ```sh
-    cp env.model .env
-    nano .env # update settings (see 📝 Configuration below)
+    cp dagobert.env.example dagobert.env
+    nano dagobert.env # update settings (see 📝 Configuration below)
     ```
 
 3. Start the stack

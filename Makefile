@@ -1,4 +1,6 @@
 .PHONY: build build-web build-go docker run
+.EXPORT_ALL_VARIABLES:
+include dagobert.env
 
 build: build-web build-go
 
@@ -15,4 +17,4 @@ docker:
 	docker build . -f configs/Dockerfile-timesketch -t sprungknoedl/dagobert-timesketch
 
 run:
-	source configs/dagobert.env && air -c configs/air.toml
+	air -c configs/air.toml
