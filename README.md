@@ -1,32 +1,35 @@
 # Dagobert
+**A Collaborative Platform for Incident Response**
 
-![Dagobert Logo](web/favicon.svg)
+Dagobert streamlines incident investigations by helping teams share technical details, track progress, and generate comprehensive reports—all in one place. Inspired by tools like [IRIS](https://dfir-iris.org/) and [Aurora Incident Response](https://github.com/cyb3rfox/Aurora-Incident-Response), Dagobert enhances collaboration and documentation for faster, more effective incident response.
 
-**Dagobert** is a collaborative platform designed to assist incident responders in sharing technical details during investigations and creating more effective incident response documentation. Inspired by the "Spreadsheet of Doom" utilized in the SANS FOR508 class and software like [IRIS](https://dfir-iris.org/) and [Aurora Incident Response](https://github.com/cyb3rfox/Aurora-Incident-Response), Dagobert takes incident response collaboration to the next level.
 
 ## ✨ Key Features
 
-**🔄 Real-time Collaboration**
-* Simultaneous multi-user editing for live teamwork during investigations
-* Audit trail for traceable decision-making
+### 📂 Multi-Case Management
+Manage multiple investigations at once with dedicated workspaces for each case. Track progress in real time and coordinate with your team without losing context.
 
-**🔌 Evidence ProcessingPlugins**
-*  Extensible plugin architecture for automated evidence handling:
-    * EVTX log parsers ([Hayabusa](https://github.com/Yamato-Security/hayabusa))
-    * Timeline creation ([Plaso](https://github.com/log2timeline/plaso))
+### 🔍 Evidence & IOC Tracking
+Record technical details, assets, IOCs, and forensic evidence in a structured way. Dagobert automatically links findings to past investigations for deeper insights.
 
-**⏱️ Timesketch integration**
-* One-click timeline uploads to Timesketch instances
-* Automatic event import from Timesketch
-* Bidirection synchronization of indicators (cooming soon)
+### ⏳ Timeline Reconstruction
+Build a clear chronology of attack events and investigative actions. Visualize the sequence of compromise and key decision points in one unified timeline.
 
-**📊 Office Report Generation**
-* Native support for DOCX/ODT report and XLSX/ODS spreadsheet templates
-* Dynamic data binding for:
-    * Executive summaries
-    * Technical IOC tables
-    * Investigation timelines
-* Style-preserving exports to Microsoft Word and LibreOffice
+### 📝 Collaborative Notes & Comments
+Document every step of your investigation in a flexible, wiki-style format. Add comments, observations, and technical notes with team-wide visibility.
+
+### ✅ Task Assignment & Tracking
+Delegate tasks to team members directly within the platform. Monitor progress, deadlines, and dependencies to keep the investigation on track.
+
+### 📄 Automated Reporting
+Generate polished reports with a single click. Customise templates and export in multiple formats to share findings with stakeholders effortlessly.
+
+### 🔌 Extensible Plugin System
+
+**Automated Evidence Processing:** Integrate tools like [Hayabusa](https://github.com/Yamato-Security/hayabusa) for EVTX parsing or [Plaso](https://github.com/log2timeline/plaso) for timeline generation.
+
+**Timesketch Integration:** Upload timelines to Timesketch with one click or automatically import events for deeper analysis.
+
 
 ## 🚀 Getting Started
 
@@ -65,6 +68,7 @@ To ease the installation and upgrades, Dagobert is shipped in Docker containers.
 
 **Production Note:** Always deploy behind a HTTPS proxy like Apache, nginx or traefik.
 
+
 ## 📝 Configuration
 Dagobert uses environment variables for all runtime configuration.
 
@@ -92,17 +96,20 @@ Add initial admins using their OIDC identity claim:
 | `DAGOBERT_ADMIN_0` | First administrative user | `a5fad3d3-559c-4578-a3f9-ec907ec0ddb9` |
 | `DAGOBERT_ADMIN_N` | Any number of administrators can be added; variable must start with `DAGOBERT_ADMIN_` | |
 
+
 ## Contributing
 
-All contributions in any form (be it code, documentation, design) is highly welcome!
+All contributions in any form (be it code, documentation, design) are highly welcome!
 
-1. Fork the repository/
+1. Fork the repository
 2. Create a feature branch: `git checkout -b feat/your-idea`.
 3. Submit a PR with a clear description.
+
 
 ## License
 
 Dagobert is released under the MIT License.
+
 
 ## Contact
 
