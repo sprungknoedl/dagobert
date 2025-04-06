@@ -55,7 +55,7 @@ To ease the installation and upgrades, Dagobert is shipped in Docker containers.
 
     ```sh
     cp dagobert.env.example dagobert.env
-    nano dagobert.env # update settings (see 📝 Configuration below)
+    nano dagobert.env # update settings
     ```
 
 3. Start the stack
@@ -70,31 +70,8 @@ To ease the installation and upgrades, Dagobert is shipped in Docker containers.
 
 
 ## 📝 Configuration
-Dagobert uses environment variables for all runtime configuration.
 
-### OpenID Connect (OIDC)
-
-| Variable | Description | Example |
-| -------- | ----------- | ------- |
-| `OIDC_ISSUER` | OpenID Connect discovery base URL of the identity provider | `https://auth.example.com/realms/dagobert` |
-| `OIDC_CLIENT_ID` | Client ID assigned to Dagobert by the identity proivder | `dagobert-client` |
-| `OIDC_CLIENT_SECRET` | Client secret assigned to Dagobert by the identity provider | `supersecret123` |
-| `OIDC_CLIENT_URL` | Dagobert's base URL (for OIDC callback) | `https://dagobert.example.com/` |
-| `OIDC_ID_CLAIM` | Claim to use as the user ID (`sub` or `oid` for [Microsoft Entra](https://learn.microsoft.com/en-us/entra/identity-platform/id-token-claims-reference#use-claims-to-reliably-identify-a-user)) | `sub` |
-
-### Web server
-
-| Variable | Description | Example |
-| -------- | ----------- | ------- |
-| `WEB_SESSION_SECRET` | Secret key used to encrypt session cookies | Generate e.g. with `openssl rand -hex 32` |
-
-### Admins
-Add initial admins using their OIDC identity claim:
-
-| Variable | Description | Example |
-| -------- | ----------- | ------- |
-| `DAGOBERT_ADMIN_0` | First administrative user | `a5fad3d3-559c-4578-a3f9-ec907ec0ddb9` |
-| `DAGOBERT_ADMIN_N` | Any number of administrators can be added; variable must start with `DAGOBERT_ADMIN_` | |
+Dagobert uses environment variables for all runtime configuration. See [📝 Wiki:Configuration](https://github.com/sprungknoedl/dagobert/wiki/📝-Configuration) for a complete reference for all available settings.
 
 
 ## Contributing
