@@ -11,7 +11,7 @@
             {{ define "navbar-extra-buttons" }}
                 {{if allowed ($url := print .env.ActiveRoute "timesketch") "POST"}}
                 <a class="join-item btn" href="{{ $url }}" up-follow  up-method="post">
-                    <i class="hio-6 hio-bars-arrow-up inline-block mr-1"></i>
+                    <i class="hio hio-6 hio-bars-arrow-up inline-block mr-1"></i>
                     Import Timesketch
                 </a>
                 {{ end }}
@@ -36,23 +36,23 @@
                     <tr class='hover {{ if .Flagged }}bg-flagged{{ else if eq .Type "Remediation"}}bg-good{{ else if eq .Type "Legitimate"}}bg-good{{ end }}'>
                         <td class="truncate"> {{ template "format-time" .Time }}</span> </td>
                         <td class="truncate">
-                            {{ if eq .Type "Reconnaissance" }}            <i class="hio-5 hio-magnifying-glass inline-block"></i>
-                            {{ else if eq .Type "Resource Development" }} <i class="hio-5 hio-cog-6-tooth inline-block"></i>
-                            {{ else if eq .Type "Initial Access" }}       <i class="hio-5 hio-lock-open inline-block"></i>
-                            {{ else if eq .Type "Execution" }}            <i class="hio-5 hio-play inline-block"></i>
-                            {{ else if eq .Type "Persistence" }}          <i class="hio-5 hio-arrow-path inline-block"></i>
-                            {{ else if eq .Type "Privilege Escalation" }} <i class="hio-5 hio-logout inline-block"></i>
-                            {{ else if eq .Type "Defense Evasion" }}      <i class="hio-5 hio-eye-slash inline-block"></i>
-                            {{ else if eq .Type "Credential Access" }}    <i class="hio-5 hio-identification inline-block"></i>
-                            {{ else if eq .Type "Discovery" }}            <i class="hio-5 hio-eye inline-block"></i>
-                            {{ else if eq .Type "Lateral Movement" }}     <i class="hio-5 hio-arrows-right-left inline-block"></i>
-                            {{ else if eq .Type "Collection" }}           <i class="hio-5 hio-arrow-down-tray inline-block"></i>
-                            {{ else if eq .Type "C2" }}                   <i class="hio-5 hio-server inline-block"></i>
-                            {{ else if eq .Type "Exfiltration" }}         <i class="hio-5 hio-truck inline-block"></i>
-                            {{ else if eq .Type "Impact" }}               <i class="hio-5 hio-fire inline-block"></i>
-                            {{ else if eq .Type "Legitimate" }}           <i class="hio-5 hio-check-circle inline-block"></i>
-                            {{ else if eq .Type "Remediation" }}          <i class="hio-5 hio-heart inline-block"></i>
-                            {{ else }}                                    <i class="hio-5 hio-question-mark-circle inline-block"></i>
+                            {{ if eq .Type "Reconnaissance" }}            <i class="hio hio-5 hio-magnifying-glass inline-block"></i>
+                            {{ else if eq .Type "Resource Development" }} <i class="hio hio-5 hio-cog-6-tooth inline-block"></i>
+                            {{ else if eq .Type "Initial Access" }}       <i class="hio hio-5 hio-lock-open inline-block"></i>
+                            {{ else if eq .Type "Execution" }}            <i class="hio hio-5 hio-play inline-block"></i>
+                            {{ else if eq .Type "Persistence" }}          <i class="hio hio-5 hio-arrow-path inline-block"></i>
+                            {{ else if eq .Type "Privilege Escalation" }} <i class="hio hio-5 hio-logout inline-block"></i>
+                            {{ else if eq .Type "Defense Evasion" }}      <i class="hio hio-5 hio-eye-slash inline-block"></i>
+                            {{ else if eq .Type "Credential Access" }}    <i class="hio hio-5 hio-identification inline-block"></i>
+                            {{ else if eq .Type "Discovery" }}            <i class="hio hio-5 hio-eye inline-block"></i>
+                            {{ else if eq .Type "Lateral Movement" }}     <i class="hio hio-5 hio-arrows-right-left inline-block"></i>
+                            {{ else if eq .Type "Collection" }}           <i class="hio hio-5 hio-arrow-down-tray inline-block"></i>
+                            {{ else if eq .Type "C2" }}                   <i class="hio hio-5 hio-server inline-block"></i>
+                            {{ else if eq .Type "Exfiltration" }}         <i class="hio hio-5 hio-truck inline-block"></i>
+                            {{ else if eq .Type "Impact" }}               <i class="hio hio-5 hio-fire inline-block"></i>
+                            {{ else if eq .Type "Legitimate" }}           <i class="hio hio-5 hio-check-circle inline-block"></i>
+                            {{ else if eq .Type "Remediation" }}          <i class="hio hio-5 hio-heart inline-block"></i>
+                            {{ else }}                                    <i class="hio hio-5 hio-question-mark-circle inline-block"></i>
                             {{ end  }}
                             {{ .Type }}
                         </td>
@@ -60,10 +60,10 @@
                         <td>
                             {{ range .Assets }}
                             <div class="text-success truncate">
-                                {{ if eq .Type "Account" }}      <i class="hio-5 hio-user inline-block"></i>
-                                {{ else if eq .Type "Desktop" }} <i class="hio-5 hio-computer-desktop inline-block"></i>
-                                {{ else if eq .Type "Server" }}  <i class="hio-5 hio-server inline-block"></i>
-                                {{ else }}                       <i class="hio-5 hio-question-mark-circle inline-block"></i>
+                                {{ if eq .Type "Account" }}      <i class="hio hio-5 hio-user inline-block"></i>
+                                {{ else if eq .Type "Desktop" }} <i class="hio hio-5 hio-computer-desktop inline-block"></i>
+                                {{ else if eq .Type "Server" }}  <i class="hio hio-5 hio-server inline-block"></i>
+                                {{ else }}                       <i class="hio hio-5 hio-question-mark-circle inline-block"></i>
                                 {{ end }}
                                 {{ .Name }}
                             </div>
@@ -72,13 +72,13 @@
                         <td>
                             {{ range .Indicators }}
                             <div class="text-error truncate">
-                                {{ if eq .Type "IP" }}           <i class="hio-5 hio-map-pin inline-block"></i>
-                                {{ else if eq .Type "Domain" }}  <i class="hio-5 hio-globe-europe inline-block"></i>
-                                {{ else if eq .Type "URL" }}     <i class="hio-5 hio-link inline-block"></i>
-                                {{ else if eq .Type "Path" }}    <i class="hio-5 hio-folder-open inline-block"></i>
-                                {{ else if eq .Type "Hash" }}    <i class="hio-5 hio-fingerprint inline-block"></i>
-                                {{ else if eq .Type "Service" }} <i class="hio-5 hio-command-line inline-block"></i>
-                                {{ else }}                       <i class="hio-5 hio-question-mark-circle inline-block"></i>
+                                {{ if eq .Type "IP" }}           <i class="hio hio-5 hio-map-pin inline-block"></i>
+                                {{ else if eq .Type "Domain" }}  <i class="hio hio-5 hio-globe-europe inline-block"></i>
+                                {{ else if eq .Type "URL" }}     <i class="hio hio-5 hio-link inline-block"></i>
+                                {{ else if eq .Type "Path" }}    <i class="hio hio-5 hio-folder-open inline-block"></i>
+                                {{ else if eq .Type "Hash" }}    <i class="hio hio-5 hio-fingerprint inline-block"></i>
+                                {{ else if eq .Type "Service" }} <i class="hio hio-5 hio-command-line inline-block"></i>
+                                {{ else }}                       <i class="hio hio-5 hio-question-mark-circle inline-block"></i>
                                 {{ end }}
                                 {{ .Value }}
                             </div>
@@ -87,18 +87,18 @@
                         <td data-search='{{ if .Flagged }}flagged:true{{ end }}' class="text-right"><div class="join">
                             {{ if allowed ($url := print "/cases/" .CaseID "/events/" .ID) "POST" }} {{ if .Flagged }}
                             <a class="join-item btn btn-sm btn-flagged" title="Flagged event" href="{{ $url }}" up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio-5 hio-flag"></i>
+                                <i class="hio hio-5 hio-flag"></i>
                             </a>
                             {{ end }} {{ end }}
                             {{ if allowed ($url := print "/cases/" .CaseID "/events/" .ID) "POST" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}" up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio-5 hio-pencil"></i>
+                                <i class="hio hio-5 hio-pencil"></i>
                             </a>
                             {{ end }}
                             {{ if allowed ($url := print "/cases/" .CaseID "/events/" .ID) "DELETE" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio-5 hio-trash"></i>
+                                <i class="hio hio-5 hio-trash"></i>
                             </a>
                             {{ end }}
                         </div></td>

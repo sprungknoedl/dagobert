@@ -42,13 +42,13 @@
                             {{ if allowed ($url := print "/cases/" .ID) "POST" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}" title="Edit"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio-5 hio-pencil"></i>
+                                <i class="hio hio-5 hio-pencil"></i>
                             </a>
                             {{ end }}
                             {{ if allowed ($url := print "/cases/" .ID) "DELETE" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}" title="Delete"
                                 up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio-5 hio-trash"></i>
+                                <i class="hio hio-5 hio-trash"></i>
                             </a>
                             {{ end }}
                         </div></td>

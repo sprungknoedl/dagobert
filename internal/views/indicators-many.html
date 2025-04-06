@@ -12,7 +12,7 @@
 					{{if allowed ($url := print .env.ActiveRoute "import") "POST"}}
 					<details class="dropdown">
 						<summary class="btn join-item">
-							<i class="hio-6 hio-bars-arrow-up inline-block mr-1"></i> Import
+							<i class="hio hio-6 hio-bars-arrow-up inline-block mr-1"></i> Import
 						</summary>
 						<ul style="position: absolute" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow">
 							<li><a href="{{ $url }}/csv" up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}">from CSV</a></li>
@@ -23,7 +23,7 @@
 					{{if allowed ($url := print .env.ActiveRoute "export") "GET"}}
 					<details class="dropdown">
 						<summary class="btn join-item">
-							<i class="hio-6 hio-bars-arrow-down inline-block mr-1"></i> Export
+							<i class="hio hio-6 hio-bars-arrow-down inline-block mr-1"></i> Export
 						</summary>
 						<ul style="position: absolute" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow">
 							<li><a href="{{ $url }}">as CSV</a></li>
@@ -55,21 +55,21 @@
 							{{ range .rows }}
 							<tr class="hover">
 								<td class="truncate">
-                            {{ if eq .Status "Confirmed" }} <span class="text-error"><i class="hio-5 hio-bug-ant inline-block"></i> {{ .Status }}</span>
-                            {{ else if eq .Status "Suspicious" }} <span class="text-warning"><i class="hio-5 hio-finger-print inline-block"></i> {{ .Status }}</span>
-                            {{ else if eq .Status "Unrelated" }} <span class="text-success"><i class="hio-5 hio-check-circle inline-block"></i> {{ .Status }}</span>
+                            {{ if eq .Status "Confirmed" }} <span class="text-error"><i class="hio hio-5 hio-bug-ant inline-block"></i> {{ .Status }}</span>
+                            {{ else if eq .Status "Suspicious" }} <span class="text-warning"><i class="hio hio-5 hio-finger-print inline-block"></i> {{ .Status }}</span>
+                            {{ else if eq .Status "Unrelated" }} <span class="text-success"><i class="hio hio-5 hio-check-circle inline-block"></i> {{ .Status }}</span>
                             {{ else }}
                             {{ .Status }}
                             {{ end }}
 								</td>
 								<td class="truncate">
-                            {{ if eq .Type "IP" }}           <i class="hio-5 hio-map-pin inline-block"></i>
-                            {{ else if eq .Type "Domain" }}  <i class="hio-5 hio-globe-europe-africa inline-block"></i>
-                            {{ else if eq .Type "URL" }}     <i class="hio-5 hio-link inline-block"></i>
-                            {{ else if eq .Type "Path" }}    <i class="hio-5 hio-folder-open inline-block"></i>
-                            {{ else if eq .Type "Hash" }}    <i class="hio-5 hio-finger-print inline-block"></i>
-                            {{ else if eq .Type "Service" }} <i class="hio-5 hio-command-line inline-block"></i>
-                            {{ else }}                       <i class="hio-5 hio-question-mark-circle inline-block"></i>
+                            {{ if eq .Type "IP" }}           <i class="hio hio-5 hio-map-pin inline-block"></i>
+                            {{ else if eq .Type "Domain" }}  <i class="hio hio-5 hio-globe-europe-africa inline-block"></i>
+                            {{ else if eq .Type "URL" }}     <i class="hio hio-5 hio-link inline-block"></i>
+                            {{ else if eq .Type "Path" }}    <i class="hio hio-5 hio-folder-open inline-block"></i>
+                            {{ else if eq .Type "Hash" }}    <i class="hio hio-5 hio-finger-print inline-block"></i>
+                            {{ else if eq .Type "Service" }} <i class="hio hio-5 hio-command-line inline-block"></i>
+                            {{ else }}                       <i class="hio hio-5 hio-question-mark-circle inline-block"></i>
                             {{ end }}
                             {{ .Type }}
 								</td>
@@ -100,13 +100,13 @@
 										{{ if allowed ($url := print "/cases/" .CaseID "/indicators/" .ID) "POST" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio-5 hio-pencil"></i>
+                                <i class="hio hio-5 hio-pencil"></i>
                             </a>
 										{{ end }}
 										{{ if allowed ($url := print "/cases/" .CaseID "/indicators/" .ID) "DELETE" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio-5 hio-trash"></i>
+                                <i class="hio hio-5 hio-trash"></i>
                             </a>
 										{{ end }}
                         </div></td>

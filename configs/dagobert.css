@@ -1,32 +1,33 @@
-@import "dataTables-2.1.8.min.css";
-@import "dataTables.tailwindcss-2.1.8.css";
-@import "heroicons-outline-405db23.css";
-@import "tom-select-2.4.1.css";
-@import "unpoly-3.9.5.min.css";
-@import "vis-timeline-7.7.3.css";
+@import './dataTables-2.1.8.min.css';
+@import './dataTables.tailwindcss-2.1.8.css';
+@import './heroicons-outline-405db23.css';
+@import './tom-select-2.4.1.css';
+@import './unpoly-3.9.5.min.css';
+@import './vis-timeline-7.7.3.css';
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@plugin "daisyui" {
+    themes: dark --default;
+}
 
 html {
     font-size: 12px;
+    font-family: SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
 }
 
 .table, .table :where(thead, tfoot) {
     font-size: 1rem;
 }
 
-.bg-good {
-    @apply bg-emerald-950 !important;
+.bg-good { 
+    @apply bg-emerald-950!;
 }
 
-.bg-flagged {
-    @apply bg-sky-950 !important;
+.bg-flagged { 
+    @apply bg-sky-950!; 
 }
-
-.btn-flagged {
-    @apply text-yellow-500 !important;
+.btn-flagged { 
+    @apply text-yellow-500!; 
 }
 
 /*
@@ -39,19 +40,17 @@ up-drawer-box {
 
 up-drawer[size=large] up-drawer-box {
     width: 66% !important;
-  }
+}
 
 /*
 HERO ICONS
 */
 .hio-5 {
-    @apply hio;
     font-size: 15px;
     line-height: 15px;
 }
 
 .hio-6 {
-    @apply hio;
     font-size: 18px;
     line-height: 18px;
 }
@@ -292,6 +291,7 @@ table.dataTable > tbody > tr.selected a.btn {
 /*
 VIS TIMELINE
 */
+
 .vis-timeline {
     border: none !important;
 }

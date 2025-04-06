@@ -30,9 +30,9 @@
                     {{ range .keys }}
                     <tr class="hover">
                         <td class="truncate">
-                            {{ if eq .Type "Dagobert" }}     <i class="hio-5 hio-bolt inline-block"></i>
-                            {{ else if eq .Type "Donald" }}  <i class="hio-5 hio-camera inline-block"></i>
-                            {{ else }}                       <i class="hio-5 hio-beaker inline-block"></i>
+                            {{ if eq .Type "Dagobert" }}     <i class="hio hio-5 hio-bolt inline-block"></i>
+                            {{ else if eq .Type "Donald" }}  <i class="hio hio-5 hio-camera inline-block"></i>
+                            {{ else }}                       <i class="hio hio-5 hio-beaker inline-block"></i>
                             {{ end }}
                             {{ .Type }}
                         </td>
@@ -42,13 +42,13 @@
                             {{ if allowed ($url := print "/settings/api-keys/" .Key) "POST" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio-5 hio-pencil"></i>
+                                <i class="hio hio-5 hio-pencil"></i>
                             </a>
                             {{ end }}
                             {{ if allowed ($url := print "/settings/api-keys/" .Key) "DELETE" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio-5 hio-trash"></i>
+                                <i class="hio hio-5 hio-trash"></i>
                             </a>
                             {{ end }}
                         </div></td>

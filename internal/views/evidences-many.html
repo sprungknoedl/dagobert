@@ -28,13 +28,13 @@
                     {{ range .rows }}
                     <tr class="hover">
                         <td class="truncate">
-                            {{ if eq .Type "File" }}              <i class="hio-5 hio-document inline-block"></i>
-                            {{ else if eq .Type "Logs" }}         <i class="hio-5 hio-document-text inline-block"></i>
-                            {{ else if eq .Type "Triage" }}       <i class="hio-5 hio-archive-box inline-block"></i>
-                            {{ else if eq .Type "System Image" }} <i class="hio-5 hio-server inline-block"></i>
-                            {{ else if eq .Type "Memory Dump" }}  <i class="hio-5 hio-cpu-chip inline-block"></i>
-                            {{ else if eq .Type "Malware" }}      <i class="hio-5 hio-bug-ant inline-block"></i>
-                            {{ else }}                            <i class="hio-5 hio-cube inline-block"></i>
+                            {{ if eq .Type "File" }}              <i class="hio hio-5 hio-document inline-block"></i>
+                            {{ else if eq .Type "Logs" }}         <i class="hio hio-5 hio-document-text inline-block"></i>
+                            {{ else if eq .Type "Triage" }}       <i class="hio hio-5 hio-archive-box inline-block"></i>
+                            {{ else if eq .Type "System Image" }} <i class="hio hio-5 hio-server inline-block"></i>
+                            {{ else if eq .Type "Memory Dump" }}  <i class="hio hio-5 hio-cpu-chip inline-block"></i>
+                            {{ else if eq .Type "Malware" }}      <i class="hio hio-5 hio-bug-ant inline-block"></i>
+                            {{ else }}                            <i class="hio hio-5 hio-cube inline-block"></i>
                             {{ end }}
                             {{ .Type }}
                         </td>
@@ -46,25 +46,25 @@
                         <td class="text-right"><div class="join">
                             {{ if allowed ($url := print "/cases/" .CaseID "/evidences/" .ID "/download") "GET" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}" >
-                                <i class="hio-5 hio-arrow-down-tray"></i>
+                                <i class="hio hio-5 hio-arrow-down-tray"></i>
                             </a>
                             {{ end }}
                             {{ if allowed ($url := print "/cases/" .CaseID "/evidences/" .ID "/run") "POST" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio-5 hio-bolt"></i>
+                                <i class="hio hio-5 hio-bolt"></i>
                             </a>
                             {{ end }}
                             {{ if allowed ($url := print "/cases/" .CaseID "/evidences/" .ID) "POST" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio-5 hio-pencil"></i>
+                                <i class="hio hio-5 hio-pencil"></i>
                             </a>
                             {{ end }}
                             {{ if allowed ($url := print "/cases/" .CaseID "/evidences/" .ID) "DELETE" }}
                             <a class="join-item btn btn-sm" href="{{ $url }}"
                                 up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio-5 hio-trash"></i>
+                                <i class="hio hio-5 hio-trash"></i>
                             </a>
                             {{ end }}
                         </div></td>
