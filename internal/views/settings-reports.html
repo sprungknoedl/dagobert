@@ -20,7 +20,7 @@
                     File
                     <span class="text-accent">*</span>
                 </label>
-				<input name="File" type="file" class="file-input file-input-bordered w-full" />
+				<input name="File" type="file" class="file-input w-full w-full" />
 			</div>
 
 			<div class="form-control mb-2">
@@ -30,7 +30,7 @@
 				    {{ if .valid.Name }}<span class="ml-2 text-sm text-error">{{ .valid.Name }}</span>{{ end }}
 				</label>
 
-				<input name="Name" type="text" class="input input-bordered" value="{{ .obj.Name }}" />
+				<input name="Name" type="text" class="input w-full" value="{{ .obj.Name }}" />
 			</div>
 
             <div class="form-control mb-2">
@@ -38,7 +38,7 @@
                     Notes
 				    {{ if .valid.Notes }}<span class="ml-2 text-sm text-error">{{ .valid.Notes }}</span>{{ end }}
                 </label>
-                <textarea name="Notes" rows="5" class="textarea textarea-bordered">{{ .obj.Notes }}</textarea>
+                <textarea name="Notes" rows="5" class="textarea w-full">{{ .obj.Notes }}</textarea>
             </div>
 
             <p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>

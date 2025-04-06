@@ -21,7 +21,7 @@
                     <span class="text-accent">*</span>
 				    {{ if .valid.Name }}<span class="ml-2 text-sm text-error">{{ .valid.Name }}</span>{{ end }}
                 </label>
-                <input name="Name" type="text" class="input input-bordered" value="{{ .obj.Name }}" />
+                <input name="Name" type="text" class="input w-full" value="{{ .obj.Name }}" />
             </div>
 
             <div class="form-control mb-2">
@@ -29,7 +29,7 @@
                     Classification
 				    {{ if .valid.Classification }}<span class="ml-2 text-sm text-error">{{ .valid.Classification }}</span>{{ end }}
                 </label>
-                <input name="Classification" type="text" class="input input-bordered" value="{{ .obj.Classification }}" />
+                <input name="Classification" type="text" class="input w-full" value="{{ .obj.Classification }}" />
             </div>
 
             <div class="form-control mb-2">
@@ -37,7 +37,7 @@
                     Severity
                     {{ if .valid.Severity }}<span class="ml-2 text-sm text-error">{{ .valid.Severity }}</span>{{ end }}
                 </label>
-                <select name="Severity" class="select select-bordered">
+                <select name="Severity" class="select w-full">
                     {{ range .model.CaseSeverities }}
                         <option {{ if eq $.obj.Severity . }}selected{{ end }}>{{ . }}</option>
                     {{ end }}
@@ -49,7 +49,7 @@
                     Outcome
                     {{ if .valid.Outcome }}<span class="ml-2 text-sm text-error">{{ .valid.Outcome }}</span>{{ end }}
                 </label>
-                <select name="Outcome" class="select select-bordered">
+                <select name="Outcome" class="select w-full">
                     {{ range .model.CaseOutcomes }}
                         <option {{ if eq $.obj.Outcome . }}selected{{ end }}>{{ . }}</option>
                     {{ end }}
@@ -61,7 +61,7 @@
                     Summary
 				    {{ if .valid.Summary }}<span class="ml-2 text-sm text-error">{{ .valid.Summary }}</span>{{ end }}
                 </label>
-                <textarea name="Summary" rows="5" class="textarea textarea-bordered">{{ .obj.Summary }}</textarea>
+                <textarea name="Summary" rows="5" class="textarea w-full">{{ .obj.Summary }}</textarea>
             </div>
 
             <div class="form-control mb-2">
@@ -76,7 +76,7 @@
                     Timesketch Sketch
                     {{ if .valid.SketchID }}<span class="ml-2 text-sm text-error">{{ .valid.SketchID }}</span>{{ end }}
                 </label>
-                <select name="SketchID" class="select select-bordered">
+                <select name="SketchID" class="select w-full">
                     <option {{ if eq $.obj.SketchID 0 }}selected{{ end }} value="0">None</option>
                     {{ range .sketches }}
                         <option {{ if eq $.obj.SketchID .ID }}selected{{ end }} value="{{ .ID }}">{{ .ID }} - {{ .Name }}</option>

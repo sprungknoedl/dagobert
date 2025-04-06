@@ -21,7 +21,7 @@
                     <span class="text-accent">*</span>
 				    {{ if .valid.Trigger }}<span class="ml-2 text-sm text-error">{{ .valid.Trigger }}</span>{{ end }}
                 </label>
-                <select name="Trigger" class="select select-bordered">
+                <select name="Trigger" class="select w-full">
                     {{ range .model.HookTrigger }}
                         <option {{ if eq $.obj.Trigger . }}selected{{ end }}>{{ . }}</option>
                     {{ end }}
@@ -34,7 +34,7 @@
                     <span class="text-accent">*</span>
 				    {{ if .valid.Name }}<span class="ml-2 text-sm text-error">{{ .valid.Name }}</span>{{ end }}
                 </label>
-                <input name="Name" type="text" class="input input-bordered" value="{{ .obj.Name }}" />
+                <input name="Name" type="text" class="input w-full" value="{{ .obj.Name }}" />
             </div>
 
             <div class="form-control mb-2">
@@ -43,7 +43,7 @@
                     <span class="text-accent">*</span>
 				    {{ if .valid.Condition }}<pre class="ml-2 text-sm text-error">{{ .valid.Condition }}</pre>{{ end }}
                 </label>
-                <input name="Condition" type="text" class="input input-bordered" value='{{ .obj.Condition }}' />
+                <input name="Condition" type="text" class="input w-full" value='{{ .obj.Condition }}' />
                 <!-- TODO: explain condition language -->
             </div>
 
@@ -53,7 +53,7 @@
                     <span class="text-accent">*</span>
 				    {{ if .valid.Mod }}<span class="ml-2 text-sm text-error">{{ .valid.Mod }}</span>{{ end }}
                 </label>
-                <select name="Mod" class="select select-bordered">
+                <select name="Mod" class="select w-full">
                     <option disabled value="" {{ if eq .obj.Mod "" }}selected{{ end }}>Select an option</option>
                     {{ range .mods }}
                         <option {{ if eq $.obj.Mod .Name }}selected{{ end }}>{{ .Name }}</option>
