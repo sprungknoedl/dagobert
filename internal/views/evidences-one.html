@@ -21,7 +21,7 @@
                     File
                     <span class="text-accent">*</span>
                 </label>
-				<input name="File" type="file" class="file-input file-input-bordered w-full" />
+				<input name="File" type="file" class="file-input w-full" />
 			</div>
 
 			<div class="form-control mb-2">
@@ -31,7 +31,7 @@
 				    {{ if .valid.Name }}<span class="ml-2 text-sm text-error">{{ .valid.Name }}</span>{{ end }}
 				</label>
 
-				<input name="Name" type="text" class="input input-bordered" value="{{ .obj.Name }}" />
+				<input name="Name" type="text" class="input w-full" value="{{ .obj.Name }}" />
 			</div>
 
             <div class="form-control mb-2">
@@ -40,7 +40,7 @@
                     <span class="text-accent">*</span>
 				    {{ if .valid.Type }}<span class="ml-2 text-sm text-error">{{ .valid.Type }}</span>{{ end }}
                 </label>
-                <select name="Type" class="tom select select-bordered">
+                <select name="Type" class="tom select w-full">
                     <option selected>{{ .obj.Type }}</option>
                     {{ range .model.EvidenceTypes }}
                         {{ if ne $.obj.Type . }}<option>{{ . }}</option>{{ end }}
@@ -53,7 +53,7 @@
                     Source
 				    {{ if .valid.Source }}<span class="ml-2 text-sm text-error">{{ .valid.Source }}</span>{{ end }}
                 </label>
-				<input name="Source" type="text" class="input input-bordered"
+				<input name="Source" type="text" class="input w-full"
                     value="{{ .obj.Source }}" />
             </div>
 
@@ -62,7 +62,7 @@
                     Notes
 				    {{ if .valid.Notes }}<span class="ml-2 text-sm text-error">{{ .valid.Notes }}</span>{{ end }}
                 </label>
-                <textarea name="Notes" rows="5" class="textarea textarea-bordered">{{ .obj.Notes }}</textarea>
+                <textarea name="Notes" rows="5" class="textarea w-full">{{ .obj.Notes }}</textarea>
             </div>
 
             <p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>

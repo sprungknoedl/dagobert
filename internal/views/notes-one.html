@@ -22,7 +22,7 @@
                     <span class="text-accent">*</span>
 				    {{ if .valid.Category }}<span class="ml-2 text-sm text-error">{{ .valid.Category }}</span>{{ end }}
                 </label>
-                <input name="Category" type="text" class="input input-bordered" value="{{ .obj.Category }}" />
+                <input name="Category" type="text" class="input w-full" value="{{ .obj.Category }}" />
             </div>
 
             <div class="form-control mb-2">
@@ -31,7 +31,7 @@
                     <span class="text-accent">*</span>
 				    {{ if .valid.Title }}<span class="ml-2 text-sm text-error">{{ .valid.Title }}</span>{{ end }}
                 </label>
-                <input name="Title" type="text" class="input input-bordered" value="{{ .obj.Title }}" />
+                <input name="Title" type="text" class="input w-full" value="{{ .obj.Title }}" />
             </div>
 
             <div class="form-control mb-2">
@@ -39,7 +39,7 @@
                     Description
 				    {{ if .valid.Description }}<span class="ml-2 text-sm text-error">{{ .valid.Description }}</span>{{ end }}
                 </label>
-                <textarea name="Description" rows="5" class="textarea textarea-bordered">{{ .obj.Description }}</textarea>
+                <textarea name="Description" rows="5" class="textarea w-full">{{ .obj.Description }}</textarea>
             </div>
 
             <p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>

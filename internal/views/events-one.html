@@ -22,7 +22,7 @@
                     <span class="text-accent">*</span>
                     {{ if .valid.Time }}<span class="ml-2 text-sm text-error">{{ .valid.Time }}</span>{{ end }}
                 </label>
-                <input name="Time" type="text" class="input input-bordered" value="{{ .obj.Time.Format "2006-01-02T15:04:05Z07:00" }}" />
+                <input name="Time" type="text" class="input w-full" value="{{ .obj.Time.Format "2006-01-02T15:04:05Z07:00" }}" />
             </div>
 
             <div class="form-control mb-2">
@@ -31,7 +31,7 @@
                     <span class="text-accent">*</span>
                     {{ if .valid.Type }}<span class="ml-2 text-sm text-error">{{ .valid.Type }}</span>{{ end }}
                 </label>
-                <select name="Type" class="select select-bordered">
+                <select name="Type" class="select w-full">
                     <option disabled value="" {{ if eq .obj.Type "" }}selected{{ end }}>Select an option</option>
                     {{ range .model.EventTypes }}
                         <option {{ if eq $.obj.Type . }}selected{{ end }}>{{ . }}</option>
@@ -45,7 +45,7 @@
                     <span class="text-accent">*</span>
                     {{ if .valid.Event }}<span class="ml-2 text-sm text-error">{{ .valid.Event }}</span>{{ end }}
                 </label>
-                <textarea name="Event" rows="5" class="textarea textarea-bordered">{{ .obj.Event }}</textarea>
+                <textarea name="Event" rows="5" class="textarea w-full">{{ .obj.Event }}</textarea>
             </div>
 
             <div class="form-control mb-2">
@@ -53,7 +53,7 @@
                     Raw
                     {{ if .valid.Raw }}<span class="ml-2 text-sm text-error">{{ .valid.Raw }}</span>{{ end }}
                 </label>
-                <textarea name="Raw" rows="10" class="textarea textarea-bordered">{{ .obj.Raw }}</textarea>
+                <textarea name="Raw" rows="10" class="textarea w-full">{{ .obj.Raw }}</textarea>
             </div>
 
             <div class="form-control mb-2">
@@ -68,7 +68,7 @@
                     Assets
                     {{ if .valid.Assets }}<span class="ml-2 text-sm text-error">{{ .valid.Assets }}</span>{{ end }}
                 </label>
-                <select multiple name="Assets" class="tom select select-bordered">
+                <select multiple name="Assets" class="tom select w-full">
                     {{ range .assets }}
                         <option value="{{ .ID }}" {{ if $.obj.HasAsset .ID }}selected{{ end }}>{{ .Name }}</option>
                     {{ end }}
@@ -80,7 +80,7 @@
                     Indicators
                     {{ if .valid.Indicators }}<span class="ml-2 text-sm text-error">{{ .valid.Indicators }}</span>{{ end }}
                 </label>
-                <select multiple name="Indicators" class="tom select select-bordered">
+                <select multiple name="Indicators" class="tom select w-full">
                     {{ range .indicators }}
                         <option value="{{ .ID }}" {{ if $.obj.HasIndicator .ID }}selected{{ end }}>{{ .Value }}</option>
                     {{ end }}

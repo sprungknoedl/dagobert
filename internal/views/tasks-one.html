@@ -22,7 +22,7 @@
                     <span class="text-accent">*</span>
 				    {{ if .valid.Type }}<span class="ml-2 text-sm text-error">{{ .valid.Type }}</span>{{ end }}
                 </label>
-                <select name="Type" class="select select-bordered">
+                <select name="Type" class="select w-full">
                     <option disabled value="" {{ if eq .obj.Type "" }}selected{{ end }}>Select an option</option>
                     {{ range .model.TaskTypes }}
                         <option {{ if eq $.obj.Type . }}selected{{ end }}>{{ . }}</option>
@@ -36,7 +36,7 @@
                     <span class="text-accent">*</span>
 				    {{ if .valid.Task }}<span class="ml-2 text-sm text-error">{{ .valid.Task }}</span>{{ end }}
                 </label>
-                <input name="Task" type="text" class="input input-bordered" value="{{ .obj.Task }}" />
+                <input name="Task" type="text" class="input w-full" value="{{ .obj.Task }}" />
             </div>
 
             <div class="form-control mb-2">
@@ -44,7 +44,7 @@
                     Owner
 				    {{ if .valid.Owner }}<span class="ml-2 text-sm text-error">{{ .valid.Owner }}</span>{{ end }}
                 </label>
-                <input name="Owner" type="text" class="input input-bordered" value="{{ .obj.Owner }}" />
+                <input name="Owner" type="text" class="input w-full" value="{{ .obj.Owner }}" />
             </div>
 
             <div class="form-control mb-2">
@@ -52,7 +52,7 @@
                     Due
 				    {{ if .valid.DateDue }}<span class="ml-2 text-sm text-error">{{ .valid.DateDue }}</span>{{ end }}
                 </label>
-                <input name="DateDue" type="text" class="input input-bordered" value="{{ .obj.DateDue.Format "2006-01-02T15:04:05Z07:00" }}" />
+                <input name="DateDue" type="text" class="input w-full" value="{{ .obj.DateDue.Format "2006-01-02T15:04:05Z07:00" }}" />
             </div>
 
             <div class="form-control mb-2">
