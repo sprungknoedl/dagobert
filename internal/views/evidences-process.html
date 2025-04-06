@@ -6,7 +6,7 @@
         <!-- Modal header -->
         <h3 class="font-bold text-lg mb-4">
             Process evidence
-            <a class="ml-2" href="{{ .env.ActiveRoute }}" up-follow> <i class="hio-5 hio-arrow-path inline-block mr-1"></i> </a>
+            <a class="ml-2" href="{{ .env.ActiveRoute }}" up-follow> <i class="hio hio-5 hio-arrow-path inline-block mr-1"></i> </a>
         </h3>
 
         <!-- Modal body -->
@@ -26,17 +26,17 @@
                     </div>
                 {{ else if eq .Status "Scheduled" }}
                     <p class="text-warning font-bold">
-		                <i class="hio-5 hio-information-circle inline-block"></i>
+		                <i class="hio hio-5 hio-information-circle inline-block"></i>
                         Job currently scheduled
                     </p>
                 {{ else if eq .Status "Running" }}
                     <p class="text-warning font-bold">
-		                <i class="hio-5 hio-information-circle inline-block"></i>
+		                <i class="hio hio-5 hio-information-circle inline-block"></i>
                         Job currently running
                     </p>
                 {{ else if eq .Status "Success" }}
                     <p class="text-success font-bold">
-		                <i class="hio-5 hio-check-circle inline-block"></i>
+		                <i class="hio hio-5 hio-check-circle inline-block"></i>
                         Job ran successfully.
                     </p>
                     <div class="card-actions justify-end">
@@ -47,7 +47,7 @@
                     </div>
                 {{ else if eq .Status "Failed" }}
                     <p class="text-error font-bold">
-		                <i class="hio-5 hio-x-circle-filled inline-block"></i>
+		                <i class="hio hio-5 hio-x-circle-filled inline-block"></i>
                         Job failed: {{ .Error }}
                     </p>
                     <div class="card-actions justify-end">
