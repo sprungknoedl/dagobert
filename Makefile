@@ -1,6 +1,6 @@
 .PHONY: build build-web build-go docker run
 .EXPORT_ALL_VARIABLES:
-include dagobert.env
+-include dagobert.env
 
 build: build-web build-go
 
