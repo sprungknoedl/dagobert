@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -115,18 +116,11 @@ func (ctrl JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 			goto cleanup
 
 		case <-ka.C:
-			err := json.NewEncoder(w).Encode(worker.Job{
+			if err := sendJob(w, rc, worker.Job{
 				Name:        "keep-alive",
 				WorkerToken: workerid,
-			})
-			if err != nil {
-				log.Printf("error encoding job: %v", err)
-				goto cleanup
-			}
-
-			err = rc.Flush()
-			if err != nil {
-				log.Printf("error flushing job: %v", err)
+			}); err != nil {
+				log.Printf("%v", err)
 				goto cleanup
 			}
 
@@ -148,21 +142,14 @@ func (ctrl JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 				goto cleanup
 			}
 
-			err = json.NewEncoder(w).Encode(worker.Job{
+			if err := sendJob(w, rc, worker.Job{
 				ID:          job.ID,
 				WorkerToken: workerid,
 				Name:        job.Name,
 				Case:        kase,
 				Evidence:    evidence,
-			})
-			if err != nil {
-				log.Printf("error encoding job: %v", err)
-				goto cleanup
-			}
-
-			err = rc.Flush()
-			if err != nil {
-				log.Printf("error flushing job: %v", err)
+			}); err != nil {
+				log.Printf("%v", err)
 				goto cleanup
 			}
 		}
@@ -178,6 +165,20 @@ cleanup:
 	if err != nil {
 		log.Printf("error rescheduling jobs for %q: %v", workerid, err)
 	}
+}
+
+func sendJob(w http.ResponseWriter, rc *http.ResponseController, job worker.Job) error {
+	err := json.NewEncoder(w).Encode(job)
+	if err != nil {
+		return fmt.Errorf("error encoding job: %w", err)
+	}
+
+	err = rc.Flush()
+	if err != nil {
+		return fmt.Errorf("error flushing job: %w", err)
+	}
+
+	return nil
 }
 
 func (ctrl JobCtrl) AckJob(w http.ResponseWriter, r *http.Request) {
