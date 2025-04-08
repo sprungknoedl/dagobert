@@ -3,7 +3,6 @@ package handler
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -90,6 +89,26 @@ func (ctrl JobCtrl) ListMods(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (ctrl JobCtrl) registerWorker(w http.ResponseWriter, r *http.Request) (string, []string) {
+	// create worker id
+	workerid := fp.Random(20)
+	modules := strings.Split(r.URL.Query().Get("modules"), ",")
+	workers, _ := strconv.Atoi(r.URL.Query().Get("workers"))
+	log.Printf("worker %q started", workerid)
+
+	// register worker
+	ctrl.workermu.Lock()
+	ctrl.workers[workerid] = Worker{
+		WorkerID:   workerid,
+		RemoteAddr: r.RemoteAddr,
+		Modules:    modules,
+		Workers:    workers,
+	}
+	ctrl.workermu.Unlock()
+
+	return workerid, modules
+}
+
 func (ctrl JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 	// set http headers required for SSE
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -107,21 +126,8 @@ func (ctrl JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 	ka := time.NewTicker(time.Minute)
 	defer ka.Stop()
 
-	// create worker id
-	workerid := fp.Random(20)
-	modules := strings.Split(r.URL.Query().Get("modules"), ",")
-	workers, _ := strconv.Atoi(r.URL.Query().Get("workers"))
-	log.Printf("worker %q started", workerid)
-
 	// register worker
-	ctrl.workermu.Lock()
-	ctrl.workers[workerid] = Worker{
-		WorkerID:   workerid,
-		RemoteAddr: r.RemoteAddr,
-		Modules:    modules,
-		Workers:    workers,
-	}
-	ctrl.workermu.Unlock()
+	workerid, modules := ctrl.registerWorker(w, r)
 
 	for {
 		select {
@@ -139,21 +145,12 @@ func (ctrl JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 			}
 
 		case <-t.C:
-			job, err := ctrl.store.PopJob(workerid, modules)
+			job, kase, evidence, err := ctrl.store.PopJob(workerid, modules)
 			if err != nil && err != sql.ErrNoRows {
 				log.Printf("error fetching job: %v", err)
 				goto cleanup
-			}
-			if err == sql.ErrNoRows {
+			} else if err == sql.ErrNoRows {
 				continue
-			}
-
-			// fetch objects
-			evidence, err1 := ctrl.store.GetEvidence(job.CaseID, job.EvidenceID)
-			kase, err2 := ctrl.store.GetCase(job.CaseID)
-			if err := errors.Join(err1, err2); err != nil {
-				log.Printf("error encoding job: %v", err)
-				goto cleanup
 			}
 
 			if err := sendJob(w, rc, worker.Job{
