@@ -79,7 +79,7 @@ func (ctrl TaskCtrl) Import(w http.ResponseWriter, r *http.Request) {
 		}
 
 		obj := model.Task{
-			ID:      fp.If(rec[0] == "", random(10), rec[0]),
+			ID:      fp.If(rec[0] == "", fp.Random(10), rec[0]),
 			Type:    rec[1],
 			Task:    rec[2],
 			Done:    done, // 3
@@ -132,7 +132,7 @@ func (ctrl TaskCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	new := dto.ID == "new"
-	dto.ID = fp.If(new, random(10), dto.ID)
+	dto.ID = fp.If(new, fp.Random(10), dto.ID)
 	if err := ctrl.store.SaveTask(dto.CaseID, dto); err != nil {
 		Err(w, r, err)
 		return

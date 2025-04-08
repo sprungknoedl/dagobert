@@ -106,7 +106,7 @@ func (ctrl SettingsCtrl) SaveHook(w http.ResponseWriter, r *http.Request) {
 
 	// save database object
 	new := dto.ID == "new"
-	dto.ID = fp.If(new, random(10), dto.ID)
+	dto.ID = fp.If(new, fp.Random(10), dto.ID)
 	if err := ctrl.store.SaveHook(dto); err != nil {
 		Err(w, r, err)
 		return
@@ -256,7 +256,7 @@ func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// finally save database object
-	dto.ID = fp.If(new, random(10), dto.ID)
+	dto.ID = fp.If(new, fp.Random(10), dto.ID)
 	if err := ctrl.store.SaveReport(dto); err != nil {
 		Err(w, r, err)
 		return

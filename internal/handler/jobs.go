@@ -17,10 +17,6 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/worker"
 )
 
-var workermu sync.Mutex
-var ServerToken = random(20)
-var Workers = map[string]Worker{}
-
 type Module struct {
 	Name        string
 	Description string
@@ -38,10 +34,28 @@ type Worker struct {
 type JobCtrl struct {
 	store *model.Store
 	acl   *ACL
+
+	workermu sync.Mutex
+	workers  map[string]Worker
 }
 
 func NewJobCtrl(store *model.Store, acl *ACL) *JobCtrl {
-	return &JobCtrl{store, acl}
+	return &JobCtrl{
+		store:   store,
+		acl:     acl,
+		workers: make(map[string]Worker),
+	}
+}
+
+func (ctrl JobCtrl) Workers() []Worker {
+	ctrl.workermu.Lock()
+	defer ctrl.workermu.Unlock()
+
+	workers := make([]Worker, 0, len(ctrl.workers))
+	for _, worker := range ctrl.workers {
+		workers = append(workers, worker)
+	}
+	return workers
 }
 
 func (ctrl JobCtrl) ListMods(w http.ResponseWriter, r *http.Request) {
@@ -94,20 +108,20 @@ func (ctrl JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 	defer ka.Stop()
 
 	// create worker id
-	workerid := random(20)
+	workerid := fp.Random(20)
 	modules := strings.Split(r.URL.Query().Get("modules"), ",")
 	workers, _ := strconv.Atoi(r.URL.Query().Get("workers"))
 	log.Printf("worker %q started", workerid)
 
 	// register worker
-	workermu.Lock()
-	Workers[workerid] = Worker{
+	ctrl.workermu.Lock()
+	ctrl.workers[workerid] = Worker{
 		WorkerID:   workerid,
 		RemoteAddr: r.RemoteAddr,
 		Modules:    modules,
 		Workers:    workers,
 	}
-	workermu.Unlock()
+	ctrl.workermu.Unlock()
 
 	for {
 		select {
@@ -156,9 +170,9 @@ func (ctrl JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 	}
 
 cleanup:
-	workermu.Lock()
-	delete(Workers, workerid)
-	workermu.Unlock()
+	ctrl.workermu.Lock()
+	delete(ctrl.workers, workerid)
+	ctrl.workermu.Unlock()
 
 	log.Printf("worker %q quit", workerid)
 	err := ctrl.store.RescheduleWorkerJobs(workerid)
@@ -208,12 +222,11 @@ func (ctrl JobCtrl) PushJob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = ctrl.store.PushJob(model.Job{
-		ID:          random(10),
-		CaseID:      cid,
-		EvidenceID:  id,
-		Name:        name,
-		Status:      "Scheduled",
-		ServerToken: ServerToken,
+		ID:         fp.Random(10),
+		CaseID:     cid,
+		EvidenceID: id,
+		Name:       name,
+		Status:     "Scheduled",
 	})
 	if err != nil {
 		Err(w, r, err)

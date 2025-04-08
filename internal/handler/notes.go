@@ -65,7 +65,7 @@ func (ctrl NoteCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	uri := fmt.Sprintf("/cases/%s/notes/", cid)
 	ImportCSV(ctrl.store, ctrl.acl, w, r, uri, 4, func(rec []string) {
 		obj := model.Note{
-			ID:          fp.If(rec[0] == "", random(10), rec[0]),
+			ID:          fp.If(rec[0] == "", fp.Random(10), rec[0]),
 			Title:       rec[1],
 			Category:    rec[2],
 			Description: rec[3],
@@ -116,7 +116,7 @@ func (ctrl NoteCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	new := dto.ID == "new"
-	dto.ID = fp.If(new, random(10), dto.ID)
+	dto.ID = fp.If(new, fp.Random(10), dto.ID)
 	if err := ctrl.store.SaveNote(dto.CaseID, dto); err != nil {
 		Err(w, r, err)
 		return

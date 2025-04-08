@@ -162,8 +162,15 @@ func StartUI() {
 	mux.HandleFunc("GET /settings/users/{id}/acl", userCtrl.EditACL)
 	mux.HandleFunc("POST /settings/users/{id}/acl", userCtrl.SaveACL)
 
+	// evidence processing jobs
+	jobCtrl := handler.NewJobCtrl(db, acl)
+	mux.HandleFunc("GET /internal/jobs", jobCtrl.PopJob)
+	mux.HandleFunc("POST /internal/jobs/ack", jobCtrl.AckJob)
+	mux.HandleFunc("GET /cases/{cid}/evidences/{id}/run", jobCtrl.ListMods)
+	mux.HandleFunc("POST /cases/{cid}/evidences/{id}/run", jobCtrl.PushJob)
+
 	// api keys
-	keyCtrl := handler.NewKeyCtrl(db, acl)
+	keyCtrl := handler.NewKeyCtrl(db, acl, jobCtrl)
 	mux.HandleFunc("GET /settings/api-keys/", keyCtrl.List)
 	mux.HandleFunc("GET /settings/api-keys/{key}", keyCtrl.Edit)
 	mux.HandleFunc("POST /settings/api-keys/{key}", keyCtrl.Save)
@@ -244,13 +251,6 @@ func StartUI() {
 	mux.HandleFunc("POST /cases/{cid}/evidences/{id}", evidenceCtrl.Save)
 	mux.HandleFunc("DELETE /cases/{cid}/evidences/{id}", evidenceCtrl.Delete)
 
-	// evidence processing jobs
-	jobCtrl := handler.NewJobCtrl(db, acl)
-	mux.HandleFunc("GET /internal/jobs", jobCtrl.PopJob)
-	mux.HandleFunc("POST /internal/jobs/ack", jobCtrl.AckJob)
-	mux.HandleFunc("GET /cases/{cid}/evidences/{id}/run", jobCtrl.ListMods)
-	mux.HandleFunc("POST /cases/{cid}/evidences/{id}/run", jobCtrl.PushJob)
-
 	// tasks
 	taskCtrl := handler.NewTaskCtrl(db, acl)
 	mux.HandleFunc("GET /cases/{cid}/tasks/", taskCtrl.List)
@@ -300,7 +300,7 @@ func StartUI() {
 	}
 
 	slog.Debug("Rescheduling stale jobs")
-	err = db.RescheduleStaleJobs(handler.ServerToken)
+	err = db.RescheduleStaleJobs()
 	if err != nil {
 		slog.Error("Failed to reschedule state jobs", "err", err)
 	}

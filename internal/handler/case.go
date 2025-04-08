@@ -75,7 +75,7 @@ func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 		}
 
 		obj := model.Case{
-			ID:             fp.If(rec[0] == "", random(10), rec[0]),
+			ID:             fp.If(rec[0] == "", fp.Random(10), rec[0]),
 			Name:           rec[1],
 			Severity:       rec[2],
 			Classification: rec[3],
@@ -133,7 +133,7 @@ func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	new := dto.ID == "new"
-	dto.ID = fp.If(new, random(10), dto.ID)
+	dto.ID = fp.If(new, fp.Random(10), dto.ID)
 	if err := ctrl.store.SaveCase(dto); err != nil {
 		Err(w, r, err)
 		return

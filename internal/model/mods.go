@@ -9,6 +9,8 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/fp"
 )
 
+var ServerToken = fp.Random(20)
+
 var JobStatus = []string{
 	"Scheduled",
 	"Running",
@@ -85,6 +87,7 @@ func (store *Store) SaveJob(obj Job) error {
 	REPLACE INTO jobs (id, case_id, evidence_id, name, status, error, server_token, worker_token)
 	VALUES (:id, :case_id, :evidence_id, :name, :status, :error, :stoken, :wtoken)`
 
+	obj.ServerToken = ServerToken
 	_, err := store.DB.Exec(query,
 		sql.Named("id", obj.ID),
 		sql.Named("case_id", obj.CaseID),
@@ -161,7 +164,7 @@ func (store *Store) RescheduleWorkerJobs(workerToken string) error {
 	return err
 }
 
-func (store *Store) RescheduleStaleJobs(serverToken string) error {
+func (store *Store) RescheduleStaleJobs() error {
 	query := `
 	UPDATE jobs
 	SET status = :status_after, server_token = :stoken, worker_token = ''
@@ -171,7 +174,7 @@ func (store *Store) RescheduleStaleJobs(serverToken string) error {
 	_, err := store.DB.Exec(query,
 		sql.Named("status_before", "Running"),
 		sql.Named("status_after", "Scheduled"),
-		sql.Named("stoken", serverToken))
+		sql.Named("stoken", ServerToken))
 	return err
 }
 

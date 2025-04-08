@@ -14,13 +14,13 @@ import (
 
 var argsPlaso []string
 
-func ValidatePlaso() bool {
+func ValidatePlaso() []string {
 	var err error
 
 	_, argsPlaso, err = shellwords.ParseWithEnvs(os.Getenv("MODULE_PLASO"))
 	if err != nil || len(argsPlaso) < 1 {
 		slog.Warn("validating module prerequisites failed", "module", "plaso", "step", "shell parsing", "err", err)
-		return false
+		return nil
 	}
 
 	slog.Info("validating module prerequisites", "module", "plaso")
@@ -28,15 +28,14 @@ func ValidatePlaso() bool {
 	if out, err := cmd.CombinedOutput(); err != nil {
 		slog.Warn("validating module prerequisites failed", "module", "plaso", "step", "cmd running", "err", err)
 		os.Stderr.Write(out)
-		return false
+		return nil
 	}
 
-	modules = append(modules,
+	return []string{
 		"Plaso (Windows Preset)",
 		"Plaso (Linux Preset)",
 		"Plaso (MacOS Preset)",
-		"Plaso (Filesystem Timeline)")
-	return true
+		"Plaso (Filesystem Timeline)"}
 }
 
 func runPlaso(job Job, parsers string, ext string) error {

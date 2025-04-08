@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/expr-lang/expr"
+	"github.com/sprungknoedl/dagobert/internal/fp"
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/internal/worker"
 )
@@ -49,12 +50,11 @@ func TriggerOnEvidenceAdded(store *model.Store, obj model.Evidence) {
 			// go Run(store, hook.Mod.Name, obj)
 
 			err := store.PushJob(model.Job{
-				ID:          random(10),
-				CaseID:      obj.CaseID,
-				EvidenceID:  obj.ID,
-				Name:        hook.Mod.Name,
-				Status:      "Scheduled",
-				ServerToken: ServerToken,
+				ID:         fp.Random(10),
+				CaseID:     obj.CaseID,
+				EvidenceID: obj.ID,
+				Name:       hook.Mod.Name,
+				Status:     "Scheduled",
 			})
 			if err != nil {
 				log.Printf("error scheduling job for %s -> %s", hook.Mod.Name, err)

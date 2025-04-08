@@ -9,25 +9,23 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"math/rand"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/fp"
 	"github.com/sprungknoedl/dagobert/internal/model"
 )
 
-var modules = []string{}
-
 func StartWorker() {
-	ValidateHayabusa()
-	ValidatePlaso()
-	ValidateTimesketch()
+	modules := []string{}
+	modules = append(modules, ValidateHayabusa()...)
+	modules = append(modules, ValidatePlaso()...)
+	modules = append(modules, ValidateTimesketch()...)
+
 	if len(modules) == 0 {
 		slog.Error("worker not ready")
 		return
@@ -191,7 +189,7 @@ func unpack(obj model.Evidence) (string, error) {
 	}
 	defer reader.Close()
 
-	dir := filepath.Join("files", "tmp", random(10))
+	dir := filepath.Join("files", "tmp", fp.Random(10))
 	if err = os.MkdirAll(dir, 0755); err != nil {
 		return "", err
 	}
@@ -237,31 +235,4 @@ func unpack(obj model.Evidence) (string, error) {
 	}
 
 	return dir + string(filepath.Separator), nil
-}
-
-func random(n int) string {
-	// random string
-	var src = rand.NewSource(time.Now().UnixNano())
-
-	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	const (
-		letterIdxBits = 6                    // 6 bits to represent a letter index
-		letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
-		letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
-	)
-
-	b := make([]byte, n)
-	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
-		if remain == 0 {
-			cache, remain = src.Int63(), letterIdxMax
-		}
-		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
-			b[i] = letterBytes[idx]
-			i--
-		}
-		cache >>= letterIdxBits
-		remain--
-	}
-
-	return string(b)
 }
