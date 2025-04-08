@@ -55,18 +55,7 @@
                                 <i class="hio hio-5 hio-bolt"></i>
                             </a>
                             {{ end }}
-                            {{ if allowed ($url := print "/cases/" .CaseID "/evidences/" .ID) "POST" }}
-                            <a class="join-item btn btn-sm" href="{{ $url }}"
-                                up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio hio-5 hio-pencil"></i>
-                            </a>
-                            {{ end }}
-                            {{ if allowed ($url := print "/cases/" .CaseID "/evidences/" .ID) "DELETE" }}
-                            <a class="join-item btn btn-sm" href="{{ $url }}"
-                                up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio hio-5 hio-trash"></i>
-                            </a>
-                            {{ end }}
+                            {{ template "action-buttons" dict "url" (print "/cases/" .CaseID "/evidences/" .ID) "env" $.env }}
                         </div></td>
                     </tr>
                     {{ end }}
