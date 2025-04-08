@@ -30,6 +30,13 @@ html {
     @apply text-yellow-500!; 
 }
 
+.table-default {
+    @apply w-full;
+    @apply min-w-full;
+    @apply text-sm;
+    @apply align-middle;
+}
+
 /*
 UNPOLY
 */
