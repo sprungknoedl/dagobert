@@ -2,6 +2,7 @@ package model
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -101,13 +102,13 @@ func (store *Store) SaveJob(obj Job) error {
 }
 
 func (store *Store) PushJob(obj Job) error { return store.SaveJob(obj) }
-func (store *Store) PopJob(workerid string, modules []string) (Job, error) {
+func (store *Store) PopJob(workerid string, modules []string) (Job, Case, Evidence, error) {
 	// slices are not supported as parameterized arguments in database/sql and sqlite.
 	// we have to use a workaround to pass the list of modules as a single argument.
 	re := regexp.MustCompile("[a-zA-Z0-9_ ]+")
 	for _, m := range modules {
 		if !re.MatchString(m) {
-			return Job{}, fmt.Errorf("invalid module name: %q", m)
+			return Job{}, Case{}, Evidence{}, fmt.Errorf("invalid module name: %q", m)
 		}
 	}
 
@@ -129,12 +130,23 @@ func (store *Store) PopJob(workerid string, modules []string) (Job, error) {
 		sql.Named("status_after", "Running"),
 		sql.Named("wtoken", workerid))
 	if err != nil {
-		return Job{}, err
+		return Job{}, Case{}, Evidence{}, err
 	}
 
 	obj := Job{}
 	err = ScanOne(rows, &obj)
-	return obj, err
+	if err != nil {
+		return Job{}, Case{}, Evidence{}, err
+	}
+
+	// fetch objects
+	evidence, err1 := store.GetEvidence(obj.CaseID, obj.EvidenceID)
+	kase, err2 := store.GetCase(obj.CaseID)
+	if err := errors.Join(err1, err2); err != nil {
+		return Job{}, Case{}, Evidence{}, err
+	}
+
+	return obj, kase, evidence, err
 }
 
 func (store *Store) AckJob(id string, status string, errmsg string) error {
