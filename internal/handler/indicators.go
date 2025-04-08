@@ -280,7 +280,7 @@ func (ctrl IndicatorCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 	uri := fmt.Sprintf("/cases/%s/indicators/", cid)
 	ImportCSV(ctrl.store, ctrl.acl, w, r, uri, 7, func(rec []string) {
 		obj := model.Indicator{
-			ID:     fp.If(rec[0] == "", random(10), rec[0]),
+			ID:     fp.If(rec[0] == "", fp.Random(10), rec[0]),
 			Status: rec[1],
 			Type:   rec[2],
 			Value:  rec[3],
@@ -330,7 +330,7 @@ func (ctrl IndicatorCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Reques
 		}
 
 		obj := model.Indicator{
-			ID:     random(10),
+			ID:     fp.Random(10),
 			CaseID: cid,
 			Type:   lookup[value.Type],
 			Value:  value.IOC,
@@ -386,7 +386,7 @@ func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	new := dto.ID == "new"
-	dto.ID = fp.If(new, random(10), dto.ID)
+	dto.ID = fp.If(new, fp.Random(10), dto.ID)
 	if err := ctrl.store.SaveIndicator(dto.CaseID, dto, true); err != nil {
 		Err(w, r, err)
 		return

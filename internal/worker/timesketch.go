@@ -14,13 +14,13 @@ import (
 
 var argsTimesketch []string
 
-func ValidateTimesketch() bool {
+func ValidateTimesketch() []string {
 	var err error
 
 	_, argsTimesketch, err = shellwords.ParseWithEnvs(os.Getenv("MODULE_TIMESKETCH"))
 	if err != nil || len(argsTimesketch) < 1 {
 		slog.Warn("validating module prerequisites failed", "module", "timesketch", "step", "shell parsing", "err", err)
-		return false
+		return nil
 	}
 
 	slog.Info("validating module prerequisites", "module", "timesketch")
@@ -28,11 +28,10 @@ func ValidateTimesketch() bool {
 	if out, err := cmd.CombinedOutput(); err != nil {
 		slog.Warn("validating module prerequisites failed", "module", "timesketch", "step", "cmd running", "err", err)
 		os.Stderr.Write(out)
-		return false
+		return nil
 	}
 
-	modules = append(modules, "Timesketch Importer")
-	return true
+	return []string{"Timesketch Importer"}
 }
 
 func UploadToTimesketch(job Job) error {

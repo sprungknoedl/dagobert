@@ -12,10 +12,12 @@ import (
 type KeyCtrl struct {
 	store *model.Store
 	acl   *ACL
+
+	jobctrl *JobCtrl
 }
 
-func NewKeyCtrl(store *model.Store, acl *ACL) *KeyCtrl {
-	return &KeyCtrl{store, acl}
+func NewKeyCtrl(store *model.Store, acl *ACL, jobctrl *JobCtrl) *KeyCtrl {
+	return &KeyCtrl{store, acl, jobctrl}
 }
 
 func (ctrl KeyCtrl) List(w http.ResponseWriter, r *http.Request) {
@@ -25,13 +27,10 @@ func (ctrl KeyCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	workermu.Lock()
-	defer workermu.Unlock()
-
 	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/keys-many.html", map[string]any{
 		"title":   "API Keys",
 		"keys":    list,
-		"workers": Workers,
+		"workers": ctrl.jobctrl.Workers(),
 	})
 }
 
@@ -68,7 +67,7 @@ func (ctrl KeyCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto.Key = fp.If(dto.Key == "new", random(64), dto.Key)
+	dto.Key = fp.If(dto.Key == "new", fp.Random(64), dto.Key)
 	if err := ctrl.store.SaveKey(dto); err != nil {
 		Err(w, r, err)
 		return

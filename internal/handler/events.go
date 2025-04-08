@@ -144,7 +144,7 @@ func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 				return
 			} else if err != nil && err == sql.ErrNoRows {
 				obj = model.Asset{
-					ID:     random(10),
+					ID:     fp.Random(10),
 					CaseID: cid,
 					Name:   asset,
 					Status: "Under investigation",
@@ -174,7 +174,7 @@ func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 				return
 			} else if err != nil && err == sql.ErrNoRows {
 				obj := model.Indicator{
-					ID:     random(10),
+					ID:     fp.Random(10),
 					CaseID: cid,
 					Value:  indicator,
 					Status: "Under investigation",
@@ -193,7 +193,7 @@ func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 		}
 
 		obj := model.Event{
-			ID:         fp.If(rec[0] == "", random(10), rec[0]),
+			ID:         fp.If(rec[0] == "", fp.Random(10), rec[0]),
 			CaseID:     cid,
 			Time:       model.Time(t),
 			Type:       rec[2],
@@ -323,7 +323,7 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	for i, elem := range tmp.Assets {
 		if strings.HasPrefix(elem, "new:") {
 			obj := model.Asset{
-				ID:     random(10),
+				ID:     fp.Random(10),
 				CaseID: dto.CaseID,
 				Name:   strings.TrimPrefix(elem, "new:"),
 				Status: "Under investigation",
@@ -344,7 +344,7 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	for i, elem := range tmp.Indicators {
 		if strings.HasPrefix(elem, "new:") {
 			obj := model.Indicator{
-				ID:     random(10),
+				ID:     fp.Random(10),
 				CaseID: dto.CaseID,
 				Value:  strings.TrimPrefix(elem, "new:"),
 				Status: "Under investigation",
@@ -387,7 +387,7 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	new := dto.ID == "new"
-	dto.ID = fp.If(new, random(10), dto.ID)
+	dto.ID = fp.If(new, fp.Random(10), dto.ID)
 	if err := ctrl.store.SaveEvent(dto.CaseID, dto, true); err != nil {
 		Err(w, r, err)
 		return

@@ -14,13 +14,13 @@ import (
 
 var argsHayabusa []string
 
-func ValidateHayabusa() bool {
+func ValidateHayabusa() []string {
 	var err error
 
 	_, argsHayabusa, err = shellwords.ParseWithEnvs(os.Getenv("MODULE_HAYABUSA"))
 	if err != nil || len(argsHayabusa) < 1 {
 		slog.Warn("validating module prerequisites failed", "module", "hayabusa", "step", "shell parsing", "err", err)
-		return false
+		return nil
 	}
 
 	slog.Info("validating module prerequisites", "module", "hayabusa")
@@ -28,11 +28,10 @@ func ValidateHayabusa() bool {
 	if out, err := cmd.CombinedOutput(); err != nil {
 		slog.Warn("validating module prerequisites failed", "module", "hayabusa", "step", "cmd running", "err", err)
 		os.Stderr.Write(out)
-		return false
+		return nil
 	}
 
-	modules = append(modules, "Hayabusa")
-	return true
+	return []string{"Hayabusa"}
 }
 
 func RunHayabusa(job Job) error {

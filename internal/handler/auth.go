@@ -120,7 +120,7 @@ func (ctrl AuthCtrl) Protect(next http.Handler) http.Handler {
 			return
 		}
 
-		state := random(16)
+		state := fp.Random(16)
 		sess.Values["oidcAuthenticated"] = false
 		sess.Values["oidcState"] = state
 		sess.Values["oidcOriginalRequestUrl"] = r.URL.String()

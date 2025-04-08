@@ -67,7 +67,7 @@ func (ctrl AssetCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	uri := fmt.Sprintf("/cases/%s/assets/", cid)
 	ImportCSV(ctrl.store, ctrl.acl, w, r, uri, 6, func(rec []string) {
 		obj := model.Asset{
-			ID:     fp.If(rec[0] == "", random(10), rec[0]),
+			ID:     fp.If(rec[0] == "", fp.Random(10), rec[0]),
 			CaseID: cid,
 			Status: rec[1],
 			Type:   rec[2],
@@ -120,7 +120,7 @@ func (ctrl AssetCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	new := dto.ID == "new"
-	dto.ID = fp.If(new, random(10), dto.ID)
+	dto.ID = fp.If(new, fp.Random(10), dto.ID)
 	if err := ctrl.store.SaveAsset(dto.CaseID, dto); err != nil {
 		Err(w, r, err)
 		return
