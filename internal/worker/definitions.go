@@ -11,32 +11,32 @@ import (
 )
 
 var List = []Module{
-	Module{
+	{
 		Name:        "Hayabusa",
 		Description: "Hayabusa (隼) is a sigma-based threat hunting and fast forensics timeline generator for Windows event logs.",
 		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".evtx" },
 	},
-	Module{
+	{
 		Name:        "Plaso (Windows Preset)",
 		Description: "Plaso (Plaso Langar Að Safna Öllu), or super timeline all the things, is a Python-based engine used by several tools for automatic creation of timelines.",
 		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
 	},
-	Module{
+	{
 		Name:        "Plaso (Linux Preset)",
 		Description: "Plaso (Plaso Langar Að Safna Öllu), or super timeline all the things, is a Python-based engine used by several tools for automatic creation of timelines.",
 		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
 	},
-	Module{
+	{
 		Name:        "Plaso (MacOS Preset)",
 		Description: "Plaso (Plaso Langar Að Safna Öllu), or super timeline all the things, is a Python-based engine used by several tools for automatic creation of timelines.",
 		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
 	},
-	Module{
+	{
 		Name:        "Plaso (Filesystem Timeline)",
 		Description: "Run Plaso with the parser for NTFS $MFT metadata files to create a file system timeline that gives great insight into actions that occurred on the filesystem.",
 		Supports:    func(e model.Evidence) bool { return filepath.Ext(e.Name) == ".zip" },
 	},
-	Module{
+	{
 		Name:        "Timesketch Importer",
 		Description: "Timesketch is an open-source tool for collaborative forensic timeline analysis. Using sketches you and your collaborators can organize and work together.",
 		Supports: func(e model.Evidence) bool {
