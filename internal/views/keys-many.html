@@ -39,18 +39,7 @@
                         <td> {{ .Name }} </td>
                         <td> {{ .Key }} </td>
                         <td class="text-right"><div class="join">
-                            {{ if allowed ($url := print "/settings/api-keys/" .Key) "POST" }}
-                            <a class="join-item btn btn-sm" href="{{ $url }}"
-                                up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio hio-5 hio-pencil"></i>
-                            </a>
-                            {{ end }}
-                            {{ if allowed ($url := print "/settings/api-keys/" .Key) "DELETE" }}
-                            <a class="join-item btn btn-sm" href="{{ $url }}"
-                                up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio hio-5 hio-trash"></i>
-                            </a>
-                            {{ end }}
+                            {{ template "action-buttons" dict "url" (print "/settings/api-keys/" .Key) "env" $.env }}
                         </div></td>
                     </tr>
                     {{ end }}

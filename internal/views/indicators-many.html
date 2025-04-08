@@ -89,26 +89,14 @@
                         <td> {{ .Events }} </td>
                         <td class="text-right"><div class="join">
                             {{ if and (eq .Type "IP") (ne .TLP "TLP:RED")}}
-										<a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
-										{{ else if and (eq .Type "Domain") (ne .TLP "TLP:RED") }}
-										<a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
-										{{ else if and (eq .Type "Hash") (ne .TLP "TLP:RED") }}
-										<a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
-										<a class="join-item btn btn-sm" target="_blank" href="https://www.hybrid-analysis.com/search?query={{ .Value }}">HA</a>
-										{{ end }}
-
-										{{ if allowed ($url := print "/cases/" .CaseID "/indicators/" .ID) "POST" }}
-                            <a class="join-item btn btn-sm" href="{{ $url }}"
-                                up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio hio-5 hio-pencil"></i>
-                            </a>
-										{{ end }}
-										{{ if allowed ($url := print "/cases/" .CaseID "/indicators/" .ID) "DELETE" }}
-                            <a class="join-item btn btn-sm" href="{{ $url }}"
-                                up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
-                                <i class="hio hio-5 hio-trash"></i>
-                            </a>
-										{{ end }}
+							<a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
+							{{ else if and (eq .Type "Domain") (ne .TLP "TLP:RED") }}
+							<a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
+							{{ else if and (eq .Type "Hash") (ne .TLP "TLP:RED") }}
+							<a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
+							<a class="join-item btn btn-sm" target="_blank" href="https://www.hybrid-analysis.com/search?query={{ .Value }}">HA</a>
+							{{ end }}
+                            {{ template "action-buttons" dict "url" (print "/cases/" .CaseID "/indicators/" .ID) "env" $.env }}
                         </div></td>
 							</tr>
 							{{ end }}

@@ -190,3 +190,18 @@
     {{ else }} {{ .Format "2006-01-02 15:04:05" }} <span class="text-neutral-content">{{ .Format "Z07:00" }}</span>
     {{ end }}
 {{ end }}
+
+{{ define "action-buttons" }}
+    {{ if allowed .url "POST" }}
+    <a class="join-item btn btn-sm" href="{{ .url }}"
+        up-method="get" up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}">
+        <i class="hio hio-5 hio-pencil"></i>
+    </a>
+    {{ end }}
+    {{ if allowed .url "DELETE" }}
+    <a class="join-item btn btn-sm" href="{{ .url }}"
+        up-method="delete" up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}">
+        <i class="hio hio-5 hio-trash"></i>
+    </a>
+    {{ end }}
+{{ end }}
