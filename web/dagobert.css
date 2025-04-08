@@ -6279,6 +6279,13 @@ html {
 .btn-flagged {
   color: var(--color-yellow-500) !important;
 }
+.table-default {
+  width: 100%;
+  min-width: 100%;
+  font-size: var(--text-sm);
+  line-height: var(--tw-leading, var(--text-sm--line-height));
+  vertical-align: middle;
+}
 up-drawer-box {
   background-color: var(--color-base-200);
   color: var(--color-base-content);
