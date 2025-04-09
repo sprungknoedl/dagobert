@@ -46,7 +46,7 @@ func NewJobCtrl(store *model.Store, acl *ACL) *JobCtrl {
 	}
 }
 
-func (ctrl JobCtrl) Workers() []Worker {
+func (ctrl *JobCtrl) Workers() []Worker {
 	ctrl.workermu.Lock()
 	defer ctrl.workermu.Unlock()
 
@@ -57,7 +57,7 @@ func (ctrl JobCtrl) Workers() []Worker {
 	return workers
 }
 
-func (ctrl JobCtrl) ListMods(w http.ResponseWriter, r *http.Request) {
+func (ctrl *JobCtrl) ListMods(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
 	obj, err := ctrl.store.GetEvidence(cid, id)
@@ -89,7 +89,7 @@ func (ctrl JobCtrl) ListMods(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (ctrl JobCtrl) registerWorker(w http.ResponseWriter, r *http.Request) (string, []string) {
+func (ctrl *JobCtrl) registerWorker(w http.ResponseWriter, r *http.Request) (string, []string) {
 	// create worker id
 	workerid := fp.Random(20)
 	modules := strings.Split(r.URL.Query().Get("modules"), ",")
@@ -109,7 +109,7 @@ func (ctrl JobCtrl) registerWorker(w http.ResponseWriter, r *http.Request) (stri
 	return workerid, modules
 }
 
-func (ctrl JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
+func (ctrl *JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 	// set http headers required for SSE
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
@@ -192,7 +192,7 @@ func sendJob(w http.ResponseWriter, rc *http.ResponseController, job worker.Job)
 	return nil
 }
 
-func (ctrl JobCtrl) AckJob(w http.ResponseWriter, r *http.Request) {
+func (ctrl *JobCtrl) AckJob(w http.ResponseWriter, r *http.Request) {
 	dto := model.Job{}
 	if err := Decode(r, &dto); err != nil {
 		Err(w, r, err)
@@ -208,7 +208,7 @@ func (ctrl JobCtrl) AckJob(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (ctrl JobCtrl) PushJob(w http.ResponseWriter, r *http.Request) {
+func (ctrl *JobCtrl) PushJob(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
 	name := r.FormValue("name")
