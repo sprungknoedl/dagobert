@@ -26,13 +26,13 @@ var (
 	libre_clean2SubRegexp = pcre.MustCompile(`<\/?text:span[^>]*>`)
 )
 
-type OdfTemplate struct {
+type LibreTemplate struct {
 	name string
 	src  io.ReaderAt
 	len  int64
 }
 
-func LoadOdfTemplate(path string) (Template, error) {
+func LoadLibreTemplate(path string) (Template, error) {
 	buf := new(bytes.Buffer)
 
 	stat, err := os.Stat(path)
@@ -48,7 +48,7 @@ func LoadOdfTemplate(path string) (Template, error) {
 	err = processZip(fh, stat.Size(), buf, func(header *zip.FileHeader, r io.Reader, w io.Writer) error {
 		if header.Name == odfMainFile {
 			// preprocess xml to transform it into a valid text/template AND docx document
-			err = preprocessOdfContent(w, r)
+			err = preprocessLibreContent(w, r)
 			return err
 		} else {
 			// just copy all other files
@@ -60,14 +60,14 @@ func LoadOdfTemplate(path string) (Template, error) {
 		return nil, err
 	}
 
-	return OdfTemplate{
+	return LibreTemplate{
 		name: filepath.Base(path),
 		src:  bytes.NewReader(buf.Bytes()),
 		len:  int64(buf.Len()),
 	}, nil
 }
 
-func preprocessOdfContent(w io.Writer, r io.Reader) error {
+func preprocessLibreContent(w io.Writer, r io.Reader) error {
 	b, err := io.ReadAll(r)
 	if err != nil {
 		return err
@@ -107,19 +107,19 @@ func preprocessOdfContent(w io.Writer, r io.Reader) error {
 	return err
 }
 
-func (tpl OdfTemplate) Name() string {
+func (tpl LibreTemplate) Name() string {
 	return tpl.name
 }
 
-func (tpl OdfTemplate) Type() string {
+func (tpl LibreTemplate) Type() string {
 	return "application/vnd.oasis.opendocument.text"
 }
 
-func (tpl OdfTemplate) Ext() string {
+func (tpl LibreTemplate) Ext() string {
 	return filepath.Ext(tpl.name)
 }
 
-func (tpl OdfTemplate) Render(dst io.Writer, data interface{}) error {
+func (tpl LibreTemplate) Render(dst io.Writer, data interface{}) error {
 	err := processZip(tpl.src, tpl.len, dst, func(header *zip.FileHeader, r io.Reader, w io.Writer) error {
 		if header.Name == odfMainFile {
 			b, err := io.ReadAll(r)
