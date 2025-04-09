@@ -13,6 +13,19 @@ import (
 
 const odfMainFile = "content.xml"
 
+var (
+	libre_pRegexp   = pcre.MustCompile(`<text:p[^>]*?>(?:(?!<text:p[ >]).)*{{p (.+?)}}.*?<\/text:p>`)
+	libre_trRegexp  = pcre.MustCompile(`<table:table-row[^>]*>(?:(?!<table:table-row[ >]).)*{{tr (.+?)}}.*?<\/table:table-row>`)
+	libre_expRegexp = pcre.MustCompile(`{{([^}]+)}}`)
+
+	// replace {<something>{ by {{   ( works with {{ }} {% and %} {# and #})
+	libre_clean1Regexp = pcre.MustCompile(`(?<={)(<[^>]*>)+(?=[\{%\#])|(?<=[%\}\#])(<[^>]*>)+(?=\})`)
+
+	// replace {{<some tags>go stuff<some other tags>}} by {{go stuff}}
+	libre_clean2Regexp    = pcre.MustCompile(`{%(?:(?!%}).)*|{#(?:(?!#}).)*|{{(?:(?!}}).)*`)
+	libre_clean2SubRegexp = pcre.MustCompile(`<\/?text:span[^>]*>`)
+)
+
 type OdfTemplate struct {
 	name string
 	src  io.ReaderAt
@@ -55,42 +68,31 @@ func LoadOdfTemplate(path string) (Template, error) {
 }
 
 func preprocessOdfContent(w io.Writer, r io.Reader) error {
-	var pRegexp = pcre.MustCompile(`<text:p[^>]*?>(?:(?!<text:p[ >]).)*{{p (.+?)}}.*?<\/text:p>`)
-	var trRegexp = pcre.MustCompile(`<table:table-row[^>]*>(?:(?!<table:table-row[ >]).)*{{tr (.+?)}}.*?<\/table:table-row>`)
-	var expRegexp = pcre.MustCompile(`{{([^}]+)}}`)
-
-	// replace {<something>{ by {{   ( works with {{ }} {% and %} {# and #})
-	var clean1Regexp = pcre.MustCompile(`(?<={)(<[^>]*>)+(?=[\{%\#])|(?<=[%\}\#])(<[^>]*>)+(?=\})`)
-
-	// replace {{<some tags>go stuff<some other tags>}} by {{go stuff}}
-	var clean2Regexp = pcre.MustCompile(`{%(?:(?!%}).)*|{#(?:(?!#}).)*|{{(?:(?!}}).)*`)
-	var clean2SubRegexp = pcre.MustCompile(`<\/?text:span[^>]*>`)
-
 	b, err := io.ReadAll(r)
 	if err != nil {
 		return err
 	}
 
 	// replace {<something>{ by {{ ( works with {{ }} {% and %} {# and #})
-	b = clean1Regexp.ReplaceAll(b, nil)
+	b = libre_clean1Regexp.ReplaceAll(b, nil)
 
 	// replace {{<some tags>go stuff<some other tags>}} by {{go stuff}}
-	b = clean2Regexp.ReplaceAllFunc(b, func(x []byte) []byte {
-		return clean2SubRegexp.ReplaceAll(x, nil)
+	b = libre_clean2Regexp.ReplaceAllFunc(b, func(x []byte) []byte {
+		return libre_clean2SubRegexp.ReplaceAll(x, nil)
 	})
 
 	// replace into xml code the paragraph containing
 	// {{p xxx }} template tag by {{ xxx }} without any surrounding
 	// <text:p> tags
-	b = pRegexp.ReplaceAll(b, []byte("{{ $1 }}"))
+	b = libre_pRegexp.ReplaceAll(b, []byte("{{ $1 }}"))
 
 	// replace into xml code the table row containing
 	// {{tr xxx }} template tag by {{ xxx }} without any surrounding
 	// <table:table-row> tags
-	b = trRegexp.ReplaceAll(b, []byte("{{ $1 }}"))
+	b = libre_trRegexp.ReplaceAll(b, []byte("{{ $1 }}"))
 
 	// clean tags
-	b = expRegexp.ReplaceAllFunc(b, func(x []byte) []byte {
+	b = libre_expRegexp.ReplaceAllFunc(b, func(x []byte) []byte {
 		x = bytes.ReplaceAll(x, []byte("&quot;"), []byte("\""))
 		x = bytes.ReplaceAll(x, []byte("&lt;"), []byte("<"))
 		x = bytes.ReplaceAll(x, []byte("&gt;"), []byte(">"))
