@@ -26,13 +26,13 @@ var (
 	ms_clean2SubRegexp = pcre.MustCompile(`<\/?w:t[^>]*>`)
 )
 
-type OxmlTemplate struct {
+type MsTemplate struct {
 	name string
 	src  io.ReaderAt
 	len  int64
 }
 
-func LoadOxmlTemplate(path string) (Template, error) {
+func LoadMsTemplate(path string) (Template, error) {
 	buf := new(bytes.Buffer)
 	stat, err := os.Stat(path)
 	if err != nil {
@@ -47,7 +47,7 @@ func LoadOxmlTemplate(path string) (Template, error) {
 	err = processZip(fh, stat.Size(), buf, func(header *zip.FileHeader, r io.Reader, w io.Writer) error {
 		if header.Name == oxmlMainFile {
 			// preprocess xml to transform it into a valid text/template AND docx document
-			err = preprocessOxmlContent(w, r)
+			err = preprocessMsContent(w, r)
 			return err
 		} else {
 			// just copy all other files
@@ -59,14 +59,14 @@ func LoadOxmlTemplate(path string) (Template, error) {
 		return nil, err
 	}
 
-	return OxmlTemplate{
+	return MsTemplate{
 		name: filepath.Base(path),
 		src:  bytes.NewReader(buf.Bytes()),
 		len:  int64(buf.Len()),
 	}, nil
 }
 
-func preprocessOxmlContent(w io.Writer, r io.Reader) error {
+func preprocessMsContent(w io.Writer, r io.Reader) error {
 	b, err := io.ReadAll(r)
 	if err != nil {
 		return err
@@ -106,19 +106,19 @@ func preprocessOxmlContent(w io.Writer, r io.Reader) error {
 	return err
 }
 
-func (tpl OxmlTemplate) Name() string {
+func (tpl MsTemplate) Name() string {
 	return tpl.name
 }
 
-func (tpl OxmlTemplate) Type() string {
+func (tpl MsTemplate) Type() string {
 	return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 }
 
-func (tpl OxmlTemplate) Ext() string {
+func (tpl MsTemplate) Ext() string {
 	return filepath.Ext(tpl.name)
 }
 
-func (tpl OxmlTemplate) Render(dst io.Writer, data interface{}) error {
+func (tpl MsTemplate) Render(dst io.Writer, data interface{}) error {
 	err := processZip(tpl.src, tpl.len, dst, func(header *zip.FileHeader, r io.Reader, w io.Writer) error {
 		if header.Name == oxmlMainFile {
 			b, err := io.ReadAll(r)

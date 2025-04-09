@@ -28,10 +28,10 @@ func LoadTemplate(name string) (doct.Template, error) {
 	case ".odp":
 		fallthrough
 	case ".odt":
-		return doct.LoadOdfTemplate(path)
+		return doct.LoadLibreTemplate(path)
 
 	case ".docx":
-		return doct.LoadOxmlTemplate(path)
+		return doct.LoadMsTemplate(path)
 
 	default:
 		return nil, errors.New("invalid template")
