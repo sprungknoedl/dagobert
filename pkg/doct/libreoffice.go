@@ -45,6 +45,7 @@ func LoadLibreTemplate(path string) (Template, error) {
 		return nil, err
 	}
 
+	defer fh.Close()
 	err = processZip(fh, stat.Size(), buf, func(header *zip.FileHeader, r io.Reader, w io.Writer) error {
 		if header.Name == odfMainFile {
 			// preprocess xml to transform it into a valid text/template AND docx document
