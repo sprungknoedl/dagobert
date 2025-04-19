@@ -59,7 +59,7 @@
                         <td> {{ call $.highlight . }} </td>
                         <td>
                             {{ range .Assets }}
-                            <div class="text-success truncate">
+                            <div class="text-info truncate">
                                 {{ if eq .Type "Account" }}      <i class="hio hio-5 hio-user inline-block"></i>
                                 {{ else if eq .Type "Desktop" }} <i class="hio hio-5 hio-computer-desktop inline-block"></i>
                                 {{ else if eq .Type "Server" }}  <i class="hio hio-5 hio-server inline-block"></i>

@@ -150,29 +150,30 @@
 
     <div class="divider"></div>
     <ul class="menu gap-2">
-		{{if allowed ($url := "/") "GET"}}                   <li><a href="{{ $url }}" title="Cases" class='{{ if eq .title "Cases" }}active{{ end }}'> <i class="hio hio-6 hio-briefcase"></i> </a></li>{{ end }}
-		{{if allowed ($url := "/settings/users/") "GET"}}    <li><a href="{{ $url }}" title="Users" class='{{ if eq .title "Users" }}active{{ end }}'> <i class="hio hio-6 hio-users"></i> </a></li>{{ end }}
-		{{if allowed ($url := "/settings/api-keys/") "GET"}} <li><a href="{{ $url }}" title="API Keys" class='{{ if eq .title "API Keys" }}active{{ end }}'> <i class="hio hio-6 hio-beaker"></i> </a></li>{{ end }}
-		{{if allowed ($url := "/settings/") "GET"}}  <li><a href="{{ $url }}" title="Settings" class='{{ if eq .title "Settings" }}active{{ end }}'> <i class="hio hio-6 hio-cog-6-tooth"></i> </a></li>{{ end }}
-		{{if allowed ($url := "/settings/auditlog/") "GET"}} <li><a href="{{ $url }}" title="Audit Log" class='{{ if eq .title "Audit Log" }}active{{ end }}'> <i class="hio hio-6 hio-scale"></i> </a></li>{{ end }}
+		{{if allowed ($url := "/") "GET"}}                   <li><a href="{{ $url }}" title="Cases" class='{{ if eq .title "Cases" }}menu-active{{ end }}'> <i class="hio hio-6 hio-briefcase"></i> </a></li>{{ end }}
+		{{if allowed ($url := "/settings/users/") "GET"}}    <li><a href="{{ $url }}" title="Users" class='{{ if eq .title "Users" }}menu-active{{ end }}'> <i class="hio hio-6 hio-users"></i> </a></li>{{ end }}
+		{{if allowed ($url := "/settings/api-keys/") "GET"}} <li><a href="{{ $url }}" title="API Keys" class='{{ if eq .title "API Keys" }}menu-active{{ end }}'> <i class="hio hio-6 hio-beaker"></i> </a></li>{{ end }}
+		{{if allowed ($url := "/settings/") "GET"}}  <li><a href="{{ $url }}" title="Settings" class='{{ if eq .title "Settings" }}menu-active{{ end }}'> <i class="hio hio-6 hio-cog-6-tooth"></i> </a></li>{{ end }}
+		{{if allowed ($url := "/settings/auditlog/") "GET"}} <li><a href="{{ $url }}" title="Audit Log" class='{{ if eq .title "Audit Log" }}menu-active{{ end }}'> <i class="hio hio-6 hio-scale"></i> </a></li>{{ end }}
     </ul>
 
     {{ if ne .env.ActiveCase.ID "" }}
     <div class="divider"></div>
     <ul class="menu gap-2">
-		{{if allowed ($url := print "/cases/" .env.CID "/events/") "GET"}}    <li><a href="{{ $url }}" title="Timeline" class='{{ if eq .title "Timeline" }}active{{ end }}'> <i class="hio hio-6 hio-clock"></i> </a></li> {{ end }}
-		{{if allowed ($url := print "/cases/" .env.CID "/assets/") "GET"}}    <li><a href="{{ $url }}" title="Assets" class='{{ if eq .title "Assets" }}active{{ end }}'> <i class="hio hio-6 hio-computer-desktop"></i> </a></li> {{ end }}
-		{{if allowed ($url := print "/cases/" .env.CID "/indicators/") "GET"}}<li><a href="{{ $url }}" title="Indicators" class='{{ if eq .title "Indicators" }}active{{ end }}'> <i class="hio hio-6 hio-finger-print"></i> </a></li> {{ end }}
-		{{if allowed ($url := print "/cases/" .env.CID "/malware/") "GET"}}   <li><a href="{{ $url }}" title="Malware/Tools" class='{{ if eq .title "Malware/Tools" }}active{{ end }}'> <i class="hio hio-6 hio-bug-ant"></i> </a></li> {{ end }}
-		{{if allowed ($url := print "/cases/" .env.CID "/evidences/") "GET"}} <li><a href="{{ $url }}" title="Evidences" class='{{ if eq .title "Evidences" }}active{{ end }}'> <i class="hio hio-6 hio-cube"></i> </a></li> {{ end }}
-		{{if allowed ($url := print "/cases/" .env.CID "/tasks/") "GET"}}     <li><a href="{{ $url }}" title="Tasks" class='{{ if eq .title "Tasks" }}active{{ end }}'> <i class="hio hio-6 hio-clipboard-document-check"></i> </a></li> {{ end }}
-		{{if allowed ($url := print "/cases/" .env.CID "/notes/") "GET"}}     <li><a href="{{ $url }}" title="Notes" class='{{ if eq .title "Notes" }}active{{ end }}'> <i class="hio hio-6 hio-chat-bubble-left"></i> </a></li> {{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/summary/") "GET"}}    <li><a href="{{ $url }}" title="Summary" class='{{ if eq .title "Summary" }}menu-active{{ end }}'> <i class="hio hio-6 hio-home-modern"></i> </a></li> {{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/events/") "GET"}}    <li><a href="{{ $url }}" title="Timeline" class='{{ if eq .title "Timeline" }}menu-active{{ end }}'> <i class="hio hio-6 hio-clock"></i> </a></li> {{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/assets/") "GET"}}    <li><a href="{{ $url }}" title="Assets" class='{{ if eq .title "Assets" }}menu-active{{ end }}'> <i class="hio hio-6 hio-computer-desktop"></i> </a></li> {{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/indicators/") "GET"}}<li><a href="{{ $url }}" title="Indicators" class='{{ if eq .title "Indicators" }}menu-active{{ end }}'> <i class="hio hio-6 hio-finger-print"></i> </a></li> {{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/malware/") "GET"}}   <li><a href="{{ $url }}" title="Malware/Tools" class='{{ if eq .title "Malware/Tools" }}menu-active{{ end }}'> <i class="hio hio-6 hio-bug-ant"></i> </a></li> {{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/evidences/") "GET"}} <li><a href="{{ $url }}" title="Evidences" class='{{ if eq .title "Evidences" }}menu-active{{ end }}'> <i class="hio hio-6 hio-cube"></i> </a></li> {{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/tasks/") "GET"}}     <li><a href="{{ $url }}" title="Tasks" class='{{ if eq .title "Tasks" }}menu-active{{ end }}'> <i class="hio hio-6 hio-clipboard-document-check"></i> </a></li> {{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/notes/") "GET"}}     <li><a href="{{ $url }}" title="Notes" class='{{ if eq .title "Notes" }}menu-active{{ end }}'> <i class="hio hio-6 hio-chat-bubble-left"></i> </a></li> {{ end }}
     </ul>
 
     <div class="divider"></div>
     <ul class="menu gap-2">
-		{{if allowed ($url := print "/cases/" .env.CID "/vis/network") "GET"}}<li><a href="{{ $url }}" title="Lateral Movement" class='{{ if eq .title "Lateral Movement" }}active{{ end }}'> <i class="hio hio-6 hio-presentation-chart-line"></i> </a></li>{{ end }}
-		{{if allowed ($url := print "/cases/" .env.CID "/vis/timeline") "GET"}}<li><a href="{{ $url }}" title="Visual Timeline" class='{{ if eq .title "Visual Timeline" }}active{{ end }}'> <i class="hio hio-6 hio-presentation-chart-bar"></i> </a></li>{{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/vis/network") "GET"}}<li><a href="{{ $url }}" title="Lateral Movement" class='{{ if eq .title "Lateral Movement" }}menu-active{{ end }}'> <i class="hio hio-6 hio-presentation-chart-line"></i> </a></li>{{ end }}
+		{{if allowed ($url := print "/cases/" .env.CID "/vis/timeline") "GET"}}<li><a href="{{ $url }}" title="Visual Timeline" class='{{ if eq .title "Visual Timeline" }}menu-active{{ end }}'> <i class="hio hio-6 hio-presentation-chart-bar"></i> </a></li>{{ end }}
 		{{if allowed ($url := print "/cases/" .env.CID "/reports") "POST"}}<li><a href="{{ $url }}" title="Report" class='' up-layer="new drawer"> <i class="hio hio-6 hio-document-arrow-down"></i> </a></li>{{ end }}
     </ul>
     {{ end }}

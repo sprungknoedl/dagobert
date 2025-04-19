@@ -25,7 +25,7 @@
 
                 <tbody>
                     {{ range .rows }}
-                    {{ if allowed ($url := print "/cases/" .ID "/events/") "GET" }}
+                    {{ if allowed ($url := print "/cases/" .ID "/summary/") "GET" }}
                     <tr class="hover">
                         <td> <a class="link" href="{{ $url }}">{{ .ID }}</a> </td>
                         <td> <a class="link" href="{{ $url }}">{{ .Name }}</a> </td>
