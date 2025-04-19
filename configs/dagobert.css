@@ -20,14 +20,13 @@ html {
 }
 
 .bg-good { 
-    @apply bg-emerald-950!;
+    background-color: color-mix(in srgb, var(--color-success) 10%, transparent) !important;
 }
-
 .bg-flagged { 
-    @apply bg-sky-950!; 
+    background-color: color-mix(in srgb, var(--color-warning) 10%, transparent) !important;
 }
 .btn-flagged { 
-    @apply text-yellow-500!; 
+    color: var(--color-warning) !important;
 }
 
 .table-default {

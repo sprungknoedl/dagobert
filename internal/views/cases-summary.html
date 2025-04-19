@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+{{ template "layout-head" }}
+<body>
+    <div class="drawer-content flex">
+        <div up-flashes></div>
+
+        {{ template "sidebar" . }}
+
+        <main class="pl-20 p-4 grow max-w-full">
+            {{ define "navbar-extra-buttons" }}
+                {{if allowed ($url := print "/cases/" .env.ActiveCase.ID) "POST"}}
+                <!--
+                <a class="join-item btn" href="{{ $url }}"
+                    up-method="get" up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}">
+                    <i class="hio hio-6 hio-pencil mr-1"></i>
+                    Edit
+                </a>
+                -->
+                {{ end }}
+            {{ end }}
+            {{ template "navbar" dict "env" .env "title" .title
+                "hideSearch" true
+                "hideImport" true
+                "hideExport" true
+                "hideAdd"    true }}
+
+            <div id="list">
+
+                <h2 class="text-primary text-xl font-bold p-2">Hosts</h2>
+                <div class="stats w-full">
+                    <div class="stat">
+                        <div class="stat-figure text-error"><i class="hio hio-bug-ant" style="font-size: 2rem;"></i></div>
+                        <div class="stat-title">Compromised</div>
+                        <div class="stat-value">{{ .hostSummary.Compromised }}</div>
+                        <div class="stat-desc">&nbsp;</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-figure text-warning"><i class="hio hio-command-line" style="font-size: 2rem;"></i></div>
+                        <div class="stat-title">Accessed</div>
+                        <div class="stat-value">{{ .hostSummary.Accessed }} </div>
+                        <div class="stat-desc">&nbsp;</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-figure"><i class="hio hio-magnifying-glass" style="font-size: 2rem;"></i></div>
+                        <div class="stat-title">Under investigation</div>
+                        <div class="stat-value">{{ .hostSummary.UnderInvestigation }}</div>
+                        <div class="stat-desc">&nbsp;</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-figure text-success"><i class="hio hio-check-circle" style="font-size: 2rem;"></i></div>
+                        <div class="stat-title">No sign of compromsise</div>
+                        <div class="stat-value">{{ .hostSummary.NoSignOfCompromise }}</div>
+                        <div class="stat-desc">&nbsp;</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-figure"><i class="hio hio-eye-slash" style="font-size: 2rem;"></i></div>
+                        <div class="stat-title">Out of scope</div>
+                        <div class="stat-value">{{ .hostSummary.OutOfScope }}</div>
+                        <div class="stat-desc">&nbsp;</div>
+                    </div>
+                </div>
+
+                <h2 class="text-primary text-xl font-bold p-2">Accounts</h2>
+                <div class="stats w-full">
+                    <div class="stat">
+                        <div class="stat-figure text-error"><i class="hio hio-bug-ant" style="font-size: 2rem;"></i></div>
+                        <div class="stat-title">Compromised</div>
+                        <div class="stat-value">{{ .accountSummary.Compromised }}</div>
+                        <div class="stat-desc">&nbsp;</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-figure text-warning"><i class="hio hio-command-line" style="font-size: 2rem;"></i></div>
+                        <div class="stat-title">Accessed</div>
+                        <div class="stat-value">{{ .accountSummary.Accessed }} </div>
+                        <div class="stat-desc">&nbsp;</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-figure"><i class="hio hio-magnifying-glass" style="font-size: 2rem;"></i></div>
+                        <div class="stat-title">Under investigation</div>
+                        <div class="stat-value">{{ .accountSummary.UnderInvestigation }}</div>
+                        <div class="stat-desc">&nbsp;</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-figure text-success"><i class="hio hio-check-circle" style="font-size: 2rem;"></i></div>
+                        <div class="stat-title">No sign of compromsise</div>
+                        <div class="stat-value">{{ .accountSummary.NoSignOfCompromise }}</div>
+                        <div class="stat-desc">&nbsp;</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-figure"><i class="hio hio-eye-slash" style="font-size: 2rem;"></i></div>
+                        <div class="stat-title">Out of scope</div>
+                        <div class="stat-value">{{ .accountSummary.OutOfScope }}</div>
+                        <div class="stat-desc">&nbsp;</div>
+                    </div>
+                </div>
+
+                <h2 class="text-primary text-xl font-bold p-2">Summary</h2>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="card bg-base-200">
+                        <div class="card-body">
+                        <h2 class="card-title">Who?</h2>
+                        <p>{{ .obj.SummaryWho }}</p>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-200">
+                        <div class="card-body">
+                        <h2 class="card-title">What?</h2>
+                        <p>{{ .obj.SummaryWhat }}</p>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-200">
+                        <div class="card-body">
+                        <h2 class="card-title">When?</h2>
+                        <p>{{ .obj.SummaryWhen }}</p>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-200">
+                        <div class="card-body">
+                        <h2 class="card-title">Where?</h2>
+                        <p>{{ .obj.SummaryWhere }}</p>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-200">
+                        <div class="card-body">
+                        <h2 class="card-title">Why?</h2>
+                        <p>{{ .obj.SummaryWhy }}</p>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-200">
+                        <div class="card-body">
+                        <h2 class="card-title">How?</h2>
+                        <p>{{ .obj.SummaryHow }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="text-primary text-xl font-bold p-2 mt-4">Key Events</h2>
+                <ul class="timeline timeline-vertical">
+                    {{ range .events }}
+                    <li>
+                        <div class="timeline-start">{{ template "format-time" .Time }}</div>
+                        <div class="timeline-middle">
+                            {{ if eq .Type "Reconnaissance" }}            <i class="hio hio-5 hio-magnifying-glass inline-block"></i>
+                            {{ else if eq .Type "Resource Development" }} <i class="hio hio-5 hio-cog-6-tooth inline-block"></i>
+                            {{ else if eq .Type "Initial Access" }}       <i class="hio hio-5 hio-lock-open inline-block"></i>
+                            {{ else if eq .Type "Execution" }}            <i class="hio hio-5 hio-play inline-block"></i>
+                            {{ else if eq .Type "Persistence" }}          <i class="hio hio-5 hio-arrow-path inline-block"></i>
+                            {{ else if eq .Type "Privilege Escalation" }} <i class="hio hio-5 hio-logout inline-block"></i>
+                            {{ else if eq .Type "Defense Evasion" }}      <i class="hio hio-5 hio-eye-slash inline-block"></i>
+                            {{ else if eq .Type "Credential Access" }}    <i class="hio hio-5 hio-identification inline-block"></i>
+                            {{ else if eq .Type "Discovery" }}            <i class="hio hio-5 hio-eye inline-block"></i>
+                            {{ else if eq .Type "Lateral Movement" }}     <i class="hio hio-5 hio-arrows-right-left inline-block"></i>
+                            {{ else if eq .Type "Collection" }}           <i class="hio hio-5 hio-arrow-down-tray inline-block"></i>
+                            {{ else if eq .Type "C2" }}                   <i class="hio hio-5 hio-server inline-block"></i>
+                            {{ else if eq .Type "Exfiltration" }}         <i class="hio hio-5 hio-truck inline-block"></i>
+                            {{ else if eq .Type "Impact" }}               <i class="hio hio-5 hio-fire inline-block"></i>
+                            {{ else if eq .Type "Legitimate" }}           <i class="hio hio-5 hio-check-circle inline-block"></i>
+                            {{ else if eq .Type "Remediation" }}          <i class="hio hio-5 hio-heart inline-block"></i>
+                            {{ else }}                                    <i class="hio hio-5 hio-question-mark-circle inline-block"></i>
+                            {{ end  }}
+                        </div>
+                        <div class="timeline-end timeline-box">{{ .Event }}</div>
+                        <hr />
+                    </li>
+                    {{ else }}
+                    <li>
+                        <div class="timeline-end timeline-box">No key events selected</div>
+                    </li>
+                    {{ end }}
+                </ul>
+            </div>
+        </main>
+    </div>
+</body>

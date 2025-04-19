@@ -1,0 +1,9 @@
+ALTER TABLE cases ADD COLUMN summary_who TEXT NOT NULL DEFAULT '';
+ALTER TABLE cases ADD COLUMN summary_what TEXT NOT NULL DEFAULT '';
+ALTER TABLE cases ADD COLUMN summary_when TEXT NOT NULL DEFAULT '';
+ALTER TABLE cases ADD COLUMN summary_where TEXT NOT NULL DEFAULT '';
+ALTER TABLE cases ADD COLUMN summary_why TEXT NOT NULL DEFAULT '';
+ALTER TABLE cases ADD COLUMN summary_how TEXT NOT NULL DEFAULT '';
+
+UPDATE cases SET summary_who = summary;
+ALTER TABLE cases DROP COLUMN summary;

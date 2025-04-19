@@ -57,20 +57,58 @@
             </div>
 
             <div class="form-control mb-2">
-                <label class="label justify-start gap-2">
-                    Summary
-				    {{ if .valid.Summary }}<span class="ml-2 text-sm text-error">{{ .valid.Summary }}</span>{{ end }}
-                </label>
-                <textarea name="Summary" rows="5" class="textarea w-full">{{ .obj.Summary }}</textarea>
-            </div>
-
-            <div class="form-control mb-2">
                 <label class="label cursor-pointer justify-start gap-2">
                     <input name="Closed" value="true" type="checkbox" class="checkbox" {{ if .obj.Closed }}checked{{ end }} />
                     Closed
                 </label>
             </div>
 
+
+            <h2 class="text-primary text-l font-bold mb-2 mt-4">Summary</h2>
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Who?
+				    {{ if .valid.SummaryWho }}<span class="ml-2 text-sm text-error">{{ .valid.SummaryWho }}</span>{{ end }}
+                </label>
+                <textarea name="SummaryWho" rows="3" class="textarea w-full">{{ .obj.SummaryWho }}</textarea>
+            </div>
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    What?
+				    {{ if .valid.SummaryWhat }}<span class="ml-2 text-sm text-error">{{ .valid.SummaryWhat }}</span>{{ end }}
+                </label>
+                <textarea name="SummaryWhat" rows="3" class="textarea w-full">{{ .obj.SummaryWhat }}</textarea>
+            </div>
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    When?
+				    {{ if .valid.SummaryWhen }}<span class="ml-2 text-sm text-error">{{ .valid.SummaryWhen }}</span>{{ end }}
+                </label>
+                <textarea name="SummaryWhen" rows="3" class="textarea w-full">{{ .obj.SummaryWhen }}</textarea>
+            </div>
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Where?
+				    {{ if .valid.SummaryWhere }}<span class="ml-2 text-sm text-error">{{ .valid.SummaryWhere }}</span>{{ end }}
+                </label>
+                <textarea name="SummaryWhere" rows="3" class="textarea w-full">{{ .obj.SummaryWhere }}</textarea>
+            </div>
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    Why?
+				    {{ if .valid.SummaryWhy }}<span class="ml-2 text-sm text-error">{{ .valid.SummaryWhy }}</span>{{ end }}
+                </label>
+                <textarea name="SummaryWhy" rows="3" class="textarea w-full">{{ .obj.SummaryWhy }}</textarea>
+            </div>
+            <div class="form-control mb-2">
+                <label class="label justify-start gap-2">
+                    How?
+				    {{ if .valid.SummaryHow }}<span class="ml-2 text-sm text-error">{{ .valid.SummaryHow }}</span>{{ end }}
+                </label>
+                <textarea name="SummaryHow" rows="3" class="textarea w-full">{{ .obj.SummaryHow }}</textarea>
+            </div>
+
+            <h2 class="text-primary text-l font-bold mb-2 mt-4">Integrations</h2>
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Timesketch Sketch

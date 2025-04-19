@@ -49,7 +49,7 @@ func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Name", "Severity", "Classification", "Closed", "Outcome", "Summary"})
+	cw.Write([]string{"ID", "Name", "Severity", "Classification", "Closed", "Outcome", "Who", "What", "When", "Where", "Why", "How"})
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
@@ -58,7 +58,12 @@ func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
 			e.Classification,
 			strconv.FormatBool(e.Closed),
 			e.Outcome,
-			e.Summary,
+			e.SummaryWho,
+			e.SummaryWhat,
+			e.SummaryWhen,
+			e.SummaryWhere,
+			e.SummaryWhy,
+			e.SummaryHow,
 		})
 	}
 
@@ -67,7 +72,7 @@ func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	uri := "/"
-	ImportCSV(ctrl.store, ctrl.acl, w, r, uri, 7, func(rec []string) {
+	ImportCSV(ctrl.store, ctrl.acl, w, r, uri, 12, func(rec []string) {
 		closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
 		if err != nil {
 			Warn(w, r, err)
@@ -81,7 +86,12 @@ func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Classification: rec[3],
 			Closed:         closed,
 			Outcome:        rec[5],
-			Summary:        rec[6],
+			SummaryWho:     rec[6],
+			SummaryWhat:    rec[6],
+			SummaryWhen:    rec[6],
+			SummaryWhere:   rec[6],
+			SummaryWhy:     rec[6],
+			SummaryHow:     rec[6],
 		}
 
 		if err = ctrl.store.SaveCase(obj); err != nil {
@@ -95,7 +105,15 @@ func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl CaseCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	obj := model.Case{ID: cid}
+	obj := model.Case{
+		ID:           cid,
+		SummaryWho:   "Identified actor [user/process/IP] involved in the incident",
+		SummaryWhat:  "Detected [action/event] leading to [impact/artifact]",
+		SummaryWhen:  "Occurred at [timestamp], duration [timeframe]",
+		SummaryWhere: "Location [host/path/network] affected",
+		SummaryWhy:   "Root cause [vulnerability/misconfiguration/intent] leading to incident",
+		SummaryHow:   "Execution method [tool/technique/tactic] used",
+	}
 	if cid != "new" {
 		var err error
 		obj, err = ctrl.store.GetCase(cid)
@@ -217,4 +235,76 @@ func (ctrl CaseCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
 
 	Audit(ctrl.store, r, "case:"+obj.ID, "Allowed access to %v", form.Users)
 	http.Redirect(w, r, "/cases/", http.StatusSeeOther)
+}
+
+type AssetSummary struct {
+	Compromised        int
+	Accessed           int
+	UnderInvestigation int
+	NoSignOfCompromise int
+	OutOfScope         int
+}
+
+func (ctrl CaseCtrl) Summary(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	obj, err := ctrl.store.GetCase(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	hostSummary := AssetSummary{}
+	accountSummary := AssetSummary{}
+	assets, err := ctrl.store.ListAssets(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	for _, asset := range assets {
+		if asset.Type == "Desktop" || asset.Type == "Server" {
+			switch asset.Status {
+			case "Compromised":
+				hostSummary.Compromised++
+			case "Accessed":
+				hostSummary.Accessed++
+			case "Under investigation":
+				hostSummary.UnderInvestigation++
+			case "No sign of compromise":
+				hostSummary.NoSignOfCompromise++
+			case "Out of scope":
+				hostSummary.OutOfScope++
+			}
+		}
+
+		if asset.Type == "Account" {
+			switch asset.Status {
+			case "Compromised":
+				accountSummary.Compromised++
+			case "Accessed":
+				accountSummary.Accessed++
+			case "Under investigation":
+				accountSummary.UnderInvestigation++
+			case "No sign of compromise":
+				accountSummary.NoSignOfCompromise++
+			case "Out of scope":
+				accountSummary.OutOfScope++
+			}
+		}
+	}
+
+	events, err := ctrl.store.ListEvents(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+
+	}
+
+	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/cases-summary.html", map[string]any{
+		"title":          "Summary",
+		"obj":            obj,
+		"hostSummary":    hostSummary,
+		"accountSummary": accountSummary,
+		"events":         fp.Filter(events, func(e model.Event) bool { return e.Flagged }),
+	})
 }

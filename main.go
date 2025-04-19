@@ -152,6 +152,7 @@ func StartUI() {
 	mux.HandleFunc("DELETE /cases/{cid}", caseCtrl.Delete)
 	mux.HandleFunc("GET /settings/cases/{cid}/acl", caseCtrl.EditACL)
 	mux.HandleFunc("POST /settings/cases/{cid}/acl", caseCtrl.SaveACL)
+	mux.HandleFunc("GET /cases/{cid}/summary/", caseCtrl.Summary)
 
 	// users
 	userCtrl := handler.NewUserCtrl(db, acl)
