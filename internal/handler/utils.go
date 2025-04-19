@@ -5,6 +5,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"errors"
+	"html/template"
 	"io"
 	"log"
 	"log/slog"
@@ -13,7 +14,6 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
-	"text/template"
 	"time"
 
 	"github.com/gorilla/schema"
