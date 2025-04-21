@@ -9,15 +9,6 @@
     themes: bumblebee --default;
 }
 
-html {
-    font-size: 12px;
-    font-family: SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-}
-
-.table, .table :where(thead, tfoot) {
-    font-size: 1rem;
-}
-
 .bg-good { 
     background-color: color-mix(in srgb, var(--color-success) 10%, transparent) !important;
 }
@@ -26,13 +17,6 @@ html {
 }
 .btn-flagged { 
     color: var(--color-warning) !important;
-}
-
-.table-default {
-    @apply w-full;
-    @apply min-w-full;
-    @apply text-sm;
-    @apply align-middle;
 }
 
 /*

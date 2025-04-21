@@ -6645,13 +6645,6 @@ div.vis-tooltip {
     }
   }
 }
-html {
-  font-size: 12px;
-  font-family: SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-}
-.table, .table :where(thead, tfoot) {
-  font-size: 1rem;
-}
 .bg-good {
   background-color: var(--color-success) !important;
   @supports (color: color-mix(in lab, red, red)) {
@@ -6666,13 +6659,6 @@ html {
 }
 .btn-flagged {
   color: var(--color-warning) !important;
-}
-.table-default {
-  width: 100%;
-  min-width: 100%;
-  font-size: var(--text-sm);
-  line-height: var(--tw-leading, var(--text-sm--line-height));
-  vertical-align: middle;
 }
 up-drawer-box {
   background-color: var(--color-base-200);
