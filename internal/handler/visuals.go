@@ -2,6 +2,7 @@ package handler
 
 import (
 	"cmp"
+	"log/slog"
 	"net/http"
 	"slices"
 	"time"
@@ -87,6 +88,7 @@ func (ctrl VisualsCtrl) Network(w http.ResponseWriter, r *http.Request) {
 	slices.SortFunc(edges, func(a, b Edge) int { return cmp.Compare(a.From+a.To, b.From+b.To) })
 	edges = slices.Compact(edges)
 
+	slog.Debug("rendering network", "nodes", nodes, "edges", edges)
 	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/vis-network.html", map[string]any{
 		"title": "Lateral Movement",
 		"nodes": fp.ToList(nodes),
@@ -123,8 +125,24 @@ func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
 				Group:   g.Name,
 			})
 		}
+		if len(ev.Assets) == 0 {
+			groups["Unknown"] = DataItem{
+				ID:      "Unknown",
+				Content: "Unknown",
+			}
+
+			// add without group when no assets are linked to the event
+			items = append(items, DataItem{
+				ID:      ev.ID + "_Unknown",
+				Content: ev.Event,
+				Title:   ev.Time.Format(time.RFC3339) + " - " + ev.Event,
+				Start:   ev.Time.Format(time.RFC3339),
+				Group:   "Unknown",
+			})
+		}
 	}
 
+	slog.Debug("rendering timeline", "items", items, "groups", groups)
 	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/vis-timeline.html", map[string]any{
 		"title":  "Visual Timeline",
 		"items":  items,
