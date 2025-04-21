@@ -61,35 +61,35 @@ $.extend( true, DataTable.defaults, {
 // Default class modification
 $.extend( true, DataTable.ext.classes, {
 	container: "dt-container dt-tailwindcss",
-	// search: {
-	// 	input: "border placeholder-gray-500 ml-2 px-3 py-2 rounded-lg border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 dark:bg-gray-800 dark:border-gray-600 dark:focus:border-blue-500 dark:placeholder-gray-400"
-	// },
-	// length: {
-		// select: "border px-3 py-2 rounded-lg border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 dark:bg-gray-800 dark:border-gray-600 dark:focus:border-blue-500"
-	// },
-	// processing: {
-		// container: "dt-processing"
-	// },
-	// paging: {
-	// 	active: 'font-semibold bg-gray-100 dark:bg-gray-700/75',
-	// 	notActive: 'bg-white dark:bg-gray-800',
-	// 	button: 'relative inline-flex justify-center items-center space-x-2 border px-4 py-2 -mr-px leading-6 hover:z-10 focus:z-10 active:z-10 border-gray-200 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:active:border-gray-700',
-	// 	first: 'rounded-l-lg',
-	// 	last: 'rounded-r-lg',
-	// 	enabled: 'text-gray-800 hover:text-gray-900 hover:border-gray-300 hover:shadow-sm focus:ring focus:ring-gray-300 focus:ring-opacity-25 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600 dark:focus:ring-opacity-40',
-	// 	notEnabled: 'text-gray-300 dark:text-gray-600'
-	// },
-	table: 'dataTable min-w-full text-sm align-middle',
+	search: {
+		input: "border placeholder-gray-500 ml-2 px-3 py-2 rounded-lg border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 dark:bg-gray-800 dark:border-gray-600 dark:focus:border-blue-500 dark:placeholder-gray-400"
+	},
+	length: {
+		select: "border px-3 py-2 rounded-lg border-gray-200 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 dark:bg-gray-800 dark:border-gray-600 dark:focus:border-blue-500"
+	},
+	processing: {
+		container: "dt-processing"
+	},
+	paging: {
+		active: 'font-semibold bg-gray-100 dark:bg-gray-700/75',
+		notActive: 'bg-white dark:bg-gray-800',
+		button: 'relative inline-flex justify-center items-center space-x-2 border px-4 py-2 -mr-px leading-6 hover:z-10 focus:z-10 active:z-10 border-gray-200 active:border-gray-200 active:shadow-none dark:border-gray-700 dark:active:border-gray-700',
+		first: 'rounded-l-lg',
+		last: 'rounded-r-lg',
+		enabled: 'text-gray-800 hover:text-gray-900 hover:border-gray-300 hover:shadow-sm focus:ring focus:ring-gray-300 focus:ring-opacity-25 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-gray-200 dark:focus:ring-gray-600 dark:focus:ring-opacity-40',
+		notEnabled: 'text-gray-300 dark:text-gray-600'
+	},
+	table: 'dataTable min-w-full text-sm align-middle whitespace-nowrap',
 	thead: {
-		// row: 'border-b border-gray-100 dark:border-gray-700/50',
-		cell: 'px-3 py-4 text-left'
+		row: 'border-b border-gray-100 dark:border-gray-700/50',
+		cell: 'px-3 py-4 font-semibold text-left'
 	},
 	tbody: {
-		// row: 'even:bg-gray-50 dark:even:bg-gray-900/50',
+		row: 'even:bg-gray-50 dark:even:bg-gray-900/50',
 		cell: 'p-3'
 	},
 	tfoot: {
-		// row: 'even:bg-gray-50 dark:even:bg-gray-900/50',
+		row: 'even:bg-gray-50 dark:even:bg-gray-900/50',
 		cell: 'p-3 text-left'
 	},
 } );
@@ -130,7 +130,7 @@ DataTable.ext.renderer.layout.tailwindcss = function ( settings, container, item
 		} )
 		.appendTo( container );
 
-	$.each( items, function (key, val) {
+	DataTable.ext.renderer.layout._forLayoutRow(items, function (key, val) {
 		var klass;
 
 		// Apply start / end (left / right when ltr) margins

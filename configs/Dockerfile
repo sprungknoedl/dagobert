@@ -1,4 +1,4 @@
-FROM node:21 AS web
+FROM node:23 AS web
 WORKDIR /src
 ENV PATH=$PATH:/src/node_modules/.bin
 
@@ -10,7 +10,7 @@ RUN make build-web
 
 # ---------------------------------
 
-FROM golang:1.22 AS app
+FROM golang:1.24 AS app
 WORKDIR /src
 
 COPY go.mod .
