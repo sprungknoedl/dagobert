@@ -145,9 +145,9 @@ func render(w http.ResponseWriter, r *http.Request, status int, name string, val
 		"upper":    strings.ToUpper,
 		"title":    strings.Title,
 		"contains": slices.Contains[[]string],
-		"json": func(value any) string {
+		"json": func(value any) template.JS {
 			out, _ := json.Marshal(value)
-			return string(out)
+			return template.JS(out)
 		},
 		"dict": func(values ...interface{}) (map[string]interface{}, error) {
 			if len(values)%2 != 0 {
