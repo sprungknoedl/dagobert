@@ -8,7 +8,7 @@
     <script src="/web/jquery-3.7.1.min.js" defer></script>
     <script src="/web/dataTables-2.2.2.js" defer></script>
     <script src="/web/dataTables.tailwindcss-2.2.2.js" defer></script>
-    <script src="/web/tom-select-2.4.3.js" defer></script>
+    <script src="/web/choices-11.1.0.js" defer></script>
     <script src="/web/unpoly-3.10.2.js" defer></script>
     <script>
     onload = (event) => {
@@ -54,10 +54,28 @@
             });
         });
 
-        up.compiler('.tom', (elem, data) => {
-            new TomSelect(elem, {
-                create: function(input){ return {value:'new:'+input, text:input} },
-                createOnBlur: true,
+        up.compiler('.choices:is([multiple])', (elem, data) => {
+            new Choices(elem, {
+                addItems: true,
+                addChoices: true,
+                classNames: {
+                    containerOuter: ['choices', 'overflow-hidden'],
+                    listDropdown: ['choices__list--dropdown', 'dropdown-content'],
+                    openState: ['overflow-visible'],
+                },
+                removeItems: true,
+                removeItemButton: true,
+                removeItemIconText: '&times;',
+            });
+        });
+
+        up.compiler('.choices:not([multiple])', (elem, data) => {
+            new Choices(elem, {
+                classNames: {
+                    containerOuter: ['choices', 'overflow-hidden'],
+                    listDropdown: ['choices__list--dropdown', 'dropdown-content'],
+                    openState: ['overflow-visible'],
+                },
             });
         });
     };

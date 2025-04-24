@@ -1,0 +1,31 @@
+.choices {
+    @apply relative dropdown w-full rounded-lg block;
+}
+
+.choices__inner {
+    @apply select w-full;
+}
+
+.choices__input {
+    @apply input input-ghost !outline-hidden px-0 py-0 input-sm;
+}
+
+.choices__list--dropdown {
+    @apply menu absolute bg-base-100 shadow-sm p-2 w-full;
+}
+
+.choices__list--dropdown .choices__item {
+    @apply rounded-field px-3 py-1.5 text-start;
+}
+
+.choices__list--multiple .choices__item {
+    @apply badge badge-primary mr-1;
+}
+
+.choices__button {
+    @apply cursor-pointer;
+}
+
+.is-highlighted {
+    background-color: color-mix(in oklab, var(--color-base-content)10%, transparent);
+}

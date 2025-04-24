@@ -40,7 +40,7 @@
                     <span class="text-accent">*</span>
 				    {{ if .valid.Type }}<span class="ml-2 text-sm text-error">{{ .valid.Type }}</span>{{ end }}
                 </label>
-                <select name="Type" class="tom select w-full">
+                <select name="Type" class="select w-full">
                     <option selected>{{ .obj.Type }}</option>
                     {{ range .model.EvidenceTypes }}
                         {{ if ne $.obj.Type . }}<option>{{ . }}</option>{{ end }}
@@ -53,8 +53,7 @@
                     Source
 				    {{ if .valid.Source }}<span class="ml-2 text-sm text-error">{{ .valid.Source }}</span>{{ end }}
                 </label>
-				<input name="Source" type="text" class="input w-full"
-                    value="{{ .obj.Source }}" />
+				<input name="Source" type="text" class="input w-full" value="{{ .obj.Source }}" />
             </div>
 
             <div class="form-control mb-2">
