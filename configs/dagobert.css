@@ -1,6 +1,5 @@
 @import './dataTables-2.2.2.css';
 @import './heroicons-outline-405db23.css';
-@import './tom-select-2.4.3.css';
 @import './unpoly-3.10.2.css';
 @import './vis-timeline-7.7.3.css';
 
@@ -8,6 +7,11 @@
 @plugin "daisyui" {
     themes: bumblebee --default;
 }
+
+@import './dagobert-tomselect.css';
+@import './dagobert-choices.css';
+@import './dagobert-datatables.css';
+@import './dagobert-vistimeline.css';
 
 .bg-good { 
     background-color: color-mix(in srgb, var(--color-success) 10%, transparent) !important;
@@ -34,6 +38,7 @@ up-drawer[size=large] up-drawer-box {
 /*
 HERO ICONS
 */
+
 .hio-5 {
     font-size: 15px;
     line-height: 15px;
@@ -43,7 +48,3 @@ HERO ICONS
     font-size: 18px;
     line-height: 18px;
 }
-
-@import './dagobert-tomselect.css';
-@import './dagobert-datatables.css';
-@import './dagobert-vistimeline.css';

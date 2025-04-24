@@ -132,64 +132,17 @@ func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// import assets (creates new one if they don't exist)
-		assets := []model.Asset{}
-		for _, asset := range strings.Split(rec[3], " ") {
-			if asset == "" {
-				continue
-			}
-
-			obj, err := ctrl.store.GetAssetByName(cid, asset)
-			if err != nil && err != sql.ErrNoRows {
-				Err(w, r, fmt.Errorf("get asset by name: %w", err))
-				return
-			} else if err != nil && err == sql.ErrNoRows {
-				obj = model.Asset{
-					ID:     fp.Random(10),
-					CaseID: cid,
-					Name:   asset,
-					Status: "Under investigation",
-					Type:   "Other",
-				}
-				if err := ctrl.store.SaveAsset(cid, obj); err != nil {
-					Err(w, r, fmt.Errorf("save asset: %w", err))
-					return
-				}
-
-				Audit(ctrl.store, r, "asset:"+obj.ID, "Added asset (event import) %q", obj.Name)
-			}
-
-			assets = append(assets, obj)
+		assets, err := ctrl.getOrCreateAssets(r, cid, strings.Split(rec[3], " "))
+		if err != nil {
+			Err(w, r, err)
+			return
 		}
 
 		// import indicators (creates new one if they don't exist)
-		indicators := []model.Indicator{}
-		for _, indicator := range strings.Split(rec[4], " ") {
-			if indicator == "" {
-				continue
-			}
-
-			obj, err := ctrl.store.GetIndicatorByValue(cid, indicator)
-			if err != nil && err != sql.ErrNoRows {
-				Err(w, r, err)
-				return
-			} else if err != nil && err == sql.ErrNoRows {
-				obj := model.Indicator{
-					ID:     fp.Random(10),
-					CaseID: cid,
-					Value:  indicator,
-					Status: "Under investigation",
-					Type:   "Other",
-					TLP:    "TLP:RED",
-				}
-				if err := ctrl.store.SaveIndicator(cid, obj, false); err != nil {
-					Err(w, r, err)
-					return
-				}
-
-				Audit(ctrl.store, r, "indicator:"+obj.ID, "Added indicator (event import): %s=%q", obj.Type, obj.Value)
-			}
-
-			indicators = append(indicators, obj)
+		indicators, err := ctrl.getOrCreateIndicators(r, cid, strings.Split(rec[4], " "))
+		if err != nil {
+			Err(w, r, err)
+			return
 		}
 
 		obj := model.Event{
@@ -319,51 +272,21 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// create any newly specified assets
-	for i, elem := range tmp.Assets {
-		if strings.HasPrefix(elem, "new:") {
-			obj := model.Asset{
-				ID:     fp.Random(10),
-				CaseID: dto.CaseID,
-				Name:   strings.TrimPrefix(elem, "new:"),
-				Status: "Under investigation",
-				Type:   "Other",
-			}
-			if err := ctrl.store.SaveAsset(dto.CaseID, obj); err != nil {
-				Err(w, r, err)
-				return
-			}
+	// TODO: validate before creating assets/indicators
 
-			Audit(ctrl.store, r, "asset:"+obj.ID, "Added asset (event save) %q", obj.Name)
-			tmp.Assets[i] = obj.ID
-		}
-
+	var err error
+	dto.Assets, err = ctrl.getOrCreateAssets(r, dto.CaseID, tmp.Assets)
+	if err != nil {
+		Err(w, r, err)
+		return
 	}
 
-	// create any newly specified indicators
-	for i, elem := range tmp.Indicators {
-		if strings.HasPrefix(elem, "new:") {
-			obj := model.Indicator{
-				ID:     fp.Random(10),
-				CaseID: dto.CaseID,
-				Value:  strings.TrimPrefix(elem, "new:"),
-				Status: "Under investigation",
-				Type:   "Other",
-				TLP:    "TLP:RED",
-			}
-			if err := ctrl.store.SaveIndicator(dto.CaseID, obj, false); err != nil {
-				Err(w, r, err)
-				return
-			}
-
-			Audit(ctrl.store, r, "indicator:"+obj.ID, "Added indicator (event save): %s=%q", obj.Type, obj.Value)
-			tmp.Indicators[i] = obj.ID
-		}
-
+	dto.Indicators, err = ctrl.getOrCreateIndicators(r, dto.CaseID, tmp.Indicators)
+	if err != nil {
+		Err(w, r, err)
+		return
 	}
 
-	dto.Assets = fp.Apply(tmp.Assets, func(id string) model.Asset { return model.Asset{ID: id} })
-	dto.Indicators = fp.Apply(tmp.Indicators, func(id string) model.Indicator { return model.Indicator{ID: id} })
 	if vr := ValidateEvent(dto); !vr.Valid() {
 		assets, err := ctrl.store.ListAssets(dto.CaseID)
 		if err != nil {
@@ -454,4 +377,67 @@ func humanizeDuration(duration time.Duration) string {
 	}
 
 	return strings.Join(parts, " ")
+}
+
+func (ctrl EventCtrl) getOrCreateAssets(r *http.Request, cid string, names []string) ([]model.Asset, error) {
+	assets := []model.Asset{}
+	for _, asset := range names {
+		if asset == "" {
+			continue
+		}
+
+		obj, err := ctrl.store.GetAssetByName(cid, asset)
+		if err != nil && err != sql.ErrNoRows {
+			return nil, fmt.Errorf("get asset by name: %w", err)
+		} else if err != nil && err == sql.ErrNoRows {
+			obj = model.Asset{
+				ID:     fp.Random(10),
+				CaseID: cid,
+				Name:   asset,
+				Status: "Under investigation",
+				Type:   "Other",
+			}
+			if err := ctrl.store.SaveAsset(cid, obj); err != nil {
+				return nil, fmt.Errorf("save asset: %w", err)
+			}
+
+			Audit(ctrl.store, r, "asset:"+obj.ID, "Added asset: %q", obj.Name)
+		}
+
+		assets = append(assets, obj)
+	}
+
+	return assets, nil
+}
+
+func (ctrl EventCtrl) getOrCreateIndicators(r *http.Request, cid string, values []string) ([]model.Indicator, error) {
+	indicators := []model.Indicator{}
+	for _, indicator := range values {
+		if indicator == "" {
+			continue
+		}
+
+		obj, err := ctrl.store.GetIndicatorByValue(cid, indicator)
+		if err != nil && err != sql.ErrNoRows {
+			return nil, fmt.Errorf("get indicator by value: %w", err)
+		} else if err != nil && err == sql.ErrNoRows {
+			obj := model.Indicator{
+				ID:     fp.Random(10),
+				CaseID: cid,
+				Value:  indicator,
+				Status: "Under investigation",
+				Type:   "Other",
+				TLP:    "TLP:RED",
+			}
+			if err := ctrl.store.SaveIndicator(cid, obj, false); err != nil {
+				return nil, fmt.Errorf("save indicator: %w", err)
+			}
+
+			Audit(ctrl.store, r, "indicator:"+obj.ID, "Added indicator: %s=%q", obj.Type, obj.Value)
+		}
+
+		indicators = append(indicators, obj)
+	}
+
+	return indicators, nil
 }

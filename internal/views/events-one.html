@@ -68,9 +68,9 @@
                     Assets
                     {{ if .valid.Assets }}<span class="ml-2 text-sm text-error">{{ .valid.Assets }}</span>{{ end }}
                 </label>
-                <select multiple name="Assets" class="tom select w-full">
+                <select multiple name="Assets" class="choices select w-full">
                     {{ range .assets }}
-                        <option value="{{ .ID }}" {{ if $.obj.HasAsset .ID }}selected{{ end }}>{{ .Name }}</option>
+                        <option value="{{ .Name }}" {{ if $.obj.HasAsset .ID }}selected{{ end }}>{{ .Name }}</option>
                     {{ end }}
                 </select>
             </div>
@@ -80,9 +80,9 @@
                     Indicators
                     {{ if .valid.Indicators }}<span class="ml-2 text-sm text-error">{{ .valid.Indicators }}</span>{{ end }}
                 </label>
-                <select multiple name="Indicators" class="tom select w-full">
+                <select multiple name="Indicators" class="choices select w-full">
                     {{ range .indicators }}
-                        <option value="{{ .ID }}" {{ if $.obj.HasIndicator .ID }}selected{{ end }}>{{ .Value }}</option>
+                        <option value="{{ .Value }}" {{ if $.obj.HasIndicator .ID }}selected{{ end }}>{{ .Value }}</option>
                     {{ end }}
                 </select>
             </div>
