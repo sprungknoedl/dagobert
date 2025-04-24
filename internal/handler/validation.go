@@ -19,7 +19,6 @@ func ValidateAsset(dto model.Asset) valid.Result {
 		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !slices.Contains(model.AssetStatus, dto.Status)},
 		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !slices.Contains(model.AssetTypes, dto.Type)},
 		{Name: "Name", Missing: dto.Name == ""},
-		{Name: "Addr", Message: "Invalid format, expected e.g. '203.0.113.1'.", Invalid: !regexIP.MatchString(dto.Addr)},
 	})
 }
 
