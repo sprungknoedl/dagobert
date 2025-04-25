@@ -8,7 +8,6 @@
     themes: bumblebee --default;
 }
 
-@import './dagobert-tomselect.css';
 @import './dagobert-choices.css';
 @import './dagobert-datatables.css';
 @import './dagobert-vistimeline.css';
