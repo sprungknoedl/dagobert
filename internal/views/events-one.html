@@ -3,6 +3,13 @@
 {{ template "layout-head" }}
 <body>
     <main>
+    <script>
+    function setNow() {
+        let now = new Date(Date.now()).toISOString();
+        document.querySelector('input[name="Time"]').value = now;
+    }
+    </script>
+
     <form method="post" action="/cases/{{ .obj.CaseID }}/events/{{ .obj.ID }}" up-submit>
         <!-- Modal header -->
         <h3 class="font-bold text-lg mb-4">
@@ -22,7 +29,10 @@
                     <span class="text-accent">*</span>
                     {{ if .valid.Time }}<span class="ml-2 text-sm text-error">{{ .valid.Time }}</span>{{ end }}
                 </label>
-                <input name="Time" type="text" class="input w-full" value="{{ .obj.Time.Format "2006-01-02T15:04:05Z07:00" }}" />
+                <div class="join w-full">
+                    <input name="Time" type="text" class="join-item input w-full" value="{{ .obj.Time.Format "2006-01-02T15:04:05Z07:00" }}" />
+                    <a class="join-item btn" onclick="setNow()">Now</a>
+                </div>
             </div>
 
             <div class="form-control mb-2">
