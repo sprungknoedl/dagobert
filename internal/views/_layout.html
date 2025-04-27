@@ -19,6 +19,15 @@
         up.layer.config.drawer.position = 'right';
         up.layer.config.drawer.size = 'large';
 
+        up.on('up:fragment:loaded', function (event) {
+            const isFailed = up.network.config.fail(event.renderOptions.response);
+            if (isFailed && event.response.status != 422) {
+                // Force the fail layer or show an error alert
+                event.renderOptions.failLayer = 'root';
+                event.renderOptions.failTarget = '#errors';
+            }
+        });
+
         up.compiler('#list', (elem, data) => {
             // auto reload #list when server returns it in an overlay
             elem.setAttribute('up-hungry', '');
@@ -42,16 +51,6 @@
                     table.search($(this).val()).draw();
                 });
             }
-        });
-
-        up.compiler('#auditlog', (elem, data) => {
-            let table = new DataTable('#auditlog', {
-                paging: false,
-                searching: true,
-                scrollX: true,
-                fixedHeader: true,
-                layout: { topStart: null, topEnd: null, bottomStart: null, bottomEnd: null }
-            });
         });
 
         up.compiler('.choices:is([multiple])', (elem, data) => {

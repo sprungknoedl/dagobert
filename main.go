@@ -277,6 +277,10 @@ func StartUI() {
 	mux.HandleFunc("GET /cases/{cid}/vis/network", visualsCtrl.Network)
 	mux.HandleFunc("GET /cases/{cid}/vis/timeline", visualsCtrl.Timeline)
 
+	// test routes
+	mux.HandleFunc("GET /errors/400", handler.Serve4xx)
+	mux.HandleFunc("GET /errors/500", handler.Serve5xx)
+
 	// --------------------------------------
 	// Static Assets
 	// --------------------------------------
