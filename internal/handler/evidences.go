@@ -145,11 +145,17 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	enums, err := ctrl.store.ListEnums()
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
 	// default values
 	dto.Size = int64(0)
 	dto.Hash = ""
 	dto.Name = filepath.Base(dto.Name) // sanitize name
-	if vr := ValidateEvidence(dto); !vr.Valid() {
+	if vr := ValidateEvidence(dto, enums); !vr.Valid() {
 		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/evidences-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,

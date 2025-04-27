@@ -90,21 +90,12 @@ func Err(w http.ResponseWriter, r *http.Request, err error) {
 func Render(store *model.Store, acl *ACL, w http.ResponseWriter, r *http.Request, status int, name string, values map[string]any) {
 	values["acl"] = acl
 	values["env"] = GetEnv(store, r)
-	values["model"] = map[string]any{
-		"AssetStatus":     model.AssetStatus,
-		"AssetTypes":      model.AssetTypes,
-		"CaseOutcomes":    model.CaseOutcomes,
-		"CaseSeverities":  model.CaseSeverities,
-		"EventTypes":      model.EventTypes,
-		"EvidenceTypes":   model.EvidenceTypes,
-		"IndicatorStatus": model.IndicatorStatus,
-		"IndicatorTLPs":   model.IndicatorTLPs,
-		"IndicatorTypes":  model.IndicatorTypes,
-		"KeyTypes":        model.KeyTypes,
-		"MalwareStatus":   model.MalwareStatus,
-		"TaskTypes":       model.TaskTypes,
-		"UserRoles":       model.UserRoles,
-		"HookTrigger":     model.HookTrigger,
+
+	var err error
+	values["model"], err = store.ListEnums()
+	if err != nil {
+		slog.Warn("Failed to list enums",
+			"err", err, "url", r.URL)
 	}
 
 	render(w, r, status, name, values)
