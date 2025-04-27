@@ -27,22 +27,8 @@
                 <tbody>
                     {{ range .rows }}
                     <tr class="hover">
-                        <td class="truncate">
-                            {{ if eq .Status "Compromised" }} <span class="text-error"><i class="hio hio-5 hio-bug-ant inline-block"></i> {{ .Status }}
-                            {{ else if eq .Status "Accessed" }} <span class="text-warning"><i class="hio hio-5 hio-command-line inline-block"></i> {{ .Status }}
-                            {{ else if eq .Status "No sign of compromise" }} <span class="text-success"><i class="hio hio-5 hio-check-circle inline-block"></i> {{ .Status }}
-                            {{ else }}
-                            {{ .Status }}
-                            {{ end }}
-                        </td>
-                        <td class="truncate">
-                            {{ if eq .Type "Account" }}      <i class="hio hio-5 hio-user inline-block"></i>
-                            {{ else if eq .Type "Desktop" }} <i class="hio hio-5 hio-computer-desktop inline-block"></i>
-                            {{ else if eq .Type "Server" }}  <i class="hio hio-5 hio-server inline-block"></i>
-                            {{ else }}                       <i class="hio hio-5 hio-question-mark-circle inline-block"></i>
-                            {{ end }}
-                            {{ .Type }}
-                        </td>
+                        <td class="truncate"> {{ template "enum" (dict "item" .Status "list" $.model.AssetStatus) }} </td>
+                        <td class="truncate"> {{ template "enum" (dict "item" .Type "list" $.model.AssetTypes) }} </td>
                         <td> {{ .Name }} </td>
                         <td> {{ .Addr }} </td>
                         <td class="truncate"> {{ template "format-time" .FirstSeen }} </td>

@@ -6,26 +6,6 @@ import (
 	"slices"
 )
 
-var EventTypes = FromEnv("VALUES_EVENT_TYPES", []string{
-	"Reconnaissance",
-	"Resource Development",
-	"Initial Access",
-	"Execution",
-	"Persistence",
-	"Privilege Escalation",
-	"Defense Evasion",
-	"Credential Access",
-	"Discovery",
-	"Lateral Movement",
-	"Collection",
-	"C2",
-	"Exfiltration",
-	"Impact",
-	"Legitimate",
-	"Remediation",
-	"Other",
-})
-
 type Event struct {
 	ID            string
 	Time          Time

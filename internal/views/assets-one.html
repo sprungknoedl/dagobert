@@ -25,7 +25,7 @@
                 <select name="Status" class="select w-full">
                     <option disabled value="" {{ if eq .obj.Status "" }}selected{{ end }}>Select an option</option>
                     {{ range .model.AssetStatus }}
-                        <option {{ if eq $.obj.Status . }}selected{{ end }}>{{ . }}</option>
+                        <option {{ if eq $.obj.Status .Name }}selected{{ end }}>{{ .Name }}</option>
                     {{ end }}
                 </select>
             </div>
@@ -39,7 +39,7 @@
                 <select name="Type" class="select w-full">
                     <option disabled value="" {{ if eq .obj.Type "" }}selected{{ end }}>Select an option</option>
                     {{ range .model.AssetTypes }}
-                        <option {{ if eq $.obj.Type . }}selected{{ end }}>{{ . }}</option>
+                        <option {{ if eq $.obj.Type .Name }}selected{{ end }}>{{ .Name }}</option>
                     {{ end }}
                 </select>
             </div>

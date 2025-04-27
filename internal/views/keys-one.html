@@ -24,7 +24,7 @@
                 <select name="Type" class="select w-full">
                     <option disabled value="" {{ if eq .obj.Type "" }}selected{{ end }}>Select an option</option>
                     {{ range .model.KeyTypes }}
-                        <option {{ if eq $.obj.Type . }}selected{{ end }}>{{ . }}</option>
+                        <option {{ if eq $.obj.Type .Name }}selected{{ end }}>{{ .Name }}</option>
                     {{ end }}
                 </select>
             </div>

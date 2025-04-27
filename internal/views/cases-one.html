@@ -39,7 +39,7 @@
                 </label>
                 <select name="Severity" class="select w-full">
                     {{ range .model.CaseSeverities }}
-                        <option {{ if eq $.obj.Severity . }}selected{{ end }}>{{ . }}</option>
+                        <option {{ if eq $.obj.Severity .Name }}selected{{ end }}>{{ .Name }}</option>
                     {{ end }}
                 </select>
             </div>
@@ -51,7 +51,7 @@
                 </label>
                 <select name="Outcome" class="select w-full">
                     {{ range .model.CaseOutcomes }}
-                        <option {{ if eq $.obj.Outcome . }}selected{{ end }}>{{ . }}</option>
+                        <option {{ if eq $.obj.Outcome .Name }}selected{{ end }}>{{ .Name }}</option>
                     {{ end }}
                 </select>
             </div>

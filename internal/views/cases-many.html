@@ -30,8 +30,8 @@
                         <td> <a class="link" href="{{ $url }}">{{ .ID }}</a> </td>
                         <td> <a class="link" href="{{ $url }}">{{ .Name }}</a> </td>
                         <td> {{ .Classification }} </td>
-                        <td> {{ .Severity }} </td>
-                        <td> {{ .Outcome }} </td>
+                        <td> {{ template "enum" (dict "item" .Severity "list" $.model.CaseSeverities) }} </td>
+                        <td> {{ template "enum" (dict "item" .Outcome "list" $.model.CaseOutcomes) }} </td>
                         <td class="text-right"><div class="join">
                             {{ if allowed ($url := print "/settings/cases/" .ID "/acl") "POST" }}
 							<a class="join-item btn btn-sm" href="{{ $url }}" title="ACL"

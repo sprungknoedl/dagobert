@@ -222,3 +222,11 @@
     </a>
     {{ end }}
 {{ end }}
+
+{{ define "enum" }}
+    {{ range $x := .list }}
+    {{ if eq $.item $x.Name }} 
+        <span class="text-{{ $x.State }}"><i class="hio hio-5 {{ $x.Icon }}"></i> {{ $x.Name }}</span>
+    {{ end }}
+    {{ end }}
+{{ end }}

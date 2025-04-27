@@ -5,9 +5,6 @@ import (
 	"fmt"
 )
 
-var CaseSeverities = FromEnv("VALUES_CASE_SEVERITIES", []string{"", "Low", "Medium", "High"})
-var CaseOutcomes = FromEnv("VALUES_CASE_OUTCOMES", []string{"", "False positive", "True positive", "Benign positive"})
-
 type Case struct {
 	ID             string
 	Name           string

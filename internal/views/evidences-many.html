@@ -27,17 +27,7 @@
                 <tbody>
                     {{ range .rows }}
                     <tr class="hover">
-                        <td class="truncate">
-                            {{ if eq .Type "File" }}              <i class="hio hio-5 hio-document inline-block"></i>
-                            {{ else if eq .Type "Logs" }}         <i class="hio hio-5 hio-document-text inline-block"></i>
-                            {{ else if eq .Type "Triage" }}       <i class="hio hio-5 hio-archive-box inline-block"></i>
-                            {{ else if eq .Type "System Image" }} <i class="hio hio-5 hio-server inline-block"></i>
-                            {{ else if eq .Type "Memory Dump" }}  <i class="hio hio-5 hio-cpu-chip inline-block"></i>
-                            {{ else if eq .Type "Malware" }}      <i class="hio hio-5 hio-bug-ant inline-block"></i>
-                            {{ else }}                            <i class="hio hio-5 hio-cube inline-block"></i>
-                            {{ end }}
-                            {{ .Type }}
-                        </td>
+                        <td class="truncate"> {{ template "enum" (dict "item" .Type "list" $.model.EvidenceTypes)}} </td>
                         <td> {{ .Name }} </td>
                         <td> {{ .Hash }} </td>
                         <td> {{ call $.humanizeSize .Size }} </td>

@@ -54,50 +54,27 @@
 						<tbody>
 							{{ range .rows }}
 							<tr class="hover">
-								<td class="truncate">
-                            {{ if eq .Status "Confirmed" }} <span class="text-error"><i class="hio hio-5 hio-bug-ant inline-block"></i> {{ .Status }}</span>
-                            {{ else if eq .Status "Suspicious" }} <span class="text-warning"><i class="hio hio-5 hio-finger-print inline-block"></i> {{ .Status }}</span>
-                            {{ else if eq .Status "Unrelated" }} <span class="text-success"><i class="hio hio-5 hio-check-circle inline-block"></i> {{ .Status }}</span>
-                            {{ else }}
-                            {{ .Status }}
-                            {{ end }}
-								</td>
-								<td class="truncate">
-                            {{ if eq .Type "IP" }}           <i class="hio hio-5 hio-map-pin inline-block"></i>
-                            {{ else if eq .Type "Domain" }}  <i class="hio hio-5 hio-globe-europe-africa inline-block"></i>
-                            {{ else if eq .Type "URL" }}     <i class="hio hio-5 hio-link inline-block"></i>
-                            {{ else if eq .Type "Path" }}    <i class="hio hio-5 hio-folder-open inline-block"></i>
-                            {{ else if eq .Type "Hash" }}    <i class="hio hio-5 hio-finger-print inline-block"></i>
-                            {{ else if eq .Type "Service" }} <i class="hio hio-5 hio-command-line inline-block"></i>
-                            {{ else }}                       <i class="hio hio-5 hio-question-mark-circle inline-block"></i>
-                            {{ end }}
-                            {{ .Type }}
-								</td>
-                        <td>
-                            {{ .Value }}
-                        </td>
-								<td>
-                            {{ if eq .TLP "TLP:RED" }}        <span class="text-error">{{ .TLP }}</span>
-                            {{ else if eq .TLP "TLP:AMBER" }} <span class="text-warning">{{ .TLP }}</span>
-                            {{ else if eq .TLP "TLP:GREEN" }} <span class="text-success">{{ .TLP }}</span>
-                            {{ else }}                        <span>{{ .TLP }}</span>
+								<td class="truncate"> {{ template "enum" (dict "item" .Status "list" $.model.IndicatorStatus) }} </td>
+								<td class="truncate"> {{ template "enum" (dict "item" .Type "list" $.model.IndicatorTypes) }} </td>
+                        		<td> {{ .Value }} </td>
+								<td> {{ template "enum" (dict "item" .TLP "list" $.model.TLP) }} </td>
+								<td> {{ .Source }} </td>
+								<td class="truncate"> {{ template "format-time" .FirstSeen }} </td>
+								<td class="truncate"> {{ template "format-time" .LastSeen }} </td>
+								<td> {{ .Events }} </td>
+								<td class="text-right">
+									<div class="join">
+									{{ if and (eq .Type "IP") (ne .TLP "TLP:RED")}}
+									<a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
+									{{ else if and (eq .Type "Domain") (ne .TLP "TLP:RED") }}
+									<a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
+									{{ else if and (eq .Type "Hash") (ne .TLP "TLP:RED") }}
+									<a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
+									<a class="join-item btn btn-sm" target="_blank" href="https://www.hybrid-analysis.com/search?query={{ .Value }}">HA</a>
 									{{ end }}
+									{{ template "action-buttons" dict "url" (print "/cases/" .CaseID "/indicators/" .ID) "env" $.env }}
+									</div>
 								</td>
-                        <td> {{ .Source }} </td>
-                        <td class="truncate"> {{ template "format-time" .FirstSeen }} </td>
-                        <td class="truncate"> {{ template "format-time" .LastSeen }} </td>
-                        <td> {{ .Events }} </td>
-                        <td class="text-right"><div class="join">
-                            {{ if and (eq .Type "IP") (ne .TLP "TLP:RED")}}
-							<a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
-							{{ else if and (eq .Type "Domain") (ne .TLP "TLP:RED") }}
-							<a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
-							{{ else if and (eq .Type "Hash") (ne .TLP "TLP:RED") }}
-							<a class="join-item btn btn-sm" target="_blank" href="https://www.virustotal.com/gui/search/{{ .Value }}">VT</a>
-							<a class="join-item btn btn-sm" target="_blank" href="https://www.hybrid-analysis.com/search?query={{ .Value }}">HA</a>
-							{{ end }}
-                            {{ template "action-buttons" dict "url" (print "/cases/" .CaseID "/indicators/" .ID) "env" $.env }}
-                        </div></td>
 							</tr>
 							{{ end }}
 						</tbody>

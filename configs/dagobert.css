@@ -12,9 +12,6 @@
 @import './dagobert-datatables.css';
 @import './dagobert-vistimeline.css';
 
-.bg-good { 
-    background-color: color-mix(in srgb, var(--color-success) 10%, transparent) !important;
-}
 .bg-flagged { 
     background-color: color-mix(in srgb, var(--color-warning) 10%, transparent) !important;
 }
