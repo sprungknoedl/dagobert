@@ -57,7 +57,7 @@
 								<td class="truncate"> {{ template "enum" (dict "item" .Status "list" $.model.IndicatorStatus) }} </td>
 								<td class="truncate"> {{ template "enum" (dict "item" .Type "list" $.model.IndicatorTypes) }} </td>
                         		<td> {{ .Value }} </td>
-								<td> {{ template "enum" (dict "item" .TLP "list" $.model.TLP) }} </td>
+								<td> {{ template "enum" (dict "item" .TLP "list" $.model.IndicatorTLPs) }} </td>
 								<td> {{ .Source }} </td>
 								<td class="truncate"> {{ template "format-time" .FirstSeen }} </td>
 								<td class="truncate"> {{ template "format-time" .LastSeen }} </td>
