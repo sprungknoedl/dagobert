@@ -4,8 +4,6 @@ import (
 	"database/sql"
 )
 
-var TaskTypes = FromEnv("VALUES_TASK_TYPES", []string{"Information request", "Analysis", "Deliverable", "Checkpoint", "Other"})
-
 type Task struct {
 	ID      string
 	Type    string

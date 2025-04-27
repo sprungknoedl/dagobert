@@ -4,10 +4,6 @@ import (
 	"database/sql"
 )
 
-var IndicatorStatus = FromEnv("VALUES_INDICATOR_STATUS", []string{"Confirmed", "Suspicious", "Under investigation", "Unrelated"})
-var IndicatorTypes = FromEnv("VALUES_INDICATOR_TYPES", []string{"IP", "Domain", "URL", "Path", "Hash", "Service", "Other"})
-var IndicatorTLPs = FromEnv("VALUES_INDICATOR_TLPS", []string{"TLP:RED", "TLP:AMBER", "TLP:GREEN", "TLP:CLEAR"})
-
 type Indicator struct {
 	ID     string
 	Status string

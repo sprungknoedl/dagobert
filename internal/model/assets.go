@@ -4,9 +4,6 @@ import (
 	"database/sql"
 )
 
-var AssetStatus = FromEnv("VALUES_ASSET_STATUS", []string{"Compromised", "Accessed", "Under investigation", "No sign of compromise", "Out of scope"})
-var AssetTypes = FromEnv("VALUES_ASSET_TYPES", []string{"Account", "Desktop", "Server", "Other"})
-
 type Asset struct {
 	ID     string
 	Status string

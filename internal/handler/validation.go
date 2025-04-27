@@ -14,10 +14,16 @@ import (
 
 var regexIP = regexp.MustCompile(`^$|^(?:\d{1,3}\.){3}\d{1,3}$`)
 
+func InEnum(enum []model.EnumItem, item string) bool {
+	return slices.Contains(
+		fp.Apply(enum, func(e model.EnumItem) string { return e.Name }),
+		item)
+}
+
 func ValidateAsset(dto model.Asset) valid.Result {
 	return valid.Check([]valid.Condition{
-		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !slices.Contains(model.AssetStatus, dto.Status)},
-		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !slices.Contains(model.AssetTypes, dto.Type)},
+		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !InEnum(model.AssetStatus, dto.Status)},
+		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !InEnum(model.AssetTypes, dto.Type)},
 		{Name: "Name", Missing: dto.Name == ""},
 	})
 }
@@ -25,8 +31,8 @@ func ValidateAsset(dto model.Asset) valid.Result {
 func ValidateCase(dto model.Case) valid.Result {
 	return valid.Check([]valid.Condition{
 		{Name: "Name", Missing: dto.Name == ""},
-		{Name: "Severity", Message: "Invalid value.", Invalid: !slices.Contains(model.CaseSeverities, dto.Severity)},
-		{Name: "Outcome", Message: "Invalid value.", Invalid: !slices.Contains(model.CaseOutcomes, dto.Outcome)},
+		{Name: "Severity", Message: "Invalid value.", Invalid: !InEnum(model.CaseSeverities, dto.Severity)},
+		{Name: "Outcome", Message: "Invalid value.", Invalid: !InEnum(model.CaseOutcomes, dto.Outcome)},
 		{Name: "SketchID", Message: "Invalid value. Must be positive.", Invalid: dto.SketchID < 0},
 	})
 }
@@ -34,7 +40,7 @@ func ValidateCase(dto model.Case) valid.Result {
 func ValidateEvent(dto model.Event) valid.Result {
 	return valid.Check([]valid.Condition{
 		{Name: "Time", Missing: dto.Time.IsZero()},
-		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !slices.Contains(model.EventTypes, dto.Type)},
+		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !InEnum(model.EventTypes, dto.Type)},
 		{Name: "Event", Missing: dto.Event == ""},
 	})
 }
@@ -49,16 +55,16 @@ func ValidateEvidence(dto model.Evidence) valid.Result {
 func ValidateIndicator(dto model.Indicator) valid.Result {
 	return valid.Check([]valid.Condition{
 		{Name: "Value", Missing: dto.Value == ""},
-		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !slices.Contains(model.IndicatorStatus, dto.Status)},
-		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !slices.Contains(model.IndicatorTypes, dto.Type)},
-		{Name: "TLP", Message: "Invalid value.", Missing: dto.Type == "", Invalid: !slices.Contains(model.IndicatorTLPs, dto.TLP)},
+		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !InEnum(model.IndicatorStatus, dto.Status)},
+		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !InEnum(model.IndicatorTypes, dto.Type)},
+		{Name: "TLP", Message: "Invalid value.", Missing: dto.Type == "", Invalid: !InEnum(model.IndicatorTLPs, dto.TLP)},
 	})
 }
 
 func ValidateKey(dto model.Key) valid.Result {
 	return valid.Check([]valid.Condition{
 		{Name: "Name", Missing: dto.Name == ""},
-		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !slices.Contains(model.KeyTypes, dto.Type)},
+		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !InEnum(model.KeyTypes, dto.Type)},
 	})
 }
 
@@ -66,7 +72,7 @@ func ValidateMalware(dto model.Malware) valid.Result {
 	return valid.Check([]valid.Condition{
 		{Name: "Path", Missing: dto.Path == ""},
 		{Name: "Source", Missing: dto.Asset.ID == ""},
-		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !slices.Contains(model.MalwareStatus, dto.Status)},
+		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !InEnum(model.MalwareStatus, dto.Status)},
 	})
 }
 
@@ -80,7 +86,7 @@ func ValidateNote(dto model.Note) valid.Result {
 func ValidateTask(dto model.Task) valid.Result {
 	return valid.Check([]valid.Condition{
 		{Name: "Task", Missing: dto.Task == ""},
-		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !slices.Contains(model.TaskTypes, dto.Type)},
+		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !InEnum(model.TaskTypes, dto.Type)},
 		{Name: "DateDue", Message: "Invalid format, expected e.g. '2006-01-02'."},
 	})
 }

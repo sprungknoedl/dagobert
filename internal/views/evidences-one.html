@@ -43,7 +43,7 @@
                 <select name="Type" class="select w-full">
                     <option selected>{{ .obj.Type }}</option>
                     {{ range .model.EvidenceTypes }}
-                        {{ if ne $.obj.Type . }}<option>{{ . }}</option>{{ end }}
+                        {{ if ne $.obj.Type .Name }}<option>{{ .Name }}</option>{{ end }}
                     {{ end }}
                 </select>
             </div>

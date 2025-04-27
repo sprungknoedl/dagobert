@@ -27,21 +27,12 @@
                     {{ range .rows }}
                     <tr class="hover">
                         <td class="truncate"> {{ .DateDue.Format "2006-01-02" }} </td>
-                        <td class="truncate">
-                            {{ if eq .Type "Information request" }} <i class="hio hio-5 hio-question-mark-circle inline-block"></i>
-                            {{ else if eq .Type "Analysis" }}       <i class="hio hio-5 hio-magnifying-glass inline-block"></i>
-                            {{ else if eq .Type "Deliverable" }}    <i class="hio hio-5 hio-document-text inline-block"></i>
-                            {{ else if eq .Type "Checkpoint" }}     <i class="hio hio-5 hio-clipboard-document-check inline-block"></i>
-                            {{ else }}                              <i class="hio hio-5 hio-question-mark-circle inline-block"></i>
-                            {{ end }}
-                            {{ .Type }}
-                        </td>
+                        <td class="truncate"> {{ template "enum" (dict "item" .Type "list" $.model.TaskTypes) }} </td>
                         <td> {{ .Task }} </td>
                         <td> {{ .Owner }} </td>
                         <td>
                             {{ if .Done }} <i class="hio hio-5 hio-check-circle text-green-500"></i>
-                            {{ else }} <i class="hio hio-5 hio-x-circle text-red-500"></i>
-                            {{ end }}
+                            {{ else }} <i class="hio hio-5 hio-x-circle text-red-500"></i> {{ end }}
                         </td>
                         <td class="text-right"><div class="join">
                             {{ template "action-buttons" dict "url" (print "/cases/" .CaseID "/tasks/" .ID) "env" $.env }}

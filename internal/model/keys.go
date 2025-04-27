@@ -4,8 +4,6 @@ import (
 	"database/sql"
 )
 
-var KeyTypes = []string{"API", "Dagobert", "Donald"}
-
 type Key struct {
 	Type string
 	Key  string
