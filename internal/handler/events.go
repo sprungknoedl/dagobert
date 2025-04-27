@@ -287,7 +287,13 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if vr := ValidateEvent(dto); !vr.Valid() {
+	enums, err := ctrl.store.ListEnums()
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	if vr := ValidateEvent(dto, enums); !vr.Valid() {
 		assets, err := ctrl.store.ListAssets(dto.CaseID)
 		if err != nil {
 			Err(w, r, err)

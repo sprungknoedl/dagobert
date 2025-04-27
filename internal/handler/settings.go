@@ -94,8 +94,14 @@ func (ctrl SettingsCtrl) SaveHook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	enums, err := ctrl.store.ListEnums()
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
 	// validate form
-	if vr := ValidateHook(dto); !vr.Valid() {
+	if vr := ValidateHook(dto, enums); !vr.Valid() {
 		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/settings-hooks.html", map[string]any{
 			"obj":   dto,
 			"mods":  worker.List,
@@ -174,9 +180,15 @@ func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	enums, err := ctrl.store.ListEnums()
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
 	// validate form
 	dto.Name = filepath.Base(dto.Name) // sanitize name
-	if vr := ValidateReport(dto); !vr.Valid() {
+	if vr := ValidateReport(dto, enums); !vr.Valid() {
 		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/settings-reports.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,

@@ -377,7 +377,13 @@ func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if vr := ValidateIndicator(dto); !vr.Valid() {
+	enums, err := ctrl.store.ListEnums()
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	if vr := ValidateIndicator(dto, enums); !vr.Valid() {
 		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/indicators-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,

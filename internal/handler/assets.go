@@ -111,7 +111,13 @@ func (ctrl AssetCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if vr := ValidateAsset(dto); !vr.Valid() {
+	enums, err := ctrl.store.ListEnums()
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	if vr := ValidateAsset(dto, enums); !vr.Valid() {
 		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/assets-one.html", map[string]any{
 			"obj":   dto,
 			"valid": vr,
