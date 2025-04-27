@@ -251,3 +251,11 @@ func ServeFile(name string) http.Handler {
 		http.ServeFile(w, r, name)
 	})
 }
+
+func Serve5xx(w http.ResponseWriter, r *http.Request) {
+	Err(w, r, errors.New("500: Internal Test Error"))
+}
+
+func Serve4xx(w http.ResponseWriter, r *http.Request) {
+	Warn(w, r, errors.New("400: Client Test Error"))
+}

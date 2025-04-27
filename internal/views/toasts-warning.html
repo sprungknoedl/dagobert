@@ -2,14 +2,13 @@
 <html lang="en">
 {{ template "layout-head" }}
 <body>
-    <main>
-    <div class="alert alert-warning w-[42rem] m-4" up-flashes
-        @click="$el.remove()">
-        <i class="hio hio-exclamation-circle-filled w-8 h-8"></i>
+	<section id="errors" class="toast toast-top toast-center z-20">
+	<div class="alert alert-warning w-[42rem] m-4" role="alert" onclick="this.remove()">
+        <i class="hio hio-exclamation-circle text-3xl"></i>
         <div>
             <h3 class="font-bold">Bad request.</h3>
             <div class="text-cs">{{ .err }}</div>
         </div>
     </div>
-    </main>
+    </section>
 </body>
