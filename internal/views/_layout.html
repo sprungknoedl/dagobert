@@ -117,18 +117,18 @@
             {{ block "navbar-extra-buttons" . }}{{ end }}
             {{if allowed ($url := print .env.ActiveRoute "import") "POST"}}
             {{ if not .hideImport }}
-            <a class="join-item btn" href="{{ $url }}" up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}">
-                <i class="hio hio-6 hio-arrow-up-tray inline-block mr-1"></i>
-                Import CSV
+            <a class="join-item btn" href="{{ $url }}/csv" up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}">
+                <i class="hio hio-6 hio-bars-arrow-up inline-block mr-1"></i>
+                Import
             </a>
             {{ end }}
             {{ end }}
 
             {{if allowed ($url := print .env.ActiveRoute "export") "GET"}}
             {{ if not .hideExport }}
-            <a class="join-item btn" href="{{ $url }}">
-                <i class="hio hio-6 hio-arrow-down-tray inline-block mr-1"></i>
-                Export CSV
+            <a class="join-item btn" href="{{ $url }}/csv">
+                <i class="hio hio-6 hio-bars-arrow-down inline-block mr-1"></i>
+                Export
             </a>
             {{ end }}
             {{ end }}
