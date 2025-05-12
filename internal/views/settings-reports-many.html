@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+{{ template "layout-head" }}
+<body>
+    <div class="drawer-content flex">
+        <section id="errors"></section>
+
+        {{ template "sidebar" . }}
+
+        <main id="list" class="pl-20 p-4 grow max-w-full">
+            {{ define "navbar-pre-title"}}
+            <li><i class="hio hio-6 hio-cog-6-tooth mr-2"></i> Settings</li>
+            {{ end }}
+            {{ template "navbar" dict "env" .env "title" .title 
+                "hideExport" true
+                "hideImport" true }}
+
+            <table class="table table-default dataTable">
+                <thead>
+                    <tr>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Name</th>
+                        <th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Notes</th>
+                        <th style="width: 7rem"></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {{ range .reports }}
+                    <tr class="hover">
+                        <td> {{ .Name }} </td>
+                        <td> {{ .Notes }} </td>
+                        <td class="text-right"><div class="join">
+                            {{ if allowed ($url := print "/settings/reports/" .ID "/download") "GET" }}
+                            <a class="join-item btn btn-sm" href="{{ $url }}" >
+                                <i class="hio hio-5 hio-arrow-down-tray"></i>
+                            </a>
+                            {{ end }}
+                            {{ if allowed ($url := print "/settings/auditlog/report:" .ID) "GET" }}
+							<a class="join-item btn btn-sm" href="{{ $url }}" title="Audit Log"
+								up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
+                                <i class="hio hio-5 hio-scale"></i>
+							</a>
+                            {{ end }}
+                            {{ if allowed ($url := print "/settings/reports/" .ID) "POST" }}
+                            <a class="join-item btn btn-sm" href="{{ $url }}"
+                                up-method="get" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
+                                <i class="hio hio-5 hio-pencil"></i>
+                            </a>
+                            {{ end }}
+                            {{ if allowed ($url := print "/settings/reports/" .ID) "DELETE" }}
+                            <a class="join-item btn btn-sm" href="{{ $url }}"
+                                up-method="delete" up-layer="new drawer" up-accept-location="{{ $.env.ActiveRoute }}">
+                                <i class="hio hio-5 hio-trash"></i>
+                            </a>
+                            {{ end }}
+                        </div></td>
+                    </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+        </main>
+    </div>
+</body>

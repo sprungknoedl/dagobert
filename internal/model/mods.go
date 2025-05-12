@@ -19,10 +19,6 @@ var JobStatus = []string{
 	"Success",
 }
 
-var HookTrigger = []string{
-	"OnEvidenceAdded",
-}
-
 type Job struct {
 	ID          string
 	CaseID      string

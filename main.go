@@ -177,17 +177,24 @@ func StartUI() {
 	mux.HandleFunc("POST /settings/api-keys/{key}", keyCtrl.Save)
 	mux.HandleFunc("DELETE /settings/api-keys/{key}", keyCtrl.Delete)
 
-	// settings (templates & hooks)
+	// settings (report templates)
 	settingsCtrl := handler.NewSettingsCtrl(db, acl)
-	mux.HandleFunc("GET /settings/{$}", settingsCtrl.List)
-	mux.HandleFunc("GET /settings/hooks/{id}", settingsCtrl.EditHook)
-	mux.HandleFunc("POST /settings/hooks/{id}", settingsCtrl.SaveHook)
-	mux.HandleFunc("DELETE /settings/hooks/{id}", settingsCtrl.DeleteHook)
+	mux.HandleFunc("GET /settings/reports/", settingsCtrl.ListReports)
 	mux.HandleFunc("GET /settings/reports/{id}", settingsCtrl.EditReport)
 	mux.HandleFunc("POST /settings/reports/{id}", settingsCtrl.SaveReport)
 	mux.HandleFunc("DELETE /settings/reports/{id}", settingsCtrl.DeleteReport)
-	mux.HandleFunc("GET /cases/{cid}/reports", settingsCtrl.ReportsDialog)
-	mux.HandleFunc("POST /cases/{cid}/render", settingsCtrl.GenerateReport)
+
+	// settings (hooks)
+	mux.HandleFunc("GET /settings/hooks/", settingsCtrl.ListHooks)
+	mux.HandleFunc("GET /settings/hooks/{id}", settingsCtrl.EditHook)
+	mux.HandleFunc("POST /settings/hooks/{id}", settingsCtrl.SaveHook)
+	mux.HandleFunc("DELETE /settings/hooks/{id}", settingsCtrl.DeleteHook)
+
+	// settings (enums)
+	mux.HandleFunc("GET /settings/enums/", settingsCtrl.ListEnums)
+	mux.HandleFunc("GET /settings/enums/{id}", settingsCtrl.EditEnum)
+	mux.HandleFunc("POST /settings/enums/{id}", settingsCtrl.SaveEnum)
+	mux.HandleFunc("DELETE /settings/enums/{id}", settingsCtrl.DeleteEnum)
 
 	// auditlog
 	auditlogCtrl := handler.NewAuditlogCtrl(db, acl)
@@ -276,6 +283,11 @@ func StartUI() {
 	visualsCtrl := handler.NewVisualsCtrl(db, acl)
 	mux.HandleFunc("GET /cases/{cid}/vis/network", visualsCtrl.Network)
 	mux.HandleFunc("GET /cases/{cid}/vis/timeline", visualsCtrl.Timeline)
+
+	// reports
+	reportsCtrl := handler.NewReportsCtrl(db, acl)
+	mux.HandleFunc("GET /cases/{cid}/reports", reportsCtrl.Dialog)
+	mux.HandleFunc("POST /cases/{cid}/render", reportsCtrl.Generate)
 
 	// test routes
 	mux.HandleFunc("GET /errors/400", handler.Serve4xx)
