@@ -46,12 +46,12 @@
                         <td> {{ call $.highlight . }} </td>
                         <td>
                             {{ range .Assets }}
-                            <div class="text-info truncate"> {{ template "enum" (dict "item" .Type "list" $.model.AssetTypes) }} </div>
+                            <div class="text-info truncate"> {{ template "enum-icon" (dict "item" .Type "list" $.model.AssetTypes) }} {{ .Name }}</div>
                             {{ end }}
                         </td>
                         <td>
                             {{ range .Indicators }}
-                            <div class="text-error truncate"> {{ template "enum" (dict "item" .Type "list" $.model.IndicatorTypes) }} </div>
+                            <div class="text-error truncate"> {{ template "enum-icon" (dict "item" .Type "list" $.model.IndicatorTypes) }} {{ .Value }}</div>
                             {{ end }}
                         </td>
                         <td data-search='{{ if .Flagged }}flagged:true{{ end }}' class="text-right"><div class="join">

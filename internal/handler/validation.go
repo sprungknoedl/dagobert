@@ -121,7 +121,7 @@ func ValidateHook(dto model.Hook, enums model.Enums) valid.Result {
 
 	return valid.Check([]valid.Condition{
 		{Name: "ID", Missing: dto.ID == ""},
-		{Name: "Trigger", Message: "Invalid trigger", Invalid: !slices.Contains(model.HookTrigger, dto.Trigger)},
+		{Name: "Trigger", Message: "Invalid trigger", Invalid: !slices.Contains(enums.HookTrigger, dto.Trigger)},
 		{Name: "Mod", Message: "Invalid mod", Invalid: !slices.Contains(mods, dto.Mod)},
 		{Name: "Condition", Message: msg, Invalid: err != nil},
 	})

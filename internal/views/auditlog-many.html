@@ -7,6 +7,9 @@
         {{ template "sidebar" . }}
 
         <main class="pl-20 p-4 grow max-w-full">
+            {{ define "navbar-pre-title"}}
+            <li><i class="hio hio-6 hio-cog-6-tooth mr-2"></i> Settings</li>
+            {{ end }}
             {{ template "navbar" dict "env" .env "title" .title
                 "hideImport" true
                 "hideExport" true
