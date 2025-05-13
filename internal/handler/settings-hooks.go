@@ -77,7 +77,6 @@ func (ctrl SettingsCtrl) SaveHook(w http.ResponseWriter, r *http.Request) {
 	// reload hooks
 	LoadHooks(ctrl.store)
 
-	Audit(ctrl.store, r, "hook:"+dto.ID, fp.If(new, "Added hook %q -> %q", "Updated hook %q -> %q"), dto.Name, dto.Mod)
 	http.Redirect(w, r, "/settings/hooks/", http.StatusSeeOther)
 }
 
@@ -91,13 +90,7 @@ func (ctrl SettingsCtrl) DeleteHook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	obj, err := ctrl.store.GetHook(id)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	err = ctrl.store.DeleteHook(id)
+	err := ctrl.store.DeleteHook(id)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -105,7 +98,5 @@ func (ctrl SettingsCtrl) DeleteHook(w http.ResponseWriter, r *http.Request) {
 
 	// reload hooks
 	LoadHooks(ctrl.store)
-
-	Audit(ctrl.store, r, "report:"+obj.ID, "Deleted hook %q -> %q", obj.Name, obj.Mod)
 	http.Redirect(w, r, "/settings/hooks/", http.StatusSeeOther)
 }

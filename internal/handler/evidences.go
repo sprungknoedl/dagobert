@@ -100,8 +100,6 @@ func (ctrl EvidenceCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Err(w, r, err)
 			return
 		}
-
-		Audit(ctrl.store, r, "evidence:"+obj.ID, "Imported evidence %q", obj.Name)
 	})
 }
 
@@ -239,7 +237,6 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		TriggerOnEvidenceAdded(ctrl.store, dto)
 	}
 
-	Audit(ctrl.store, r, "evidence:"+dto.ID, fp.If(new, "Added evidence %q", "Updated evidence %q"), dto.Name)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/", dto.CaseID), http.StatusSeeOther)
 }
 
@@ -280,7 +277,6 @@ func (ctrl EvidenceCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Audit(ctrl.store, r, "evidence:"+obj.ID, "Deleted evidence %q", obj.Name)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/", cid), http.StatusSeeOther)
 }
 

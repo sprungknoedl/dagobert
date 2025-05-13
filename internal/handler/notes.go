@@ -76,8 +76,6 @@ func (ctrl NoteCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Err(w, r, err)
 			return
 		}
-
-		Audit(ctrl.store, r, "note:"+obj.ID, "Imported note %q", obj.Title)
 	})
 }
 
@@ -128,7 +126,6 @@ func (ctrl NoteCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Audit(ctrl.store, r, "note:"+dto.ID, fp.If(new, "Added note %q", "Updated note %q"), dto.Title)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/notes/", dto.CaseID), http.StatusSeeOther)
 }
 
@@ -143,18 +140,11 @@ func (ctrl NoteCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	obj, err := ctrl.store.GetNote(cid, id)
+	err := ctrl.store.DeleteNote(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	err = ctrl.store.DeleteNote(cid, id)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	Audit(ctrl.store, r, "note:"+obj.ID, "Deleted note %q", obj.Title)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/notes/", cid), http.StatusSeeOther)
 }

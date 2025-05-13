@@ -80,8 +80,6 @@ func (ctrl AssetCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Err(w, r, err)
 			return
 		}
-
-		Audit(ctrl.store, r, "asset:"+obj.ID, "Imported asset %q", obj.Name)
 	})
 }
 
@@ -132,7 +130,6 @@ func (ctrl AssetCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Audit(ctrl.store, r, "asset:"+dto.ID, fp.If(new, "Added asset %q", "Updated asset %q"), dto.Name)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/assets/", dto.CaseID), http.StatusSeeOther)
 }
 
@@ -147,18 +144,11 @@ func (ctrl AssetCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	obj, err := ctrl.store.GetAsset(cid, id)
+	err := ctrl.store.DeleteAsset(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	err = ctrl.store.DeleteAsset(cid, id)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	Audit(ctrl.store, r, "asset:"+obj.ID, "Deleted asset %q", obj.Name)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/assets/", cid), http.StatusSeeOther)
 }

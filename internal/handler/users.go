@@ -92,7 +92,6 @@ func (ctrl UserCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Audit(ctrl.store, r, "user:"+dto.ID, "Saved user: %s (%s)", dto.Name, dto.UPN)
 	http.Redirect(w, r, "/settings/users/", http.StatusSeeOther)
 }
 
@@ -106,12 +105,6 @@ func (ctrl UserCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	obj, err := ctrl.store.GetUser(id)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
 	if err := ctrl.store.DeleteUser(id); err != nil {
 		Err(w, r, err)
 		return
@@ -122,7 +115,6 @@ func (ctrl UserCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Audit(ctrl.store, r, "user:"+obj.ID, "Deleted user: %s (%s)", obj.Name, obj.UPN)
 	if GetEnv(ctrl.store, r).UID == id {
 		http.Redirect(w, r, "/auth/logout", http.StatusSeeOther)
 	} else {
@@ -177,6 +169,5 @@ func (ctrl UserCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Audit(ctrl.store, r, "user:"+obj.ID, "Allowed %s (%s) access to %v", obj.Name, obj.UPN, form.Cases)
 	http.Redirect(w, r, "/settings/users/", http.StatusSeeOther)
 }

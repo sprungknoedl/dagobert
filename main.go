@@ -196,11 +196,6 @@ func StartUI() {
 	mux.HandleFunc("POST /settings/enums/{id}", settingsCtrl.SaveEnum)
 	mux.HandleFunc("DELETE /settings/enums/{id}", settingsCtrl.DeleteEnum)
 
-	// auditlog
-	auditlogCtrl := handler.NewAuditlogCtrl(db, acl)
-	mux.HandleFunc("GET /settings/auditlog/", auditlogCtrl.List)
-	mux.HandleFunc("GET /settings/auditlog/{oid}", auditlogCtrl.ListForObject)
-
 	// --------------------------------------
 	// Investigation
 	// --------------------------------------

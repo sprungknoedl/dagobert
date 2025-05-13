@@ -212,13 +212,7 @@ func (ctrl *JobCtrl) PushJob(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
 	name := r.FormValue("name")
-	obj, err := ctrl.store.GetEvidence(cid, id)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	err = ctrl.store.PushJob(model.Job{
+	err := ctrl.store.PushJob(model.Job{
 		ID:         fp.Random(10),
 		CaseID:     cid,
 		EvidenceID: id,
@@ -230,6 +224,5 @@ func (ctrl *JobCtrl) PushJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Audit(ctrl.store, r, "evidence:"+obj.ID, "Run extension %q on evidence %q", name, obj.Name)
 	ctrl.ListMods(w, r)
 }

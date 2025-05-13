@@ -170,12 +170,6 @@
     <div class="divider"></div>
     <ul class="menu gap-2">
 		{{if allowed ($url := "/") "GET"}}                   <li><a href="{{ $url }}" title="Cases" class='{{ if eq .title "Cases" }}menu-active{{ end }}'> <i class="hio hio-6 hio-briefcase"></i> </a></li>{{ end }}
-        <!--
-		{{if allowed ($url := "/settings/users/") "GET"}}    <li><a href="{{ $url }}" title="Users" class='{{ if eq .title "Users" }}menu-active{{ end }}'> <i class="hio hio-6 hio-users"></i> </a></li>{{ end }}
-		{{if allowed ($url := "/settings/api-keys/") "GET"}} <li><a href="{{ $url }}" title="API Keys" class='{{ if eq .title "API Keys" }}menu-active{{ end }}'> <i class="hio hio-6 hio-beaker"></i> </a></li>{{ end }}
-		{{if allowed ($url := "/settings/") "GET"}}  <li><a href="{{ $url }}" title="Settings" class='{{ if eq .title "Settings" }}menu-active{{ end }}'> <i class="hio hio-6 hio-cog-6-tooth"></i> </a></li>{{ end }}
-		{{if allowed ($url := "/settings/auditlog/") "GET"}} <li><a href="{{ $url }}" title="Audit Log" class='{{ if eq .title "Audit Log" }}menu-active{{ end }}'> <i class="hio hio-6 hio-scale"></i> </a></li>{{ end }}
-        -->
     </ul>
 
     {{ if ne .env.ActiveCase.ID "" }}
@@ -206,7 +200,6 @@
         <li class="dropdown dropdown-right dropdown-end">
             <div tabindex="42" role="button"><i class="hio hio-6 hio-cog-6-tooth"></i></div>
             <ul  tabindex="42" class="dropdown-content menu bg-base-200 rounded-box z-2 w-52 p-2 shadow">
-		        <li><a href="{{ $url }}/auditlog/"> <i class="hio hio-6 hio-scale"></i> Audit Log</a></li>
                 <li><a href="{{ $url }}/hooks/"> <i class="hio hio-6 hio-bolt"></i> Automation Rules</a></li>
                 <li><a href="{{ $url }}/api-keys/"> <i class="hio hio-6 hio-beaker"></i> API Keys</a></li>
                 <li><a href="{{ $url }}/enums/"> <i class="hio hio-6 hio-briefcase"></i> Case Objects</a></li>
