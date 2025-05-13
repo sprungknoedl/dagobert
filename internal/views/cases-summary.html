@@ -144,28 +144,9 @@
                 <ul class="timeline timeline-vertical">
                     {{ range .events }}
                     <li>
-                        <div class="timeline-start">{{ template "format-time" .Time }}</div>
-                        <div class="timeline-middle">
-                            {{ if eq .Type "Reconnaissance" }}            <i class="hio hio-5 hio-magnifying-glass inline-block"></i>
-                            {{ else if eq .Type "Resource Development" }} <i class="hio hio-5 hio-cog-6-tooth inline-block"></i>
-                            {{ else if eq .Type "Initial Access" }}       <i class="hio hio-5 hio-lock-open inline-block"></i>
-                            {{ else if eq .Type "Execution" }}            <i class="hio hio-5 hio-play inline-block"></i>
-                            {{ else if eq .Type "Persistence" }}          <i class="hio hio-5 hio-arrow-path inline-block"></i>
-                            {{ else if eq .Type "Privilege Escalation" }} <i class="hio hio-5 hio-logout inline-block"></i>
-                            {{ else if eq .Type "Defense Evasion" }}      <i class="hio hio-5 hio-eye-slash inline-block"></i>
-                            {{ else if eq .Type "Credential Access" }}    <i class="hio hio-5 hio-identification inline-block"></i>
-                            {{ else if eq .Type "Discovery" }}            <i class="hio hio-5 hio-eye inline-block"></i>
-                            {{ else if eq .Type "Lateral Movement" }}     <i class="hio hio-5 hio-arrows-right-left inline-block"></i>
-                            {{ else if eq .Type "Collection" }}           <i class="hio hio-5 hio-arrow-down-tray inline-block"></i>
-                            {{ else if eq .Type "C2" }}                   <i class="hio hio-5 hio-server inline-block"></i>
-                            {{ else if eq .Type "Exfiltration" }}         <i class="hio hio-5 hio-truck inline-block"></i>
-                            {{ else if eq .Type "Impact" }}               <i class="hio hio-5 hio-fire inline-block"></i>
-                            {{ else if eq .Type "Legitimate" }}           <i class="hio hio-5 hio-check-circle inline-block"></i>
-                            {{ else if eq .Type "Remediation" }}          <i class="hio hio-5 hio-heart inline-block"></i>
-                            {{ else }}                                    <i class="hio hio-5 hio-question-mark-circle inline-block"></i>
-                            {{ end  }}
-                        </div>
-                        <div class="timeline-end timeline-box">{{ .Event }}</div>
+                        <div class="timeline-start"> {{ template "format-time" .Time }} </div>
+                        <div class="timeline-middle"> {{ template "enum-icon" (dict "item" .Type "list" $.model.EventTypes) }} </div>
+                        <div class="timeline-end timeline-box"> {{ .Event }} </div>
                         <hr />
                     </li>
                     {{ else }}
