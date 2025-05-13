@@ -158,8 +158,6 @@ func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 
 		if err = ctrl.store.SaveEvent(cid, obj, true); err != nil {
 			Err(w, r, err)
-		} else {
-			Audit(ctrl.store, r, "event:"+obj.ID, "Imported event %q", obj.Event)
 		}
 	})
 }
@@ -213,8 +211,6 @@ func (ctrl EventCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Request) {
 		if err = ctrl.store.SaveEvent(cid, obj, false); err != nil {
 			Err(w, r, err)
 			return
-		} else {
-			Audit(ctrl.store, r, "event:"+obj.ID, "Imported event from timesketch %q", obj.Event)
 		}
 	}
 
@@ -322,7 +318,6 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Audit(ctrl.store, r, "event:"+dto.ID, fp.If(new, "Added event %q", "Updated event %q"), dto.Event)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/events/", dto.CaseID), http.StatusSeeOther)
 }
 
@@ -337,19 +332,12 @@ func (ctrl EventCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	obj, err := ctrl.store.GetEvent(cid, id)
+	err := ctrl.store.DeleteEvent(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	err = ctrl.store.DeleteEvent(cid, id)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	Audit(ctrl.store, r, "event:"+obj.ID, "Deleted event %q", obj.Event)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/events/", cid), http.StatusSeeOther)
 }
 
@@ -406,8 +394,6 @@ func (ctrl EventCtrl) getOrCreateAssets(r *http.Request, cid string, names []str
 			if err := ctrl.store.SaveAsset(cid, obj); err != nil {
 				return nil, fmt.Errorf("save asset: %w", err)
 			}
-
-			Audit(ctrl.store, r, "asset:"+obj.ID, "Added asset: %q", obj.Name)
 		}
 
 		assets = append(assets, obj)
@@ -438,8 +424,6 @@ func (ctrl EventCtrl) getOrCreateIndicators(r *http.Request, cid string, values 
 			if err := ctrl.store.SaveIndicator(cid, obj, false); err != nil {
 				return nil, fmt.Errorf("save indicator: %w", err)
 			}
-
-			Audit(ctrl.store, r, "indicator:"+obj.ID, "Added indicator: %s=%q", obj.Type, obj.Value)
 		}
 
 		indicators = append(indicators, obj)

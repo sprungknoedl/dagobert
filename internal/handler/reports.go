@@ -95,12 +95,6 @@ func (ctrl ReportsCtrl) Generate(w http.ResponseWriter, r *http.Request) {
 	// process report template
 	// ---
 	name := r.FormValue("Template")
-	obj, err := ctrl.store.GetReportByName(name)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
 	tpl, err := LoadTemplate(name)
 	if err != nil {
 		Warn(w, r, err)
@@ -127,6 +121,4 @@ func (ctrl ReportsCtrl) Generate(w http.ResponseWriter, r *http.Request) {
 		Err(w, r, err)
 		return
 	}
-
-	Audit(ctrl.store, r, "report:"+obj.ID, "Generated report %q from template %q", filename, obj.Name)
 }

@@ -145,7 +145,6 @@ func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Audit(ctrl.store, r, "report:"+dto.ID, fp.If(new, "Added report template %q", "Updated report template %q"), dto.Name)
 	http.Redirect(w, r, "/settings/reports/", http.StatusSeeOther)
 }
 
@@ -184,6 +183,5 @@ func (ctrl SettingsCtrl) DeleteReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Audit(ctrl.store, r, "report:"+obj.ID, "Deleted report template %q", obj.Name)
 	http.Redirect(w, r, "/settings/reports/", http.StatusSeeOther)
 }

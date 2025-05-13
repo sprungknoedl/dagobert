@@ -294,8 +294,6 @@ func (ctrl IndicatorCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 			Err(w, r, err)
 			return
 		}
-
-		Audit(ctrl.store, r, "indicator:"+obj.ID, "Imported indicator: %s=%v", obj.Type, obj.Value)
 	})
 }
 
@@ -342,8 +340,6 @@ func (ctrl IndicatorCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Reques
 		if err = ctrl.store.SaveIndicator(cid, obj, false); err != nil {
 			Err(w, r, err)
 			return
-		} else {
-			Audit(ctrl.store, r, "indicator:"+obj.ID, "Imported indicator from timesketch: %s=%v", obj.Type, obj.Value)
 		}
 	}
 
@@ -398,7 +394,6 @@ func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Audit(ctrl.store, r, "indicator:"+dto.ID, fp.If(new, "Added indicator: %s=%v", "Updated indicator: %s=%v"), dto.Type, dto.Value)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/indicators/", dto.CaseID), http.StatusSeeOther)
 }
 
@@ -413,19 +408,12 @@ func (ctrl IndicatorCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	obj, err := ctrl.store.GetIndicator(cid, id)
+	err := ctrl.store.DeleteIndicator(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	err = ctrl.store.DeleteIndicator(cid, id)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	Audit(ctrl.store, r, "indicator:"+obj.ID, "Deleted indicator: %s=%v", obj.Type, obj.Value)
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/indicators/", cid), http.StatusSeeOther)
 }
 

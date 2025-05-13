@@ -98,8 +98,6 @@ func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Err(w, r, err)
 			return
 		}
-
-		Audit(ctrl.store, r, "case:"+obj.ID, "Imported case #%s - %s", obj.ID, obj.Name)
 	})
 }
 
@@ -163,7 +161,6 @@ func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Audit(ctrl.store, r, "case:"+dto.ID, fp.If(new, "Added case #%s - %s", "Updated case #%s - %s"), dto.ID, dto.Name)
 	http.Redirect(w, r, "/cases/", http.StatusSeeOther)
 }
 
@@ -177,18 +174,11 @@ func (ctrl CaseCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	obj, err := ctrl.store.GetCase(cid)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
 	if err := ctrl.store.DeleteCase(cid); err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Audit(ctrl.store, r, "case:"+obj.ID, "Deleted case #%s - %s", obj.ID, obj.Name)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
@@ -239,7 +229,6 @@ func (ctrl CaseCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Audit(ctrl.store, r, "case:"+obj.ID, "Allowed access to %v", form.Users)
 	http.Redirect(w, r, "/cases/", http.StatusSeeOther)
 }
 
