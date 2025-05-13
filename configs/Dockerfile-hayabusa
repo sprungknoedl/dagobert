@@ -1,26 +1,11 @@
-FROM golang:1.24 AS app
-WORKDIR /src
-
-COPY go.mod .
-RUN go mod download
-
-COPY . .
-RUN make build-go
-
-# ---------------------------------
-
-FROM debian:12
-WORKDIR /home/sprungknoedl
-
-COPY --from=app /src/dagobert /home/sprungknoedl/dagobert
+FROM sprungknoedl/dagobert:latest
+USER root
 ADD https://github.com/Yamato-Security/hayabusa/releases/download/v3.2.0/hayabusa-3.2.0-lin-x64-musl.zip /usr/src/hayabusa-3.2.0-lin-x64-musl.zip
 
 RUN apt update && apt install -y ca-certificates unzip
 RUN unzip /usr/src/hayabusa-3.2.0-lin-x64-musl.zip -d /home/sprungknoedl
 RUN mv hayabusa-3.2.0-lin-x64-musl hayabusa && chmod +x hayabusa
-
-RUN useradd -l -u 1000 -g users sprungknoedl
-RUN mkdir /home/sprungknoedl/files && chown -R sprungknoedl:users /home/sprungknoedl
+RUN mkdir -p /home/sprungknoedl/files && chown -R sprungknoedl:users /home/sprungknoedl
 
 USER sprungknoedl
 RUN ./hayabusa update-rules
