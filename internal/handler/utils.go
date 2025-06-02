@@ -232,6 +232,14 @@ func GetCase(store *model.Store, r *http.Request) model.Case {
 	return kase
 }
 
+func GetObject[T any](id string, obj T, getfn func(string) (T, error)) (T, error) {
+	if id != "new" {
+		return getfn(id)
+	}
+
+	return obj, nil
+}
+
 func ServeDir(prefix string, dir string) http.Handler {
 	fs := http.FileServer(http.Dir(dir))
 	return http.StripPrefix("/web/", fs)
