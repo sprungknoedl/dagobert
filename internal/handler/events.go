@@ -413,7 +413,7 @@ func (ctrl EventCtrl) getOrCreateIndicators(r *http.Request, cid string, values 
 		if err != nil && err != sql.ErrNoRows {
 			return nil, fmt.Errorf("get indicator by value: %w", err)
 		} else if err != nil && err == sql.ErrNoRows {
-			obj := model.Indicator{
+			obj = model.Indicator{
 				ID:     fp.Random(10),
 				CaseID: cid,
 				Value:  indicator,
