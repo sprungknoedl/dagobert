@@ -30,7 +30,7 @@
                 </label>
                 <select name="Role" class="select w-full">
                     <option disabled value="" {{ if eq .obj.Role "" }}selected{{ end }}>Select an option</option>
-                    {{ range .model.UserRoles }}
+                    {{ range .roles }}
                         <option {{ if eq $.obj.Role . }}selected{{ end }}>{{ . }}</option>
                     {{ end }}
                 </select>
