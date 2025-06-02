@@ -44,6 +44,7 @@ func (ctrl UserCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 
 	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "internal/views/users-one.html", map[string]any{
 		"obj":   obj,
+		"roles": model.UserRoles,
 		"valid": valid.Result{},
 	})
 }
@@ -64,6 +65,7 @@ func (ctrl UserCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	if vr := ValidateUser(dto, enums); !vr.Valid() {
 		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/users-one.html", map[string]any{
 			"obj":   dto,
+			"roles": model.UserRoles,
 			"valid": vr,
 		})
 		return
