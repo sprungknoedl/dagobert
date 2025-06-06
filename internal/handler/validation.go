@@ -11,9 +11,9 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-func InEnum(enum []model.EnumItem, item string) bool {
+func InEnum(enum []model.Enum, item string) bool {
 	return slices.Contains(
-		fp.Apply(enum, func(e model.EnumItem) string { return e.Name }),
+		fp.Apply(enum, func(e model.Enum) string { return e.Name }),
 		item)
 }
 
@@ -124,5 +124,17 @@ func ValidateHook(dto model.Hook, enums model.Enums) valid.Result {
 		{Name: "Trigger", Message: "Invalid trigger", Invalid: !slices.Contains(enums.HookTrigger, dto.Trigger)},
 		{Name: "Mod", Message: "Invalid mod", Invalid: !slices.Contains(mods, dto.Mod)},
 		{Name: "Condition", Message: msg, Invalid: err != nil},
+	})
+}
+
+func ValidateEnum(dto model.Enum) valid.Result {
+	states := []string{"", "success", "warning", "error"}
+	enums := []string{"AssetStatus", "AssetTypes", "CaseSeverities", "CaseOutcomes", "EventTypes", "EvidenceTypes", "IndicatorStatus", "IndicatorTypes", "KeyTypes", "MalwareStatus", "TaskTypes"}
+
+	return valid.Check([]valid.Condition{
+		{Name: "ID", Missing: dto.ID == ""},
+		{Name: "Name", Missing: dto.Name == ""},
+		{Name: "Category", Invalid: !slices.Contains(enums, dto.Category), Message: "Invalid category"},
+		{Name: "States", Invalid: !slices.Contains(states, dto.State), Message: "Invalid state"},
 	})
 }

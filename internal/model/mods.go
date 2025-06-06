@@ -1,13 +1,13 @@
 package model
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 
 	"github.com/sprungknoedl/dagobert/internal/fp"
+	"gorm.io/gorm/clause"
 )
 
 var ServerToken = fp.Random(20)
@@ -42,59 +42,23 @@ type Hook struct {
 }
 
 func (store *Store) GetJobs(eid string) ([]Job, error) {
-	query := `
-	SELECT id, case_id, evidence_id, name, status, error, server_token, worker_token
-	FROM jobs
-	WHERE evidence_id = :eid`
-
-	rows, err := store.DB.Query(query,
-		sql.Named("eid", eid))
-	if err != nil {
-		return nil, err
-	}
-
 	list := []Job{}
-	err = ScanAll(rows, &list)
-	return list, err
+	tx := store.DB.
+		Where("evidence_id = ?", eid).
+		Find(&list)
+	return list, tx.Error
 }
 
 func (store *Store) GetRunningJobs() ([]Job, error) {
-	query := `
-	SELECT id, case_id, evidence_id, name, status, error, server_token, worker_token
-	FROM jobs
-	WHERE status = :status`
-
-	rows, err := store.DB.Query(query,
-		sql.Named("status", "Running"))
-	if err != nil {
-		return nil, err
-	}
-
 	list := []Job{}
-	err = ScanAll(rows, &list)
-	if err != nil {
-		return nil, err
-	}
-
-	return list, nil
+	tx := store.DB.
+		Where("status = ?", "Running").
+		Find(&list)
+	return list, tx.Error
 }
 
 func (store *Store) SaveJob(obj Job) error {
-	query := `
-	REPLACE INTO jobs (id, case_id, evidence_id, name, status, error, server_token, worker_token)
-	VALUES (:id, :case_id, :evidence_id, :name, :status, :error, :stoken, :wtoken)`
-
-	obj.ServerToken = ServerToken
-	_, err := store.DB.Exec(query,
-		sql.Named("id", obj.ID),
-		sql.Named("case_id", obj.CaseID),
-		sql.Named("evidence_id", obj.EvidenceID),
-		sql.Named("name", obj.Name),
-		sql.Named("status", obj.Status),
-		sql.Named("error", obj.Error),
-		sql.Named("stoken", obj.ServerToken),
-		sql.Named("wtoken", obj.WorkerToken))
-	return err
+	return store.DB.Save(&obj).Error
 }
 
 func (store *Store) PushJob(obj Job) error { return store.SaveJob(obj) }
@@ -109,28 +73,14 @@ func (store *Store) PopJob(workerid string, modules []string) (Job, Case, Eviden
 	}
 
 	modules = fp.Apply(modules, func(s string) string { return "'" + s + "'" })
-
-	query := `
-	UPDATE jobs
-	SET status = :status_after, worker_token = :wtoken
-	WHERE rowid = (
-		SELECT min(rowid)
-		FROM jobs
-		WHERE status = :status_before 
-		AND name IN (` + strings.Join(modules, ", ") + `) )
-	RETURNING id, case_id, evidence_id, name, status, error, server_token, worker_token;
-	`
-
-	rows, err := store.DB.Query(query,
-		sql.Named("status_before", "Scheduled"),
-		sql.Named("status_after", "Running"),
-		sql.Named("wtoken", workerid))
-	if err != nil {
-		return Job{}, Case{}, Evidence{}, err
-	}
+	rowid := store.DB.Model(Job{}).Select("min(rowid)").Where("status = ? and name in (`" + strings.Join(modules, ", ") + "`)")
 
 	obj := Job{}
-	err = ScanOne(rows, &obj)
+	err := store.DB.Model(&obj).
+		Clauses(clause.Returning{}).
+		Where("rowid = ?", rowid).
+		Updates(map[string]any{"status": "Running", "worker_token": workerid}).
+		Error
 	if err != nil {
 		return Job{}, Case{}, Evidence{}, err
 	}
@@ -146,102 +96,42 @@ func (store *Store) PopJob(workerid string, modules []string) (Job, Case, Eviden
 }
 
 func (store *Store) AckJob(id string, status string, errmsg string) error {
-	query := `
-	UPDATE jobs
-	SET status = :status, error = :error
-	WHERE id == :id`
-
-	_, err := store.DB.Exec(query,
-		sql.Named("id", id),
-		sql.Named("status", status),
-		sql.Named("error", errmsg))
-	return err
+	return store.DB.Model(&Job{}).
+		Where("id = ?", id).
+		Updates(map[string]any{"status": status, "error": errmsg}).
+		Error
 }
 
 func (store *Store) RescheduleWorkerJobs(workerToken string) error {
-	query := `
-	UPDATE jobs
-	SET status = :status_after, worker_token = ''
-	WHERE worker_token == :wtoken
-	AND status = :status_before`
-
-	_, err := store.DB.Exec(query,
-		sql.Named("status_before", "Running"),
-		sql.Named("status_after", "Scheduled"),
-		sql.Named("wtoken", workerToken))
-	return err
+	return store.DB.Model(&Job{}).
+		Where("worker_token = ? and status = ?", workerToken, "Running").
+		Updates(map[string]any{"status": "Scheduled", "worker_token": ""}).
+		Error
 }
 
 func (store *Store) RescheduleStaleJobs() error {
-	query := `
-	UPDATE jobs
-	SET status = :status_after, server_token = :stoken, worker_token = ''
-	WHERE server_token != :stoken
-	AND status = :status_before`
-
-	_, err := store.DB.Exec(query,
-		sql.Named("status_before", "Running"),
-		sql.Named("status_after", "Scheduled"),
-		sql.Named("stoken", ServerToken))
-	return err
+	return store.DB.Model(&Job{}).
+		Where("server_token = ? and status = ?", ServerToken, "Running").
+		Updates(map[string]any{"status": "Scheduled", "server_token": ServerToken, "worker_token": ""}).
+		Error
 }
 
 func (store *Store) ListHooks() ([]Hook, error) {
-	query := `
-	SELECT id, trigger, name, mod, condition, enabled
-	FROM hooks`
-
-	rows, err := store.DB.Query(query)
-	if err != nil {
-		return nil, err
-	}
-
 	list := []Hook{}
-	err = ScanAll(rows, &list)
-	return list, err
+	tx := store.DB.Find(&list)
+	return list, tx.Error
 }
 
 func (store *Store) GetHook(id string) (Hook, error) {
-	query := `
-	SELECT id, trigger, name, mod, condition, enabled
-	FROM hooks
-	WHERE id = :id`
-
-	rows, err := store.DB.Query(query,
-		sql.Named("id", id))
-	if err != nil {
-		return Hook{}, err
-	}
-
 	obj := Hook{}
-	err = ScanOne(rows, &obj)
-	return obj, err
+	tx := store.DB.First(&obj, "id = ?", id)
+	return obj, tx.Error
 }
 
 func (store *Store) SaveHook(obj Hook) error {
-	query := `
-	INSERT INTO hooks (id, trigger, name, mod, condition, enabled)
-	VALUES (:id, :trigger, :name, :mod, :condition, :enabled)
-	ON CONFLICT (id)
-		DO UPDATE SET trigger=:trigger, name=:name, mod=:mod, condition=:condition, enabled=:enabled
-		WHERE id = :id`
-
-	_, err := store.DB.Exec(query,
-		sql.Named("id", obj.ID),
-		sql.Named("trigger", obj.Trigger),
-		sql.Named("name", obj.Name),
-		sql.Named("mod", obj.Mod),
-		sql.Named("condition", obj.Condition),
-		sql.Named("enabled", obj.Enabled))
-	return err
+	return store.DB.Save(&obj).Error
 }
 
 func (store *Store) DeleteHook(id string) error {
-	query := `
-	DELETE FROM hooks
-	WHERE id = :id`
-
-	_, err := store.DB.Exec(query,
-		sql.Named("id", id))
-	return err
+	return store.DB.Delete(Case{}, "id = ?", id).Error
 }

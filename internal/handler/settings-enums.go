@@ -15,7 +15,7 @@ func (ctrl SettingsCtrl) ListEnums(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl SettingsCtrl) EditEnum(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	obj := model.EnumItem{ID: id}
+	obj := model.Enum{ID: id}
 	if id != "new" {
 		var err error
 		obj, err = ctrl.store.GetEnum(id)

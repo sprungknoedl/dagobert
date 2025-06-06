@@ -17,6 +17,7 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
+	"gorm.io/gorm"
 )
 
 type EventCtrl struct {
@@ -381,9 +382,9 @@ func (ctrl EventCtrl) getOrCreateAssets(r *http.Request, cid string, names []str
 		}
 
 		obj, err := ctrl.store.GetAssetByName(cid, asset)
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && err != sql.ErrNoRows && err != gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("get asset by name: %w", err)
-		} else if err != nil && err == sql.ErrNoRows {
+		} else if err != nil && err == gorm.ErrRecordNotFound {
 			obj = model.Asset{
 				ID:     fp.Random(10),
 				CaseID: cid,
@@ -410,7 +411,7 @@ func (ctrl EventCtrl) getOrCreateIndicators(r *http.Request, cid string, values 
 		}
 
 		obj, err := ctrl.store.GetIndicatorByValue(cid, indicator)
-		if err != nil && err != sql.ErrNoRows {
+		if err != nil && err != sql.ErrNoRows && err != gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("get indicator by value: %w", err)
 		} else if err != nil && err == sql.ErrNoRows {
 			obj = model.Indicator{
