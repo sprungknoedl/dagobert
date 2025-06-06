@@ -1,7 +1,6 @@
 package model
 
 import (
-	"database/sql"
 	"fmt"
 )
 
@@ -21,13 +20,13 @@ type Case struct {
 
 	SketchID int
 
-	Assets     []Asset
-	Evidences  []Evidence
-	Indicators []Indicator
-	Events     []Event
-	Malware    []Malware
-	Notes      []Note
-	Tasks      []Task
+	Assets     []Asset     `gorm:"-"`
+	Evidences  []Evidence  `gorm:"-"`
+	Indicators []Indicator `gorm:"-"`
+	Events     []Event     `gorm:"-"`
+	Malware    []Malware   `gorm:"-"`
+	Notes      []Note      `gorm:"-"`
+	Tasks      []Task      `gorm:"-"`
 }
 
 func (c Case) String() string {
@@ -39,80 +38,33 @@ func (c Case) String() string {
 }
 
 func (store *Store) ListCases() ([]Case, error) {
-	query := `
-	SELECT id, name, summary_who, summary_what, summary_when, summary_where, summary_why, summary_how, classification, severity, outcome, closed, sketch_id
-	FROM cases
-	ORDER BY name ASC`
-
-	rows, err := store.DB.Query(query)
-	if err != nil {
-		return nil, err
-	}
-
 	list := []Case{}
-	err = ScanAll(rows, &list)
-	return list, err
+	tx := store.DB.
+		Order("name asc").
+		Find(&list)
+	return list, tx.Error
 }
 
 func (store *Store) GetCase(cid string) (Case, error) {
-	query := `
-	SELECT id, name, summary_who, summary_what, summary_when, summary_where, summary_why, summary_how, classification, severity, outcome, closed, sketch_id
-	FROM cases
-	WHERE id = :cid`
-
-	rows, err := store.DB.Query(query,
-		sql.Named("cid", cid))
-	if err != nil {
-		return Case{}, err
+	// special case for "dumb" routes
+	if cid == "" {
+		return Case{}, nil
 	}
 
 	obj := Case{}
-	err = ScanOne(rows, &obj)
-	return obj, err
+	tx := store.DB.First(&obj, "id = ?", cid)
+	return obj, tx.Error
 }
 
 func (store *Store) GetCaseFull(cid string) (Case, error) {
-	obj, err := store.GetCase(cid)
-	if err != nil {
-		return Case{}, err
-	}
-
 	// TODO: fetch relations
-
-	return obj, nil
+	return store.GetCase(cid)
 }
 
 func (store *Store) SaveCase(obj Case) error {
-	query := `
-	INSERT INTO cases (id, name, summary_who, summary_what, summary_when, summary_where, summary_why, summary_how, classification, severity, outcome, closed, sketch_id)
-	VALUES (:id, :name, :summary_who, :summary_what, :summary_when, :summary_where, :summary_why, :summary_how, :classification, :severity, :outcome, :closed, :sketch_id)
-	ON CONFLICT (id)
-		DO UPDATE SET name=:name, summary_who=:summary_who, summary_what=:summary_what, summary_when=:summary_when, summary_where=:summary_where, summary_why=:summary_why, summary_how=:summary_how, classification=:classification, severity=:severity, outcome=:outcome, closed=:closed, sketch_id=:sketch_id
-		WHERE id = :id`
-
-	_, err := store.DB.Exec(query,
-		sql.Named("id", obj.ID),
-		sql.Named("name", obj.Name),
-		sql.Named("summary_who", obj.SummaryWho),
-		sql.Named("summary_what", obj.SummaryWhat),
-		sql.Named("summary_when", obj.SummaryWhen),
-		sql.Named("summary_where", obj.SummaryWhere),
-		sql.Named("summary_why", obj.SummaryWhy),
-		sql.Named("summary_how", obj.SummaryHow),
-		sql.Named("classification", obj.Classification),
-		sql.Named("severity", obj.Severity),
-		sql.Named("outcome", obj.Outcome),
-		sql.Named("closed", obj.Closed),
-		sql.Named("sketch_id", obj.SketchID))
-	return err
+	return store.DB.Save(&obj).Error
 }
 
 func (store *Store) DeleteCase(cid string) error {
-	query := `
-	DELETE FROM cases
-	WHERE id = :cid`
-
-	_, err := store.DB.Exec(query,
-		sql.Named("cid", cid))
-	return err
+	return store.DB.Delete(Case{}, "id = ?", cid).Error
 }

@@ -327,7 +327,7 @@ func StartUI() {
 }
 
 func InitializeDatabase(store *model.Store) error {
-	db, err := sqlite.WithInstance(store.DB, &sqlite.Config{})
+	db, err := sqlite.WithInstance(store.RawConn, &sqlite.Config{})
 	if err != nil {
 		return err
 	}

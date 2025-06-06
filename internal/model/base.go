@@ -6,10 +6,11 @@ import (
 	"embed"
 	"fmt"
 	"os"
-	"reflect"
 	"strings"
 	"time"
 
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 	_ "modernc.org/sqlite"
 )
 
@@ -17,71 +18,23 @@ import (
 var Migrations embed.FS
 
 type Store struct {
-	DB *sql.DB
+	RawConn *sql.DB
+	DB      *gorm.DB
 }
 
 func Connect(dburl string) (*Store, error) {
 	var err error
-	db, err := sql.Open("sqlite", dburl)
+	conn, err := sql.Open("sqlite", dburl)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Store{DB: db}, nil
-}
-
-func ScanAll(rows *sql.Rows, dest any) error {
-	defer rows.Close()
-
-	destv := reflect.ValueOf(dest).Elem()
-	cols, err := rows.Columns()
+	db, err := gorm.Open(sqlite.New(sqlite.Config{Conn: conn}), &gorm.Config{})
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	args := make([]any, len(cols))
-
-	for rows.Next() {
-		rowp := reflect.New(destv.Type().Elem())
-		rowv := rowp.Elem()
-
-		for i := 0; i < len(cols); i++ {
-			args[i] = rowv.Field(i).Addr().Interface()
-		}
-
-		if err := rows.Scan(args...); err != nil {
-			return err
-		}
-
-		destv.Set(reflect.Append(destv, rowv))
-	}
-
-	return rows.Err()
-}
-
-func ScanOne(rows *sql.Rows, dest any) error {
-	defer rows.Close()
-
-	destv := reflect.ValueOf(dest).Elem()
-	cols, err := rows.Columns()
-	if err != nil {
-		return err
-	}
-
-	args := make([]any, len(cols))
-	for i := 0; i < len(cols); i++ {
-		args[i] = destv.Field(i).Addr().Interface()
-	}
-
-	if !rows.Next() {
-		return sql.ErrNoRows
-	}
-
-	if err := rows.Err(); err != nil {
-		return err
-	}
-
-	return rows.Scan(args...)
+	return &Store{RawConn: conn, DB: db}, nil
 }
 
 func FromEnv(name string, defaults []string) []string {
