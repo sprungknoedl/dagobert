@@ -132,10 +132,11 @@ func render(w http.ResponseWriter, r *http.Request, status int, name string, val
 	}
 
 	tpl, err := template.New(filepath.Base(name)).Funcs(template.FuncMap{
-		"lower":    strings.ToLower,
-		"upper":    strings.ToUpper,
-		"title":    strings.Title,
-		"contains": slices.Contains[[]string],
+		"lower":      strings.ToLower,
+		"upper":      strings.ToUpper,
+		"title":      strings.Title,
+		"trimspaces": func(value string) string { return strings.ReplaceAll(value, " ", "") },
+		"contains":   slices.Contains[[]string],
 		"json": func(value any) template.JS {
 			out, _ := json.Marshal(value)
 			return template.JS(out)
