@@ -16,17 +16,17 @@
                 "hideExport" true
                 "hideImport" true }}
 
-            {{ template "enum-list" (dict "title" "Asset Status" "list" .model.AssetStatus "env" .env ) }}
-            {{ template "enum-list" (dict "title" "Asset Types" "list" .model.AssetTypes "env" .env ) }}
-            {{ template "enum-list" (dict "title" "Case Severities" "list" .model.CaseSeverities "env" .env ) }}
-            {{ template "enum-list" (dict "title" "Case Outcomes" "list" .model.CaseOutcomes "env" .env ) }}
-            {{ template "enum-list" (dict "title" "Event Types" "list" .model.EventTypes "env" .env ) }}
-            {{ template "enum-list" (dict "title" "Evidence Types" "list" .model.EvidenceTypes "env" .env ) }}
-            {{ template "enum-list" (dict "title" "Indicator Status" "list" .model.IndicatorStatus "env" .env ) }}
-            {{ template "enum-list" (dict "title" "Indicator Types" "list" .model.IndicatorTypes "env" .env ) }}
-            {{ template "enum-list" (dict "title" "Key Types" "list" .model.KeyTypes "env" .env ) }}
-            {{ template "enum-list" (dict "title" "Malware Status" "list" .model.MalwareStatus "env" .env ) }}
-            {{ template "enum-list" (dict "title" "Task Types" 	"list" .model.TaskTypes "env" .env ) }}
+            {{ template "enum-list" (dict "title" "Asset Status" "list" .enums.AssetStatus "env" .env ) }}
+            {{ template "enum-list" (dict "title" "Asset Types" "list" .enums.AssetTypes "env" .env ) }}
+            {{ template "enum-list" (dict "title" "Case Severities" "list" .enums.CaseSeverities "env" .env ) }}
+            {{ template "enum-list" (dict "title" "Case Outcomes" "list" .enums.CaseOutcomes "env" .env ) }}
+            {{ template "enum-list" (dict "title" "Event Types" "list" .enums.EventTypes "env" .env ) }}
+            {{ template "enum-list" (dict "title" "Evidence Types" "list" .enums.EvidenceTypes "env" .env ) }}
+            {{ template "enum-list" (dict "title" "Indicator Status" "list" .enums.IndicatorStatus "env" .env ) }}
+            {{ template "enum-list" (dict "title" "Indicator Types" "list" .enums.IndicatorTypes "env" .env ) }}
+            {{ template "enum-list" (dict "title" "Key Types" "list" .enums.KeyTypes "env" .env ) }}
+            {{ template "enum-list" (dict "title" "Malware Status" "list" .enums.MalwareStatus "env" .env ) }}
+            {{ template "enum-list" (dict "title" "Task Types" 	"list" .enums.TaskTypes "env" .env ) }}
         </main>
     </div>
 </body>
@@ -39,35 +39,33 @@
     </div>
 
     <div class="collapse-content px-0">
-        <!--
         {{if allowed ($url := "/settings/enums/new") "POST"}}
-        <a class="btn btn-sm" href="{{ $url }}" up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}">
+        <a class="btn btn-sm" href="{{ $url }}?category={{ trimspaces .title }}" up-layer="new drawer" up-accept-location="{{ .env.ActiveRoute }}">
             <i class="hio hio-5 hio-plus inline-block"></i> Add
         </a>
         {{ end }}
-        -->
 
         <table class="table table-default dataTable" data-order='[[ 0, "asc" ], [ 1, "asc" ]]'>
             <thead>
                 <tr>
-                    <th>Order</th>
+                    <th>Rank</th>
                     <th>Name</th>
                     <th>Icon</th>
                     <th>State</th>
-                    <!--<th style="width: 7rem"></th>-->
+                    <th style="width: 7rem"></th>
                 </tr>
             </thead>
 
             <tbody>
                 {{ range .list }}
                 <tr class="hover">
-                    <td> {{ .Order }} </td>
+                    <td> {{ .Rank }} </td>
                     <td> {{ if ne .Name "" }}{{ .Name }}{{ else }}<em>&lt;Empty&gt;</em>{{ end }} </td>
                     <td> <i class="hio hio-5 {{ .Icon }}"></i> {{ .Icon }} </td>
                     <td> <span class="text-{{ .State }}">{{ .State }}</span> </td>
-                    <!--<td class="text-right">
+                    <td class="text-right">
                         <div class="join"> {{ template "action-buttons" dict "url" (print "/settings/enums/" .ID) "env" $.env }} </div>
-                    </td>-->
+                    </td>
                 </tr>
                 {{ end }}
             </tbody>
