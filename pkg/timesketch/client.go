@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sprungknoedl/dagobert/internal/fp"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"golang.org/x/net/html"
 )
 

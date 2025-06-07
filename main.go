@@ -14,10 +14,11 @@ import (
 	"github.com/golang-migrate/migrate/v4/database/sqlite"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/lmittmann/tint"
-	"github.com/sprungknoedl/dagobert/internal/handler"
-	"github.com/sprungknoedl/dagobert/internal/model"
-	"github.com/sprungknoedl/dagobert/internal/worker"
+	"github.com/sprungknoedl/dagobert/app/handler"
+	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/worker"
 	"github.com/sprungknoedl/dagobert/pkg/timesketch"
+	"github.com/sprungknoedl/dagobert/public"
 )
 
 type Configuration struct {
@@ -292,7 +293,7 @@ func StartUI() {
 	// Static Assets
 	// --------------------------------------
 	mux.Handle("GET /favicon.ico", handler.ServeFile(filepath.Join(cfg.AssetsFolder, "favicon.ico")))
-	mux.Handle("GET /web/", handler.ServeDir("/web/", cfg.AssetsFolder))
+	mux.Handle("GET /public/", handler.ServeDir("/public/", public.AssetsFS))
 
 	// --------------------------------------
 	// Initialize Dagobert
