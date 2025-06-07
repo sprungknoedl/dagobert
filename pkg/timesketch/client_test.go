@@ -3,7 +3,7 @@ package timesketch
 import (
 	"testing"
 
-	"github.com/sprungknoedl/dagobert/internal/fp"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
 )
 
 func TestNewClient(t *testing.T) {
