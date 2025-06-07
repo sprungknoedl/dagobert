@@ -22,7 +22,7 @@ func (store *Store) ListEvidences(cid string) ([]Evidence, error) {
 
 func (store *Store) GetEvidence(cid string, id string) (Evidence, error) {
 	obj := Evidence{}
-	tx := store.DB.First(&obj, "id = ?", cid)
+	tx := store.DB.First(&obj, "id = ?", id)
 	return obj, tx.Error
 }
 
@@ -31,5 +31,5 @@ func (store *Store) SaveEvidence(cid string, obj Evidence) error {
 }
 
 func (store *Store) DeleteEvidence(cid string, id string) error {
-	return store.DB.Delete(Case{}, "id = ?", cid).Error
+	return store.DB.Delete(Evidence{}, "id = ?", id).Error
 }

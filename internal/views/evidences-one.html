@@ -16,24 +16,6 @@
             <input name="ID" type="hidden" value="{{ .obj.ID }}" />
             <input name="CaseID" type="hidden" value="{{ .obj.CaseID }}" />
 
-			<div class="form-control mb-2">
-				<label class="label justify-start gap-2">
-                    File
-                    <span class="text-accent">*</span>
-                </label>
-				<input name="File" type="file" class="file-input w-full" />
-			</div>
-
-			<div class="form-control mb-2">
-				<label class="label justify-start gap-2">
-					Name
-                    <span class="text-accent">*</span>
-				    {{ if .valid.Name }}<span class="ml-2 text-sm text-error">{{ .valid.Name }}</span>{{ end }}
-				</label>
-
-				<input name="Name" type="text" class="input w-full" value="{{ .obj.Name }}" />
-			</div>
-
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">
                     Type
@@ -47,6 +29,32 @@
                     {{ end }}
                 </select>
             </div>
+
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">
+					Name
+                    <span class="text-accent">*</span>
+				    {{ if .valid.Name }}<span class="ml-2 text-sm text-error">{{ .valid.Name }}</span>{{ end }}
+				</label>
+
+				<input name="Name" type="text" class="input w-full" value="{{ .obj.Name }}" />
+			</div>
+
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">
+                    File
+                    {{ if eq .obj.Size 0 }}<span class="text-xs">(no file uploaded yet)</span>{{ end }}
+                </label>
+				<input name="File" type="file" class="file-input w-full" />
+			</div>
+
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">
+                    Hash
+                    {{ if eq .obj.Size 0 }}<span class="text-xs">(will be calculated for uploaded files)</span>{{ end }}
+                </label>
+				<input {{ if ne .obj.Size 0 }}disabled{{ end }} name="Hash" type="text" class="input w-full" value="{{ .obj.Hash }}" />
+			</div>
 
             <div class="form-control mb-2">
                 <label class="label justify-start gap-2">

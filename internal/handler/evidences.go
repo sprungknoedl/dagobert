@@ -151,7 +151,6 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 
 	// default values
 	dto.Size = int64(0)
-	dto.Hash = ""
 	dto.Name = filepath.Base(dto.Name) // sanitize name
 	if vr := ValidateEvidence(dto, enums); !vr.Valid() {
 		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "internal/views/evidences-one.html", map[string]any{
@@ -171,8 +170,8 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// create file
-		fw, err := os.Create(dst)
+		// create file, fail if file exists
+		fw, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
 		if err != nil {
 			Err(w, r, err)
 			return
@@ -189,7 +188,7 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 
 		dto.Size = fh.Size
 		dto.Hash = fmt.Sprintf("%x", hasher.Sum(nil))
-	} else if dto.ID != "new" {
+	} else if dto.ID != "new" && dto.Size > 0 {
 		// keep metadata for existing evidences that did not change
 		obj, err := ctrl.store.GetEvidence(dto.CaseID, dto.ID)
 		if err != nil {
@@ -203,26 +202,23 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		// look if file is present in fs and add it to the database
 		src := filepath.Join("files", "evidences", dto.CaseID, dto.Name)
 		fr, err := os.Open(src)
-		if err != nil {
-			Err(w, r, err)
-			return
-		}
+		if err == nil {
+			stat, err := fr.Stat()
+			if err != nil {
+				Err(w, r, err)
+				return
+			}
 
-		stat, err := fr.Stat()
-		if err != nil {
-			Err(w, r, err)
-			return
-		}
+			hasher := sha1.New()
+			_, err = io.Copy(hasher, fr)
+			if err != nil {
+				Err(w, r, err)
+				return
+			}
 
-		hasher := sha1.New()
-		_, err = io.Copy(hasher, fr)
-		if err != nil {
-			Err(w, r, err)
-			return
+			dto.Size = stat.Size()
+			dto.Hash = fmt.Sprintf("%x", hasher.Sum(nil))
 		}
-
-		dto.Size = stat.Size()
-		dto.Hash = fmt.Sprintf("%x", hasher.Sum(nil))
 	}
 
 	new := dto.ID == "new"
