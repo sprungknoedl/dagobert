@@ -15,6 +15,7 @@ WORKDIR /src
 
 COPY go.mod .
 RUN go mod download
+COPY --from=web /src/public /src/public
 
 COPY . .
 RUN make build-go
@@ -26,9 +27,8 @@ WORKDIR /home/sprungknoedl
 
 RUN apt update && apt install -y docker.io
 
-COPY --from=web /src/web /home/sprungknoedl/web
 COPY --from=app /src/dagobert /home/sprungknoedl/dagobert
-COPY --from=app /src/internal/views /home/sprungknoedl/internal/views
+COPY --from=app /src/app/views /home/sprungknoedl/app/views
 COPY --from=app /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 RUN useradd -l -u 1000 -g users sprungknoedl
