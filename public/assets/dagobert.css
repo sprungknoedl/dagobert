@@ -635,8 +635,8 @@ table.fixedHeader-floating, table.fixedHeader-locked {
 }
 @font-face {
   font-family: 'heroicons-outline';
-  src: url('/web/heroicons-outline-405db23.eot?2hwaeq');
-  src: url('/web/heroicons-outline-405db23.eot?2hwaeq#iefix') format('embedded-opentype'), url('/web/heroicons-outline-405db23.ttf?2hwaeq') format('truetype'), url('/web/heroicons-outline-405db23.woff?2hwaeq') format('woff'), url('/web/heroicons-outline-405db23.svg?2hwaeq#heroicons-outline') format('svg');
+  src: url('/public/assets/heroicons-outline-405db23.eot?2hwaeq');
+  src: url('/public/assets/heroicons-outline-405db23.eot?2hwaeq#iefix') format('embedded-opentype'), url('/public/assets/heroicons-outline-405db23.ttf?2hwaeq') format('truetype'), url('/public/assets/heroicons-outline-405db23.woff?2hwaeq') format('woff'), url('/public/assets/heroicons-outline-405db23.svg?2hwaeq#heroicons-outline') format('svg');
   font-weight: normal;
   font-style: normal;
   font-display: block;
