@@ -103,7 +103,7 @@ templ EvidencesOne(env Env, obj model.Evidence, vr valid.Result) {
 		</div>
 		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]))
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
-		<p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
+		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
 		<script>
 		document.querySelector('input[name="File"]').onchange = (e) => {
 			document.querySelector('input[name="Name"]').value = e.target.value.replace(/.*(\/|\\)/, '');

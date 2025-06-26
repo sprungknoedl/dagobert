@@ -77,7 +77,7 @@ templ IndicatorsOne(env Env, obj model.Indicator, vr valid.Result) {
 		@selectField("TLP", obj.TLP, env.Enums.IndicatorTLPs, required(), withLabel("TLP"), withError(vr["TLP"]))
 		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]))
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
-		<p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
+		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
 	}
 }
 

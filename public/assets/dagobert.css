@@ -6129,9 +6129,6 @@ div.vis-tooltip {
   .whitespace-nowrap {
     white-space: nowrap;
   }
-  .text-accent {
-    color: var(--color-accent);
-  }
   .text-error {
     color: var(--color-error);
   }
@@ -6146,6 +6143,9 @@ div.vis-tooltip {
   }
   .text-info {
     color: var(--color-info);
+  }
+  .text-neutral {
+    color: var(--color-neutral);
   }
   .text-neutral-content {
     color: var(--color-neutral-content);
@@ -6211,10 +6211,6 @@ div.vis-tooltip {
     --fontsize: 0.75rem;
     --btn-p: 0.75rem;
     --size: calc(var(--size-field, 0.25rem) * 8);
-  }
-  .btn-accent {
-    --btn-color: var(--color-accent);
-    --btn-fg: var(--color-accent-content);
   }
   .btn-error {
     --btn-color: var(--color-error);

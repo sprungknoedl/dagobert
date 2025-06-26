@@ -66,7 +66,7 @@ templ AssetsOne(env Env, obj model.Asset, vr valid.Result) {
 		@stringField("Addr", obj.Addr, withLabel("Address / Domain"), withError(vr["Addr"]))
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
 		<!-- x -->
-		<p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
+		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
 	}
 }
 
@@ -85,6 +85,6 @@ templ CasesACL(env Env, obj model.Case, users []model.User, perms []string) {
 				</div>
 			}
 		}
-		<p class="mb-2"><strong class="text-accent">Note:</strong> Administrators have access to all cases and are not shown here.</p>
+		<p class="mb-2"><strong class="text-neutral">Note:</strong> Administrators have access to all cases and are not shown here.</p>
 	}
 }

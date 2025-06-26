@@ -60,6 +60,6 @@ templ SettingsHooksOne(env Env, obj model.Hook, mods []worker.Module, vr valid.R
 		{{ modenum := fp.Apply(mods, func(m worker.Module) model.Enum { return model.Enum{Name: m.Name} }) }}
 		@selectField("Mod", obj.Mod, modenum, required(), withLabel("Mod"), withError(vr["Mod"]))
 		@booleanField("Enabled", obj.Enabled, withLabel("Enabled"), withError(vr["Enabled"]))
-		<p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
+		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
 	}
 }
