@@ -34,7 +34,7 @@ templ SettingsEnumsOne(env Env, obj model.Enum, vr valid.Result) {
 		@hiddenField("Category", obj.Category)
 		@numberField("Rank", obj.Rank, withLabel("Rank"), withError(vr["Rank"]))
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
-		@stringField("Icon", obj.Icon, required(), withLabel("Icon"), withError(vr["Icon"]))
+		@stringField("Icon", obj.Icon, withLabel("Icon"), withError(vr["Icon"]))
 		<p class="text-sm mb-2">All icon from the <a href="https://heroicons.com/" target="_blank" class="underline">heroicons</a> library are supported.</p>
 		<div class="form-control mb-2">
 			<label class="label justify-start gap-2">
