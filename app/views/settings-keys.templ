@@ -76,6 +76,6 @@ templ SettingsKeysOne(env Env, obj model.Key, vr valid.Result) {
 		@hiddenField("Key", obj.Key)
 		@selectField("Type", obj.Type, env.Enums.KeyTypes, required(), withLabel("Type"), withError(vr["Type"]))
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
-		<p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
+		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
 	}
 }

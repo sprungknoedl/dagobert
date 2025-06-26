@@ -74,7 +74,7 @@ templ TasksOne(env Env, obj model.Task, vr valid.Result) {
 			</div>
 		</div>
 		@booleanField("Done", obj.Done, withLabel("Done"))
-		<p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
+		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
 		<script>
 		function setNow() {
 			let now = new Date(Date.now()).toISOString();
