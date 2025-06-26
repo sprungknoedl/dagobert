@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -281,7 +282,7 @@ func (ctrl IndicatorCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 			ID:     fp.If(rec[0] == "", fp.Random(10), rec[0]),
 			Status: rec[1],
 			Type:   rec[2],
-			Value:  rec[3],
+			Value:  refang(rec[3]),
 			TLP:    rec[4],
 			Source: rec[5],
 			Notes:  rec[6],
@@ -374,6 +375,7 @@ func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dto.Value = refang(dto.Value)
 	if vr := ValidateIndicator(dto, enums); !vr.Valid() {
 		Render(w, r, http.StatusUnprocessableEntity, views.IndicatorsOne(Env(ctrl, r), dto, vr))
 		return
@@ -405,6 +407,25 @@ func (ctrl IndicatorCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/indicators/", cid), http.StatusSeeOther)
+}
+
+// Removes any defanging done to indicator values.
+func refang(ioc string) string {
+	translate := map[string]string{
+		"[.]":    ".",
+		"[:]":    ":",
+		"[://]":  "://",
+		"hxxp:":  "http:",
+		"hxxps:": "https:",
+		"sfxp:":  "sftp:",
+		"fxp:":   "ftp:",
+		"fxle:":  "file:",
+	}
+
+	for old, new := range translate {
+		ioc = strings.ReplaceAll(ioc, old, new)
+	}
+	return ioc
 }
 
 // Types for OpenIOC export
