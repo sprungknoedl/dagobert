@@ -79,7 +79,7 @@ templ CasesOne(env Env, obj model.Case, sketches []timesketch.Sketch, vr valid.R
 			</label>
 			<select name="SketchID" class="select w-full">
 				for _, e := range sketches {
-					<option selected?={ e.ID == obj.SketchID }>{ strconv.Itoa(e.ID) } - { e.Name }</option>
+					<option value={ e.ID } selected?={ e.ID == obj.SketchID }>{ strconv.Itoa(e.ID) } - { e.Name }</option>
 				}
 			</select>
 		</div>
