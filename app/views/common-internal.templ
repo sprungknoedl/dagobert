@@ -12,6 +12,7 @@ type navbarConfig struct {
 	hideExport  bool
 	hideRefresh bool
 	hideAdd     bool
+	hideSearch  bool
 }
 
 type navbarOption func(*navbarConfig)
@@ -35,6 +36,7 @@ func navHideImport() navbarOption  { return func(nc *navbarConfig) { nc.hideImpo
 func navHideExport() navbarOption  { return func(nc *navbarConfig) { nc.hideExport = true } }
 func navHideRefresh() navbarOption { return func(nc *navbarConfig) { nc.hideRefresh = true } }
 func navHideAdd() navbarOption     { return func(nc *navbarConfig) { nc.hideAdd = true } }
+func navHideSearch() navbarOption  { return func(nc *navbarConfig) { nc.hideSearch = true } }
 
 func navSettings() navbarOption { return navPreTitle(navSettingsTitle()) }
 
@@ -61,13 +63,15 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 		</div>
 		<div class="flex-1"></div>
 		<div class="flex-none flex gap-4">
-			<!-- search input -->
-			<label class="w-96 input flex items-center gap-2">
-				<input type="search" name="search" class="grow" placeholder="Search ..."/>
-				<svg class="w-6 h-6 opacity-70" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-					<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"></path>
-				</svg>
-			</label>
+			if !cfg.hideSearch {
+				<!-- search input -->
+				<label class="w-96 input flex items-center gap-2">
+					<input type="search" name="search" class="grow" placeholder="Search ..."/>
+					<svg class="w-6 h-6 opacity-70" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+						<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"></path>
+					</svg>
+				</label>
+			}
 			<!-- buttons -->
 			<div class="join" role="group">
 				if cfg.preButtons != nil {
@@ -89,7 +93,7 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 					</a>
 				}
 				if uri, ok := env.Allowed("POST", env.Route+"new"); ok && !cfg.hideAdd {
-					<a class="join-item btn btn-accent" href={ uri } up-layer="new drawer" up-accept-location={ env.Route }>
+					<a class="join-item btn btn-neutral" href={ uri } up-layer="new drawer" up-accept-location={ env.Route }>
 						<i class="hio hio-6 hio-plus inline-block mr-1"></i> Add
 					</a>
 				}
