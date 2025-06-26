@@ -3,6 +3,7 @@ package handler
 import (
 	"log/slog"
 	"net/http"
+	"runtime/debug"
 	"strconv"
 	"time"
 )
@@ -16,6 +17,7 @@ func Recover(next http.Handler) http.Handler {
 					"raddr", r.RemoteAddr,
 					"method", r.Method,
 					"url", r.URL)
+				slog.Error("stack trace:\n" + string(debug.Stack()))
 
 				w.WriteHeader(http.StatusInternalServerError)
 			}

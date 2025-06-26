@@ -1,0 +1,64 @@
+package views
+
+import (
+	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+)
+
+templ SettingsReportsMany(env Env, rows []model.Report) {
+	@layout() {
+		@list(env, "Reports", navSettings(), navHideExport(), navHideImport()) {
+			<table class="table table-default dataTable">
+				<thead>
+					<tr>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Name</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Notes</th>
+						<th style="width: 7rem"></th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, row := range rows {
+						<tr class="hover">
+							<td>{ row.Name } </td>
+							<td>{ row.Notes } </td>
+							<td class="text-right">
+								<div class="join">
+									if url, ok := env.Allowed("GET", env.Route+row.ID+"/download"); ok {
+										@externalBtn(url, "") {
+											<i class="hio hio-5 hio-arrow-down-tray"></i>
+										}
+									}
+									@defaultActionBtns(env, env.Route+row.ID)
+								</div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	}
+}
+
+templ SettingsReportsOne(env Env, obj model.Report, vr valid.Result) {
+	{{ uri := "/settings/reports/" + obj.ID }}
+	{{ title := fp.If(obj.ID == "new", "Add report template", "Edit report template") }}
+	@form(uri, title) {
+		@hiddenField("ID", obj.ID)
+		<div class="form-control mb-2">
+			<label class="label justify-start gap-2">
+				File
+				@requiredLabel()
+			</label>
+			<input name="File" type="file" class="file-input w-full"/>
+		</div>
+		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
+		@textareaField("Notes", obj.Notes, required(), withLabel("Notes"), withError(vr["Notes"]))
+		<p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
+		<script>
+        document.querySelector('input[name="File"]').onchange = (e) => {
+            document.querySelector('input[name="Name"]').value = e.target.value.replace(/.*(\/|\\)/, '');
+        };
+        </script>
+	}
+}

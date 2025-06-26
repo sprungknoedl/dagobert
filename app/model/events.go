@@ -1,8 +1,6 @@
 package model
 
-import (
-	"gorm.io/gorm/clause"
-)
+import "gorm.io/gorm/clause"
 
 type Event struct {
 	ID            string `gorm:"primaryKey"`
@@ -66,10 +64,10 @@ func (store *Store) SaveEvent(cid string, obj Event, override bool) error {
 	}
 
 	return store.DB.
-		Clauses(clause.OnConflict{DoNothing: !override}).
+		Clauses(clause.OnConflict{DoNothing: !override, UpdateAll: override}).
 		Omit("Assets.*").
 		Omit("Indicators.*").
-		Save(obj).
+		Create(&obj).
 		Error
 }
 

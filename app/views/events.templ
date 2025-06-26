@@ -1,0 +1,150 @@
+package views
+
+import (
+	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+	"strings"
+)
+
+templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators []model.Indicator) {
+	@layout() {
+		@list(env, "Timeline", navHideImport(), navPreButtons(eventsManyExtra(env))) {
+			<table class="table table-default dataTable" data-order='[[ 0, "asc" ]]'>
+				<thead>
+					<tr>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Time</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Type</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Event</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Assets</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Indicators</th>
+						<th style="width: 7rem"></th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, row := range rows {
+						<tr class={ fp.If(row.Flagged, "hover bg-flagged", "hover") }>
+							<td>
+								@formatTime(row.Time)
+							</td>
+							<td>
+								@enum(env.Enums.EventTypes, row.Type)
+							</td>
+							<td>
+								@highlightEvent(row, assets, indicators)
+							</td>
+							<td>
+								for _, x := range row.Assets {
+									<div class="text-info">
+										@enumIcon(env.Enums.AssetTypes, x.Type)
+										{ x.Name }
+									</div>
+								}
+							</td>
+							<td>
+								for _, x := range row.Indicators {
+									<div class="text-error">
+										@enumIcon(env.Enums.IndicatorTypes, x.Type)
+										{ x.Value }
+									</div>
+								}
+							</td>
+							<td data-search={ fp.If(row.Flagged, "flagged:true", "") } class="text-right">
+								<div class="join">
+									if row.Flagged {
+										@actionBtn(env, "GET", env.Route+row.ID) {
+											<i class="hio hio-5 hio-flag btn-flagged"></i>
+										}
+									}
+									@defaultActionBtns(env, env.Route+row.ID)
+								</div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	}
+}
+
+templ EventsOne(env Env, obj model.Event, assets []model.Asset, indicators []model.Indicator, vr valid.Result) {
+	{{ uri := "/cases/" + obj.CaseID + "/events/" + obj.ID }}
+	{{ title := fp.If(obj.ID == "new", "Add event", "Edit event") }}
+	@form(uri, title) {
+		@hiddenField("ID", obj.ID)
+		@hiddenField("CaseID", obj.CaseID)
+		<div class="form-control mb-2">
+			<label class="label justify-start gap-2">
+				Time
+				@requiredLabel()
+				@validationError(vr["Time"])
+			</label>
+			<div class="join w-full">
+				<input name="Time" type="text" class="join-item input w-full" value={ obj.Time.Format("2006-01-02T15:04:05Z07:00") }/>
+				<a class="join-item btn" onclick="setNow()">Now</a>
+			</div>
+		</div>
+		@selectField("Type", obj.Type, env.Enums.EventTypes, required(), withLabel("Type"), withError(vr["Type"]))
+		@textareaField("Event", obj.Event, required(), withLabel("Event"), withError(vr["Event"]))
+		@textareaField("Raw", obj.Raw, withLabel("Raw"), withError(vr["Raw"]))
+		@booleanField("Flagged", obj.Flagged, withLabel("Flagged"))
+		@choicesField("Assets", withLabel("Assets"), withError(vr["Assets"])) {
+			for _, x := range assets {
+				<option value={ x.Name } selected?={ obj.HasAsset(x.ID) }>{ x.Name }</option>
+			}
+		}
+		@choicesField("Indicators", withLabel("Indicators"), withError(vr["Indicators"])) {
+			for _, x := range indicators {
+				<option value={ x.Value } selected?={ obj.HasIndicator(x.ID) }>{ x.Value }</option>
+			}
+		}
+		<p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
+		<script>
+		function setNow() {
+			let now = new Date(Date.now()).toISOString();
+			document.querySelector('input[name="Time"]').value = now;
+		}
+		</script>
+	}
+}
+
+func highlightEvent(ev model.Event, assets []model.Asset, indicators []model.Indicator) templ.Component {
+	html := templ.EscapeString(ev.Event)
+	// first highlight linked indicators, then any
+	for _, x := range ev.Indicators {
+		html = strings.ReplaceAll(html, x.Value, "<span class='text-error'>"+templ.EscapeString(x.Value)+"</span>")
+	}
+	for _, x := range indicators {
+		html = strings.ReplaceAll(html, x.Value, "<span class='text-error'>"+templ.EscapeString(x.Value)+"</span>")
+	}
+
+	// first highlight linked assets, then any
+	for _, x := range ev.Assets {
+		html = strings.ReplaceAll(html, x.Name, "<span class='text-info'>"+templ.EscapeString(x.Name)+"</span>")
+		if x.Addr != "" {
+			html = strings.ReplaceAll(html, x.Addr, "<span class='text-info'>"+templ.EscapeString(x.Addr)+"</span>")
+		}
+	}
+	for _, x := range assets {
+		html = strings.ReplaceAll(html, x.Name, "<span class='text-info'>"+templ.EscapeString(x.Name)+"</span>")
+		if x.Addr != "" {
+			html = strings.ReplaceAll(html, x.Addr, "<span class='text-info'>"+templ.EscapeString(x.Addr)+"</span>")
+		}
+	}
+
+	return templ.Raw(html)
+}
+
+templ eventsManyExtra(env Env) {
+	if url, ok := env.Allowed("POST", env.Route+"import"); ok {
+		<details class="dropdown">
+			<summary class="btn join-item">
+				<i class="hio hio-6 hio-bars-arrow-up inline-block mr-1"></i> Import
+			</summary>
+			<ul style="position: absolute" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow">
+				<li><a href={ url + "/csv" } up-layer="new drawer" up-accept-location={ env.Route }>from CSV</a></li>
+				<li><a href={ url + "/timesketch" } up-follow up-method="post">from Timesketch</a></li>
+			</ul>
+		</details>
+	}
+}

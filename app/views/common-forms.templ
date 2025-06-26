@@ -1,0 +1,158 @@
+package views
+
+import (
+	"strconv"
+
+	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+)
+
+templ form(uri string, title string, opts ...formOption) {
+	{{ cfg := applyformOptions(opts) }}
+	@layout() {
+		<main>
+			<form method="post" action={ uri } enctype={ cfg.enctype } up-submit>
+				<!-- Modal header -->
+				<h3 class="font-bold text-lg mb-4">{ title } </h3>
+				<!-- Modal body -->
+				<div class="mb-4">
+					{ children... }
+				</div>
+				<!-- Modal footer -->
+				<div class="flex gap-2 items-center">
+					<button type="submit" class="btn btn-primary">Save </button>
+					<a class="btn" up-dismiss>Cancel </a>
+				</div>
+			</form>
+		</main>
+	}
+}
+
+type formConfig struct {
+	label      templ.Component
+	required   templ.Component
+	validation templ.Component
+	enctype    string
+}
+
+type formOption func(*formConfig)
+
+func applyformOptions(opts []formOption) formConfig {
+	cfg := formConfig{
+		label:      templ.NopComponent,
+		required:   templ.NopComponent,
+		validation: templ.NopComponent,
+		enctype:    "application/x-www-form-urlencoded",
+	}
+
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+	return cfg
+}
+
+func required() formOption {
+	return func(fc *formConfig) { fc.required = requiredLabel() }
+}
+
+func withLabel(label string) formOption {
+	return func(fc *formConfig) { fc.label = templ.Raw(templ.EscapeString(label)) }
+}
+
+func withError(vc valid.Condition) formOption {
+	return func(fc *formConfig) { fc.validation = validationError(vc) }
+}
+
+func enctype(enc string) formOption {
+	return func(fc *formConfig) { fc.enctype = enc }
+}
+
+templ requiredLabel() {
+	<span class="text-accent">*</span>
+}
+
+templ validationError(vc valid.Condition) {
+	if vc.Missing || vc.Invalid {
+		<span class="ml-2 text-sm text-error">{ vc.Message }</span>
+	}
+}
+
+templ hiddenField(name string, value string, opts ...formOption) {
+	<input name={ name } type="hidden" value={ value }/>
+}
+
+templ stringField(name string, value string, opts ...formOption) {
+	{{ cfg := applyformOptions(opts) }}
+	<div class="form-control mb-2">
+		<label class="label justify-start gap-2">
+			@cfg.label
+			@cfg.required
+			@cfg.validation
+		</label>
+		<input name={ name } type="text" class="input w-full" value={ value }/>
+	</div>
+}
+
+templ numberField(name string, value int, opts ...formOption) {
+	{{ cfg := applyformOptions(opts) }}
+	<div class="form-control mb-2">
+		<label class="label justify-start gap-2">
+			@cfg.label
+			@cfg.required
+			@cfg.validation
+		</label>
+		<input name={ name } type="text" class="input w-full" value={ strconv.Itoa(value) }/>
+	</div>
+}
+
+templ selectField(name string, value string, enum []model.Enum, opts ...formOption) {
+	{{ cfg := applyformOptions(opts) }}
+	<div class="form-control mb-2">
+		<label class="label justify-start gap-2">
+			@cfg.label
+			@cfg.required
+			@cfg.validation
+		</label>
+		<select name={ name } class="select w-full">
+			for _, e := range enum {
+				<option selected?={ e.Name == value }>{ e.Name }</option>
+			}
+		</select>
+	</div>
+}
+
+templ choicesField(name string, opts ...formOption) {
+	{{ cfg := applyformOptions(opts) }}
+	<div class="form-control mb-2">
+		<label class="label justify-start gap-2">
+			@cfg.label
+			@cfg.required
+			@cfg.validation
+		</label>
+		<select multiple name={ name } class="choices select w-full">
+			{ children... }
+		</select>
+	</div>
+}
+
+templ booleanField(name string, value bool, opts ...formOption) {
+	{{ cfg := applyformOptions(opts) }}
+	<div class="form-control mb-2">
+		<label class="label cursor-pointer justify-start gap-2">
+			<input name={ name } value="true" type="checkbox" class="checkbox" checked?={ value }/>
+			@cfg.label
+		</label>
+	</div>
+}
+
+templ textareaField(name string, value string, opts ...formOption) {
+	{{ cfg := applyformOptions(opts) }}
+	<div class="form-control mb-2">
+		<label class="label justify-start gap-2">
+			@cfg.label
+			@cfg.required
+			@cfg.validation
+		</label>
+		<textarea name={ name } rows="3" class="textarea w-full">{ value }</textarea>
+	</div>
+}

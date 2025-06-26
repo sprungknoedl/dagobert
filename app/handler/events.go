@@ -7,13 +7,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
-	"math"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
@@ -21,87 +20,48 @@ import (
 )
 
 type EventCtrl struct {
-	store *model.Store
-	acl   *ACL
-	ts    *timesketch.Client
+	Ctrl
+	ts *timesketch.Client
 }
 
 func NewEventCtrl(store *model.Store, acl *ACL, ts *timesketch.Client) *EventCtrl {
-	return &EventCtrl{store, acl, ts}
+	return &EventCtrl{Ctrl: BaseCtrl{store, acl}, ts: ts}
 }
 
 func (ctrl EventCtrl) List(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.store.ListEvents(cid)
+	list, err := ctrl.Store().ListEvents(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	assets, err := ctrl.store.ListAssets(cid)
+	assets, err := ctrl.Store().ListAssets(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	indicators, err := ctrl.store.ListIndicators(cid)
+	indicators, err := ctrl.Store().ListIndicators(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/events-many.html", map[string]any{
-		"title": "Timeline",
-		"rows":  list,
-		"hasTimeGap": func(list []model.Event, i int) string {
-			if i > 0 {
-				prev := time.Time(list[i-1].Time)
-				curr := time.Time(list[i].Time)
-				if d := curr.Sub(prev); d.Abs() > 2*24*time.Hour {
-					return humanizeDuration(d.Abs())
-				}
-			}
-
-			return ""
-		},
-		"highlight": func(ev model.Event) template.HTML {
-			html := template.HTMLEscapeString(ev.Event)
-			// first highlight linked indicators, then any
-			for _, x := range ev.Indicators {
-				html = strings.ReplaceAll(html, x.Value, "<span class='text-error'>"+template.HTMLEscapeString(x.Value)+"</span>")
-			}
-			for _, x := range indicators {
-				html = strings.ReplaceAll(html, x.Value, "<span class='text-error'>"+template.HTMLEscapeString(x.Value)+"</span>")
-			}
-
-			// first highlight linked assets, then any
-			for _, x := range ev.Assets {
-				html = strings.ReplaceAll(html, x.Name, "<span class='text-success'>"+template.HTMLEscapeString(x.Name)+"</span>")
-				if x.Addr != "" {
-					html = strings.ReplaceAll(html, x.Addr, "<span class='text-success'>"+template.HTMLEscapeString(x.Addr)+"</span>")
-				}
-			}
-			for _, x := range assets {
-				html = strings.ReplaceAll(html, x.Name, "<span class='text-success'>"+template.HTMLEscapeString(x.Name)+"</span>")
-				if x.Addr != "" {
-					html = strings.ReplaceAll(html, x.Addr, "<span class='text-success'>"+template.HTMLEscapeString(x.Addr)+"</span>")
-				}
-			}
-
-			return template.HTML(html)
-		},
-	})
+	env := Env(ctrl, r)
+	views.EventsMany(env, list, assets, indicators).Render(r.Context(), w)
 }
 
 func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.store.ListEvents(cid)
+	list, err := ctrl.Store().ListEvents(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	filename := fmt.Sprintf("%s - %s - Timeline.csv", time.Now().Format("20060102"), GetEnv(ctrl.store, r).ActiveCase.Name)
+	kase := GetCase(ctrl.Store(), r)
+	filename := fmt.Sprintf("%s - %s - Timeline.csv", time.Now().Format("20060102"), kase.Name)
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.WriteHeader(http.StatusOK)
 
@@ -125,7 +85,7 @@ func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
 func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/events/", cid)
-	ImportCSV(ctrl.store, ctrl.acl, w, r, uri, 7, func(rec []string) {
+	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 7, func(rec []string) {
 		t, err := time.Parse(time.RFC3339, rec[1])
 		if err != nil {
 			Warn(w, r, err)
@@ -133,14 +93,14 @@ func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// import assets (creates new one if they don't exist)
-		assets, err := ctrl.getOrCreateAssets(r, cid, strings.Split(rec[3], " "))
+		assets, err := ctrl.getOrCreateAssets(cid, strings.Split(rec[3], " "))
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 
 		// import indicators (creates new one if they don't exist)
-		indicators, err := ctrl.getOrCreateIndicators(r, cid, strings.Split(rec[4], " "))
+		indicators, err := ctrl.getOrCreateIndicators(cid, strings.Split(rec[4], " "))
 		if err != nil {
 			Err(w, r, err)
 			return
@@ -157,7 +117,7 @@ func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 			Raw:        rec[6],
 		}
 
-		if err = ctrl.store.SaveEvent(cid, obj, true); err != nil {
+		if err = ctrl.Store().SaveEvent(cid, obj, true); err != nil {
 			Err(w, r, err)
 		}
 	})
@@ -165,7 +125,7 @@ func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl EventCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	kase, err := ctrl.store.GetCase(cid)
+	kase, err := ctrl.Store().GetCase(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -209,7 +169,7 @@ func (ctrl EventCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Request) {
 			Raw:    buf.String(),
 		}
 
-		if err = ctrl.store.SaveEvent(cid, obj, false); err != nil {
+		if err = ctrl.Store().SaveEvent(cid, obj, false); err != nil {
 			Err(w, r, err)
 			return
 		}
@@ -225,31 +185,26 @@ func (ctrl EventCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 	obj := model.Event{ID: id, CaseID: cid}
 	if id != "new" {
 		var err error
-		obj, err = ctrl.store.GetEvent(cid, id)
+		obj, err = ctrl.Store().GetEvent(cid, id)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 	}
 
-	assets, err := ctrl.store.ListAssets(cid)
+	assets, err := ctrl.Store().ListAssets(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	indicators, err := ctrl.store.ListIndicators(cid)
+	indicators, err := ctrl.Store().ListIndicators(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/events-one.html", map[string]any{
-		"obj":        obj,
-		"assets":     assets,
-		"indicators": indicators,
-		"valid":      valid.Result{},
-	})
+	Render(w, r, http.StatusOK, views.EventsOne(Env(ctrl, r), obj, assets, indicators, valid.Result{}))
 }
 
 func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
@@ -272,49 +227,44 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	// TODO: validate before creating assets/indicators
 
 	var err error
-	dto.Assets, err = ctrl.getOrCreateAssets(r, dto.CaseID, tmp.Assets)
+	dto.Assets, err = ctrl.getOrCreateAssets(dto.CaseID, tmp.Assets)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	dto.Indicators, err = ctrl.getOrCreateIndicators(r, dto.CaseID, tmp.Indicators)
+	dto.Indicators, err = ctrl.getOrCreateIndicators(dto.CaseID, tmp.Indicators)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	enums, err := ctrl.store.ListEnums()
+	enums, err := ctrl.Store().ListEnums()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	if vr := ValidateEvent(dto, enums); !vr.Valid() {
-		assets, err := ctrl.store.ListAssets(dto.CaseID)
+		assets, err := ctrl.Store().ListAssets(dto.CaseID)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 
-		indicators, err := ctrl.store.ListIndicators(dto.CaseID)
+		indicators, err := ctrl.Store().ListIndicators(dto.CaseID)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "app/views/events-one.html", map[string]any{
-			"obj":        dto,
-			"assets":     assets,
-			"indicators": indicators,
-			"valid":      vr,
-		})
+		Render(w, r, http.StatusUnprocessableEntity, views.EventsOne(Env(ctrl, r), dto, assets, indicators, vr))
 		return
 	}
 
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)
-	if err := ctrl.store.SaveEvent(dto.CaseID, dto, true); err != nil {
+	if err := ctrl.Store().SaveEvent(dto.CaseID, dto, true); err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -327,13 +277,11 @@ func (ctrl EventCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s/events/%s?confirm=yes", cid, id)
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/utils-confirm.html", map[string]any{
-			"dst": uri,
-		})
+		views.ConfirmDialog(uri).Render(r.Context(), w)
 		return
 	}
 
-	err := ctrl.store.DeleteEvent(cid, id)
+	err := ctrl.Store().DeleteEvent(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -342,46 +290,14 @@ func (ctrl EventCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/events/", cid), http.StatusSeeOther)
 }
 
-func humanizeDuration(duration time.Duration) string {
-	days := int64(duration.Hours() / 24)
-	hours := int64(math.Mod(duration.Hours(), 24))
-	minutes := int64(math.Mod(duration.Minutes(), 60))
-	seconds := int64(math.Mod(duration.Seconds(), 60))
-
-	chunks := []struct {
-		singularName string
-		amount       int64
-	}{
-		{"day", days},
-		{"hour", hours},
-		{"minute", minutes},
-		{"second", seconds},
-	}
-
-	parts := []string{}
-
-	for _, chunk := range chunks {
-		switch chunk.amount {
-		case 0:
-			continue
-		case 1:
-			parts = append(parts, fmt.Sprintf("%d %s", chunk.amount, chunk.singularName))
-		default:
-			parts = append(parts, fmt.Sprintf("%d %ss", chunk.amount, chunk.singularName))
-		}
-	}
-
-	return strings.Join(parts, " ")
-}
-
-func (ctrl EventCtrl) getOrCreateAssets(r *http.Request, cid string, names []string) ([]model.Asset, error) {
+func (ctrl EventCtrl) getOrCreateAssets(cid string, names []string) ([]model.Asset, error) {
 	assets := []model.Asset{}
 	for _, asset := range names {
 		if asset == "" {
 			continue
 		}
 
-		obj, err := ctrl.store.GetAssetByName(cid, asset)
+		obj, err := ctrl.Store().GetAssetByName(cid, asset)
 		if err != nil && err != sql.ErrNoRows && err != gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("get asset by name: %w", err)
 		} else if err != nil && err == gorm.ErrRecordNotFound {
@@ -392,7 +308,7 @@ func (ctrl EventCtrl) getOrCreateAssets(r *http.Request, cid string, names []str
 				Status: "Under investigation",
 				Type:   "Other",
 			}
-			if err := ctrl.store.SaveAsset(cid, obj); err != nil {
+			if err := ctrl.Store().SaveAsset(cid, obj); err != nil {
 				return nil, fmt.Errorf("save asset: %w", err)
 			}
 		}
@@ -403,14 +319,14 @@ func (ctrl EventCtrl) getOrCreateAssets(r *http.Request, cid string, names []str
 	return assets, nil
 }
 
-func (ctrl EventCtrl) getOrCreateIndicators(r *http.Request, cid string, values []string) ([]model.Indicator, error) {
+func (ctrl EventCtrl) getOrCreateIndicators(cid string, values []string) ([]model.Indicator, error) {
 	indicators := []model.Indicator{}
 	for _, indicator := range values {
 		if indicator == "" {
 			continue
 		}
 
-		obj, err := ctrl.store.GetIndicatorByValue(cid, indicator)
+		obj, err := ctrl.Store().GetIndicatorByValue(cid, indicator)
 		if err != nil && err != sql.ErrNoRows && err != gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("get indicator by value: %w", err)
 		} else if err != nil && err == sql.ErrNoRows {
@@ -422,7 +338,7 @@ func (ctrl EventCtrl) getOrCreateIndicators(r *http.Request, cid string, values 
 				Type:   "Other",
 				TLP:    "TLP:RED",
 			}
-			if err := ctrl.store.SaveIndicator(cid, obj, false); err != nil {
+			if err := ctrl.Store().SaveIndicator(cid, obj, false); err != nil {
 				return nil, fmt.Errorf("save indicator: %w", err)
 			}
 		}

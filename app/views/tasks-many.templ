@@ -1,0 +1,85 @@
+package views
+
+import (
+	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+	"time"
+)
+
+templ TasksMany(env Env, rows []model.Task) {
+	@layout() {
+		@list(env, "Tasks") {
+			<table class="table table-default dataTable" data-order='[[ 0, "asc" ], [ 2, "asc" ]]'>
+				<thead>
+					<tr>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Due</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Type</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Task</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Owner</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Done</th>
+						<th style="width: 7rem"></th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, row := range rows {
+						<tr class="hover">
+							<td class={ fp.If(!row.Done && time.Now().After(time.Time(row.DateDue)), "truncate text-error", "truncate") }>
+								{ row.DateDue.Format("2006-01-02") }
+							</td>
+							<td class="truncate">
+								@enum(env.Enums.TaskTypes, row.Type)
+							</td>
+							<td>{ row.Task } </td>
+							<td>{ row.Owner } </td>
+							<td>
+								if row.Done {
+									<i class="hio hio-5 hio-check-circle text-green-500"></i>
+									Done
+								} else {
+									<i class="hio hio-5 hio-x-circle text-red-500"></i>
+									Open
+								}
+							</td>
+							<td class="text-right">
+								<div class="join">
+									@defaultActionBtns(env, env.Route+row.ID)
+								</div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	}
+}
+
+templ TasksOne(env Env, obj model.Task, vr valid.Result) {
+	{{ uri := "/cases/" + obj.CaseID + "/tasks/" + obj.ID }}
+	{{ title := fp.If(obj.ID == "new", "Add task", "Edit task") }}
+	@form(uri, title) {
+		@hiddenField("ID", obj.ID)
+		@hiddenField("CaseID", obj.CaseID)
+		@selectField("Type", obj.Type, env.Enums.TaskTypes, required(), withLabel("Type"), withError(vr["Type"]))
+		@stringField("Task", obj.Task, required(), withLabel("Task"), withError(vr["Task"]))
+		@stringField("Owner", obj.Owner, withLabel("Owner"), withError(vr["Owner"]))
+		<div class="form-control mb-2">
+			<label class="label justify-start gap-2">
+				Due
+				@validationError(vr["DateDue"])
+			</label>
+			<div class="join w-full">
+				<input name="DateDue" type="text" class="join-item input w-full" value={ obj.DateDue.Format(time.RFC3339) }/>
+				<a class="join-item btn" onclick="setNow()">Now</a>
+			</div>
+		</div>
+		@booleanField("Done", obj.Done, withLabel("Done"))
+		<p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
+		<script>
+		function setNow() {
+			let now = new Date(Date.now()).toISOString();
+			document.querySelector('input[name="DateDue"]').value = now;
+		}
+		</script>
+	}
+}

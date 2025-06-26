@@ -3,46 +3,45 @@ package handler
 import (
 	"encoding/csv"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type AssetCtrl struct {
-	store *model.Store
-	acl   *ACL
+	Ctrl
 }
 
 func NewAssetCtrl(store *model.Store, acl *ACL) *AssetCtrl {
-	return &AssetCtrl{store, acl}
+	return &AssetCtrl{Ctrl: BaseCtrl{store, acl}}
 }
 
 func (ctrl AssetCtrl) List(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.store.ListAssets(cid)
+	list, err := ctrl.Store().ListAssets(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/assets-many.html", map[string]any{
-		"title": "Assets",
-		"rows":  list,
-	})
+	Render(w, r, http.StatusOK, views.AssetsMany(Env(ctrl, r), "Assets", list))
 }
 
 func (ctrl AssetCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.store.ListAssets(cid)
+	list, err := ctrl.Store().ListAssets(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	filename := fmt.Sprintf("%s - %s - Assets.csv", time.Now().Format("20060102"), GetEnv(ctrl.store, r).ActiveCase.Name)
+	kase := GetCase(ctrl.Store(), r)
+	filename := fmt.Sprintf("%s - %s - Assets.csv", time.Now().Format("20060102"), kase.Name)
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.WriteHeader(http.StatusOK)
 
@@ -65,7 +64,7 @@ func (ctrl AssetCtrl) Export(w http.ResponseWriter, r *http.Request) {
 func (ctrl AssetCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/assets/", cid)
-	ImportCSV(ctrl.store, ctrl.acl, w, r, uri, 6, func(rec []string) {
+	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 6, func(rec []string) {
 		obj := model.Asset{
 			ID:     fp.If(rec[0] == "", fp.Random(10), rec[0]),
 			CaseID: cid,
@@ -76,7 +75,7 @@ func (ctrl AssetCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Notes:  rec[5],
 		}
 
-		if err := ctrl.store.SaveAsset(cid, obj); err != nil {
+		if err := ctrl.Store().SaveAsset(cid, obj); err != nil {
 			Err(w, r, err)
 			return
 		}
@@ -89,17 +88,14 @@ func (ctrl AssetCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 	obj := model.Asset{ID: id, CaseID: cid}
 	if id != "new" {
 		var err error
-		obj, err = ctrl.store.GetAsset(cid, id)
+		obj, err = ctrl.Store().GetAsset(cid, id)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/assets-one.html", map[string]any{
-		"obj":   obj,
-		"valid": valid.Result{},
-	})
+	Render(w, r, http.StatusOK, views.AssetsOne(Env(ctrl, r), obj, valid.Result{}))
 }
 
 func (ctrl AssetCtrl) Save(w http.ResponseWriter, r *http.Request) {
@@ -109,23 +105,21 @@ func (ctrl AssetCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	enums, err := ctrl.store.ListEnums()
+	enums, err := ctrl.Store().ListEnums()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	if vr := ValidateAsset(dto, enums); !vr.Valid() {
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "app/views/assets-one.html", map[string]any{
-			"obj":   dto,
-			"valid": vr,
-		})
+		slog.Info("asset validation error", "dto", dto, "validation", vr)
+		Render(w, r, http.StatusUnprocessableEntity, views.AssetsOne(Env(ctrl, r), dto, vr))
 		return
 	}
 
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)
-	if err := ctrl.store.SaveAsset(dto.CaseID, dto); err != nil {
+	if err := ctrl.Store().SaveAsset(dto.CaseID, dto); err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -138,13 +132,11 @@ func (ctrl AssetCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s/assets/%s?confirm=yes", cid, id)
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/utils-confirm.html", map[string]any{
-			"dst": uri,
-		})
+		views.ConfirmDialog(uri).Render(r.Context(), w)
 		return
 	}
 
-	err := ctrl.store.DeleteAsset(cid, id)
+	err := ctrl.Store().DeleteAsset(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return

@@ -5,33 +5,28 @@ import (
 	"net/http"
 
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type KeyCtrl struct {
-	store *model.Store
-	acl   *ACL
-
+	Ctrl
 	jobctrl *JobCtrl
 }
 
 func NewKeyCtrl(store *model.Store, acl *ACL, jobctrl *JobCtrl) *KeyCtrl {
-	return &KeyCtrl{store, acl, jobctrl}
+	return &KeyCtrl{Ctrl: BaseCtrl{store, acl}, jobctrl: jobctrl}
 }
 
 func (ctrl KeyCtrl) List(w http.ResponseWriter, r *http.Request) {
-	list, err := ctrl.store.ListKeys()
+	list, err := ctrl.Store().ListKeys()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/keys-many.html", map[string]any{
-		"title":   "API Keys",
-		"keys":    list,
-		"workers": ctrl.jobctrl.Workers(),
-	})
+	Render(w, r, http.StatusOK, views.SettingsKeyMany(Env(ctrl, r), list, ctrl.jobctrl.Workers()))
 }
 
 func (ctrl KeyCtrl) Edit(w http.ResponseWriter, r *http.Request) {
@@ -39,17 +34,14 @@ func (ctrl KeyCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 	obj := model.Key{Key: key}
 	if key != "new" {
 		var err error
-		obj, err = ctrl.store.GetKey(key)
+		obj, err = ctrl.Store().GetKey(key)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/keys-one.html", map[string]any{
-		"obj":   obj,
-		"valid": valid.Result{},
-	})
+	Render(w, r, http.StatusOK, views.SettingsKeysOne(Env(ctrl, r), obj, valid.Result{}))
 }
 
 func (ctrl KeyCtrl) Save(w http.ResponseWriter, r *http.Request) {
@@ -59,22 +51,19 @@ func (ctrl KeyCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	enums, err := ctrl.store.ListEnums()
+	enums, err := ctrl.Store().ListEnums()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	if vr := ValidateKey(dto, enums); !vr.Valid() {
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "app/views/keys-one.html", map[string]any{
-			"obj":   dto,
-			"valid": vr,
-		})
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsKeysOne(Env(ctrl, r), dto, vr))
 		return
 	}
 
 	dto.Key = fp.If(dto.Key == "new", fp.Random(64), dto.Key)
-	if err := ctrl.store.SaveKey(dto); err != nil {
+	if err := ctrl.Store().SaveKey(dto); err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -86,13 +75,11 @@ func (ctrl KeyCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	key := r.PathValue("key")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/api-keys/%s?confirm=yes", key)
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/utils-confirm.html", map[string]any{
-			"dst": uri,
-		})
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
 		return
 	}
 
-	if err := ctrl.store.DeleteKey(key); err != nil {
+	if err := ctrl.Store().DeleteKey(key); err != nil {
 		Err(w, r, err)
 		return
 	}

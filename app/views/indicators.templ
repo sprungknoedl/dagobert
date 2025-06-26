@@ -1,0 +1,108 @@
+package views
+
+import (
+	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+)
+
+templ IndicatorsMany(env Env, rows []model.Indicator) {
+	@layout() {
+		@list(env, "Indicators", navHideImport(), navHideExport(), navPreButtons(indicatorsManyExtra(env))) {
+			<table class="table table-default dataTable" data-order='[[ 1, "asc" ], [ 2, "asc" ]]'>
+				<thead>
+					<tr>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Status</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Type</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Value</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">TLP</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Source</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">First seen</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Last seen</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Events</th>
+						<th style="width: 7rem"></th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, row := range rows {
+						<tr class="hover">
+							<td class="truncate">
+								@enum(env.Enums.IndicatorStatus, row.Status)
+							</td>
+							<td class="truncate">
+								@enum(env.Enums.IndicatorTypes, row.Type)
+							</td>
+							<td>{ row.Value } </td>
+							<td>
+								@enum(env.Enums.IndicatorTLPs, row.TLP)
+							</td>
+							<td>{ row.Source } </td>
+							<td class="truncate">
+								@formatTime(row.FirstSeen)
+							</td>
+							<td class="truncate">
+								@formatTime(row.LastSeen)
+							</td>
+							<td>{ row.Events } </td>
+							<td class="text-right">
+								<div class="join">
+									if row.Type == "IP" && row.TLP != "TLP:RED" {
+										@externalBtn("https://www.virustotal.com/gui/search/"+row.Value, "VT")
+									} else if row.Type == "Domain" && row.TLP != "TLP:RED" {
+										@externalBtn("https://www.virustotal.com/gui/search/"+row.Value, "VT")
+									} else if row.Type == "Hash" && row.TLP != "TLP:RED" {
+										@externalBtn("https://www.virustotal.com/gui/search/"+row.Value, "VT")
+										@externalBtn("https://www.hybrid-analysis.com/search?query="+row.Value, "HA")
+									}
+									@defaultActionBtns(env, env.Route+row.ID)
+								</div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	}
+}
+
+templ IndicatorsOne(env Env, obj model.Indicator, vr valid.Result) {
+	{{ uri := "/cases/" + obj.CaseID + "/indicators/" + obj.ID }}
+	{{ title := fp.If(obj.ID == "new", "Add indicator", "Edit indicator") }}
+	@form(uri, title) {
+		@hiddenField("ID", obj.ID)
+		@hiddenField("CaseID", obj.CaseID)
+		@selectField("Status", obj.Status, env.Enums.IndicatorStatus, required(), withLabel("Status"), withError(vr["Status"]))
+		@selectField("Type", obj.Type, env.Enums.IndicatorTypes, required(), withLabel("Type"), withError(vr["Type"]))
+		@stringField("Value", obj.Value, required(), withLabel("Value"), withError(vr["Value"]))
+		@selectField("TLP", obj.TLP, env.Enums.IndicatorTLPs, required(), withLabel("TLP"), withError(vr["TLP"]))
+		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]))
+		@textareaField("Notes", obj.Notes, required(), withLabel("Notes"), withError(vr["Notes"]))
+		<p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
+	}
+}
+
+templ indicatorsManyExtra(env Env) {
+	if url, ok := env.Allowed("POST", env.Route + "import"); ok {
+		<details class="dropdown">
+			<summary class="btn join-item">
+				<i class="hio hio-6 hio-bars-arrow-up inline-block mr-1"></i> Import
+			</summary>
+			<ul style="position: absolute" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow">
+				<li><a href={ url + "/csv" } up-layer="new drawer" up-accept-location={ env.Route }>from CSV</a></li>
+				<li><a href={ url + "/timesketch" } up-follow up-method="post">from Timesketch</a></li>
+			</ul>
+		</details>
+	}
+	if url, ok := env.Allowed("GET", env.Route + "export"); ok {
+		<details class="dropdown">
+			<summary class="btn join-item">
+				<i class="hio hio-6 hio-bars-arrow-down inline-block mr-1"></i> Export
+			</summary>
+			<ul style="position: absolute" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow">
+				<li><a href={ url + "/csv" }>as CSV</a></li>
+				<li><a href={ url + "/ioc" }>as OpenIOC</a></li>
+				<li><a href={ url + "/stix" }>as STIX</a></li>
+			</ul>
+		</details>
+	}
+}

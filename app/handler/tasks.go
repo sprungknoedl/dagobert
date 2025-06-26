@@ -9,42 +9,40 @@ import (
 	"time"
 
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type TaskCtrl struct {
-	store *model.Store
-	acl   *ACL
+	Ctrl
 }
 
 func NewTaskCtrl(store *model.Store, acl *ACL) *TaskCtrl {
-	return &TaskCtrl{store, acl}
+	return &TaskCtrl{BaseCtrl{store, acl}}
 }
 
 func (ctrl TaskCtrl) List(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.store.ListTasks(cid)
+	list, err := ctrl.Store().ListTasks(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/tasks-many.html", map[string]any{
-		"title": "Tasks",
-		"rows":  list,
-	})
+	Render(w, r, http.StatusOK, views.TasksMany(Env(ctrl, r), list))
 }
 
 func (ctrl TaskCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.store.ListTasks(cid)
+	list, err := ctrl.Store().ListTasks(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	filename := fmt.Sprintf("%s - %s - Tasks.csv", time.Now().Format("20060102"), GetEnv(ctrl.store, r).ActiveCase.Name)
+	kase := GetCase(ctrl.Store(), r)
+	filename := fmt.Sprintf("%s - %s - Tasks.csv", time.Now().Format("20060102"), kase.Name)
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.WriteHeader(http.StatusOK)
 
@@ -67,7 +65,7 @@ func (ctrl TaskCtrl) Export(w http.ResponseWriter, r *http.Request) {
 func (ctrl TaskCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/tasks/", cid)
-	ImportCSV(ctrl.store, ctrl.acl, w, r, uri, 6, func(rec []string) {
+	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 6, func(rec []string) {
 		done, err := strconv.ParseBool(cmp.Or(rec[3], "false"))
 		if err != nil {
 			Warn(w, r, err)
@@ -88,7 +86,7 @@ func (ctrl TaskCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			CaseID:  cid,
 		}
 
-		if err := ctrl.store.SaveTask(cid, obj); err != nil {
+		if err := ctrl.Store().SaveTask(cid, obj); err != nil {
 			Err(w, r, err)
 			return
 		}
@@ -101,17 +99,14 @@ func (ctrl TaskCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 	obj := model.Task{ID: id, CaseID: cid}
 	if id != "new" {
 		var err error
-		obj, err = ctrl.store.GetTask(cid, id)
+		obj, err = ctrl.Store().GetTask(cid, id)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/tasks-one.html", map[string]any{
-		"obj":   obj,
-		"valid": valid.Result{},
-	})
+	Render(w, r, http.StatusOK, views.TasksOne(Env(ctrl, r), obj, valid.Result{}))
 }
 
 func (ctrl TaskCtrl) Save(w http.ResponseWriter, r *http.Request) {
@@ -121,23 +116,20 @@ func (ctrl TaskCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	enums, err := ctrl.store.ListEnums()
+	enums, err := ctrl.Store().ListEnums()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	if vr := ValidateTask(dto, enums); !vr.Valid() {
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "app/views/tasks-one.html", map[string]any{
-			"obj":   dto,
-			"valid": vr,
-		})
+		Render(w, r, http.StatusUnprocessableEntity, views.TasksOne(Env(ctrl, r), dto, vr))
 		return
 	}
 
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)
-	if err := ctrl.store.SaveTask(dto.CaseID, dto); err != nil {
+	if err := ctrl.Store().SaveTask(dto.CaseID, dto); err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -150,13 +142,11 @@ func (ctrl TaskCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s/tasks/%s?confirm=yes", cid, id)
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/utils-confirm.html", map[string]any{
-			"dst": uri,
-		})
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
 		return
 	}
 
-	err := ctrl.store.DeleteTask(cid, id)
+	err := ctrl.Store().DeleteTask(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return

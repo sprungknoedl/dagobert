@@ -13,7 +13,9 @@ type Enums struct {
 	KeyTypes        []Enum
 	MalwareStatus   []Enum
 	TaskTypes       []Enum
-	HookTrigger     []string
+
+	UserRoles   []Enum
+	HookTrigger []Enum
 }
 
 type Enum struct {
@@ -28,8 +30,14 @@ type Enum struct {
 	// UpdatedAt time.Time
 }
 
-var hookTrigger = []string{
-	"OnEvidenceAdded",
+var hookTrigger = []Enum{
+	{Name: "OnEvidenceAdded"},
+}
+
+var userRoles = []Enum{
+	{Name: "Administrator"},
+	{Name: "User"},
+	{Name: "Read-Only"},
 }
 
 func (store *Store) ListEnums() (Enums, error) {
@@ -41,7 +49,7 @@ func (store *Store) ListEnums() (Enums, error) {
 	}
 
 	// group enums
-	enums := Enums{HookTrigger: hookTrigger}
+	enums := Enums{HookTrigger: hookTrigger, UserRoles: userRoles}
 	for _, enum := range list {
 		switch enum.Category {
 		case "AssetStatus":

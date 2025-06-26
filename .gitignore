@@ -4,3 +4,4 @@ dagobert.env
 .DS_Store
 files
 node_modules
+*_templ.go

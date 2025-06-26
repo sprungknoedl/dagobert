@@ -1,0 +1,51 @@
+package views
+
+import (
+	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+)
+
+templ NotesMany(env Env, rows []model.Note) {
+	@layout() {
+		@list(env, "Notes") {
+			<table class="table table-default dataTable" data-order='[[ 0, "asc" ], [ 1, "asc" ]]'>
+				<thead>
+					<tr>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Category</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Title</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Description</th>
+						<th style="width: 7rem"></th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, row := range rows {
+						<tr class="hover">
+							<td>{ row.Category } </td>
+							<td>{ row.Title } </td>
+							<td>{ row.Description } </td>
+							<td class="text-right">
+								<div class="join">
+									@defaultActionBtns(env, env.Route+row.ID)
+								</div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	}
+}
+
+templ NotesOne(env Env, obj model.Note, vr valid.Result) {
+	{{ uri := "/cases/" + obj.CaseID + "/notes/" + obj.ID }}
+	{{ title := fp.If(obj.ID == "new", "Add note", "Edit note") }}
+	@form(uri, title) {
+		@hiddenField("ID", obj.ID)
+		@hiddenField("CaseID", obj.CaseID)
+		@stringField("Category", obj.Category, required(), withLabel("Category"), withError(vr["Category"]))
+		@stringField("Title", obj.Title, required(), withLabel("Title"), withError(vr["Title"]))
+		@textareaField("Description", obj.Description, withLabel("Description"), withError(vr["Description"]))
+		<p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
+	}
+}

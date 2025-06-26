@@ -1,0 +1,90 @@
+package views
+
+import (
+	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+	"slices"
+)
+
+templ AssetsMany(env Env, title string, rows []model.Asset) {
+	@layout() {
+		@list(env, title) {
+			<table class="table table-default dataTable" data-order='[[ 1, "asc" ], [ 2, "asc" ]]'>
+				<thead>
+					<tr>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Status</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Type</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Name</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Address / Domain</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">First seen</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Last seen</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Notes</th>
+						<th style="width: 7rem"></th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, row := range rows {
+						<tr class="hover">
+							<td class="truncate">
+								@enum(env.Enums.AssetStatus, row.Status)
+							</td>
+							<td class="truncate">
+								@enum(env.Enums.AssetTypes, row.Type)
+							</td>
+							<td>{ row.Name } </td>
+							<td>{ row.Addr } </td>
+							<td class="truncate">
+								@formatTime(row.FirstSeen)
+							</td>
+							<td class="truncate">
+								@formatTime(row.LastSeen)
+							</td>
+							<td>{ row.Notes } </td>
+							<td class="text-right">
+								<div class="join">
+									@defaultActionBtns(env, env.Route+row.ID)
+								</div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	}
+}
+
+templ AssetsOne(env Env, obj model.Asset, vr valid.Result) {
+	{{ uri := "/cases/" + obj.CaseID + "/assets/" + obj.ID }}
+	{{ title := fp.If(obj.ID == "new", "Add asset", "Edit asset") }}
+	@form(uri, title) {
+		@hiddenField("ID", obj.ID)
+		@hiddenField("CaseID", obj.CaseID)
+		@selectField("Status", obj.Status, env.Enums.AssetStatus, required(), withLabel("Status"), withError(vr["Status"]))
+		@selectField("Type", obj.Type, env.Enums.AssetTypes, required(), withLabel("Type"), withError(vr["Type"]))
+		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
+		@stringField("Addr", obj.Addr, withLabel("Address / Domain"), withError(vr["Addr"]))
+		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
+		<!-- x -->
+		<p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
+	}
+}
+
+templ CasesACL(env Env, obj model.Case, users []model.User, perms []string) {
+	{{ uri := "/settings/cases/" + obj.ID + "/acl" }}
+	{{ title := "Access control" }}
+	@form(uri, title) {
+		<p class="mb-2">The following users are allowed to access <strong>{ obj.Name }</strong>:</p>
+		for _, user := range users {
+			if user.Role != "Administrator" {
+				<div class="form-control mb-2">
+					<label class="label cursor-pointer justify-start gap-2">
+						<input name="Users" value={ user.ID } type="checkbox" class="checkbox" checked?={ slices.Contains(perms, user.ID) }/>
+						{ user.Name } ({ user.UPN })
+					</label>
+				</div>
+			}
+		}
+		<p class="mb-2"><strong class="text-accent">Note:</strong> Administrators have access to all cases and are not shown here.</p>
+	}
+}

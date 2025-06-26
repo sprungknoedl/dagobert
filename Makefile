@@ -8,6 +8,7 @@ build-web:
 	npx @tailwindcss/cli -i app/assets/dagobert.css -o public/assets/dagobert.css
 
 build-go:
+	go tool templ generate
 	CGO_ENABLED=0 go build -o dagobert .
 
 docker:

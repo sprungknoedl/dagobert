@@ -58,7 +58,16 @@ type Job struct {
 type Module struct {
 	Name        string
 	Description string
+	Status      string
+	Error       string
 	Supports    func(model.Evidence) bool
+}
+
+type Worker struct {
+	WorkerID   string
+	RemoteAddr string
+	Modules    []string
+	Workers    int
 }
 
 func Get(name string) (Module, error) {

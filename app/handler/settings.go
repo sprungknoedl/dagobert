@@ -5,10 +5,9 @@ import (
 )
 
 type SettingsCtrl struct {
-	store *model.Store
-	acl   *ACL
+	Ctrl
 }
 
 func NewSettingsCtrl(store *model.Store, acl *ACL) *SettingsCtrl {
-	return &SettingsCtrl{store, acl}
+	return &SettingsCtrl{BaseCtrl{store, acl}}
 }
