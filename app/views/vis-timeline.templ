@@ -1,0 +1,33 @@
+package views
+
+type DataItem struct {
+	ID      string `json:"id"`
+	Content string `json:"content"`
+	Title   string `json:"title"`
+	Start   string `json:"start"`
+	Group   string `json:"group"`
+}
+
+templ VisTimeLine(env Env, items []DataItem, groups []DataItem) {
+	@layout() {
+		<section id="errors"></section>
+		@sidebar(env, "Visual Timeline")
+		<main class="pl-20 p-4 grow max-w-full flex flex-col h-screen">
+			@navbar(env, "Foo", navHideRefresh(), navHideAdd(), navHideImport(), navHideExport())
+			<div id="visjs" class="h-full"></div>
+		</main>
+		<script src="/public/assets/vis-timeline-7.7.3.min.js"></script>
+		<script>
+        function initializeChart(items, groups) {
+            const options = {
+                orientation: 'top',
+                height: '100%',
+            };
+
+            var container = document.getElementById("visjs");
+            var timeline = new vis.Timeline(container, new vis.DataSet(items), new vis.DataSet(groups), options);
+        }
+        </script>
+		@templ.JSFuncCall("initializeChart", items, groups)
+	}
+}

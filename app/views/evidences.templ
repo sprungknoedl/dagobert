@@ -1,0 +1,187 @@
+package views
+
+import (
+	"fmt"
+	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/worker"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+	"math"
+)
+
+func humanizeSize(s int64) string {
+	sizes := []string{"B", "kB", "MB", "GB", "TB", "PB", "EB"}
+
+	if s < 10 {
+		return fmt.Sprintf("%d B", s)
+	}
+	e := math.Floor(math.Log(float64(s)) / math.Log(1000))
+	suffix := sizes[int(e)]
+	val := math.Floor(float64(s)/math.Pow(1000, e)*10+0.5) / 10
+	f := "%.0f %s"
+	if val < 10 {
+		f = "%.1f %s"
+	}
+
+	return fmt.Sprintf(f, val, suffix)
+}
+
+templ EvidencesMany(env Env, rows []model.Evidence) {
+	@layout() {
+		@list(env, "Evidences") {
+			<table class="table table-default dataTable" data-order='[[ 1, "asc" ]]'>
+				<thead>
+					<tr>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Type</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Name</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Hash</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Size</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Source</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Notes</th>
+						<th style="width: 7rem"></th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, row := range rows {
+						<tr class="hover">
+							<td class="truncate">
+								@enumIcon(env.Enums.EvidenceTypes, row.Type)
+							</td>
+							<td>{ row.Name } </td>
+							<td>{ row.Hash } </td>
+							<td>{ humanizeSize(row.Size) } </td>
+							<td>{ row.Source } </td>
+							<td>{ row.Notes } </td>
+							<td class="text-right">
+								<div class="join">
+									if url, ok := env.Allowed("GET", env.Route+row.ID+"/download"); ok {
+										@externalBtn(url, "") {
+											<i class="hio hio-5 hio-arrow-down-tray"></i>
+										}
+									}
+									if url, ok := env.Allowed("POST", env.Route+row.ID+"/run"); ok {
+										@actionBtn(env, "POST", url) {
+											<i class="hio hio-5 hio-bolt"></i>
+										}
+									}
+									@defaultActionBtns(env, env.Route+row.ID)
+								</div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	}
+}
+
+templ EvidencesOne(env Env, obj model.Evidence, vr valid.Result) {
+	{{ uri := "/cases/" + obj.CaseID + "/evidences/" + obj.ID }}
+	{{ title := fp.If(obj.ID == "new", "Add evidence", "Edit evidence") }}
+	@form(uri, title, enctype("multipart/form-data")) {
+		@hiddenField("ID", obj.ID)
+		@hiddenField("CaseID", obj.CaseID)
+		@selectField("Type", obj.Type, env.Enums.EvidenceTypes, required(), withLabel("Type"), withError(vr["Type"]))
+		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
+		<div class="form-control mb-2">
+			<label class="label justify-start gap-2">
+				File
+				if obj.Size == 0 {
+					<span class="text-xs">(no file uploaded yet)</span>
+				}
+			</label>
+			<input name="File" type="file" class="file-input w-full"/>
+		</div>
+		<div class="form-control mb-2">
+			<label class="label justify-start gap-2">
+				Hash
+				if obj.Size == 0 {
+					<span class="text-xs">(will be calculated for uploaded files)</span>
+				}
+			</label>
+			<input disabled?={ obj.Size == 0 } name="Hash" type="text" class="input w-full" value={ obj.Hash }/>
+		</div>
+		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]))
+		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
+		<p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
+		<script>
+		document.querySelector('input[name="File"]').onchange = (e) => {
+			document.querySelector('input[name="Name"]').value = e.target.value.replace(/.*(\/|\\)/, '');
+		};
+        </script>
+	}
+}
+
+templ EvidencesProcess(env Env, runs []worker.Module) {
+	@layout() {
+		<main>
+			<!-- Modal header -->
+			<h3 class="font-bold text-lg mb-4">
+				Process evidence
+				<a class="ml-2" href={ env.Route } up-follow><i class="hio hio-5 hio-arrow-path inline-block mr-1"></i> </a>
+			</h3>
+			<!-- Modal body -->
+			<div class="mb-4">
+				<p class="mb-4">You may have to refresh the evidence list to see the updated results after running a mod.</p>
+				for _, run := range runs {
+					<div class="card bg-base-100 mb-4">
+						<div class="card-body p-4">
+							<h2 class="card-title">{ run.Name }</h2>
+							<p>{ run.Description }</p>
+							switch run.Status {
+								case "Scheduled":
+									<p class="text-warning font-bold">
+										<i class="hio hio-5 hio-information-circle inline-block"></i>
+										Job currently scheduled
+									</p>
+								case "Running":
+									<p class="text-warning font-bold">
+										<i class="hio hio-5 hio-information-circle inline-block"></i>
+										Job currently running
+									</p>
+								case "Success":
+									<p class="text-success font-bold">
+										<i class="hio hio-5 hio-check-circle inline-block"></i>
+										Job ran successfully.
+									</p>
+									<div class="card-actions justify-end">
+										<form method="post" up-submit>
+											<input type="hidden" name="name" value={ run.Name }/>
+											<button class="btn btn-neutral" type="submit">Rerun</button>
+										</form>
+									</div>
+								case "Failed":
+									<p class="text-error font-bold">
+										<i class="hio hio-5 hio-x-circle-filled inline-block"></i>
+										Job failed: { run.Error }
+									</p>
+									<div class="card-actions justify-end">
+										<form method="post" up-submit>
+											<input type="hidden" name="name" value={ run.Name }/>
+											<button class="btn btn-neutral" type="submit">Rerun</button>
+										</form>
+									</div>
+								default:
+									<div class="card-actions justify-end">
+										<form method="post" up-submit>
+											<input type="hidden" name="name" value={ run.Name }/>
+											<button class="btn btn-primary" type="submit">Run</button>
+										</form>
+									</div>
+							}
+						</div>
+					</div>
+				}
+				if len(runs) == 0 {
+					<div class="card bg-base-100 mb-4">
+						<div class="card-body p-4">
+							<p class="text-warning">Evidence type not supported by any mods. </p>
+						</div>
+					</div>
+				}
+			</div>
+			<!-- Modal footer -->
+			<div class="flex gap-2 items-center"></div>
+		</main>
+	}
+}

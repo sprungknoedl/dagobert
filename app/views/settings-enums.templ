@@ -1,0 +1,99 @@
+package views
+
+import (
+	"strings"
+
+	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+)
+
+templ SettingsEnumsMany(env Env) {
+	@layout() {
+		@list(env, "Case Objects", navSettings(), navHideAdd(), navHideExport(), navHideImport()) {
+			@enumList(env, "Asset Status", env.Enums.AssetStatus)
+			@enumList(env, "Asset Types", env.Enums.AssetTypes)
+			@enumList(env, "Case Severities", env.Enums.CaseSeverities)
+			@enumList(env, "Case Outcomes", env.Enums.CaseOutcomes)
+			@enumList(env, "Event Types", env.Enums.EventTypes)
+			@enumList(env, "Evidence Types", env.Enums.EvidenceTypes)
+			@enumList(env, "Indicator Status", env.Enums.IndicatorStatus)
+			@enumList(env, "Indicator Types", env.Enums.IndicatorTypes)
+			@enumList(env, "Key Types", env.Enums.KeyTypes)
+			@enumList(env, "Malware Status", env.Enums.MalwareStatus)
+			@enumList(env, "Task Types", env.Enums.TaskTypes)
+		}
+	}
+}
+
+templ SettingsEnumsOne(env Env, obj model.Enum, vr valid.Result) {
+	{{ uri := "/settings/enums/" + obj.ID }}
+	{{ title := fp.If(obj.ID == "new", "Add case object", "Edit case object") }}
+	@form(uri, title) {
+		@hiddenField("ID", obj.ID)
+		@hiddenField("Category", obj.Category)
+		@numberField("Rank", obj.Rank, withLabel("Rank"), withError(vr["Rank"]))
+		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
+		@stringField("Icon", obj.Icon, required(), withLabel("Icon"), withError(vr["Icon"]))
+		<p class="text-sm mb-2">All icon from the <a href="https://heroicons.com/" target="_blank" class="underline">heroicons</a> library are supported.</p>
+		<div class="form-control mb-2">
+			<label class="label justify-start gap-2">
+				State
+				@validationError(vr["State"])
+			</label>
+			<select name="State" class="select w-full">
+				<option disabled value="" selected?={ obj.State == "" }>Select an option</option>
+				<option selected?={ obj.State == "success" }>success</option>
+				<option selected?={ obj.State == "warning" }>warning</option>
+				<option selected?={ obj.State == "danger" }>danger</option>
+			</select>
+		</div>
+		<p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
+	}
+}
+
+templ enumList(env Env, title string, rows []model.Enum) {
+	<div class="collapse collapse-arrow">
+		<input type="checkbox" checked/>
+		<div class="collapse-title px-0">
+			<h2 class="text-primary text-xl font-bold">{ title } </h2>
+		</div>
+		<div class="collapse-content px-0">
+			if url, ok := env.Allowed("POST", "/settings/enums/new"); ok {
+				<a class="btn btn-sm" href={ url + "?category=" + strings.ReplaceAll(title, " ", "") } up-layer="new drawer" up-accept-location={ env.Route }>
+					<i class="hio hio-5 hio-plus inline-block"></i> Add
+				</a>
+			}
+			<table class="table table-default dataTable" data-order='[[ 0, "asc" ], [ 1, "asc" ]]'>
+				<thead>
+					<tr>
+						<th>Rank</th>
+						<th>Name</th>
+						<th>Icon</th>
+						<th>State</th>
+						<th style="width: 7rem"></th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, row := range rows {
+						<tr class="hover">
+							<td>{ row.Rank } </td>
+							<td>
+								if row.Name != "" {
+									{ row.Name }
+								} else {
+									<em>&lt;Empty&gt;</em>
+								}
+							</td>
+							<td><i class={ "hio hio-5 " + row.Icon }></i> { row.Icon } </td>
+							<td><span class="text-{{ .State }}">{ row.State } </span> </td>
+							<td class="text-right">
+								@defaultActionBtns(env, env.Route+row.ID)
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	</div>
+}

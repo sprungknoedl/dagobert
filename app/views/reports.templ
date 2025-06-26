@@ -1,0 +1,36 @@
+package views
+
+import "github.com/sprungknoedl/dagobert/app/model"
+
+templ ReportsDialog(env Env, rows []model.Report) {
+	@layout() {
+		<main>
+			<form method="post" action={ "/cases/" + env.Case.ID + "/render" }>
+				<!-- Modal header -->
+				<h3 class="font-bold text-lg mb-4">
+					Select report template
+				</h3>
+				<!-- Modal body -->
+				<div class="mb-4">
+					<input name="CaseID" type="hidden" value={ env.Case.ID }/>
+					<div class="form-control mb-2">
+						<label class="label justify-start gap-2">
+							Template
+						</label>
+						<select name="Template" class="select w-full">
+							<option disabled selected value="">Select an option</option>
+							for _, row := range rows {
+								<option>{ row.Name }</option>
+							}
+						</select>
+					</div>
+				</div>
+				<!-- Modal footer -->
+				<div class="flex gap-2 items-center">
+					<button type="submit" class="btn btn-primary">Generate </button>
+					<a class="btn" up-dismiss>Cancel </a>
+				</div>
+			</form>
+		</main>
+	}
+}

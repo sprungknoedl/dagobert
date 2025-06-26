@@ -5,22 +5,20 @@ import (
 	"net/http"
 
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/app/worker"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 func (ctrl SettingsCtrl) ListHooks(w http.ResponseWriter, r *http.Request) {
-	hooks, err := ctrl.store.ListHooks()
+	hooks, err := ctrl.Store().ListHooks()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/settings-hooks-many.html", map[string]any{
-		"title": "Automation Rules",
-		"hooks": hooks,
-	})
+	Render(w, r, http.StatusOK, views.SettingsHooksMany(Env(ctrl, r), hooks))
 }
 
 func (ctrl SettingsCtrl) EditHook(w http.ResponseWriter, r *http.Request) {
@@ -28,18 +26,14 @@ func (ctrl SettingsCtrl) EditHook(w http.ResponseWriter, r *http.Request) {
 	obj := model.Hook{ID: id}
 	if id != "new" {
 		var err error
-		obj, err = ctrl.store.GetHook(id)
+		obj, err = ctrl.Store().GetHook(id)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/settings-hooks-one.html", map[string]any{
-		"obj":   obj,
-		"mods":  worker.List,
-		"valid": valid.Result{},
-	})
+	Render(w, r, http.StatusOK, views.SettingsHooksOne(Env(ctrl, r), obj, worker.List, valid.Result{}))
 }
 
 func (ctrl SettingsCtrl) SaveHook(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +44,7 @@ func (ctrl SettingsCtrl) SaveHook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	enums, err := ctrl.store.ListEnums()
+	enums, err := ctrl.Store().ListEnums()
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -58,24 +52,20 @@ func (ctrl SettingsCtrl) SaveHook(w http.ResponseWriter, r *http.Request) {
 
 	// validate form
 	if vr := ValidateHook(dto, enums); !vr.Valid() {
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "app/views/settings-hooks-one.html", map[string]any{
-			"obj":   dto,
-			"mods":  worker.List,
-			"valid": vr,
-		})
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsHooksOne(Env(ctrl, r), dto, worker.List, vr))
 		return
 	}
 
 	// save database object
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)
-	if err := ctrl.store.SaveHook(dto); err != nil {
+	if err := ctrl.Store().SaveHook(dto); err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	// reload hooks
-	LoadHooks(ctrl.store)
+	LoadHooks(ctrl.Store())
 
 	http.Redirect(w, r, "/settings/hooks/", http.StatusSeeOther)
 }
@@ -84,19 +74,17 @@ func (ctrl SettingsCtrl) DeleteHook(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/hooks/%s?confirm=yes", id)
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/utils-confirm.html", map[string]any{
-			"dst": uri,
-		})
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
 		return
 	}
 
-	err := ctrl.store.DeleteHook(id)
+	err := ctrl.Store().DeleteHook(id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	// reload hooks
-	LoadHooks(ctrl.store)
+	LoadHooks(ctrl.Store())
 	http.Redirect(w, r, "/settings/hooks/", http.StatusSeeOther)
 }

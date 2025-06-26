@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,43 +13,40 @@ import (
 	"time"
 
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type EvidenceCtrl struct {
-	store *model.Store
-	acl   *ACL
+	Ctrl
 }
 
 func NewEvidenceCtrl(store *model.Store, acl *ACL) *EvidenceCtrl {
-	return &EvidenceCtrl{store, acl}
+	return &EvidenceCtrl{BaseCtrl{store, acl}}
 }
 
 func (ctrl EvidenceCtrl) List(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.store.ListEvidences(cid)
+	list, err := ctrl.Store().ListEvidences(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/evidences-many.html", map[string]any{
-		"title":        "Evidences",
-		"rows":         list,
-		"humanizeSize": humanizeSize,
-	})
+	Render(w, r, http.StatusOK, views.EvidencesMany(Env(ctrl, r), list))
 }
 
 func (ctrl EvidenceCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.store.ListEvidences(cid)
+	list, err := ctrl.Store().ListEvidences(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	filename := fmt.Sprintf("%s - %s - Evidences.csv", time.Now().Format("20060102"), GetEnv(ctrl.store, r).ActiveCase.Name)
+	kase := GetCase(ctrl.Store(), r)
+	filename := fmt.Sprintf("%s - %s - Evidences.csv", time.Now().Format("20060102"), kase.Name)
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.WriteHeader(http.StatusOK)
 
@@ -73,7 +69,7 @@ func (ctrl EvidenceCtrl) Export(w http.ResponseWriter, r *http.Request) {
 func (ctrl EvidenceCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/evidences/", cid)
-	ImportCSV(ctrl.store, ctrl.acl, w, r, uri, 6, func(rec []string) {
+	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 6, func(rec []string) {
 		size, err := strconv.ParseInt(rec[4], 10, 64)
 		if err != nil {
 			Warn(w, r, err)
@@ -96,7 +92,7 @@ func (ctrl EvidenceCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Notes:  rec[5],
 		}
 
-		if err := ctrl.store.SaveEvidence(cid, obj); err != nil {
+		if err := ctrl.Store().SaveEvidence(cid, obj); err != nil {
 			Err(w, r, err)
 			return
 		}
@@ -109,24 +105,20 @@ func (ctrl EvidenceCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 	obj := model.Evidence{ID: id, CaseID: cid}
 	if id != "new" {
 		var err error
-		obj, err = ctrl.store.GetEvidence(cid, id)
+		obj, err = ctrl.Store().GetEvidence(cid, id)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 	}
 
-	assets, err := ctrl.store.ListAssets(cid)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
+	// assets, err := ctrl.Store().ListAssets(cid)
+	// if err != nil {
+	// 	Err(w, r, err)
+	// 	return
+	// }
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/evidences-one.html", map[string]any{
-		"obj":    obj,
-		"assets": assets,
-		"valid":  valid.Result{},
-	})
+	Render(w, r, http.StatusOK, views.EvidencesOne(Env(ctrl, r), obj, valid.Result{}))
 }
 
 func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
@@ -143,7 +135,7 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	enums, err := ctrl.store.ListEnums()
+	enums, err := ctrl.Store().ListEnums()
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -153,11 +145,7 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	dto.Size = int64(0)
 	dto.Name = filepath.Base(dto.Name) // sanitize name
 	if vr := ValidateEvidence(dto, enums); !vr.Valid() {
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "app/views/evidences-one.html", map[string]any{
-			"obj":   dto,
-			"valid": vr,
-		})
-		return
+		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(Env(ctrl, r), dto, vr))
 	}
 
 	// process file if present
@@ -190,7 +178,7 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		dto.Hash = fmt.Sprintf("%x", hasher.Sum(nil))
 	} else if dto.ID != "new" && dto.Size > 0 {
 		// keep metadata for existing evidences that did not change
-		obj, err := ctrl.store.GetEvidence(dto.CaseID, dto.ID)
+		obj, err := ctrl.Store().GetEvidence(dto.CaseID, dto.ID)
 		if err != nil {
 			Err(w, r, err)
 			return
@@ -223,14 +211,14 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)
-	if err := ctrl.store.SaveEvidence(dto.CaseID, dto); err != nil {
+	if err := ctrl.Store().SaveEvidence(dto.CaseID, dto); err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	// trigger registered hooks
 	if new {
-		TriggerOnEvidenceAdded(ctrl.store, dto)
+		TriggerOnEvidenceAdded(ctrl.Store(), dto)
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/", dto.CaseID), http.StatusSeeOther)
@@ -239,7 +227,7 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 func (ctrl EvidenceCtrl) Download(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
-	obj, err := ctrl.store.GetEvidence(cid, id)
+	obj, err := ctrl.Store().GetEvidence(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -255,40 +243,21 @@ func (ctrl EvidenceCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s/evidences/%s?confirm=yes", cid, id)
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/utils-confirm.html", map[string]any{
-			"dst": uri,
-		})
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
 		return
 	}
 
 	// try to delete file from disk
-	obj, err := ctrl.store.GetEvidence(cid, id)
+	obj, err := ctrl.Store().GetEvidence(cid, id)
 	if err == nil {
 		os.Remove(filepath.Join("files", "evidences", obj.CaseID, obj.Name))
 	}
 
-	err = ctrl.store.DeleteEvidence(cid, id)
+	err = ctrl.Store().DeleteEvidence(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/", cid), http.StatusSeeOther)
-}
-
-func humanizeSize(s int) string {
-	sizes := []string{"B", "kB", "MB", "GB", "TB", "PB", "EB"}
-
-	if s < 10 {
-		return fmt.Sprintf("%d B", s)
-	}
-	e := math.Floor(math.Log(float64(s)) / math.Log(1000))
-	suffix := sizes[int(e)]
-	val := math.Floor(float64(s)/math.Pow(1000, e)*10+0.5) / 10
-	f := "%.0f %s"
-	if val < 10 {
-		f = "%.1f %s"
-	}
-
-	return fmt.Sprintf(f, val, suffix)
 }

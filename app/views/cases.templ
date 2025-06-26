@@ -1,0 +1,206 @@
+package views
+
+import (
+	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/timesketch"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+	"strconv"
+)
+
+templ CasesMany(env Env, rows []model.Case) {
+	@layout() {
+		@list(env, "Cases") {
+			<table class="table table-default dataTable">
+				<thead>
+					<tr>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">ID</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Name</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Classification</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Severity</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Outcome</th>
+						<th style="width: 7rem"></th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, row := range rows {
+						if url, ok := env.Allowed("GET", env.Route+row.ID+"/summary"); ok {
+							<tr class="hover">
+								<td><a class="link" href={ url }>{ row.ID }</a> </td>
+								<td><a class="link" href={ url }>{ row.Name }</a> </td>
+								<td>{ row.Classification } </td>
+								<td>
+									@enum(env.Enums.CaseSeverities, row.Severity)
+								</td>
+								<td>
+									@enum(env.Enums.CaseOutcomes, row.Outcome)
+								</td>
+								<td class="text-right">
+									<div class="join">
+										@actionBtn(env, "GET", env.Route+row.ID+"/acl") {
+											ACL 
+										}
+										@defaultActionBtns(env, env.Route+row.ID)
+									</div>
+								</td>
+							</tr>
+						}
+					}
+				</tbody>
+			</table>
+		}
+	}
+}
+
+templ CasesOne(env Env, obj model.Case, sketches []timesketch.Sketch, vr valid.Result) {
+	{{ uri := "/cases/" + obj.ID }}
+	{{ title := fp.If(obj.ID == "new", "Add case", "Edit case") }}
+	@form(uri, title) {
+		@hiddenField("ID", obj.ID)
+		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
+		@stringField("Classification", obj.Classification, withLabel("Classification"), withError(vr["Classification"]))
+		@selectField("Severity", obj.Severity, env.Enums.CaseSeverities, withLabel("Severity"), withError(vr["Severity"]))
+		@selectField("Outcome", obj.Outcome, env.Enums.CaseOutcomes, withLabel("Outcome"), withError(vr["Outcome"]))
+		@booleanField("Closed", obj.Closed, withLabel("Closed"))
+		<!-- x -->
+		<h2 class="text-primary text-l font-bold mb-2 mt-4">Summary</h2>
+		@textareaField("SummaryWho", obj.SummaryWho, withLabel("Who?"), withError(vr["SummaryWho"]))
+		@textareaField("SummaryWhat", obj.SummaryWhat, withLabel("What?"), withError(vr["SummaryWhat"]))
+		@textareaField("SummaryWhen", obj.SummaryWhen, withLabel("When?"), withError(vr["SummaryWhen"]))
+		@textareaField("SummaryWhere", obj.SummaryWhere, withLabel("Where?"), withError(vr["SummaryWhere"]))
+		@textareaField("SummaryWhy", obj.SummaryWhy, withLabel("Why?"), withError(vr["SummaryWhy"]))
+		@textareaField("SummaryHow", obj.SummaryHow, withLabel("How?"), withError(vr["SummaryHow"]))
+		<!-- x -->
+		<h2 class="text-primary text-l font-bold mb-2 mt-4">Integrations</h2>
+		<div class="form-control mb-2">
+			<label class="label justify-start gap-2">
+				Timesketch Sketch
+				@validationError(vr["SketchID"])
+			</label>
+			<select name="SketchID" class="select w-full">
+				for _, e := range sketches {
+					<option selected?={ e.ID == obj.SketchID }>{ strconv.Itoa(e.ID) } - { e.Name }</option>
+				}
+			</select>
+		</div>
+		<!-- x -->
+		<p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
+	}
+}
+
+templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model.Asset, indicators []model.Indicator) {
+	{{ hostSummary, accountSummary := summarizeAssets(assets) }}
+	{{ keyEvents := fp.Filter(events, func(e model.Event) bool { return e.Flagged }) }}
+	@layout() {
+		@list(env, "Summary") {
+			<h2 class="text-primary text-xl font-bold p-2">Hosts</h2>
+			<div class="stats w-full">
+				@stat("text-error", "bug-ant", "Compromised", hostSummary.Compromised)
+				@stat("text-warning", "command-line", "Accessed", hostSummary.Accessed)
+				@stat("", "magnifying-glass", "Under investigation", hostSummary.UnderInvestigation)
+				@stat("text-success", "check-circle", "No sign of compromise", hostSummary.NoSignOfCompromise)
+				@stat("", "eye-slash", "Out of scope", hostSummary.OutOfScope)
+			</div>
+			<h2 class="text-primary text-xl font-bold p-2">Accounts</h2>
+			<div class="stats w-full">
+				@stat("text-error", "bug-ant", "Compromised", accountSummary.Compromised)
+				@stat("text-warning", "command-line", "Accessed", accountSummary.Accessed)
+				@stat("", "magnifying-glass", "Under investigation", accountSummary.UnderInvestigation)
+				@stat("text-success", "check-circle", "No sign of compromise", accountSummary.NoSignOfCompromise)
+				@stat("", "eye-slash", "Out of scope", accountSummary.OutOfScope)
+			</div>
+			<h2 class="text-primary text-xl font-bold p-2">Summary</h2>
+			<div class="grid grid-cols-3 gap-4">
+				@card("Who?", obj.SummaryWho)
+				@card("What?", obj.SummaryWhat)
+				@card("When?", obj.SummaryWhen)
+				@card("Where?", obj.SummaryWhere)
+				@card("Why?", obj.SummaryWhy)
+				@card("How?", obj.SummaryHow)
+			</div>
+			<h2 class="text-primary text-xl font-bold p-2 mt-4">Key Events</h2>
+			<ul class="timeline timeline-vertical">
+				for _, ev := range keyEvents {
+					<li>
+						<div class="timeline-start">
+							@formatTime(ev.Time)
+						</div>
+						<div class="timeline-middle">
+							@enumIcon(env.Enums.EventTypes, ev.Type)
+						</div>
+						<div class="timeline-end timeline-box">
+							@highlightEvent(ev, assets, indicators)
+						</div>
+						<hr/>
+					</li>
+				}
+				if len(keyEvents) == 0 {
+					<li>
+						<div class="timeline-end timeline-box">No key events selected</div>
+					</li>
+				}
+			</ul>
+		}
+	}
+}
+
+type AssetSummary struct {
+	Compromised        int
+	Accessed           int
+	UnderInvestigation int
+	NoSignOfCompromise int
+	OutOfScope         int
+}
+
+func summarizeAssets(assets []model.Asset) (hostSummary, accountSummary AssetSummary) {
+	for _, asset := range assets {
+		if asset.Type == "Desktop" || asset.Type == "Server" {
+			switch asset.Status {
+			case "Compromised":
+				hostSummary.Compromised++
+			case "Accessed":
+				hostSummary.Accessed++
+			case "Under investigation":
+				hostSummary.UnderInvestigation++
+			case "No sign of compromise":
+				hostSummary.NoSignOfCompromise++
+			case "Out of scope":
+				hostSummary.OutOfScope++
+			}
+		}
+
+		if asset.Type == "Account" {
+			switch asset.Status {
+			case "Compromised":
+				accountSummary.Compromised++
+			case "Accessed":
+				accountSummary.Accessed++
+			case "Under investigation":
+				accountSummary.UnderInvestigation++
+			case "No sign of compromise":
+				accountSummary.NoSignOfCompromise++
+			case "Out of scope":
+				accountSummary.OutOfScope++
+			}
+		}
+	}
+	return
+}
+
+templ stat(status, icon, title string, value int) {
+	<div class="stat">
+		<div class={ "stat-figure " + status }><i class={ "hio hio-" + icon } style="font-size: 2rem;"></i></div>
+		<div class="stat-title">{ title }</div>
+		<div class="stat-value">{ value }</div>
+		<div class="stat-desc">&nbsp;</div>
+	</div>
+}
+
+templ card(title, value string) {
+	<div class="card bg-base-200">
+		<div class="card-body">
+			<h2 class="card-title">{ title }</h2>
+			<p>{ value }</p>
+		</div>
+	</div>
+}

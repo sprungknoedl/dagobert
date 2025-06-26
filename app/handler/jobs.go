@@ -12,45 +12,29 @@ import (
 	"time"
 
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/app/worker"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 )
 
-type Module struct {
-	Name        string
-	Description string
-	Status      string
-	Error       string
-}
-
-type Worker struct {
-	WorkerID   string
-	RemoteAddr string
-	Modules    []string
-	Workers    int
-}
-
 type JobCtrl struct {
-	store *model.Store
-	acl   *ACL
-
+	Ctrl
 	workermu sync.Mutex
-	workers  map[string]Worker
+	workers  map[string]worker.Worker
 }
 
 func NewJobCtrl(store *model.Store, acl *ACL) *JobCtrl {
 	return &JobCtrl{
-		store:   store,
-		acl:     acl,
-		workers: make(map[string]Worker),
+		Ctrl:    BaseCtrl{store, acl},
+		workers: make(map[string]worker.Worker),
 	}
 }
 
-func (ctrl *JobCtrl) Workers() []Worker {
+func (ctrl *JobCtrl) Workers() []worker.Worker {
 	ctrl.workermu.Lock()
 	defer ctrl.workermu.Unlock()
 
-	workers := make([]Worker, 0, len(ctrl.workers))
+	workers := make([]worker.Worker, 0, len(ctrl.workers))
 	for _, worker := range ctrl.workers {
 		workers = append(workers, worker)
 	}
@@ -60,22 +44,22 @@ func (ctrl *JobCtrl) Workers() []Worker {
 func (ctrl *JobCtrl) ListMods(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
-	obj, err := ctrl.store.GetEvidence(cid, id)
+	obj, err := ctrl.Store().GetEvidence(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	modules := worker.Supported(obj)
-	jobs, err := ctrl.store.GetJobs(obj.ID)
+	jobs, err := ctrl.Store().GetJobs(obj.ID)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	m := fp.ToMap(jobs, func(obj model.Job) string { return obj.Name })
-	runs := fp.Apply(modules, func(obj worker.Module) Module {
-		return Module{
+	runs := fp.Apply(modules, func(obj worker.Module) worker.Module {
+		return worker.Module{
 			Name:        obj.Name,
 			Description: obj.Description,
 			Status:      m[obj.Name].Status,
@@ -83,10 +67,7 @@ func (ctrl *JobCtrl) ListMods(w http.ResponseWriter, r *http.Request) {
 		}
 	})
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/evidences-process.html", map[string]any{
-		"obj":  obj,
-		"runs": runs,
-	})
+	Render(w, r, http.StatusOK, views.EvidencesProcess(Env(ctrl, r), runs))
 }
 
 func (ctrl *JobCtrl) registerWorker(w http.ResponseWriter, r *http.Request) (string, []string) {
@@ -98,7 +79,7 @@ func (ctrl *JobCtrl) registerWorker(w http.ResponseWriter, r *http.Request) (str
 
 	// register worker
 	ctrl.workermu.Lock()
-	ctrl.workers[workerid] = Worker{
+	ctrl.workers[workerid] = worker.Worker{
 		WorkerID:   workerid,
 		RemoteAddr: r.RemoteAddr,
 		Modules:    modules,
@@ -145,7 +126,7 @@ func (ctrl *JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 			}
 
 		case <-t.C:
-			job, kase, evidence, err := ctrl.store.PopJob(workerid, modules)
+			job, kase, evidence, err := ctrl.Store().PopJob(workerid, modules)
 			if err != nil && err != sql.ErrNoRows {
 				log.Printf("error fetching job: %v", err)
 				goto cleanup
@@ -172,7 +153,7 @@ cleanup:
 	ctrl.workermu.Unlock()
 
 	log.Printf("worker %q quit", workerid)
-	err := ctrl.store.RescheduleWorkerJobs(workerid)
+	err := ctrl.Store().RescheduleWorkerJobs(workerid)
 	if err != nil {
 		log.Printf("error rescheduling jobs for %q: %v", workerid, err)
 	}
@@ -199,7 +180,7 @@ func (ctrl *JobCtrl) AckJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := ctrl.store.AckJob(dto.ID, dto.Status, dto.Error)
+	err := ctrl.Store().AckJob(dto.ID, dto.Status, dto.Error)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -212,7 +193,7 @@ func (ctrl *JobCtrl) PushJob(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
 	name := r.FormValue("name")
-	err := ctrl.store.PushJob(model.Job{
+	err := ctrl.Store().PushJob(model.Job{
 		ID:         fp.Random(10),
 		CaseID:     cid,
 		EvidenceID: id,

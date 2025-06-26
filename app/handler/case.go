@@ -9,36 +9,33 @@ import (
 	"time"
 
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type CaseCtrl struct {
-	store *model.Store
-	acl   *ACL
-	ts    *timesketch.Client
+	Ctrl
+	ts *timesketch.Client
 }
 
 func NewCaseCtrl(store *model.Store, acl *ACL, ts *timesketch.Client) *CaseCtrl {
-	return &CaseCtrl{store, acl, ts}
+	return &CaseCtrl{Ctrl: BaseCtrl{store, acl}, ts: ts}
 }
 
 func (ctrl CaseCtrl) List(w http.ResponseWriter, r *http.Request) {
-	list, err := ctrl.store.ListCases()
+	list, err := ctrl.Store().ListCases()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/cases-many.html", map[string]any{
-		"title": "Cases",
-		"rows":  list,
-	})
+	Render(w, r, http.StatusOK, views.CasesMany(Env(ctrl, r), list))
 }
 
 func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
-	list, err := ctrl.store.ListCases()
+	list, err := ctrl.Store().ListCases()
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -72,7 +69,7 @@ func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	uri := "/"
-	ImportCSV(ctrl.store, ctrl.acl, w, r, uri, 12, func(rec []string) {
+	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 12, func(rec []string) {
 		closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
 		if err != nil {
 			Warn(w, r, err)
@@ -94,7 +91,7 @@ func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			SummaryHow:     rec[6],
 		}
 
-		if err = ctrl.store.SaveCase(obj); err != nil {
+		if err = ctrl.Store().SaveCase(obj); err != nil {
 			Err(w, r, err)
 			return
 		}
@@ -114,7 +111,7 @@ func (ctrl CaseCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 	}
 	if cid != "new" {
 		var err error
-		obj, err = ctrl.store.GetCase(cid)
+		obj, err = ctrl.Store().GetCase(cid)
 		if err != nil {
 			Err(w, r, err)
 			return
@@ -126,11 +123,7 @@ func (ctrl CaseCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		sketches, _ = ctrl.ts.ListSketches()
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/cases-one.html", map[string]any{
-		"obj":      obj,
-		"valid":    valid.Result{},
-		"sketches": sketches,
-	})
+	Render(w, r, http.StatusOK, views.CasesOne(Env(ctrl, r), obj, sketches, valid.Result{}))
 }
 
 func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
@@ -140,23 +133,25 @@ func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	enums, err := ctrl.store.ListEnums()
+	enums, err := ctrl.Store().ListEnums()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	if vr := ValidateCase(dto, enums); !vr.Valid() {
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "app/views/cases-one.html", map[string]any{
-			"obj":   dto,
-			"valid": vr,
-		})
+		var sketches []timesketch.Sketch
+		if ctrl.ts != nil {
+			sketches, _ = ctrl.ts.ListSketches()
+		}
+
+		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(Env(ctrl, r), dto, sketches, vr))
 		return
 	}
 
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)
-	if err := ctrl.store.SaveCase(dto); err != nil {
+	if err := ctrl.Store().SaveCase(dto); err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -168,13 +163,11 @@ func (ctrl CaseCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/cases/%s?confirm=yes", cid)
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/utils-confirm.html", map[string]any{
-			"dst": uri,
-		})
+		views.ConfirmDialog(uri).Render(r.Context(), w)
 		return
 	}
 
-	if err := ctrl.store.DeleteCase(cid); err != nil {
+	if err := ctrl.Store().DeleteCase(cid); err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -184,35 +177,30 @@ func (ctrl CaseCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl CaseCtrl) EditACL(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	obj, err := ctrl.store.GetCase(cid)
+	obj, err := ctrl.Store().GetCase(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	users, err := ctrl.store.ListUsers()
+	users, err := ctrl.Store().ListUsers()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	perms, err := ctrl.store.GetCasePermissions(cid)
+	perms, err := ctrl.Store().GetCasePermissions(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/cases-acl.html", map[string]any{
-		"obj":   obj,
-		"perms": perms,
-		"users": users,
-		"valid": valid.Result{},
-	})
+	Render(w, r, http.StatusOK, views.CasesACL(Env(ctrl, r), obj, users, perms))
 }
 
 func (ctrl CaseCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	obj, err := ctrl.store.GetCase(cid)
+	obj, err := ctrl.Store().GetCase(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -224,7 +212,7 @@ func (ctrl CaseCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := ctrl.acl.SaveCasePermissions(obj.ID, form.Users); err != nil {
+	if err := ctrl.ACL().SaveCasePermissions(obj.ID, form.Users); err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -232,74 +220,32 @@ func (ctrl CaseCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/cases/", http.StatusSeeOther)
 }
 
-type AssetSummary struct {
-	Compromised        int
-	Accessed           int
-	UnderInvestigation int
-	NoSignOfCompromise int
-	OutOfScope         int
-}
-
 func (ctrl CaseCtrl) Summary(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	obj, err := ctrl.store.GetCase(cid)
+	obj, err := ctrl.Store().GetCase(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	hostSummary := AssetSummary{}
-	accountSummary := AssetSummary{}
-	assets, err := ctrl.store.ListAssets(cid)
+	assets, err := ctrl.Store().ListAssets(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	for _, asset := range assets {
-		if asset.Type == "Desktop" || asset.Type == "Server" {
-			switch asset.Status {
-			case "Compromised":
-				hostSummary.Compromised++
-			case "Accessed":
-				hostSummary.Accessed++
-			case "Under investigation":
-				hostSummary.UnderInvestigation++
-			case "No sign of compromise":
-				hostSummary.NoSignOfCompromise++
-			case "Out of scope":
-				hostSummary.OutOfScope++
-			}
-		}
-
-		if asset.Type == "Account" {
-			switch asset.Status {
-			case "Compromised":
-				accountSummary.Compromised++
-			case "Accessed":
-				accountSummary.Accessed++
-			case "Under investigation":
-				accountSummary.UnderInvestigation++
-			case "No sign of compromise":
-				accountSummary.NoSignOfCompromise++
-			case "Out of scope":
-				accountSummary.OutOfScope++
-			}
-		}
+	indicators, err := ctrl.Store().ListIndicators(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
 	}
 
-	events, err := ctrl.store.ListEvents(cid)
+	events, err := ctrl.Store().ListEvents(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/cases-summary.html", map[string]any{
-		"title":          "Summary",
-		"obj":            obj,
-		"hostSummary":    hostSummary,
-		"accountSummary": accountSummary,
-		"events":         fp.Filter(events, func(e model.Event) bool { return e.Flagged }),
-	})
+	Render(w, r, http.StatusOK, views.CasesSummary(Env(ctrl, r), obj, events, assets, indicators))
 }

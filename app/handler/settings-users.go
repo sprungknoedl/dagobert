@@ -5,29 +5,26 @@ import (
 	"net/http"
 
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type UserCtrl struct {
-	store *model.Store
-	acl   *ACL
+	Ctrl
 }
 
 func NewUserCtrl(store *model.Store, acl *ACL) *UserCtrl {
-	return &UserCtrl{store, acl}
+	return &UserCtrl{BaseCtrl{store, acl}}
 }
 
 func (ctrl UserCtrl) List(w http.ResponseWriter, r *http.Request) {
-	list, err := ctrl.store.ListUsers()
+	list, err := ctrl.Store().ListUsers()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/users-many.html", map[string]any{
-		"title": "Users",
-		"rows":  list,
-	})
+	Render(w, r, http.StatusOK, views.SettingsUsersMany(Env(ctrl, r), list))
 }
 
 func (ctrl UserCtrl) Edit(w http.ResponseWriter, r *http.Request) {
@@ -35,18 +32,14 @@ func (ctrl UserCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 	obj := model.User{ID: id}
 	if id != "new" {
 		var err error
-		obj, err = ctrl.store.GetUser(id)
+		obj, err = ctrl.Store().GetUser(id)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/users-one.html", map[string]any{
-		"obj":   obj,
-		"roles": model.UserRoles,
-		"valid": valid.Result{},
-	})
+	Render(w, r, http.StatusOK, views.SettingsUsersOne(Env(ctrl, r), obj, valid.Result{}))
 }
 
 func (ctrl UserCtrl) Save(w http.ResponseWriter, r *http.Request) {
@@ -56,40 +49,36 @@ func (ctrl UserCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	enums, err := ctrl.store.ListEnums()
+	enums, err := ctrl.Store().ListEnums()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	if vr := ValidateUser(dto, enums); !vr.Valid() {
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "app/views/users-one.html", map[string]any{
-			"obj":   dto,
-			"roles": model.UserRoles,
-			"valid": vr,
-		})
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsUsersOne(Env(ctrl, r), dto, vr))
 		return
 	}
 
 	// Update user
-	if err := ctrl.store.SaveUser(dto); err != nil {
+	if err := ctrl.Store().SaveUser(dto); err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	// Update role in casbin
-	if err := ctrl.acl.SaveUserRole(dto.ID, dto.Role); err != nil {
+	if err := ctrl.ACL().SaveUserRole(dto.ID, dto.Role); err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	// Update permissions casbin, those need to be changed when a role change happens
-	perms, err := ctrl.store.GetUserPermissions(dto.ID)
+	perms, err := ctrl.Store().GetUserPermissions(dto.ID)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
-	if err := ctrl.acl.SaveUserPermissions(dto.ID, dto.Role, perms); err != nil {
+	if err := ctrl.ACL().SaveUserPermissions(dto.ID, dto.Role, perms); err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -101,23 +90,21 @@ func (ctrl UserCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/users/%s?confirm=yes", id)
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/utils-confirm.html", map[string]any{
-			"dst": uri,
-		})
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
 		return
 	}
 
-	if err := ctrl.store.DeleteUser(id); err != nil {
+	if err := ctrl.Store().DeleteUser(id); err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	if err := ctrl.acl.DeleteUser(id); err != nil {
+	if err := ctrl.ACL().DeleteUser(id); err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	if GetEnv(ctrl.store, r).UID == id {
+	if GetUser(ctrl.Store(), r).ID == id {
 		http.Redirect(w, r, "/auth/logout", http.StatusSeeOther)
 	} else {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
@@ -126,35 +113,30 @@ func (ctrl UserCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl UserCtrl) EditACL(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	obj, err := ctrl.store.GetUser(id)
+	obj, err := ctrl.Store().GetUser(id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	cases, err := ctrl.store.ListCases()
+	cases, err := ctrl.Store().ListCases()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	perms, err := ctrl.store.GetUserPermissions(id)
+	perms, err := ctrl.Store().GetUserPermissions(id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/users-acl.html", map[string]any{
-		"obj":   obj,
-		"perms": perms,
-		"cases": cases,
-		"valid": valid.Result{},
-	})
+	Render(w, r, http.StatusOK, views.SettingsUsersACL(Env(ctrl, r), obj, cases, perms, valid.Result{}))
 }
 
 func (ctrl UserCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	obj, err := ctrl.store.GetUser(id)
+	obj, err := ctrl.Store().GetUser(id)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -166,7 +148,7 @@ func (ctrl UserCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := ctrl.acl.SaveUserPermissions(obj.ID, obj.Role, form.Cases); err != nil {
+	if err := ctrl.ACL().SaveUserPermissions(obj.ID, obj.Role, form.Cases); err != nil {
 		Err(w, r, err)
 		return
 	}

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/doct"
 )
 
@@ -35,24 +36,21 @@ func LoadTemplate(name string) (doct.Template, error) {
 }
 
 type ReportsCtrl struct {
-	store *model.Store
-	acl   *ACL
+	Ctrl
 }
 
 func NewReportsCtrl(store *model.Store, acl *ACL) *ReportsCtrl {
-	return &ReportsCtrl{store, acl}
+	return &ReportsCtrl{BaseCtrl{store, acl}}
 }
 
 func (ctrl ReportsCtrl) Dialog(w http.ResponseWriter, r *http.Request) {
-	list, err := ctrl.store.ListReports()
+	list, err := ctrl.Store().ListReports()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/reports-dialog.html", map[string]any{
-		"rows": list,
-	})
+	Render(w, r, http.StatusOK, views.ReportsDialog(Env(ctrl, r), list))
 }
 
 func (ctrl ReportsCtrl) Generate(w http.ResponseWriter, r *http.Request) {
@@ -62,28 +60,28 @@ func (ctrl ReportsCtrl) Generate(w http.ResponseWriter, r *http.Request) {
 	// fetch data
 	// ---
 	var accerr error
-	kase, err := ctrl.store.GetCase(cid)
+	kase, err := ctrl.Store().GetCase(cid)
 	accerr = errors.Join(accerr, err)
 
-	kase.Assets, err = ctrl.store.ListAssets(cid)
+	kase.Assets, err = ctrl.Store().ListAssets(cid)
 	accerr = errors.Join(accerr, err)
 
-	kase.Events, err = ctrl.store.ListEvents(cid)
+	kase.Events, err = ctrl.Store().ListEvents(cid)
 	accerr = errors.Join(accerr, err)
 
-	kase.Evidences, err = ctrl.store.ListEvidences(cid)
+	kase.Evidences, err = ctrl.Store().ListEvidences(cid)
 	accerr = errors.Join(accerr, err)
 
-	kase.Indicators, err = ctrl.store.ListIndicators(cid)
+	kase.Indicators, err = ctrl.Store().ListIndicators(cid)
 	accerr = errors.Join(accerr, err)
 
-	kase.Malware, err = ctrl.store.ListMalware(cid)
+	kase.Malware, err = ctrl.Store().ListMalware(cid)
 	accerr = errors.Join(accerr, err)
 
-	kase.Notes, err = ctrl.store.ListNotes(cid)
+	kase.Notes, err = ctrl.Store().ListNotes(cid)
 	accerr = errors.Join(accerr, err)
 
-	kase.Tasks, err = ctrl.store.ListTasks(cid)
+	kase.Tasks, err = ctrl.Store().ListTasks(cid)
 	accerr = errors.Join(accerr, err)
 
 	if accerr != nil {

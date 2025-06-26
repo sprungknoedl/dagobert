@@ -15,6 +15,7 @@ import (
 	cm "github.com/casbin/casbin/v2/model"
 	"github.com/coreos/go-oidc"
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/tty"
 	"golang.org/x/oauth2"
@@ -38,8 +39,7 @@ type AuthCtrl struct {
 	oauthConfig   *oauth2.Config
 	verifier      *oidc.IDTokenVerifier
 	autoProvision bool
-	store         *model.Store
-	acl           *ACL
+	Ctrl
 }
 
 func NewAuthCtrl(store *model.Store, acl *ACL, cfg OpenIDConfig) *AuthCtrl {
@@ -67,8 +67,7 @@ func NewAuthCtrl(store *model.Store, acl *ACL, cfg OpenIDConfig) *AuthCtrl {
 		oauthConfig:   config,
 		verifier:      verifier,
 		autoProvision: cfg.AutoProvision,
-		store:         store,
-		acl:           acl,
+		Ctrl:          BaseCtrl{store, acl},
 	}
 }
 
@@ -80,7 +79,7 @@ func (ctrl AuthCtrl) isAuthorized(r *http.Request) bool {
 	obj := r.URL.Path                                       // the resource that is going to be accessed.
 	act := r.Method                                         // the operation that the user performs on the resource.
 
-	res, err := ctrl.acl.Enforce(sub, obj, act)
+	res, err := ctrl.ACL().Enforce(sub, obj, act)
 	if err != nil {
 		log.Printf("|%s| failed to authorize: %v", tty.Yellow("WARN "), err)
 	}
@@ -96,7 +95,7 @@ func (ctrl AuthCtrl) Protect(next http.Handler) http.Handler {
 		key := r.Header.Get(ApiKeyHeader)
 		if key != "" {
 			// TODO: validate api key header
-			_, err := ctrl.store.GetKey(key)
+			_, err := ctrl.Store().GetKey(key)
 			if err != nil {
 				Warn(w, r, err)
 				return
@@ -203,7 +202,7 @@ func (ctrl AuthCtrl) Callback(w http.ResponseWriter, r *http.Request) {
 
 	// check if user exists
 	uid := claims[ctrl.openidConfig.Identifier].(string)
-	user, err := ctrl.store.GetUser(uid)
+	user, err := ctrl.Store().GetUser(uid)
 	if err != nil && !ctrl.autoProvision {
 		http.Redirect(w, r, "/auth/forbidden", http.StatusTemporaryRedirect)
 		return
@@ -228,7 +227,7 @@ func (ctrl AuthCtrl) Callback(w http.ResponseWriter, r *http.Request) {
 	user.UPN = claims["preferred_username"].(string)
 	user.Email = claims["email"].(string)
 	user.LastLogin = model.Time(time.Now())
-	err = ctrl.store.SaveUser(user)
+	err = ctrl.Store().SaveUser(user)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -238,9 +237,8 @@ func (ctrl AuthCtrl) Callback(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ctrl AuthCtrl) Forbidden(w http.ResponseWriter, r *http.Request) {
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusForbidden, "app/views/auth-forbidden.html", map[string]any{
-		"err": errors.New("forbidden"),
-	})
+	w.WriteHeader(http.StatusForbidden)
+	views.ErrorForbidden().Render(r.Context(), w)
 }
 
 type ACL struct {

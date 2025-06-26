@@ -8,21 +8,19 @@ import (
 	"path/filepath"
 
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 func (ctrl SettingsCtrl) ListReports(w http.ResponseWriter, r *http.Request) {
-	reports, err := ctrl.store.ListReports()
+	reports, err := ctrl.Store().ListReports()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/settings-reports-many.html", map[string]any{
-		"title":   "Report Templates",
-		"reports": reports,
-	})
+	Render(w, r, http.StatusOK, views.SettingsReportsMany(Env(ctrl, r), reports))
 }
 
 func (ctrl SettingsCtrl) EditReport(w http.ResponseWriter, r *http.Request) {
@@ -30,17 +28,14 @@ func (ctrl SettingsCtrl) EditReport(w http.ResponseWriter, r *http.Request) {
 	obj := model.Report{ID: id}
 	if id != "new" {
 		var err error
-		obj, err = ctrl.store.GetReport(id)
+		obj, err = ctrl.Store().GetReport(id)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 	}
 
-	Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/settings-reports-one.html", map[string]any{
-		"obj":   obj,
-		"valid": valid.Result{},
-	})
+	Render(w, r, http.StatusOK, views.SettingsReportsOne(Env(ctrl, r), obj, valid.Result{}))
 }
 
 func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +46,7 @@ func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	enums, err := ctrl.store.ListEnums()
+	enums, err := ctrl.Store().ListEnums()
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -60,10 +55,7 @@ func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 	// validate form
 	dto.Name = filepath.Base(dto.Name) // sanitize name
 	if vr := ValidateReport(dto, enums); !vr.Valid() {
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusUnprocessableEntity, "app/views/settings-reports-one.html", map[string]any{
-			"obj":   dto,
-			"valid": vr,
-		})
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsReportsOne(Env(ctrl, r), dto, vr))
 		return
 	}
 
@@ -103,7 +95,7 @@ func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 
 	// cleanup old file (if new report was uploaded)
 	if fileUpload && !new {
-		obj, err := ctrl.store.GetReport(dto.ID)
+		obj, err := ctrl.Store().GetReport(dto.ID)
 		if err != nil {
 			Err(w, r, err)
 			return
@@ -121,7 +113,7 @@ func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 
 	// rename file
 	if !fileUpload && !new {
-		obj, err := ctrl.store.GetReport(dto.ID)
+		obj, err := ctrl.Store().GetReport(dto.ID)
 		if err != nil {
 			Err(w, r, err)
 			return
@@ -140,7 +132,7 @@ func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 
 	// finally save database object
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)
-	if err := ctrl.store.SaveReport(dto); err != nil {
+	if err := ctrl.Store().SaveReport(dto); err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -150,7 +142,7 @@ func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl SettingsCtrl) DownloadReport(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	obj, err := ctrl.store.GetReport(id)
+	obj, err := ctrl.Store().GetReport(id)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -165,19 +157,17 @@ func (ctrl SettingsCtrl) DeleteReport(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/reports/%s?confirm=yes", id)
-		Render(ctrl.store, ctrl.acl, w, r, http.StatusOK, "app/views/utils-confirm.html", map[string]any{
-			"dst": uri,
-		})
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
 		return
 	}
 
 	// try to delete file from disk
-	obj, err := ctrl.store.GetReport(id)
+	obj, err := ctrl.Store().GetReport(id)
 	if err == nil {
 		os.Remove(filepath.Join("files", "templates", obj.Name))
 	}
 
-	err = ctrl.store.DeleteReport(id)
+	err = ctrl.Store().DeleteReport(id)
 	if err != nil {
 		Err(w, r, err)
 		return

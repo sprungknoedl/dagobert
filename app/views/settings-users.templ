@@ -1,0 +1,95 @@
+package views
+
+import (
+	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+	"slices"
+)
+
+templ SettingsUsersMany(env Env, rows []model.User) {
+	@layout() {
+		@list(env, "Users", navSettings(), navHideExport(), navHideImport()) {
+			<table class="table table-default dataTable" data-order='[[ 1, "asc" ]]'>
+				<thead>
+					<tr>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">ID</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Name</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">UPN</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Email</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Role</th>
+						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Last login</th>
+						<th style="width: 7rem"></th>
+					</tr>
+				</thead>
+				<tbody>
+					for _, row := range rows {
+						<tr class="hover">
+							<td>{ row.ID } </td>
+							<td>{ row.Name } </td>
+							<td>{ row.UPN } </td>
+							<td>{ row.Email } </td>
+							<td>{ row.Role } </td>
+							<td>
+								@formatTime(row.LastLogin)
+							</td>
+							<td class="text-right">
+								<div class="join">
+									if url, ok := env.Allowed("GET", env.Route+row.ID+"/acl"); ok && row.Role != "Administrator" {
+										@actionBtn(env, "GET", url) {
+											ACL
+										}
+									}
+									@defaultActionBtns(env, env.Route+row.ID)
+								</div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	}
+}
+
+templ SettingsUsersOne(env Env, obj model.User, vr valid.Result) {
+	{{ uri := "/settings/users/" + obj.ID }}
+	{{ title := fp.If(obj.ID == "new", "Add user", "Edit user") }}
+	@form(uri, title) {
+		@hiddenField("ID", obj.ID)
+		@selectField("Role", obj.Role, env.Enums.UserRoles, required(), withLabel("Role"), withError(vr["Role"]))
+		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
+		<div class="form-control mb-2">
+			<label class="label justify-start gap-2">
+				UPN
+				<span class="text-sm text-neutral-content">(Will be overwritten by identity provider.)</span>
+				@validationError(vr["UPN"])
+			</label>
+			<input name="UPN" type="text" class="input w-full" value={ obj.UPN }/>
+		</div>
+		<div class="form-control mb-2">
+			<label class="label justify-start gap-2">
+				Email
+				<span class="text-sm text-neutral-content">(Will be overwritten by identity provider.)</span>
+				@validationError(vr["Email"])
+			</label>
+			<input name="Email" type="text" class="input w-full" value={ obj.Email }/>
+		</div>
+		<p class="text-sm">Fields marked with <span class="text-accent">*</span> are required.</p>
+	}
+}
+
+templ SettingsUsersACL(env Env, obj model.User, cases []model.Case, perms []string, vr valid.Result) {
+	{{ uri := "/settings/users/" + obj.ID + "/acl" }}
+	{{ title := "Access control" }}
+	@form(uri, title) {
+		<p class="mb-2">User <strong>{ obj.Name } ({ obj.UPN })</strong> is allowed to access the following cases:</p>
+		for _, kase := range cases {
+			<div class="form-control mb-2">
+				<label class="label cursor-pointer justify-start gap-2">
+					<input name="Cases" value={ kase.ID } type="checkbox" class="checkbox" checked?={ slices.Contains(perms, kase.ID) }/>
+					{ kase.Name }
+				</label>
+			</div>
+		}
+	}
+}

@@ -1,0 +1,87 @@
+package views
+
+type Node struct {
+	ID    string `json:"id"`
+	Label string `json:"label"`
+	Group string `json:"group"`
+}
+
+type Edge struct {
+	From   string `json:"from"`
+	To     string `json:"to"`
+	Dashes bool   `json:"dashes"`
+}
+
+templ VisNetwork(env Env, nodes []Node, edges []Edge) {
+	@layout() {
+		<section id="errors"></section>
+		@sidebar(env, "Lateral Movement")
+		<main class="pl-20 p-4 grow max-w-full flex flex-col h-screen">
+			@navbar(env, "Foo", navHideRefresh(), navHideAdd(), navHideImport(), navHideExport())
+			<div id="mynetwork" class="h-full"></div>
+		</main>
+		<script src="/public/assets/vis-network-9.1.9.min.js"></script>
+		<script>
+        function initializeChart(nodes, edges) {
+            const options = {
+                edges: {
+                    color: {
+                        color: "oklch(85% 0.199 91.936)",
+                        highlight: "oklch(75% 0.183 55.934)",
+                    },
+                    smooth: {
+                        forceDirection: "vertical"
+                    }
+                },
+                nodes: {
+                    shape: "icon",
+                    margin: 10,
+                    font: {
+                        color: "oklch(20% 0 0)",
+                        background: "oklch(100% 0 0)",
+                    },
+                    icon: {
+                        face: "'heroicons-outline'",
+                    },
+                },
+                groups: {
+                    // Assets
+                    AssetServer: { icon: { code: "\ue9fb", size: 50, color: "oklch(37% 0.01 67.558)" } },
+                    AssetDesktop: { icon: { code: "\ue97d", size: 50, color: "oklch(37% 0.01 67.558)" } },
+                    AssetAccount: { icon: { code: "\uea1a", size: 50, color: "oklch(37% 0.01 67.558)" } },
+                    AssetOther: { icon: { code: "\ue9ef", size: 50, color: "oklch(37% 0.01 67.558)" } },
+
+                    // Indicators
+                    IndicatorIP: { icon: { code: "\ue9cc", size: 32, color: "oklch(70% 0.191 22.216)" } },
+                    IndicatorDomain: { icon: { code: "\ue9b3", size: 32, color: "oklch(70% 0.191 22.216)" } },
+                    IndicatorURL: { icon: { code: "\ue9c4", size: 32, color: "oklch(70% 0.191 22.216)" } },
+                    IndicatorPath: { icon: { code: "\ue9a8", size: 32, color: "oklch(70% 0.191 22.216)" } },
+                    IndicatorHash: { icon: { code: "\ue9a3", size: 32, color: "oklch(70% 0.191 22.216)" } },
+                    IndicatorService: { icon: { code: "\ue97c", size: 32, color: "oklch(70% 0.191 22.216)" } },
+                    IndicatorOther: { icon: { code: "\ue9ef", size: 32, color: "oklch(70% 0.191 22.216)" } },
+                },
+                "physics": {
+                    "repulsion": {
+                        "centralGravity": 0.25,
+                        "springLength": 150,
+                        "nodeDistance": 175,
+                        "damping": 0.15
+                    },
+                    "minVelocity": 0.75,
+                    "solver": "repulsion"
+                }
+            };
+
+            // create a network
+            var container = document.getElementById("mynetwork");
+            var data = {
+                nodes: new vis.DataSet(nodes),
+                edges: new vis.DataSet(edges),
+            };
+
+            var network = new vis.Network(container, data, options);
+        }
+        </script>
+		@templ.JSFuncCall("initializeChart", nodes, edges)
+	}
+}

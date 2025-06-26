@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-var UserRoles = []string{"Administrator", "User", "Read-Only"}
+// var UserRoles = []string{"Administrator", "User", "Read-Only"}
 
 type User struct {
 	ID        string
