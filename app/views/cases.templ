@@ -92,7 +92,7 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 	{{ hostSummary, accountSummary := summarizeAssets(assets) }}
 	{{ keyEvents := fp.Filter(events, func(e model.Event) bool { return e.Flagged }) }}
 	@layout() {
-		@list(env, "Summary") {
+		@list(env, "Summary", navHideSearch(), navHideAdd(), navHideExport(), navHideImport()) {
 			<h2 class="text-primary text-xl font-bold p-2">Hosts</h2>
 			<div class="stats w-full">
 				@stat("text-error", "bug-ant", "Compromised", hostSummary.Compromised)
