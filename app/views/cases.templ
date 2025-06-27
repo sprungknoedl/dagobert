@@ -89,25 +89,17 @@ templ CasesOne(env Env, obj model.Case, sketches []timesketch.Sketch, vr valid.R
 }
 
 templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model.Asset, indicators []model.Indicator) {
-	{{ hostSummary, accountSummary := summarizeAssets(assets) }}
+	{{ summary := summarizeAssets(assets) }}
 	{{ keyEvents := fp.Filter(events, func(e model.Event) bool { return e.Flagged }) }}
 	@layout() {
 		@list(env, "Summary", navHideSearch(), navHideAdd(), navHideExport(), navHideImport()) {
-			<h2 class="text-primary text-xl font-bold p-2">Hosts</h2>
+			<h2 class="text-primary text-xl font-bold p-2">Assets</h2>
 			<div class="stats w-full">
-				@stat("text-error", "bug-ant", "Compromised", hostSummary.Compromised)
-				@stat("text-warning", "command-line", "Accessed", hostSummary.Accessed)
-				@stat("", "magnifying-glass", "Under investigation", hostSummary.UnderInvestigation)
-				@stat("text-success", "check-circle", "No sign of compromise", hostSummary.NoSignOfCompromise)
-				@stat("", "eye-slash", "Out of scope", hostSummary.OutOfScope)
-			</div>
-			<h2 class="text-primary text-xl font-bold p-2">Accounts</h2>
-			<div class="stats w-full">
-				@stat("text-error", "bug-ant", "Compromised", accountSummary.Compromised)
-				@stat("text-warning", "command-line", "Accessed", accountSummary.Accessed)
-				@stat("", "magnifying-glass", "Under investigation", accountSummary.UnderInvestigation)
-				@stat("text-success", "check-circle", "No sign of compromise", accountSummary.NoSignOfCompromise)
-				@stat("", "eye-slash", "Out of scope", accountSummary.OutOfScope)
+				@stat("text-error", "bug-ant", "Compromised", summary.Compromised)
+				@stat("text-warning", "command-line", "Accessed", summary.Accessed)
+				@stat("", "magnifying-glass", "Under investigation", summary.UnderInvestigation)
+				@stat("text-success", "check-circle", "No sign of compromise", summary.NoSignOfCompromise)
+				@stat("", "eye-slash", "Out of scope", summary.OutOfScope)
 			</div>
 			<h2 class="text-primary text-xl font-bold p-2">Summary</h2>
 			<div class="grid grid-cols-3 gap-4">
@@ -152,36 +144,19 @@ type AssetSummary struct {
 	OutOfScope         int
 }
 
-func summarizeAssets(assets []model.Asset) (hostSummary, accountSummary AssetSummary) {
+func summarizeAssets(assets []model.Asset) (summary AssetSummary) {
 	for _, asset := range assets {
-		if asset.Type == "Desktop" || asset.Type == "Server" {
-			switch asset.Status {
-			case "Compromised":
-				hostSummary.Compromised++
-			case "Accessed":
-				hostSummary.Accessed++
-			case "Under investigation":
-				hostSummary.UnderInvestigation++
-			case "No sign of compromise":
-				hostSummary.NoSignOfCompromise++
-			case "Out of scope":
-				hostSummary.OutOfScope++
-			}
-		}
-
-		if asset.Type == "Account" {
-			switch asset.Status {
-			case "Compromised":
-				accountSummary.Compromised++
-			case "Accessed":
-				accountSummary.Accessed++
-			case "Under investigation":
-				accountSummary.UnderInvestigation++
-			case "No sign of compromise":
-				accountSummary.NoSignOfCompromise++
-			case "Out of scope":
-				accountSummary.OutOfScope++
-			}
+		switch asset.Status {
+		case "Compromised":
+			summary.Compromised++
+		case "Accessed":
+			summary.Accessed++
+		case "Under investigation":
+			summary.UnderInvestigation++
+		case "No sign of compromise":
+			summary.NoSignOfCompromise++
+		case "Out of scope":
+			summary.OutOfScope++
 		}
 	}
 	return
