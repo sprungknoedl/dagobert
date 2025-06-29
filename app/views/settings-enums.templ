@@ -88,7 +88,9 @@ templ enumList(env Env, title string, rows []model.Enum) {
 							<td class="value-2" data-search={ row.Icon }><i class={ "hio hio-5 " + row.Icon }></i> { row.Icon } </td>
 							<td class="value-3" data-search={ row.State }><span class="text-{{ .State }}">{ row.State } </span> </td>
 							<td class="text-right">
-								@defaultActionBtns(env, env.Route+row.ID)
+								<div class="join">
+									@defaultActionBtns(env, env.Route+row.ID)
+								</div>
 							</td>
 						</tr>
 					}

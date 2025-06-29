@@ -3011,26 +3011,6 @@ div.vis-tooltip {
     cursor: unset;
     transition: visibility 0.2s, padding 0.2s ease-out, background-color 0.2s ease-out;
   }
-  .validator {
-    &:user-valid, &:has(:user-valid) {
-      &, &:focus, &:checked, &[aria-checked="true"], &:focus-within {
-        --input-color: var(--color-success);
-      }
-    }
-    &:user-invalid, &:has(:user-invalid), &[aria-invalid] {
-      &, &:focus, &:checked, &[aria-checked="true"], &:focus-within {
-        --input-color: var(--color-error);
-      }
-      & ~ .validator-hint {
-        visibility: visible;
-        display: block;
-        color: var(--color-error);
-      }
-    }
-    & ~ .validator-hint {
-      visibility: hidden;
-    }
-  }
   .collapse {
     visibility: collapse;
   }
@@ -5071,18 +5051,8 @@ div.vis-tooltip {
       }
     }
   }
-  .mask {
-    display: inline-block;
-    vertical-align: middle;
-    mask-size: contain;
-    mask-repeat: no-repeat;
-    mask-position: center;
-  }
   .block {
     display: block;
-  }
-  .contents {
-    display: contents;
   }
   .flex {
     display: flex;

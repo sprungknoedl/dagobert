@@ -47,11 +47,11 @@ templ EvidencesMany(env Env, rows []model.Evidence) {
 							<td class="value-0 truncate">
 								@enumIcon(env.Enums.EvidenceTypes, row.Type)
 							</td>
-							<td class="value-1">{ row.Name } </td>
-							<td class="value-2">{ row.Hash } </td>
-							<td class="value-3">{ humanizeSize(row.Size) } </td>
-							<td class="value-4">{ row.Source } </td>
-							<td class="value-5">{ row.Notes } </td>
+							<td class="value-1" data-search={ row.Name }>{ row.Name } </td>
+							<td class="value-2" data-search={ row.Hash }>{ row.Hash } </td>
+							<td class="value-3" data-search={ row.Size }>{ humanizeSize(row.Size) } </td>
+							<td class="value-4" data-search={ row.Source }>{ row.Source } </td>
+							<td class="value-5" data-search={ row.Notes }>{ row.Notes } </td>
 							<td class="text-right">
 								<div class="join">
 									if url, ok := env.Allowed("GET", env.Route+row.ID+"/download"); ok {

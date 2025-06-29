@@ -50,7 +50,7 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 									</div>
 								}
 							</td>
-							<td class="value-5" data-search={ fp.If(row.Flagged, "flagged:true", "") } class="text-right">
+							<td class="text-right" data-search={ fp.If(row.Flagged, "flagged:true", "") }>
 								<div class="join">
 									if row.Flagged {
 										@actionBtn(env, "GET", env.Route+row.ID) {
