@@ -64,29 +64,29 @@ templ enumList(env Env, title string, rows []model.Enum) {
 					<i class="hio hio-5 hio-plus inline-block"></i> Add
 				</a>
 			}
-			<table class="table table-default dataTable" data-order='[[ 0, "asc" ], [ 1, "asc" ]]'>
+			<table class="table table-default" data-default-sort="value-0">
 				<thead>
 					<tr>
-						<th>Rank</th>
-						<th>Name</th>
-						<th>Icon</th>
-						<th>State</th>
+						<th data-sort="value-0" class="sort px-3 py-4 text-left">Rank</th>
+						<th data-sort="value-1" class="sort px-3 py-4 text-left">Name</th>
+						<th data-sort="value-2" class="sort px-3 py-4 text-left">Icon</th>
+						<th data-sort="value-3" class="sort px-3 py-4 text-left">State</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
-				<tbody>
+				<tbody class="values">
 					for _, row := range rows {
 						<tr class="hover">
-							<td>{ row.Rank } </td>
-							<td>
+							<td class="value-0" data-search={ row.Rank }>{ row.Rank } </td>
+							<td class="value-1" data-search={ row.Name }>
 								if row.Name != "" {
 									{ row.Name }
 								} else {
 									<em>&lt;Empty&gt;</em>
 								}
 							</td>
-							<td><i class={ "hio hio-5 " + row.Icon }></i> { row.Icon } </td>
-							<td><span class="text-{{ .State }}">{ row.State } </span> </td>
+							<td class="value-2" data-search={ row.Icon }><i class={ "hio hio-5 " + row.Icon }></i> { row.Icon } </td>
+							<td class="value-3" data-search={ row.State }><span class="text-{{ .State }}">{ row.State } </span> </td>
 							<td class="text-right">
 								@defaultActionBtns(env, env.Route+row.ID)
 							</td>

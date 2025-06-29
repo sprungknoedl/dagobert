@@ -66,7 +66,7 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 			if !cfg.hideSearch {
 				<!-- search input -->
 				<label class="w-96 input flex items-center gap-2">
-					<input type="search" name="search" class="grow" placeholder="Search ..."/>
+					<input type="search" name="search" class="search grow" placeholder="Search ..."/>
 					<svg class="w-6 h-6 opacity-70" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
 						<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"></path>
 					</svg>
@@ -211,8 +211,7 @@ templ layout() {
 			<title>Dagobert</title>
 			<link href="/public/assets/dagobert.css" rel="stylesheet"/>
 			<script src="/public/assets/jquery-3.7.1.min.js" defer></script>
-			<script src="/public/assets/dataTables-2.2.2.js" defer></script>
-			<script src="/public/assets/dataTables.tailwindcss-2.2.2.js" defer></script>
+			<script src="/public/assets/list-2.3.1.min.js" defer></script>
 			<script src="/public/assets/choices-11.1.0.js" defer></script>
 			<script src="/public/assets/unpoly-3.10.2.js" defer></script>
 			<script src="/public/assets/dagobert.js" defer></script>

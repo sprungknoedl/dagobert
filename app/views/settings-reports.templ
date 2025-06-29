@@ -9,19 +9,19 @@ import (
 templ SettingsReportsMany(env Env, rows []model.Report) {
 	@layout() {
 		@list(env, "Reports", navSettings(), navHideExport(), navHideImport()) {
-			<table class="table table-default dataTable">
+			<table class="table table-default" data-default-sort="value-0">
 				<thead>
 					<tr>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Name</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Notes</th>
+						<th data-sort="value-0" class="sort px-3 py-4 text-left">Name</th>
+						<th data-sort="value-1" class="sort px-3 py-4 text-left">Notes</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
-				<tbody>
+				<tbody class="values">
 					for _, row := range rows {
 						<tr class="hover">
-							<td>{ row.Name } </td>
-							<td>{ row.Notes } </td>
+							<td class="value-0" data-search={ row.Name }>{ row.Name } </td>
+							<td class="value-1" data-search={ row.Notes }>{ row.Notes } </td>
 							<td class="text-right">
 								<div class="join">
 									if url, ok := env.Allowed("GET", env.Route+row.ID+"/download"); ok {

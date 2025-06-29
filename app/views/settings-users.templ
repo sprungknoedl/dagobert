@@ -5,32 +5,33 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 	"slices"
+	"time"
 )
 
 templ SettingsUsersMany(env Env, rows []model.User) {
 	@layout() {
 		@list(env, "Users", navSettings(), navHideExport(), navHideImport()) {
-			<table class="table table-default dataTable" data-order='[[ 1, "asc" ]]'>
+			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">ID</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Name</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">UPN</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Email</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Role</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Last login</th>
+						<th data-sort="value-0" class="sort px-3 py-4 text-left">ID</th>
+						<th data-sort="value-1" class="sort px-3 py-4 text-left">Name</th>
+						<th data-sort="value-2" class="sort px-3 py-4 text-left">UPN</th>
+						<th data-sort="value-3" class="sort px-3 py-4 text-left">Email</th>
+						<th data-sort="value-4" class="sort px-3 py-4 text-left">Role</th>
+						<th data-sort="value-5" class="sort px-3 py-4 text-left">Last login</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
-				<tbody>
+				<tbody class="values">
 					for _, row := range rows {
 						<tr class="hover">
-							<td>{ row.ID } </td>
-							<td>{ row.Name } </td>
-							<td>{ row.UPN } </td>
-							<td>{ row.Email } </td>
-							<td>{ row.Role } </td>
-							<td>
+							<td class="value-0" data-search={ row.ID }>{ row.ID } </td>
+							<td class="value-1" data-search={ row.Name }>{ row.Name } </td>
+							<td class="value-2" data-search={ row.UPN }>{ row.UPN } </td>
+							<td class="value-3" data-search={ row.Email }>{ row.Email } </td>
+							<td class="value-4" data-search={ row.Role }>{ row.Role } </td>
+							<td class="value-5" data-search={ row.LastLogin.Format(time.RFC3339) }>
 								@formatTime(row.LastLogin)
 							</td>
 							<td class="text-right">

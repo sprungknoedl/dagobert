@@ -10,31 +10,31 @@ import (
 templ SettingsHooksMany(env Env, rows []model.Hook) {
 	@layout() {
 		@list(env, "Hooks", navSettings(), navHideExport(), navHideImport()) {
-			<table class="table table-default dataTable" data-order='[[ 1, "asc" ], [ 2, "asc" ]]'>
+			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Enabled</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Trigger</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Name</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Condition</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Module</th>
+						<th data-sort="value-0" class="sort px-3 py-4 text-left">Enabled</th>
+						<th data-sort="value-1" class="sort px-3 py-4 text-left">Trigger</th>
+						<th data-sort="value-2" class="sort px-3 py-4 text-left">Name</th>
+						<th data-sort="value-3" class="sort px-3 py-4 text-left">Condition</th>
+						<th data-sort="value-4" class="sort px-3 py-4 text-left">Module</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
-				<tbody>
+				<tbody class="values">
 					for _, row := range rows {
 						<tr class="hover">
-							<td>
+							<td class="value-0" data-search={ fp.If(row.Enabled, "Enabled", "Disabled") }>
 								if row.Enabled {
 									<div class="text-success"><i class="hio hio-5 hio-check inline-block"></i> Enabled</div>
 								} else {
 									<div class="text-error"><i class="hio hio-5 hio-x-mark inline-block"></i> Disabled</div>
 								}
 							</td>
-							<td>{ row.Trigger } </td>
-							<td>{ row.Name } </td>
-							<td>{ row.Condition } </td>
-							<td>{ row.Mod } </td>
+							<td class="value-1" data-search={ row.Trigger }>{ row.Trigger } </td>
+							<td class="value-2" data-search={ row.Name }>{ row.Name } </td>
+							<td class="value-3" data-search={ row.Condition }>{ row.Condition } </td>
+							<td class="value-4" data-search={ row.Mod }>{ row.Mod } </td>
 							<td class="text-right">
 								<div class="join">
 									@defaultActionBtns(env, env.Route+row.ID)

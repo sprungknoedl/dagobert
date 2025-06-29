@@ -4,46 +4,47 @@ import (
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
+	"time"
 )
 
 templ IndicatorsMany(env Env, rows []model.Indicator) {
 	@layout() {
 		@list(env, "Indicators", navHideImport(), navHideExport(), navPreButtons(indicatorsManyExtra(env))) {
-			<table class="table table-default dataTable" data-order='[[ 1, "asc" ], [ 2, "asc" ]]'>
+			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Status</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Type</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Value</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">TLP</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Source</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">First seen</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Last seen</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Events</th>
+						<th data-sort="value-0" class="sort px-3 py-4 text-left">Status</th>
+						<th data-sort="value-1" class="sort px-3 py-4 text-left">Type</th>
+						<th data-sort="value-2" class="sort px-3 py-4 text-left">Value</th>
+						<th data-sort="value-3" class="sort px-3 py-4 text-left">TLP</th>
+						<th data-sort="value-4" class="sort px-3 py-4 text-left">Source</th>
+						<th data-sort="value-5" class="sort px-3 py-4 text-left">First seen</th>
+						<th data-sort="value-6" class="sort px-3 py-4 text-left">Last seen</th>
+						<th data-sort="value-7" class="sort px-3 py-4 text-left">Events</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
-				<tbody>
+				<tbody class="values">
 					for _, row := range rows {
 						<tr class="hover">
-							<td class="truncate">
+							<td class="value-0 truncate" data-search={ row.Status }>
 								@enum(env.Enums.IndicatorStatus, row.Status)
 							</td>
-							<td class="truncate">
+							<td class="value-1 truncate" data-search={ row.Type }>
 								@enum(env.Enums.IndicatorTypes, row.Type)
 							</td>
-							<td>{ row.Value } </td>
-							<td>
+							<td class="value-2" data-search={ row.Value }>{ row.Value } </td>
+							<td class="value-3" data-search={ row.TLP }>
 								@enum(env.Enums.IndicatorTLPs, row.TLP)
 							</td>
-							<td>{ row.Source } </td>
-							<td class="truncate">
+							<td class="value-4" data-search={ row.Source }>{ row.Source } </td>
+							<td class="value-5 truncate" data-search={ row.FirstSeen.Format(time.RFC3339) }>
 								@formatTime(row.FirstSeen)
 							</td>
-							<td class="truncate">
+							<td class="value-6 truncate" data-search={ row.LastSeen.Format(time.RFC3339) }>
 								@formatTime(row.LastSeen)
 							</td>
-							<td>{ row.Events } </td>
+							<td class="value-7" data-search={ row.Events }>{ row.Events } </td>
 							<td class="text-right">
 								<div class="join">
 									if row.Type == "IP" && row.TLP != "TLP:RED" {

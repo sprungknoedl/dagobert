@@ -10,29 +10,29 @@ import (
 templ TasksMany(env Env, rows []model.Task) {
 	@layout() {
 		@list(env, "Tasks") {
-			<table class="table table-default dataTable" data-order='[[ 0, "asc" ], [ 2, "asc" ]]'>
+			<table class="table table-default" data-default-sort="value-0">
 				<thead>
 					<tr>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Due</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Type</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Task</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Owner</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Done</th>
+						<th data-sort="value-0" class="sort px-3 py-4 text-left">Due</th>
+						<th data-sort="value-1" class="sort px-3 py-4 text-left">Type</th>
+						<th data-sort="value-2" class="sort px-3 py-4 text-left">Task</th>
+						<th data-sort="value-3" class="sort px-3 py-4 text-left">Owner</th>
+						<th data-sort="value-4" class="sort px-3 py-4 text-left">Done</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
-				<tbody>
+				<tbody class="values">
 					for _, row := range rows {
 						<tr class="hover">
-							<td class={ fp.If(!row.Done && time.Now().After(time.Time(row.DateDue)), "truncate text-error", "truncate") }>
+							<td class={ "value-0 truncate " + fp.If(!row.Done && time.Now().After(time.Time(row.DateDue)), "text-error", "") } data-search={ row.DateDue.Format("2006-01-02") }>
 								{ row.DateDue.Format("2006-01-02") }
 							</td>
-							<td class="truncate">
+							<td class="value-1 truncate" data-search={ row.Type }>
 								@enum(env.Enums.TaskTypes, row.Type)
 							</td>
-							<td>{ row.Task } </td>
-							<td>{ row.Owner } </td>
-							<td>
+							<td class="value-2" data-search={ row.Task }>{ row.Task } </td>
+							<td class="value-3" data-search={ row.Owner }>{ row.Owner } </td>
+							<td class="value-4" data-search={ fp.If(row.Done, "Done", "Open") }>
 								if row.Done {
 									<i class="hio hio-5 hio-check-circle text-green-500"></i>
 									Done

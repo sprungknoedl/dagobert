@@ -9,21 +9,21 @@ import (
 templ NotesMany(env Env, rows []model.Note) {
 	@layout() {
 		@list(env, "Notes") {
-			<table class="table table-default dataTable" data-order='[[ 0, "asc" ], [ 1, "asc" ]]'>
+			<table class="table table-default" data-default-sort="value-0">
 				<thead>
 					<tr>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Category</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Title</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Description</th>
+						<th data-sort="value-0" class="sort px-3 py-4 text-left">Category</th>
+						<th data-sort="value-1" class="sort px-3 py-4 text-left">Title</th>
+						<th data-sort="value-2" class="sort px-3 py-4 text-left">Description</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
-				<tbody>
+				<tbody class="values">
 					for _, row := range rows {
 						<tr class="hover">
-							<td>{ row.Category } </td>
-							<td>{ row.Title } </td>
-							<td>{ row.Description } </td>
+							<td class="value-0" data-search={ row.Category }>{ row.Category }</td>
+							<td class="value-1" data-search={ row.Title }>{ row.Title }</td>
+							<td class="value-2" data-search={ row.Description }>{ row.Description }</td>
 							<td class="text-right">
 								<div class="join">
 									@defaultActionBtns(env, env.Route+row.ID)
