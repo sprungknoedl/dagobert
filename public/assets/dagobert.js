@@ -20,25 +20,38 @@ onload = (event) => {
         elem.setAttribute('up-hungry', '');
         elem.setAttribute('up-if-layer', 'subtree')
 
-        let table = new DataTable("#list table", {
-            paging: false,
-            searching: true,
-            scrollX: true,
-            typeDetect: false,
-            fixedHeader: true,
-            layout: { topStart: null, topEnd: null, bottomStart: null, bottomEnd: null },
-            language: {
-                emptyTable: 'No data available in table',
-                zeroRecords: 'No records to display'
-            }
-        });
+        var options = {
+            valueNames: [
+                { name: 'value-0', attr: 'data-search' },
+                { name: 'value-1', attr: 'data-search' },
+                { name: 'value-2', attr: 'data-search' },
+                { name: 'value-3', attr: 'data-search' },
+                { name: 'value-4', attr: 'data-search' },
+                { name: 'value-5', attr: 'data-search' },
+                { name: 'value-6', attr: 'data-search' },
+                { name: 'value-7', attr: 'data-search' },
+                { name: 'value-8', attr: 'data-search' },
+                { name: 'value-9', attr: 'data-search' },
+            ],
+            listClass: 'values'
+        };
+        var table = document.querySelector("#list table");
+        var search = document.querySelector("[name='search']");
+        var list = new List(table, options);
 
-        if ($("[name='search']").length) {
-            table.search($("[name='search']").val()).draw();
-            $("[name='search']").on('keyup', function() {
-                table.search($(this).val()).draw();
+        if (search) {
+            list.search(search.value);
+            search?.addEventListener('keyup', (event) => {
+                list.search(search.value);
             });
         }
+
+        var order = table?.dataset?.defaultSort;
+        if (order) {
+            list.sort(order, { order: "asc" });
+            document.querySelector("[data-sort='" + order + "']").classList.add("asc");
+        }
+
     });
 
     up.compiler('select.choices:is([multiple])', (elem, data) => {

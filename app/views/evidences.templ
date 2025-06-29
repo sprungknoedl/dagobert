@@ -29,29 +29,29 @@ func humanizeSize(s int64) string {
 templ EvidencesMany(env Env, rows []model.Evidence) {
 	@layout() {
 		@list(env, "Evidences") {
-			<table class="table table-default dataTable" data-order='[[ 1, "asc" ]]'>
+			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Type</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Name</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Hash</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Size</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Source</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Notes</th>
+						<th data-sort="value-0" class="sort px-3 py-4 text-left">Type</th>
+						<th data-sort="value-1" class="sort px-3 py-4 text-left">Name</th>
+						<th data-sort="value-2" class="sort px-3 py-4 text-left">Hash</th>
+						<th data-sort="value-3" class="sort px-3 py-4 text-left">Size</th>
+						<th data-sort="value-4" class="sort px-3 py-4 text-left">Source</th>
+						<th data-sort="value-5" class="sort px-3 py-4 text-left">Notes</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
-				<tbody>
+				<tbody class="values">
 					for _, row := range rows {
 						<tr class="hover">
-							<td class="truncate">
+							<td class="value-0 truncate">
 								@enumIcon(env.Enums.EvidenceTypes, row.Type)
 							</td>
-							<td>{ row.Name } </td>
-							<td>{ row.Hash } </td>
-							<td>{ humanizeSize(row.Size) } </td>
-							<td>{ row.Source } </td>
-							<td>{ row.Notes } </td>
+							<td class="value-1">{ row.Name } </td>
+							<td class="value-2">{ row.Hash } </td>
+							<td class="value-3">{ humanizeSize(row.Size) } </td>
+							<td class="value-4">{ row.Source } </td>
+							<td class="value-5">{ row.Notes } </td>
 							<td class="text-right">
 								<div class="join">
 									if url, ok := env.Allowed("GET", env.Route+row.ID+"/download"); ok {

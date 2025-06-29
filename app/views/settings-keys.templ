@@ -11,26 +11,26 @@ templ SettingsKeyMany(env Env, keys []model.Key, workers []worker.Worker) {
 	@layout() {
 		@list(env, "API Keys", navSettings(), navHideExport(), navHideImport()) {
 			<h2 class="text-primary text-xl font-bold p-2">Keys</h2>
-			<table class="table table-default dataTable" data-order='[[ 1, "asc" ]]'>
+			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Type</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Name</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Key</th>
+						<th data-sort="value-0" class="sort px-3 py-4 text-left">Type</th>
+						<th data-sort="value-1" class="sort px-3 py-4 text-left">Name</th>
+						<th data-sort="value-2" class="sort px-3 py-4 text-left">Key</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
-				<tbody>
-					for _, key := range keys {
+				<tbody class="values">
+					for _, row := range keys {
 						<tr class="hover">
-							<td class="truncate">
-								@enum(env.Enums.KeyTypes, key.Type)
+							<td class="value-0 truncate" data-search={ row.Type }>
+								@enum(env.Enums.KeyTypes, row.Type)
 							</td>
-							<td>{ key.Name } </td>
-							<td>{ key.Key } </td>
+							<td class="value-1" data-search={ row.Name }>{ row.Name } </td>
+							<td class="value-2" data-search={ row.Key }>{ row.Key } </td>
 							<td class="text-right">
 								<div class="join">
-									@defaultActionBtns(env, env.Route+key.Key)
+									@defaultActionBtns(env, env.Route+row.Key)
 								</div>
 							</td>
 						</tr>

@@ -1,4 +1,3 @@
-@import './dataTables-2.2.2.css';
 @import './heroicons-outline-405db23.css';
 @import './unpoly-3.10.2.css';
 @import './vis-timeline-7.7.3.css';
@@ -9,7 +8,6 @@
 }
 
 @import './dagobert-choices.css';
-@import './dagobert-datatables.css';
 @import './dagobert-vistimeline.css';
 
 .bg-flagged { 
@@ -18,6 +16,15 @@
 .btn-flagged { 
     color: var(--color-warning) !important;
 }
+
+.sort.asc::after {
+  content: "\25B2"; /* \002B06"; */
+  padding-left: 3px;
+  }
+.sort.desc::after {
+  content: "\25BC"; /* "\002B07"; */
+  padding-left: 3px
+  }
 
 /*
 UNPOLY

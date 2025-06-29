@@ -11,28 +11,28 @@ import (
 templ CasesMany(env Env, rows []model.Case) {
 	@layout() {
 		@list(env, "Cases") {
-			<table class="table table-default dataTable">
+			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">ID</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Name</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Classification</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Severity</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Outcome</th>
+						<th data-sort="value-0" class="sort px-3 py-4 text-left">ID</th>
+						<th data-sort="value-1" class="sort px-3 py-4 text-left">Name</th>
+						<th data-sort="value-2" class="sort px-3 py-4 text-left">Classification</th>
+						<th data-sort="value-3" class="sort px-3 py-4 text-left">Severity</th>
+						<th data-sort="value-4" class="sort px-3 py-4 text-left">Outcome</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
-				<tbody>
+				<tbody class="values">
 					for _, row := range rows {
 						if url, ok := env.Allowed("GET", env.Route+row.ID+"/summary"); ok {
 							<tr class="hover">
-								<td><a class="link" href={ url }>{ row.ID }</a> </td>
-								<td><a class="link" href={ url }>{ row.Name }</a> </td>
-								<td>{ row.Classification } </td>
-								<td>
+								<td class="value-0" data-search={ row.ID }><a class="link" href={ url }>{ row.ID }</a> </td>
+								<td class="value-1" data-search={ row.Name }><a class="link" href={ url }>{ row.Name }</a> </td>
+								<td class="value-2" data-search={ row.Classification }>{ row.Classification } </td>
+								<td class="value-3" data-search={ row.Severity }>
 									@enum(env.Enums.CaseSeverities, row.Severity)
 								</td>
-								<td>
+								<td class="value-4" data-search={ row.Outcome }>
 									@enum(env.Enums.CaseOutcomes, row.Outcome)
 								</td>
 								<td class="text-right">
