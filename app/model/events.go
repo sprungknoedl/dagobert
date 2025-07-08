@@ -1,6 +1,11 @@
 package model
 
-import "gorm.io/gorm/clause"
+import (
+	"errors"
+
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
+)
 
 type Event struct {
 	ID            string `gorm:"primaryKey"`
@@ -56,19 +61,18 @@ func (store *Store) GetEvent(cid string, id string) (Event, error) {
 }
 
 func (store *Store) SaveEvent(cid string, obj Event, override bool) error {
-	if len(obj.Assets) == 0 {
-		store.DB.Model(&obj).Association("Assets").Clear()
-	}
-	if len(obj.Indicators) == 0 {
-		store.DB.Model(&obj).Association("Indicators").Clear()
-	}
-
-	return store.DB.
-		Clauses(clause.OnConflict{DoNothing: !override, UpdateAll: override}).
-		Omit("Assets.*").
-		Omit("Indicators.*").
-		Create(&obj).
-		Error
+	return store.DB.Transaction(func(tx *gorm.DB) error {
+		return errors.Join(
+			tx.
+				Clauses(clause.OnConflict{DoNothing: !override, UpdateAll: override}).
+				Omit("Assets.*").
+				Omit("Indicators.*").
+				Create(&obj).
+				Error,
+			tx.Model(&obj).Association("Assets").Replace(obj.Assets),
+			tx.Model(&obj).Association("Indicators").Replace(obj.Indicators),
+		)
+	})
 }
 
 func (store *Store) DeleteEvent(cid string, id string) error {
