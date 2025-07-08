@@ -37,16 +37,18 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 							<td class="value-3" data-search={ strings.Join(fp.Apply(row.Assets, func(x model.Asset) string { return x.Name }), " ") }>
 								for _, x := range row.Assets {
 									<div class="text-info">
-										@enumIcon(env.Enums.AssetTypes, x.Type)
-										{ x.Name }
+										@enumIcon(env.Enums.AssetTypes, x.Type) {
+											{ x.Name }
+										}
 									</div>
 								}
 							</td>
 							<td class="value-4" data-search={ strings.Join(fp.Apply(row.Indicators, func(x model.Indicator) string { return x.Value }), " ") }>
 								for _, x := range row.Indicators {
 									<div class="text-error">
-										@enumIcon(env.Enums.IndicatorTypes, x.Type)
-										{ x.Value }
+										@enumIcon(env.Enums.IndicatorTypes, x.Type) {
+											{ x.Value }
+										}
 									</div>
 								}
 							</td>

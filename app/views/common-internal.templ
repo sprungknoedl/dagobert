@@ -197,7 +197,10 @@ templ enum(list []model.Enum, value string) {
 templ enumIcon(list []model.Enum, value string) {
 	for _, x := range list {
 		if x.Name == value {
-			<span class={ "text-" + x.State }><i class={ "mr-2 hio hio-5 " + x.Icon } title={ x.Name }></i></span>
+			<span class={ "text-" + x.State }>
+				<i class={ "mr-2 hio hio-5 " + x.Icon } title={ x.Name }></i>
+				{ children... }
+			</span>
 		}
 	}
 }
