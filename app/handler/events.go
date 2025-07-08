@@ -2,7 +2,6 @@ package handler
 
 import (
 	"bytes"
-	"database/sql"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
@@ -225,7 +224,6 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: validate before creating assets/indicators
-
 	var err error
 	dto.Assets, err = ctrl.getOrCreateAssets(dto.CaseID, tmp.Assets)
 	if err != nil {
@@ -298,7 +296,7 @@ func (ctrl EventCtrl) getOrCreateAssets(cid string, names []string) ([]model.Ass
 		}
 
 		obj, err := ctrl.Store().GetAssetByName(cid, asset)
-		if err != nil && err != sql.ErrNoRows && err != gorm.ErrRecordNotFound {
+		if err != nil && err != gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("get asset by name: %w", err)
 		} else if err != nil && err == gorm.ErrRecordNotFound {
 			obj = model.Asset{
@@ -327,9 +325,9 @@ func (ctrl EventCtrl) getOrCreateIndicators(cid string, values []string) ([]mode
 		}
 
 		obj, err := ctrl.Store().GetIndicatorByValue(cid, indicator)
-		if err != nil && err != sql.ErrNoRows && err != gorm.ErrRecordNotFound {
+		if err != nil && err != gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("get indicator by value: %w", err)
-		} else if err != nil && err == sql.ErrNoRows {
+		} else if err != nil && err == gorm.ErrRecordNotFound {
 			obj = model.Indicator{
 				ID:     fp.Random(10),
 				CaseID: cid,
