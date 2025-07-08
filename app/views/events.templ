@@ -31,8 +31,16 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 							<td class="value-1" data-search={ row.Type }>
 								@enum(env.Enums.EventTypes, row.Type)
 							</td>
-							<td class="value-2" data-search={ row.Event }>
-								@highlightEvent(row, assets, indicators)
+							<td class="fixed-width value-2" data-search={ row.Event }>
+								<details>
+									<summary>
+										@highlightEvent(row, assets, indicators)
+									</summary>
+									<div class="card bg-base-200 rounded-box gap-2 mt-4 p-4 overflow-scroll">
+										<p class="font-bold">Raw:</p>
+										<pre><code>{ row.Raw }</code></pre>
+									</div>
+								</details>
 							</td>
 							<td class="value-3" data-search={ strings.Join(fp.Apply(row.Assets, func(x model.Asset) string { return x.Name }), " ") }>
 								for _, x := range row.Assets {

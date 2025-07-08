@@ -52,6 +52,12 @@ onload = (event) => {
             document.querySelector("[data-sort='" + order + "']").classList.add("asc");
         }
 
+        // lock table size in place
+        table.querySelectorAll("td.fixed-width").forEach(elem => {
+            var width = elem.clientWidth
+            elem.style.width = width + "px"
+            elem.style.maxWidth = width + "px"
+        });
     });
 
     up.compiler('select.choices:is([multiple])', (elem, data) => {
