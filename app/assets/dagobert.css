@@ -31,7 +31,7 @@ UNPOLY
 */
 
 up-drawer-box {
-    @apply bg-base-200 text-base-content;
+    @apply bg-base-200 text-neutral;
 }
 
 up-drawer[size=large] up-drawer-box {
