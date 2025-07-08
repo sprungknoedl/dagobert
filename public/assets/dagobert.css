@@ -5998,7 +5998,7 @@ div.vis-tooltip {
 }
 up-drawer-box {
   background-color: var(--color-base-200);
-  color: var(--color-base-content);
+  color: var(--color-neutral);
 }
 up-drawer[size=large] up-drawer-box {
   width: 66% !important;
