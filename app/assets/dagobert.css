@@ -3,6 +3,7 @@
 @import './vis-timeline-7.7.3.css';
 
 @import 'tailwindcss';
+@plugin "@tailwindcss/typography";
 @plugin "daisyui" {
     themes: bumblebee --default;
 }
