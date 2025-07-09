@@ -189,7 +189,12 @@ templ defaultActionBtns(env Env, url string) {
 templ enum(list []model.Enum, value string) {
 	for _, x := range list {
 		if x.Name == value {
-			<span class={ "text-" + x.State }><i class={ "hio hio-5 " + x.Icon } title={ x.Name }></i> { x.Name }</span>
+			<span class={ "flex gap-2" + fp.If(x.State != "", " text-"+x.State, "") }>
+				if x.Icon != "" {
+					<i class={ "hio hio-5 " + x.Icon } title={ x.Name }></i>
+				}
+				{ x.Name }
+			</span>
 		}
 	}
 }
@@ -197,8 +202,10 @@ templ enum(list []model.Enum, value string) {
 templ enumIcon(list []model.Enum, value string) {
 	for _, x := range list {
 		if x.Name == value {
-			<span class={ "text-" + x.State }>
-				<i class={ "mr-2 hio hio-5 " + x.Icon } title={ x.Name }></i>
+			<span class={ "flex gap-2" + fp.If(x.State != "", " text-"+x.State, "") }>
+				if x.Icon != "" {
+					<i class={ "hio hio-5 " + x.Icon } title={ x.Name }></i>
+				}
 				{ children... }
 			</span>
 		}
