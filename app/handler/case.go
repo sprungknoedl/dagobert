@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/sprungknoedl/dagobert/app/model"
@@ -156,7 +157,8 @@ func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/cases/", http.StatusSeeOther)
+	dstSummary := strings.HasSuffix(r.Referer(), "?target=summary")
+	http.Redirect(w, r, fp.If(dstSummary, "/cases/"+dto.ID+"/summary/", "/cases/"), http.StatusSeeOther)
 }
 
 func (ctrl CaseCtrl) Delete(w http.ResponseWriter, r *http.Request) {

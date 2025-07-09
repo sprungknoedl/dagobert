@@ -24,7 +24,7 @@ templ CasesMany(env Env, rows []model.Case) {
 				</thead>
 				<tbody class="values">
 					for _, row := range rows {
-						if url, ok := env.Allowed("GET", env.Route+row.ID+"/summary"); ok {
+						if url, ok := env.Allowed("GET", env.Route+row.ID+"/summary/"); ok {
 							<tr class="hover">
 								<td class="value-0" data-search={ row.ID }><a class="link" href={ url }>{ row.ID }</a> </td>
 								<td class="value-1" data-search={ row.Name }><a class="link" href={ url }>{ row.Name }</a> </td>
@@ -92,7 +92,7 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 	{{ summary := summarizeAssets(assets) }}
 	{{ keyEvents := fp.Filter(events, func(e model.Event) bool { return e.Flagged }) }}
 	@layout() {
-		@list(env, "Summary", navHideSearch(), navHideAdd(), navHideExport(), navHideImport()) {
+		@list(env, "Summary", navHideSearch(), navHideAdd(), navHideExport(), navHideImport(), navPreButtons(caseSummaryExtra(env))) {
 			<h2 class="text-primary text-xl font-bold p-2">Assets</h2>
 			<div class="stats w-full">
 				@stat("text-error", "bug-ant", "Compromised", summary.Compromised)
@@ -178,4 +178,12 @@ templ card(title, value string) {
 			<p>{ value }</p>
 		</div>
 	</div>
+}
+
+templ caseSummaryExtra(env Env) {
+	if url, ok := env.Allowed("GET", "/cases/" + env.Case.ID + "?target=summary"); ok {
+		<a class="join-item btn" href={ url } up-layer="new drawer" up-accept-location={ env.Route }>
+			<i class="hio hio-6 hio-pencil inline-block mr-1"></i> Edit
+		</a>
+	}
 }
