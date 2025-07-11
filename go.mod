@@ -14,6 +14,7 @@ require (
 	github.com/gorilla/sessions v1.3.0
 	github.com/lmittmann/tint v1.0.7
 	github.com/mattn/go-shellwords v1.0.12
+	github.com/yuin/goldmark v1.7.12
 	go.arsenm.dev/pcre v0.0.0-20220530205550-74594f6c8b0e
 	golang.org/x/oauth2 v0.21.0
 	gorm.io/driver/sqlite v1.5.7
@@ -35,7 +36,6 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-sqlite3 v1.14.28 // indirect
 	github.com/natefinch/atomic v1.0.1 // indirect
-	github.com/yuin/goldmark v1.7.12 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	golang.org/x/mod v0.24.0 // indirect
 	golang.org/x/sync v0.14.0 // indirect
