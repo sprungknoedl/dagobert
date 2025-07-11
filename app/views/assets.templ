@@ -9,8 +9,14 @@ import (
 )
 
 templ AssetsMany(env Env, title string, rows []model.Asset) {
+	{{ summary := summarizeAssets(rows) }}
 	@layout() {
 		@list(env, title) {
+			<div class="stats w-full mb-4">
+				for _, status := range env.Enums.AssetStatus {
+					@stat(status.State, status.Icon, status.Name, summary[status.Name])
+				}
+			</div>
 			<table class="table table-default" data-default-sort="value-2">
 				<thead>
 					<tr>
