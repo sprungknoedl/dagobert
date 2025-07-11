@@ -13,7 +13,7 @@ templ VisTimeLine(env Env, items []DataItem, groups []DataItem) {
 		<section id="errors"></section>
 		@sidebar(env, "Visual Timeline")
 		<main class="pl-20 p-4 grow max-w-full flex flex-col h-screen">
-			@navbar(env, "Visual Timeline", navHideRefresh(), navHideAdd(), navHideImport(), navHideExport())
+			@navbar(env, "Visual Timeline", navHideSearch(), navHideRefresh(), navHideAdd(), navHideImport(), navHideExport())
 			<div id="visjs" class="h-full"></div>
 		</main>
 		<script src="/public/assets/vis-timeline-7.7.3.min.js"></script>

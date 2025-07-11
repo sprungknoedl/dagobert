@@ -38,7 +38,7 @@ templ VisNetwork(env Env, nodes []Node, edges []Edge) {
 		<section id="errors"></section>
 		@sidebar(env, "Lateral Movement")
 		<main class="pl-20 p-4 grow max-w-full flex flex-col h-screen">
-			@navbar(env, "Lateral Movement", navHideRefresh(), navHideAdd(), navHideImport(), navHideExport())
+			@navbar(env, "Lateral Movement", navHideSearch(), navHideRefresh(), navHideAdd(), navHideImport(), navHideExport())
 			<div id="mynetwork" class="h-full"></div>
 		</main>
 		<script src="/public/assets/vis-network-9.1.9.min.js"></script>
