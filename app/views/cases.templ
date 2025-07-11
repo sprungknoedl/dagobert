@@ -95,11 +95,9 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 		@list(env, "Summary", navHideSearch(), navHideAdd(), navHideExport(), navHideImport(), navPreButtons(caseSummaryExtra(env))) {
 			<h2 class="text-primary text-xl font-bold p-2">Assets</h2>
 			<div class="stats w-full">
-				@stat("text-error", "bug-ant", "Compromised", summary.Compromised)
-				@stat("text-warning", "command-line", "Accessed", summary.Accessed)
-				@stat("", "magnifying-glass", "Under investigation", summary.UnderInvestigation)
-				@stat("text-success", "check-circle", "No sign of compromise", summary.NoSignOfCompromise)
-				@stat("", "eye-slash", "Out of scope", summary.OutOfScope)
+				for _, status := range env.Enums.AssetStatus {
+					@stat(status.State, status.Icon, status.Name, summary[status.Name])
+				}
 			</div>
 			<h2 class="text-primary text-xl font-bold p-2">Summary</h2>
 			<div class="grid grid-cols-3 gap-4">
@@ -136,35 +134,17 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 	}
 }
 
-type AssetSummary struct {
-	Compromised        int
-	Accessed           int
-	UnderInvestigation int
-	NoSignOfCompromise int
-	OutOfScope         int
-}
-
-func summarizeAssets(assets []model.Asset) (summary AssetSummary) {
-	for _, asset := range assets {
-		switch asset.Status {
-		case "Compromised":
-			summary.Compromised++
-		case "Accessed":
-			summary.Accessed++
-		case "Under investigation":
-			summary.UnderInvestigation++
-		case "No sign of compromise":
-			summary.NoSignOfCompromise++
-		case "Out of scope":
-			summary.OutOfScope++
-		}
+func summarizeAssets(rows []model.Asset) map[string]int {
+	summary := map[string]int{}
+	for _, row := range rows {
+		summary[row.Status]++
 	}
-	return
+	return summary
 }
 
 templ stat(status, icon, title string, value int) {
 	<div class="stat">
-		<div class={ "stat-figure " + status }><i class={ "hio hio-" + icon } style="font-size: 2rem;"></i></div>
+		<div class={ "stat-figure " + fp.If(status != "", " text-"+status, "") }><i class={ "hio " + icon } style="font-size: 2rem;"></i></div>
 		<div class="stat-title">{ title }</div>
 		<div class="stat-value">{ value }</div>
 		<div class="stat-desc">&nbsp;</div>
