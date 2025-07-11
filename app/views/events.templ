@@ -11,6 +11,8 @@ import (
 templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators []model.Indicator) {
 	@layout() {
 		@list(env, "Timeline", navHideImport(), navPreButtons(eventsManyExtra(env))) {
+			<div id="histogram" class="card bg-base-200 text-xs m-4 p-4"></div>
+			<!-- -->
 			<table class="table table-default" data-default-sort="value-0">
 				<thead>
 					<tr>
@@ -76,6 +78,27 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 					}
 				</tbody>
 			</table>
+			// histogram
+			<script src="/public/assets/vis-graph2d-7.7.4.min.js"></script>
+			<script>
+			function initializeChart(items) {
+				var options = {
+					style: "bar",
+					barChart: { align: "center" },
+					dataAxis: { visible: false },
+					drawPoints: false,
+					height: "150px",
+					orientation: "bottom",
+					// showMinorLabels: false,
+					moment: (date) => vis.moment(date).utc(),
+
+				};
+
+				var container = document.getElementById("histogram");
+				var timeline = new vis.Graph2d(container, new vis.DataSet(items), options);
+			}
+			</script>
+			@templ.JSFuncCall("initializeChart", histogram(rows, 50))
 		}
 	}
 }
@@ -160,4 +183,57 @@ templ eventsManyExtra(env Env) {
 			</ul>
 		</details>
 	}
+}
+
+type TimeHistogram map[time.Time]int
+type HistogramItem struct {
+	X   string `json:"x"`
+	End string `json:"end"`
+	Y   int    `json:"y"`
+}
+
+// histogram creates a histogram with a fixed number of buckets.
+func histogram(events []model.Event, numBuckets int) []HistogramItem {
+	if len(events) < 2 || numBuckets <= 0 {
+		// Not enough data or invalid bucket count.
+		return []HistogramItem{}
+	}
+
+	// Find the min and max times to determine the range.
+	minTime, maxTime := time.Time(events[0].Time), time.Time(events[0].Time)
+	for _, e := range events {
+		if time.Time(e.Time).Before(minTime) {
+			minTime = time.Time(e.Time)
+		}
+		if time.Time(e.Time).After(maxTime) {
+			maxTime = time.Time(e.Time)
+		}
+	}
+
+	duration := maxTime.Sub(minTime)
+	if duration <= 0 {
+		return []HistogramItem{}
+	}
+
+	// Calculate the size of each bucket.
+	bucketSize := time.Duration(int64(duration) / int64(numBuckets))
+	if bucketSize < 1 {
+		bucketSize = 1
+	}
+
+	histogram := make(TimeHistogram)
+	for _, event := range events {
+		bucket := time.Time(event.Time).Truncate(bucketSize)
+		histogram[bucket]++
+	}
+
+	dataset := []HistogramItem{}
+	for x, y := range histogram {
+		dataset = append(dataset, HistogramItem{
+			X:   x.Format(time.RFC3339),
+			End: x.Add(bucketSize).Format(time.RFC3339),
+			Y:   y,
+		})
+	}
+	return dataset
 }

@@ -3,7 +3,7 @@
 }
 
 .vis-time-axis .vis-grid.vis-minor {
-    border-color: var(--color-neutral) !important;
+    border-color: var(--color-neutral-content) !important;
 }
 
 .vis-time-axis .vis-grid.vis-major {
@@ -15,14 +15,14 @@
 }
 
 .vis-item {
-    color: var(--color-accent) !important;
-    border-color: var(--color-accent) !important;
-    background-color: var(--color-accent-content) !important;
+    color: var(--color-neutral) !important;
+    border-color: var(--color-neutral-content) !important;
+    background-color: var(--color-neutral-content) !important;
 }
 
 .vis-item.vis-selected {
     color: var(--color-primary-content) !important;
-    border-color: var(--color-primary-content) !important;
+    border-color: var(--color-primary) !important;
     background-color: var(--color-primary) !important;
 }
 
@@ -45,4 +45,20 @@
 
 .vis-group:hover {
     background-color: var(--color-base-200);
+}
+
+/* --- */
+
+.vis-bar {
+    fill: var(--color-neutral) !important;
+    fill-opacity: 0.5 !important;
+    stroke-width: 0 !important;
+}
+
+#histogram .vis-horizontal {
+    border: none !important;
+}
+
+#histogram .vis-vertical {
+    border-color: var(--color-neutral-content) !important;
 }
