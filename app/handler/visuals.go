@@ -32,10 +32,6 @@ func (ctrl VisualsCtrl) Network(w http.ResponseWriter, r *http.Request) {
 	edges := []views.Edge{}
 
 	for _, ev := range events {
-		if ev.Type == "Legitimate" || ev.Type == "Remediation" {
-			continue
-		}
-
 		for _, x := range ev.Assets {
 			nodes[x.ID] = views.Node{
 				ID:    x.ID,
