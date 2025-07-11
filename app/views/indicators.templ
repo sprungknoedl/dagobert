@@ -55,6 +55,7 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 								<div class="join">
 									if row.Type == "IP" && row.TLP != "TLP:RED" {
 										@externalBtn("https://www.virustotal.com/gui/search/"+row.Value, "VT")
+										@externalBtn("https://www.abuseipdb.com/check/"+row.Value, "AB")
 									} else if row.Type == "Domain" && row.TLP != "TLP:RED" {
 										@externalBtn("https://www.virustotal.com/gui/search/"+row.Value, "VT")
 									} else if row.Type == "Hash" && row.TLP != "TLP:RED" {
