@@ -8,8 +8,14 @@ import (
 )
 
 templ IndicatorsMany(env Env, rows []model.Indicator) {
+	{{ summary := summarizeIndicators(rows) }}
 	@layout() {
 		@list(env, "Indicators", navHideImport(), navHideExport(), navPreButtons(indicatorsManyExtra(env))) {
+			<div class="stats w-full mb-4">
+				for _, status := range env.Enums.IndicatorStatus {
+					@stat(status.State, status.Icon, status.Name, summary[status.Name])
+				}
+			</div>
 			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>
@@ -106,4 +112,12 @@ templ indicatorsManyExtra(env Env) {
 			</ul>
 		</details>
 	}
+}
+
+func summarizeIndicators(rows []model.Indicator) map[string]int {
+	summary := map[string]int{}
+	for _, row := range rows {
+		summary[row.Status]++
+	}
+	return summary
 }
