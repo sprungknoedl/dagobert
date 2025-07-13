@@ -37,6 +37,12 @@ func Connect(dburl string) (*Store, error) {
 	return &Store{RawConn: conn, DB: db}, nil
 }
 
+func (store *Store) Transaction(fn func(tx *Store) error) error {
+	return store.DB.Transaction(func(tx *gorm.DB) error {
+		return fn(&Store{RawConn: store.RawConn, DB: tx})
+	})
+}
+
 func FromEnv(name string, defaults []string) []string {
 	list := strings.Split(os.Getenv(name), ";")
 	if len(list) > 1 {

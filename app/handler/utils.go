@@ -27,16 +27,16 @@ var decoder = schema.NewDecoder()
 var SessionName = "default"
 var SessionStore = sessions.NewCookieStore([]byte(os.Getenv("WEB_SESSION_SECRET")))
 
-func ImportCSV(store *model.Store, acl *ACL, w http.ResponseWriter, r *http.Request, uri string, numFields int, cb func(rec []string)) {
+func ImportCSV(store *model.Store, acl *ACL, w http.ResponseWriter, r *http.Request, uri string, numFields int, cb func(rec []string)) error {
 	if r.Method == http.MethodGet {
 		views.ImportDialog().Render(r.Context(), w)
-		return
+		return nil
 	}
 
 	fr, _, err := r.FormFile("file")
 	if err != nil {
 		Warn(w, r, err)
-		return
+		return err
 	}
 
 	cr := csv.NewReader(fr)
@@ -57,13 +57,14 @@ func ImportCSV(store *model.Store, acl *ACL, w http.ResponseWriter, r *http.Requ
 		}
 		if err != nil {
 			Warn(w, r, err)
-			return
+			return err
 		}
 
 		cb(rec)
 	}
 
 	http.Redirect(w, r, uri, http.StatusSeeOther)
+	return nil
 }
 
 func Warn(w http.ResponseWriter, r *http.Request, err error) {
