@@ -5,8 +5,11 @@
 
 @import 'tailwindcss';
 @plugin "@tailwindcss/typography";
-@plugin "daisyui" {
-    themes: bumblebee --default;
+@plugin "daisyui";
+@plugin "daisyui/theme" {
+    name: "cupcake";
+    default: true;
+    --radius-field: 1rem;
 }
 
 @import './dagobert-choices.css';

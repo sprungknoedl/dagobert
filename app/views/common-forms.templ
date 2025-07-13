@@ -13,14 +13,14 @@ templ form(uri string, title string, opts ...formOption) {
 		<main>
 			<form method="post" action={ uri } enctype={ cfg.enctype } up-submit>
 				<!-- Modal header -->
-				<h3 class="font-bold text-lg mb-4">{ title } </h3>
+				<h1 class="font-serif text-2xl mb-4">{ title }</h1>
 				<!-- Modal body -->
 				<div class="mb-4">
 					{ children... }
 				</div>
 				<!-- Modal footer -->
 				<div class="flex gap-2 items-center">
-					<button type="submit" class="btn btn-primary">Save </button>
+					<button type="submit" class="btn btn-neutral">Save </button>
 					<a class="btn" up-dismiss>Cancel </a>
 				</div>
 			</form>

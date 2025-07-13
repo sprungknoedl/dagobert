@@ -53,12 +53,11 @@ templ SettingsEnumsOne(env Env, obj model.Enum, vr valid.Result) {
 }
 
 templ enumList(env Env, title string, rows []model.Enum) {
-	<div class="collapse collapse-arrow">
-		<input type="checkbox" checked/>
-		<div class="collapse-title px-0">
-			<h2 class="text-primary text-xl font-bold">{ title } </h2>
-		</div>
-		<div class="collapse-content px-0">
+	<details open>
+		<summary class="my-4">
+			<span class="text-xl font-serif p-2">{ title } </span>
+		</summary>
+		<div class="px-0">
 			if url, ok := env.Allowed("POST", "/settings/enums/new"); ok {
 				<a class="btn btn-sm" href={ url + "?category=" + strings.ReplaceAll(title, " ", "") } up-layer="new drawer" up-accept-location={ env.Route }>
 					<i class="hio hio-5 hio-plus inline-block"></i> Add
@@ -97,5 +96,5 @@ templ enumList(env Env, title string, rows []model.Enum) {
 				</tbody>
 			</table>
 		</div>
-	</div>
+	</details>
 }

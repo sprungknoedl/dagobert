@@ -116,10 +116,10 @@ templ EvidencesProcess(env Env, runs []worker.Module) {
 	@layout() {
 		<main>
 			<!-- Modal header -->
-			<h3 class="font-bold text-lg mb-4">
+			<h1 class="font-serif text-2xl mb-4">
 				Process evidence
 				<a class="ml-2" href={ env.Route } up-follow><i class="hio hio-5 hio-arrow-path inline-block mr-1"></i> </a>
-			</h3>
+			</h1>
 			<!-- Modal body -->
 			<div class="mb-4">
 				<p class="mb-4">You may have to refresh the evidence list to see the updated results after running a plugin.</p>
@@ -165,7 +165,7 @@ templ EvidencesProcess(env Env, runs []worker.Module) {
 									<div class="card-actions justify-end">
 										<form method="post" up-submit>
 											<input type="hidden" name="name" value={ run.Name }/>
-											<button class="btn btn-primary" type="submit">Run</button>
+											<button class="btn btn-neutral" type="submit">Run</button>
 										</form>
 									</div>
 							}
@@ -173,7 +173,7 @@ templ EvidencesProcess(env Env, runs []worker.Module) {
 					</div>
 				}
 				if len(runs) == 0 {
-					<div class="alert alert-info alert-soft">
+					<div class="alert alert-info">
 						<i class="hio hio-bolt-slash text-2xl"></i>
 						<span>Evidence type not supported by any plugins. </span>
 					</div>

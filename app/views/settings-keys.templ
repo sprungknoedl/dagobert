@@ -10,7 +10,7 @@ import (
 templ SettingsKeyMany(env Env, keys []model.Key, workers []worker.Worker) {
 	@layout() {
 		@list(env, "API Keys", navSettings(), navHideExport(), navHideImport()) {
-			<h2 class="text-primary text-xl font-bold p-2">Keys</h2>
+			<h2 class="text-xl font-serif p-2">Keys</h2>
 			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>
@@ -38,7 +38,7 @@ templ SettingsKeyMany(env Env, keys []model.Key, workers []worker.Worker) {
 				</tbody>
 			</table>
 			<!-- ======= -->
-			<h2 class="text-primary text-xl font-bold p-2 mt-6">Workers</h2>
+			<h2 class="text-xl font-serif p-2 mt-6">Workers</h2>
 			<table class="table table-default dataTable" data-order='[[ 0, "asc" ]]'>
 				<thead>
 					<tr>
