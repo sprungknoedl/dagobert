@@ -110,7 +110,7 @@ func (ctrl AuthCtrl) Protect(next http.Handler) http.Handler {
 		authenticated := sess.Values["oidcAuthenticated"]
 		if authenticated != nil && authenticated.(bool) ||
 			strings.HasPrefix(r.URL.Path, "/auth/") ||
-			strings.HasPrefix(r.URL.Path, "/web/") {
+			strings.HasPrefix(r.URL.Path, "/public/") {
 			if ctrl.isAuthorized(r) {
 				next.ServeHTTP(w, r)
 			} else {
@@ -221,8 +221,6 @@ func (ctrl AuthCtrl) Callback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// update fields from identity provider
-	user.ID = uid
-	user.Role = fp.If(user.Role != "", user.Role, "Read-Only")
 	user.Name = claims["name"].(string)
 	user.UPN = claims["preferred_username"].(string)
 	user.Email = claims["email"].(string)
@@ -256,7 +254,7 @@ func NewACL(db *model.Store) *ACL {
 
 	enforcer, err := casbin.NewEnforcer(m, db)
 	if err != nil {
-		log.Fatalf("Failed to init Casbin enforcer: %v \n", err.Error())
+		log.Fatalf("Failed to init casbin enforcer: %v \n", err.Error())
 	}
 
 	enforcer.EnableAutoSave(true)
