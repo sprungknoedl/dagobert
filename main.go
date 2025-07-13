@@ -76,14 +76,14 @@ func StartUI() {
 	slog.Debug("Connecting to database", "url", cfg.Database)
 	db, err := model.Connect(cfg.Database)
 	if err != nil {
-		slog.Error("Failed to connect to database: %v", "err", err)
+		slog.Error("Failed to connect to database", "err", err)
 		return
 	}
 
 	slog.Debug("Initializing database")
 	err = InitializeDatabase(db)
 	if err != nil {
-		slog.Error("Failed to run database migrations: %v", "err", err)
+		slog.Error("Failed to run database migrations", "err", err)
 		return
 	}
 
@@ -94,7 +94,7 @@ func StartUI() {
 		os.Getenv("TIMESKETCH_PASS"),
 	)
 	if err != nil {
-		slog.Warn("Failed to create timesketch client: %v", "err", err)
+		slog.Warn("Failed to create timesketch client", "err", err)
 	}
 
 	// --------------------------------------

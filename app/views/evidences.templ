@@ -122,7 +122,7 @@ templ EvidencesProcess(env Env, runs []worker.Module) {
 			</h3>
 			<!-- Modal body -->
 			<div class="mb-4">
-				<p class="mb-4">You may have to refresh the evidence list to see the updated results after running a mod.</p>
+				<p class="mb-4">You may have to refresh the evidence list to see the updated results after running a plugin.</p>
 				for _, run := range runs {
 					<div class="card bg-base-100 mb-4">
 						<div class="card-body p-4">
@@ -173,10 +173,9 @@ templ EvidencesProcess(env Env, runs []worker.Module) {
 					</div>
 				}
 				if len(runs) == 0 {
-					<div class="card bg-base-100 mb-4">
-						<div class="card-body p-4">
-							<p class="text-warning">Evidence type not supported by any mods. </p>
-						</div>
+					<div class="alert alert-info alert-soft">
+						<i class="hio hio-bolt-slash text-2xl"></i>
+						<span>Evidence type not supported by any plugins. </span>
 					</div>
 				}
 			</div>
