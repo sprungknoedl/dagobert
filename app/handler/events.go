@@ -84,41 +84,45 @@ func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
 func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/events/", cid)
-	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 7, func(rec []string) {
-		t, err := time.Parse(time.RFC3339, rec[1])
-		if err != nil {
-			Warn(w, r, err)
-			return
-		}
 
-		// import assets (creates new one if they don't exist)
-		assets, err := ctrl.getOrCreateAssets(cid, strings.Split(rec[3], " "))
-		if err != nil {
-			Err(w, r, err)
-			return
-		}
+	ctrl.Store().Transaction(func(tx *model.Store) error {
+		return ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 7, func(rec []string) {
+			t, err := time.Parse(time.RFC3339, rec[1])
+			if err != nil {
+				Warn(w, r, err)
+				return
+			}
 
-		// import indicators (creates new one if they don't exist)
-		indicators, err := ctrl.getOrCreateIndicators(cid, strings.Split(rec[4], " "))
-		if err != nil {
-			Err(w, r, err)
-			return
-		}
+			// import assets (creates new one if they don't exist)
+			assets, err := getOrCreateAssets(tx, cid, strings.Split(rec[3], " "))
+			if err != nil {
+				Err(w, r, err)
+				return
+			}
 
-		obj := model.Event{
-			ID:         fp.If(rec[0] == "", fp.Random(10), rec[0]),
-			CaseID:     cid,
-			Time:       model.Time(t),
-			Type:       rec[2],
-			Assets:     assets,
-			Indicators: indicators,
-			Event:      rec[5],
-			Raw:        rec[6],
-		}
+			// import indicators (creates new one if they don't exist)
+			indicators, err := getOrCreateIndicators(tx, cid, strings.Split(rec[4], " "))
+			if err != nil {
+				Err(w, r, err)
+				return
+			}
 
-		if err = ctrl.Store().SaveEvent(cid, obj, true); err != nil {
-			Err(w, r, err)
-		}
+			obj := model.Event{
+				ID:         fp.If(rec[0] == "", fp.Random(10), rec[0]),
+				CaseID:     cid,
+				Time:       model.Time(t),
+				Type:       rec[2],
+				Assets:     assets,
+				Indicators: indicators,
+				Event:      rec[5],
+				Raw:        rec[6],
+			}
+
+			if err = ctrl.Store().SaveEvent(cid, obj, true); err != nil {
+				Err(w, r, err)
+			}
+		})
+
 	})
 }
 
@@ -224,19 +228,6 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: validate before creating assets/indicators
-	var err error
-	dto.Assets, err = ctrl.getOrCreateAssets(dto.CaseID, tmp.Assets)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	dto.Indicators, err = ctrl.getOrCreateIndicators(dto.CaseID, tmp.Indicators)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
 	enums, err := ctrl.Store().ListEnums()
 	if err != nil {
 		Err(w, r, err)
@@ -260,9 +251,28 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	new := dto.ID == "new"
-	dto.ID = fp.If(new, fp.Random(10), dto.ID)
-	if err := ctrl.Store().SaveEvent(dto.CaseID, dto, true); err != nil {
+	err = ctrl.Store().Transaction(func(tx *model.Store) error {
+		var err error
+		dto.Assets, err = getOrCreateAssets(tx, dto.CaseID, tmp.Assets)
+		if err != nil {
+			return err
+		}
+
+		dto.Indicators, err = getOrCreateIndicators(tx, dto.CaseID, tmp.Indicators)
+		if err != nil {
+			return err
+		}
+
+		new := dto.ID == "new"
+		dto.ID = fp.If(new, fp.Random(10), dto.ID)
+		if err = tx.SaveEvent(dto.CaseID, dto, true); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -288,14 +298,14 @@ func (ctrl EventCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/events/", cid), http.StatusSeeOther)
 }
 
-func (ctrl EventCtrl) getOrCreateAssets(cid string, names []string) ([]model.Asset, error) {
+func getOrCreateAssets(db *model.Store, cid string, names []string) ([]model.Asset, error) {
 	assets := []model.Asset{}
 	for _, asset := range names {
 		if asset == "" {
 			continue
 		}
 
-		obj, err := ctrl.Store().GetAssetByName(cid, asset)
+		obj, err := db.GetAssetByName(cid, asset)
 		if err != nil && err != gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("get asset by name: %w", err)
 		} else if err != nil && err == gorm.ErrRecordNotFound {
@@ -306,7 +316,7 @@ func (ctrl EventCtrl) getOrCreateAssets(cid string, names []string) ([]model.Ass
 				Status: "Under investigation",
 				Type:   "Other",
 			}
-			if err := ctrl.Store().SaveAsset(cid, obj); err != nil {
+			if err := db.SaveAsset(cid, obj); err != nil {
 				return nil, fmt.Errorf("save asset: %w", err)
 			}
 		}
@@ -317,14 +327,14 @@ func (ctrl EventCtrl) getOrCreateAssets(cid string, names []string) ([]model.Ass
 	return assets, nil
 }
 
-func (ctrl EventCtrl) getOrCreateIndicators(cid string, values []string) ([]model.Indicator, error) {
+func getOrCreateIndicators(db *model.Store, cid string, values []string) ([]model.Indicator, error) {
 	indicators := []model.Indicator{}
 	for _, indicator := range values {
 		if indicator == "" {
 			continue
 		}
 
-		obj, err := ctrl.Store().GetIndicatorByValue(cid, indicator)
+		obj, err := db.GetIndicatorByValue(cid, indicator)
 		if err != nil && err != gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("get indicator by value: %w", err)
 		} else if err != nil && err == gorm.ErrRecordNotFound {
@@ -336,7 +346,7 @@ func (ctrl EventCtrl) getOrCreateIndicators(cid string, values []string) ([]mode
 				Type:   "Other",
 				TLP:    "TLP:RED",
 			}
-			if err := ctrl.Store().SaveIndicator(cid, obj, false); err != nil {
+			if err := db.SaveIndicator(cid, obj, false); err != nil {
 				return nil, fmt.Errorf("save indicator: %w", err)
 			}
 		}
