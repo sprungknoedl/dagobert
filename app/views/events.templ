@@ -48,20 +48,16 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 							</td>
 							<td class="value-3" data-search={ strings.Join(fp.Apply(row.Assets, func(x model.Asset) string { return x.Name }), " ") }>
 								for _, x := range row.Assets {
-									<div class="text-info">
-										@enumIcon(env.Enums.AssetTypes, x.Type) {
-											{ x.Name }
-										}
-									</div>
+									@enumIcon(env.Enums.AssetTypes, x.Type) {
+										{ x.Name }
+									}
 								}
 							</td>
 							<td class="value-4" data-search={ strings.Join(fp.Apply(row.Indicators, func(x model.Indicator) string { return x.Value }), " ") }>
 								for _, x := range row.Indicators {
-									<div class="text-error">
-										@enumIcon(env.Enums.IndicatorTypes, x.Type) {
-											{ x.Value }
-										}
-									</div>
+									@enumIcon(env.Enums.IndicatorTypes, x.Type) {
+										{ x.Value }
+									}
 								}
 							</td>
 							<td class="text-right value-5" data-search={ fp.If(row.Flagged, "flagged:true", "") }>
@@ -148,23 +144,23 @@ func highlightEvent(ev model.Event, assets []model.Asset, indicators []model.Ind
 	html := templ.EscapeString(ev.Event)
 	// first highlight linked indicators, then any
 	for _, x := range ev.Indicators {
-		html = strings.ReplaceAll(html, x.Value, "<span class='text-error'>"+templ.EscapeString(x.Value)+"</span>")
+		html = strings.ReplaceAll(html, x.Value, "<span class='font-bold'>"+templ.EscapeString(x.Value)+"</span>")
 	}
 	for _, x := range indicators {
-		html = strings.ReplaceAll(html, x.Value, "<span class='text-error'>"+templ.EscapeString(x.Value)+"</span>")
+		html = strings.ReplaceAll(html, x.Value, "<span class='font-bold'>"+templ.EscapeString(x.Value)+"</span>")
 	}
 
 	// first highlight linked assets, then any
 	for _, x := range ev.Assets {
-		html = strings.ReplaceAll(html, x.Name, "<span class='text-info'>"+templ.EscapeString(x.Name)+"</span>")
+		html = strings.ReplaceAll(html, x.Name, "<span class='font-bold'>"+templ.EscapeString(x.Name)+"</span>")
 		if x.Addr != "" {
-			html = strings.ReplaceAll(html, x.Addr, "<span class='text-info'>"+templ.EscapeString(x.Addr)+"</span>")
+			html = strings.ReplaceAll(html, x.Addr, "<span class='font-bold'>"+templ.EscapeString(x.Addr)+"</span>")
 		}
 	}
 	for _, x := range assets {
-		html = strings.ReplaceAll(html, x.Name, "<span class='text-info'>"+templ.EscapeString(x.Name)+"</span>")
+		html = strings.ReplaceAll(html, x.Name, "<span class='font-bold'>"+templ.EscapeString(x.Name)+"</span>")
 		if x.Addr != "" {
-			html = strings.ReplaceAll(html, x.Addr, "<span class='text-info'>"+templ.EscapeString(x.Addr)+"</span>")
+			html = strings.ReplaceAll(html, x.Addr, "<span class='font-bold'>"+templ.EscapeString(x.Addr)+"</span>")
 		}
 	}
 

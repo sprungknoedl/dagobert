@@ -63,7 +63,7 @@ templ CasesOne(env Env, obj model.Case, sketches []timesketch.Sketch, vr valid.R
 		@selectField("Outcome", obj.Outcome, env.Enums.CaseOutcomes, withLabel("Outcome"), withError(vr["Outcome"]))
 		@booleanField("Closed", obj.Closed, withLabel("Closed"))
 		<!-- x -->
-		<h2 class="text-primary text-l font-bold mb-2 mt-4">Summary</h2>
+		<h2 class="text-xl font-serif mb-2 mt-4">Summary</h2>
 		@textareaField("SummaryWho", obj.SummaryWho, withLabel("Who?"), withError(vr["SummaryWho"]))
 		@textareaField("SummaryWhat", obj.SummaryWhat, withLabel("What?"), withError(vr["SummaryWhat"]))
 		@textareaField("SummaryWhen", obj.SummaryWhen, withLabel("When?"), withError(vr["SummaryWhen"]))
@@ -71,7 +71,7 @@ templ CasesOne(env Env, obj model.Case, sketches []timesketch.Sketch, vr valid.R
 		@textareaField("SummaryWhy", obj.SummaryWhy, withLabel("Why?"), withError(vr["SummaryWhy"]))
 		@textareaField("SummaryHow", obj.SummaryHow, withLabel("How?"), withError(vr["SummaryHow"]))
 		<!-- x -->
-		<h2 class="text-primary text-l font-bold mb-2 mt-4">Integrations</h2>
+		<h2 class="text-xl font-serif mb-2 mt-4">Integrations</h2>
 		<div class="form-control mb-2">
 			<label class="label justify-start gap-2">
 				Timesketch Sketch
@@ -93,13 +93,13 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 	{{ keyEvents := fp.Filter(events, func(e model.Event) bool { return e.Flagged }) }}
 	@layout() {
 		@list(env, "Summary", navHideSearch(), navHideAdd(), navHideExport(), navHideImport(), navPreButtons(caseSummaryExtra(env))) {
-			<h2 class="text-primary text-xl font-bold p-2">Assets</h2>
+			<h2 class="text-xl font-serif p-2">Assets</h2>
 			<div class="stats w-full">
 				for _, status := range env.Enums.AssetStatus {
 					@stat(status.State, status.Icon, status.Name, summary[status.Name])
 				}
 			</div>
-			<h2 class="text-primary text-xl font-bold p-2">Summary</h2>
+			<h2 class="text-xl font-serif p-2 mt-6">Summary</h2>
 			<div class="grid grid-cols-3 gap-4">
 				@card("Who?", obj.SummaryWho)
 				@card("What?", obj.SummaryWhat)
@@ -108,7 +108,7 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 				@card("Why?", obj.SummaryWhy)
 				@card("How?", obj.SummaryHow)
 			</div>
-			<h2 class="text-primary text-xl font-bold p-2 mt-4">Key Events</h2>
+			<h2 class="text-xl font-serif p-2 mt-6">Key Events</h2>
 			<ul class="timeline timeline-vertical">
 				for _, ev := range keyEvents {
 					<li>
