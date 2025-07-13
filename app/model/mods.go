@@ -29,7 +29,7 @@ type Job struct {
 	ServerToken string
 	WorkerToken string
 
-	Description string
+	Description string `gorm:"-"`
 }
 
 type Hook struct {

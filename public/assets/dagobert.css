@@ -6682,6 +6682,11 @@ div.vis-tooltip {
     color: var(--color-error-content);
     --alert-color: var(--color-error);
   }
+  .alert-info {
+    border-color: var(--color-info);
+    color: var(--color-info-content);
+    --alert-color: var(--color-info);
+  }
   .alert-warning {
     border-color: var(--color-warning);
     color: var(--color-warning-content);
