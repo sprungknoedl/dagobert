@@ -20,13 +20,13 @@ type Case struct {
 
 	SketchID int
 
-	Assets     []Asset     `gorm:"-"`
-	Evidences  []Evidence  `gorm:"-"`
-	Indicators []Indicator `gorm:"-"`
-	Events     []Event     `gorm:"-"`
-	Malware    []Malware   `gorm:"-"`
-	Notes      []Note      `gorm:"-"`
-	Tasks      []Task      `gorm:"-"`
+	Assets     []Asset     // `gorm:"->"`
+	Events     []Event     // `gorm:"->"`
+	Evidences  []Evidence  // `gorm:"->"`
+	Indicators []Indicator // `gorm:"->"`
+	Malware    []Malware   // `gorm:"->"`
+	Notes      []Note      // `gorm:"->"`
+	Tasks      []Task      // `gorm:"->"`
 }
 
 func (c Case) String() string {
@@ -57,8 +57,17 @@ func (store *Store) GetCase(cid string) (Case, error) {
 }
 
 func (store *Store) GetCaseFull(cid string) (Case, error) {
-	// TODO: fetch relations
-	return store.GetCase(cid)
+	obj := Case{}
+	tx := store.DB.
+		Preload("Assets").
+		Preload("Events").
+		Preload("Evidences").
+		Preload("Indicators").
+		Preload("Malware").
+		Preload("Notes").
+		Preload("Tasks").
+		First(&obj, "id = ?", cid)
+	return obj, tx.Error
 }
 
 func (store *Store) SaveCase(obj Case) error {
