@@ -43,7 +43,7 @@ templ SettingsReportsMany(env Env, rows []model.Report) {
 templ SettingsReportsOne(env Env, obj model.Report, vr valid.Result) {
 	{{ uri := "/settings/reports/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add report template", "Edit report template") }}
-	@form(uri, title) {
+	@form(uri, title, enctype("multipart/form-data")) {
 		@hiddenField("ID", obj.ID)
 		<div class="form-control mb-2">
 			<label class="label justify-start gap-2">
@@ -53,7 +53,7 @@ templ SettingsReportsOne(env Env, obj model.Report, vr valid.Result) {
 			<input name="File" type="file" class="file-input w-full"/>
 		</div>
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
-		@textareaField("Notes", obj.Notes, required(), withLabel("Notes"), withError(vr["Notes"]))
+		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
 		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
 		<script>
         document.querySelector('input[name="File"]').onchange = (e) => {

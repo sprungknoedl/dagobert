@@ -59,33 +59,9 @@ func (ctrl ReportsCtrl) Generate(w http.ResponseWriter, r *http.Request) {
 	// ---
 	// fetch data
 	// ---
-	var accerr error
-	kase, err := ctrl.Store().GetCase(cid)
-	accerr = errors.Join(accerr, err)
-
-	kase.Assets, err = ctrl.Store().ListAssets(cid)
-	accerr = errors.Join(accerr, err)
-
-	kase.Events, err = ctrl.Store().ListEvents(cid)
-	accerr = errors.Join(accerr, err)
-
-	kase.Evidences, err = ctrl.Store().ListEvidences(cid)
-	accerr = errors.Join(accerr, err)
-
-	kase.Indicators, err = ctrl.Store().ListIndicators(cid)
-	accerr = errors.Join(accerr, err)
-
-	kase.Malware, err = ctrl.Store().ListMalware(cid)
-	accerr = errors.Join(accerr, err)
-
-	kase.Notes, err = ctrl.Store().ListNotes(cid)
-	accerr = errors.Join(accerr, err)
-
-	kase.Tasks, err = ctrl.Store().ListTasks(cid)
-	accerr = errors.Join(accerr, err)
-
-	if accerr != nil {
-		Err(w, r, accerr)
+	kase, err := ctrl.Store().GetCaseFull(cid)
+	if err != nil {
+		Err(w, r, err)
 		return
 	}
 
