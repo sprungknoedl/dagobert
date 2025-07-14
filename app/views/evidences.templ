@@ -145,7 +145,7 @@ templ EvidencesProcess(env Env, runs []worker.Module) {
 										Job ran successfully.
 									</p>
 									<div class="card-actions justify-end">
-										<form method="post" up-submit>
+										<form action={ env.Route } method="post" up-submit>
 											<input type="hidden" name="name" value={ run.Name }/>
 											<button class="btn btn-neutral" type="submit">Rerun</button>
 										</form>
@@ -156,14 +156,14 @@ templ EvidencesProcess(env Env, runs []worker.Module) {
 										Job failed: { run.Error }
 									</p>
 									<div class="card-actions justify-end">
-										<form method="post" up-submit>
+										<form action={ env.Route } method="post" up-submit>
 											<input type="hidden" name="name" value={ run.Name }/>
 											<button class="btn btn-neutral" type="submit">Rerun</button>
 										</form>
 									</div>
 								default:
 									<div class="card-actions justify-end">
-										<form method="post" up-submit>
+										<form action={ env.Route } method="post" up-submit>
 											<input type="hidden" name="name" value={ run.Name }/>
 											<button class="btn btn-neutral" type="submit">Run</button>
 										</form>
