@@ -58,7 +58,7 @@ templ SettingsUsersOne(env Env, obj model.User, vr valid.Result) {
 	@form(uri, title) {
 		@stringField("ID", obj.ID, required(), withLabel("ID"), withError(vr["ID"]))
 		@selectField("Role", obj.Role, env.Enums.UserRoles, required(), withLabel("Role"), withError(vr["Role"]))
-		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
+		@stringField("Name", obj.Name, withLabel("Name"), withError(vr["Name"]))
 		<div class="form-control mb-2">
 			<label class="label justify-start gap-2">
 				UPN
