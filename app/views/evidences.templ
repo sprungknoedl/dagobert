@@ -45,7 +45,7 @@ templ EvidencesMany(env Env, rows []model.Evidence) {
 					for _, row := range rows {
 						<tr class="hover">
 							<td class="value-0 truncate">
-								@enumIcon(env.Enums.EvidenceTypes, row.Type)
+								@enum(env.Enums.EvidenceTypes, row.Type)
 							</td>
 							<td class="value-1" data-search={ row.Name }>{ row.Name } </td>
 							<td class="value-2" data-search={ row.Hash }>{ row.Hash } </td>
