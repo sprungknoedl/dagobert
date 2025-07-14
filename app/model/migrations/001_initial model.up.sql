@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS event_assets (
 	event_id TEXT NOT NULL,
 	asset_id TEXT NOT NULL,
 
+	UNIQUE (event_id, asset_id),
 	FOREIGN KEY (asset_id) REFERENCES assets(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -53,6 +54,7 @@ CREATE TABLE IF NOT EXISTS event_indicators (
 	event_id     TEXT NOT NULL,
 	indicator_id TEXT NOT NULL,
 
+	UNIQUE (event_id, indicator_id),
 	FOREIGN KEY (indicator_id) REFERENCES indicators(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
