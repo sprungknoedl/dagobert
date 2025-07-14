@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -65,7 +66,7 @@ func (store *Store) PushJob(obj Job) error { return store.SaveJob(obj) }
 func (store *Store) PopJob(workerid string, modules []string) (Job, Case, Evidence, error) {
 	// slices are not supported as parameterized arguments in database/sql and sqlite.
 	// we have to use a workaround to pass the list of modules as a single argument.
-	re := regexp.MustCompile("[a-zA-Z0-9_ ]+")
+	re := regexp.MustCompile("^[()a-zA-Z0-9_ ]+$")
 	for _, m := range modules {
 		if !re.MatchString(m) {
 			return Job{}, Case{}, Evidence{}, fmt.Errorf("invalid module name: %q", m)
@@ -73,16 +74,19 @@ func (store *Store) PopJob(workerid string, modules []string) (Job, Case, Eviden
 	}
 
 	modules = fp.Apply(modules, func(s string) string { return "'" + s + "'" })
-	rowid := store.DB.Model(Job{}).Select("min(rowid)").Where("status = ? and name in (`" + strings.Join(modules, ", ") + "`)")
+	rowid := store.DB.Model(Job{}).Select("min(rowid)").Where("status = ? and name in ("+strings.Join(modules, ", ")+")", "Scheduled")
 
 	obj := Job{}
 	err := store.DB.Model(&obj).
 		Clauses(clause.Returning{}).
-		Where("rowid = ?", rowid).
+		Where("rowid = (?)", rowid).
 		Updates(map[string]any{"status": "Running", "worker_token": workerid}).
 		Error
 	if err != nil {
 		return Job{}, Case{}, Evidence{}, err
+	}
+	if obj.ID == "" {
+		return Job{}, Case{}, Evidence{}, gorm.ErrRecordNotFound
 	}
 
 	// fetch objects
