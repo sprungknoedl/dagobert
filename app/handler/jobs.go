@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -15,6 +14,7 @@ import (
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/app/worker"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"gorm.io/gorm"
 )
 
 type JobCtrl struct {
@@ -127,10 +127,10 @@ func (ctrl *JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 
 		case <-t.C:
 			job, kase, evidence, err := ctrl.Store().PopJob(workerid, modules)
-			if err != nil && err != sql.ErrNoRows {
+			if err != nil && err != gorm.ErrRecordNotFound {
 				log.Printf("error fetching job: %v", err)
 				goto cleanup
-			} else if err == sql.ErrNoRows {
+			} else if err == gorm.ErrRecordNotFound {
 				continue
 			}
 
