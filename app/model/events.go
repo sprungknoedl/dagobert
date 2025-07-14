@@ -65,8 +65,8 @@ func (store *Store) SaveEvent(cid string, obj Event, override bool) error {
 		return errors.Join(
 			tx.
 				Clauses(clause.OnConflict{DoNothing: !override, UpdateAll: override}).
-				Omit("Assets.*").
-				Omit("Indicators.*").
+				Omit("Assets").
+				Omit("Indicators").
 				Create(&obj).
 				Error,
 			tx.Model(&obj).Association("Assets").Replace(obj.Assets),
