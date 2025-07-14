@@ -56,7 +56,7 @@ templ SettingsUsersOne(env Env, obj model.User, vr valid.Result) {
 	{{ uri := "/settings/users/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add user", "Edit user") }}
 	@form(uri, title) {
-		@hiddenField("ID", obj.ID)
+		@stringField("ID", obj.ID, required(), withLabel("ID"), withError(vr["ID"]))
 		@selectField("Role", obj.Role, env.Enums.UserRoles, required(), withLabel("Role"), withError(vr["Role"]))
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
 		<div class="form-control mb-2">
