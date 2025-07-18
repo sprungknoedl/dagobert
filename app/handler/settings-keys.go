@@ -41,24 +41,17 @@ func (ctrl KeyCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsKeysOne(Env(ctrl, r), obj, valid.Result{}))
+	Render(w, r, http.StatusOK, views.SettingsKeysOne(Env(ctrl, r), obj, valid.ValidationError{}))
 }
 
 func (ctrl KeyCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	dto := model.Key{}
-	if err := Decode(r, &dto); err != nil {
-		Warn(w, r, err)
-		return
-	}
-
-	enums, err := ctrl.Store().ListEnums()
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	if vr := ValidateKey(dto, enums); !vr.Valid() {
+	err := Decode(ctrl.Store(), r, &dto, ValidateKey)
+	if vr, ok := err.(valid.ValidationError); err != nil && ok {
 		Render(w, r, http.StatusUnprocessableEntity, views.SettingsKeysOne(Env(ctrl, r), dto, vr))
+		return
+	} else if err != nil {
+		Warn(w, r, err)
 		return
 	}
 

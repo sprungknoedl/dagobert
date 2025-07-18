@@ -39,24 +39,17 @@ func (ctrl UserCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsUsersOne(Env(ctrl, r), obj, valid.Result{}))
+	Render(w, r, http.StatusOK, views.SettingsUsersOne(Env(ctrl, r), obj, valid.ValidationError{}))
 }
 
 func (ctrl UserCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	dto := model.User{}
-	if err := Decode(r, &dto); err != nil {
-		Warn(w, r, err)
-		return
-	}
-
-	enums, err := ctrl.Store().ListEnums()
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	if vr := ValidateUser(dto, enums); !vr.Valid() {
+	err := Decode(ctrl.Store(), r, &dto, ValidateUser)
+	if vr, ok := err.(valid.ValidationError); err != nil && ok {
 		Render(w, r, http.StatusUnprocessableEntity, views.SettingsUsersOne(Env(ctrl, r), dto, vr))
+		return
+	} else if err != nil {
+		Warn(w, r, err)
 		return
 	}
 
@@ -131,7 +124,7 @@ func (ctrl UserCtrl) EditACL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsUsersACL(Env(ctrl, r), obj, cases, perms, valid.Result{}))
+	Render(w, r, http.StatusOK, views.SettingsUsersACL(Env(ctrl, r), obj, cases, perms, valid.ValidationError{}))
 }
 
 func (ctrl UserCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
@@ -143,7 +136,7 @@ func (ctrl UserCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	form := struct{ Cases []string }{}
-	if err := Decode(r, &form); err != nil {
+	if err := Decode(ctrl.Store(), r, &form, nil); err != nil {
 		Warn(w, r, err)
 		return
 	}

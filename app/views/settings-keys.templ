@@ -69,7 +69,7 @@ templ SettingsKeyMany(env Env, keys []model.Key, workers []worker.Worker) {
 	}
 }
 
-templ SettingsKeysOne(env Env, obj model.Key, vr valid.Result) {
+templ SettingsKeysOne(env Env, obj model.Key, vr valid.ValidationError) {
 	{{ uri := "/settings/api-keys/" + obj.Key }}
 	{{ title := fp.If(obj.Key == "new", "Add API key", "Edit API key") }}
 	@form(uri, title) {

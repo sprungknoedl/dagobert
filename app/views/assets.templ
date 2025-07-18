@@ -61,7 +61,7 @@ templ AssetsMany(env Env, title string, rows []model.Asset) {
 	}
 }
 
-templ AssetsOne(env Env, obj model.Asset, vr valid.Result) {
+templ AssetsOne(env Env, obj model.Asset, vr valid.ValidationError) {
 	{{ uri := "/cases/" + obj.CaseID + "/assets/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add asset", "Edit asset") }}
 	@form(uri, title) {

@@ -207,47 +207,34 @@ func (ctrl EventCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.EventsOne(Env(ctrl, r), obj, assets, indicators, valid.Result{}))
+	Render(w, r, http.StatusOK, views.EventsOne(Env(ctrl, r), obj, assets, indicators, valid.ValidationError{}))
 }
 
 func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	dto := model.Event{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
-	if err := Decode(r, &dto); err != nil {
-		Warn(w, r, err)
-		return
-	}
-
-	// special case: select-multiple :/
 	tmp := struct {
 		Assets     []string
 		Indicators []string
-	}{}
-	if err := Decode(r, &tmp); err != nil {
-		Warn(w, r, err)
-		return
-	}
-
-	// TODO: validate before creating assets/indicators
-	enums, err := ctrl.Store().ListEnums()
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	if vr := ValidateEvent(dto, enums); !vr.Valid() {
-		assets, err := ctrl.Store().ListAssets(dto.CaseID)
-		if err != nil {
+	}{} // special case: select-multiple :/
+	err := JoinV(
+		Decode(ctrl.Store(), r, &dto, ValidateEvent),
+		Decode(ctrl.Store(), r, &tmp, nil))
+	if vr, ok := err.(valid.ValidationError); err != nil && ok {
+		ev, err1 := ctrl.Store().GetEvent(dto.CaseID, dto.ID)
+		assets, err2 := ctrl.Store().ListAssets(dto.CaseID)
+		indicators, err3 := ctrl.Store().ListIndicators(dto.CaseID)
+		if err := errors.Join(err1, err2, err3); err != nil {
 			Err(w, r, err)
 			return
 		}
 
-		indicators, err := ctrl.Store().ListIndicators(dto.CaseID)
-		if err != nil {
-			Err(w, r, err)
-			return
-		}
-
+		// changes in the form to the selects will be lost, but this is easier than the other way around ...
+		dto.Assets = ev.Assets
+		dto.Indicators = ev.Indicators
 		Render(w, r, http.StatusUnprocessableEntity, views.EventsOne(Env(ctrl, r), dto, assets, indicators, vr))
+		return
+	} else if err != nil {
+		Warn(w, r, err)
 		return
 	}
 
@@ -271,7 +258,6 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 
 		return nil
 	})
-
 	if err != nil {
 		Err(w, r, err)
 		return

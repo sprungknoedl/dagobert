@@ -75,7 +75,7 @@ templ EvidencesMany(env Env, rows []model.Evidence) {
 	}
 }
 
-templ EvidencesOne(env Env, obj model.Evidence, vr valid.Result) {
+templ EvidencesOne(env Env, obj model.Evidence, vr valid.ValidationError) {
 	{{ uri := "/cases/" + obj.CaseID + "/evidences/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add evidence", "Edit evidence") }}
 	@form(uri, title, enctype("multipart/form-data")) {

@@ -35,27 +35,18 @@ func (ctrl SettingsCtrl) EditReport(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsReportsOne(Env(ctrl, r), obj, valid.Result{}))
+	Render(w, r, http.StatusOK, views.SettingsReportsOne(Env(ctrl, r), obj, valid.ValidationError{}))
 }
 
 func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 	// decode form
 	dto := model.Report{ID: r.PathValue("id")}
-	if err := Decode(r, &dto); err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	enums, err := ctrl.Store().ListEnums()
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	// validate form
-	dto.Name = filepath.Base(dto.Name) // sanitize name
-	if vr := ValidateReport(dto, enums); !vr.Valid() {
+	err := Decode(ctrl.Store(), r, &dto, ValidateReport)
+	if vr, ok := err.(valid.ValidationError); err != nil && ok {
 		Render(w, r, http.StatusUnprocessableEntity, views.SettingsReportsOne(Env(ctrl, r), dto, vr))
+		return
+	} else if err != nil {
+		Err(w, r, err)
 		return
 	}
 

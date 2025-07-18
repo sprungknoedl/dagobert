@@ -39,7 +39,7 @@ templ NotesMany(env Env, rows []model.Note) {
 	}
 }
 
-templ NotesOne(env Env, obj model.Note, vr valid.Result) {
+templ NotesOne(env Env, obj model.Note, vr valid.ValidationError) {
 	{{ uri := "/cases/" + obj.CaseID + "/notes/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add note", "Edit note") }}
 	@form(uri, title) {
