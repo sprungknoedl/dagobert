@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"log/slog"
 	"net/http"
 
 	"github.com/sprungknoedl/dagobert/app/model"
@@ -24,22 +23,18 @@ func (ctrl SettingsCtrl) EditEnum(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsEnumsOne(Env(ctrl, r), obj, valid.Result{}))
+	Render(w, r, http.StatusOK, views.SettingsEnumsOne(Env(ctrl, r), obj, valid.ValidationError{}))
 }
 
 func (ctrl SettingsCtrl) SaveEnum(w http.ResponseWriter, r *http.Request) {
 	// deocde form
 	dto := model.Enum{ID: r.PathValue("id")}
-	if err := Decode(r, &dto); err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	// validate form
-	if vr := ValidateEnum(dto); !vr.Valid() {
-		slog.Info("invalid enum", "valid", vr)
-
+	err := Decode(ctrl.Store(), r, &dto, ValidateEnum)
+	if vr, ok := err.(valid.ValidationError); err != nil && ok {
 		Render(w, r, http.StatusUnprocessableEntity, views.SettingsEnumsOne(Env(ctrl, r), dto, vr))
+		return
+	} else if err != nil {
+		Err(w, r, err)
 		return
 	}
 

@@ -175,7 +175,7 @@ func sendJob(w http.ResponseWriter, rc *http.ResponseController, job worker.Job)
 
 func (ctrl *JobCtrl) AckJob(w http.ResponseWriter, r *http.Request) {
 	dto := model.Job{}
-	if err := Decode(r, &dto); err != nil {
+	if err := Decode(ctrl.Store(), r, &dto, nil); err != nil {
 		Err(w, r, err)
 		return
 	}

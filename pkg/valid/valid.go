@@ -21,20 +21,24 @@ func (c Condition) String() string {
 	}
 }
 
-type Result map[string]Condition
+type ValidationError map[string]Condition
 
-func Check(conds []Condition) Result {
-	r := Result{}
+func Check(conds []Condition) ValidationError {
+	r := ValidationError{}
 	for _, c := range conds {
 		if c.Missing || c.Invalid {
 			r[c.Name] = c
 		}
 	}
 
-	return r
+	if len(r) > 0 {
+		return r
+	} else {
+		return nil
+	}
 }
 
-func (r Result) Error() string {
+func (r ValidationError) Error() string {
 	parts := []string{}
 	for _, v := range r {
 		parts = append(parts, v.String())
@@ -43,6 +47,6 @@ func (r Result) Error() string {
 	return strings.Join(parts, "\n")
 }
 
-func (r Result) Valid() bool {
+func (r ValidationError) Valid() bool {
 	return len(r) == 0
 }

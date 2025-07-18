@@ -17,7 +17,7 @@ func InEnum(enum []model.Enum, item string) bool {
 		item)
 }
 
-func ValidateAsset(dto model.Asset, enums model.Enums) valid.Result {
+func ValidateAsset(dto *model.Asset, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !InEnum(enums.AssetStatus, dto.Status)},
 		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !InEnum(enums.AssetTypes, dto.Type)},
@@ -25,7 +25,7 @@ func ValidateAsset(dto model.Asset, enums model.Enums) valid.Result {
 	})
 }
 
-func ValidateCase(dto model.Case, enums model.Enums) valid.Result {
+func ValidateCase(dto *model.Case, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Name", Missing: dto.Name == ""},
 		{Name: "Severity", Message: "Invalid value.", Invalid: !InEnum(enums.CaseSeverities, dto.Severity)},
@@ -34,7 +34,7 @@ func ValidateCase(dto model.Case, enums model.Enums) valid.Result {
 	})
 }
 
-func ValidateEvent(dto model.Event, enums model.Enums) valid.Result {
+func ValidateEvent(dto *model.Event, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Time", Missing: dto.Time.IsZero()},
 		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !InEnum(enums.EventTypes, dto.Type)},
@@ -42,14 +42,14 @@ func ValidateEvent(dto model.Event, enums model.Enums) valid.Result {
 	})
 }
 
-func ValidateEvidence(dto model.Evidence, enums model.Enums) valid.Result {
+func ValidateEvidence(dto *model.Evidence, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Name", Missing: dto.Name == ""},
 		{Name: "Type", Missing: dto.Type == ""},
 	})
 }
 
-func ValidateIndicator(dto model.Indicator, enums model.Enums) valid.Result {
+func ValidateIndicator(dto *model.Indicator, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Value", Missing: dto.Value == ""},
 		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !InEnum(enums.IndicatorStatus, dto.Status)},
@@ -58,14 +58,14 @@ func ValidateIndicator(dto model.Indicator, enums model.Enums) valid.Result {
 	})
 }
 
-func ValidateKey(dto model.Key, enums model.Enums) valid.Result {
+func ValidateKey(dto *model.Key, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Name", Missing: dto.Name == ""},
 		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !InEnum(enums.KeyTypes, dto.Type)},
 	})
 }
 
-func ValidateMalware(dto model.Malware, enums model.Enums) valid.Result {
+func ValidateMalware(dto *model.Malware, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Path", Missing: dto.Path == ""},
 		{Name: "Source", Missing: dto.Asset.ID == ""},
@@ -73,14 +73,14 @@ func ValidateMalware(dto model.Malware, enums model.Enums) valid.Result {
 	})
 }
 
-func ValidateNote(dto model.Note, enums model.Enums) valid.Result {
+func ValidateNote(dto *model.Note, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Category", Missing: dto.Category == ""},
 		{Name: "Title", Missing: dto.Title == ""},
 	})
 }
 
-func ValidateTask(dto model.Task, enums model.Enums) valid.Result {
+func ValidateTask(dto *model.Task, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Task", Missing: dto.Task == ""},
 		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !InEnum(enums.TaskTypes, dto.Type)},
@@ -88,7 +88,7 @@ func ValidateTask(dto model.Task, enums model.Enums) valid.Result {
 	})
 }
 
-func ValidateReport(dto model.Report, enums model.Enums) valid.Result {
+func ValidateReport(dto *model.Report, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{
 			Name: "Name", Missing: dto.Name == "",
@@ -98,14 +98,14 @@ func ValidateReport(dto model.Report, enums model.Enums) valid.Result {
 	})
 }
 
-func ValidateUser(dto model.User, enums model.Enums) valid.Result {
+func ValidateUser(dto *model.User, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "ID", Missing: dto.ID == ""},
 		{Name: "Role", Message: "Invalid role", Invalid: !InEnum(enums.UserRoles, dto.Role)},
 	})
 }
 
-func ValidateHook(dto model.Hook, enums model.Enums) valid.Result {
+func ValidateHook(dto *model.Hook, enums model.Enums) valid.ValidationError {
 	mods := fp.Apply(worker.List, func(m worker.Module) string { return m.Name })
 
 	// compile condition
@@ -127,7 +127,7 @@ func ValidateHook(dto model.Hook, enums model.Enums) valid.Result {
 	})
 }
 
-func ValidateEnum(dto model.Enum) valid.Result {
+func ValidateEnum(dto *model.Enum, _ model.Enums) valid.ValidationError {
 	states := []string{"", "success", "warning", "error"}
 	enums := []string{"AssetStatus", "AssetTypes", "CaseSeverities", "CaseOutcomes", "EventTypes", "EvidenceTypes", "IndicatorStatus", "IndicatorTypes", "KeyTypes", "MalwareStatus", "TaskTypes"}
 

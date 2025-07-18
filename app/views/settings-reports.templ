@@ -40,7 +40,7 @@ templ SettingsReportsMany(env Env, rows []model.Report) {
 	}
 }
 
-templ SettingsReportsOne(env Env, obj model.Report, vr valid.Result) {
+templ SettingsReportsOne(env Env, obj model.Report, vr valid.ValidationError) {
 	{{ uri := "/settings/reports/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add report template", "Edit report template") }}
 	@form(uri, title, enctype("multipart/form-data")) {

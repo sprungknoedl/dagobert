@@ -33,26 +33,18 @@ func (ctrl SettingsCtrl) EditHook(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsHooksOne(Env(ctrl, r), obj, worker.List, valid.Result{}))
+	Render(w, r, http.StatusOK, views.SettingsHooksOne(Env(ctrl, r), obj, worker.List, valid.ValidationError{}))
 }
 
 func (ctrl SettingsCtrl) SaveHook(w http.ResponseWriter, r *http.Request) {
 	// deocde form
 	dto := model.Hook{ID: r.PathValue("id")}
-	if err := Decode(r, &dto); err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	enums, err := ctrl.Store().ListEnums()
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	// validate form
-	if vr := ValidateHook(dto, enums); !vr.Valid() {
+	err := Decode(ctrl.Store(), r, &dto, ValidateHook)
+	if vr, ok := err.(valid.ValidationError); err != nil && ok {
 		Render(w, r, http.StatusUnprocessableEntity, views.SettingsHooksOne(Env(ctrl, r), dto, worker.List, vr))
+		return
+	} else if err != nil {
+		Err(w, r, err)
 		return
 	}
 

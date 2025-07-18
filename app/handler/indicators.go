@@ -359,30 +359,23 @@ func (ctrl IndicatorCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.IndicatorsOne(Env(ctrl, r), obj, valid.Result{}))
+	Render(w, r, http.StatusOK, views.IndicatorsOne(Env(ctrl, r), obj, valid.ValidationError{}))
 }
 
 func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	dto := model.Indicator{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
-	if err := Decode(r, &dto); err != nil {
-		Warn(w, r, err)
-		return
-	}
-
-	enums, err := ctrl.Store().ListEnums()
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	dto.Value = refang(dto.Value)
-	if vr := ValidateIndicator(dto, enums); !vr.Valid() {
+	err := Decode(ctrl.Store(), r, &dto, ValidateIndicator)
+	if vr, ok := err.(valid.ValidationError); err != nil && ok {
 		Render(w, r, http.StatusUnprocessableEntity, views.IndicatorsOne(Env(ctrl, r), dto, vr))
+		return
+	} else if err != nil {
+		Warn(w, r, err)
 		return
 	}
 
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)
+	dto.Value = refang(dto.Value)
 	if err := ctrl.Store().SaveIndicator(dto.CaseID, dto, true); err != nil {
 		Err(w, r, err)
 		return

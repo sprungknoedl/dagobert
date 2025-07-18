@@ -73,7 +73,7 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 	}
 }
 
-templ IndicatorsOne(env Env, obj model.Indicator, vr valid.Result) {
+templ IndicatorsOne(env Env, obj model.Indicator, vr valid.ValidationError) {
 	{{ uri := "/cases/" + obj.CaseID + "/indicators/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add indicator", "Edit indicator") }}
 	@form(uri, title) {

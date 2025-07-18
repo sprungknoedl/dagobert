@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/csv"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"time"
 
@@ -95,25 +94,17 @@ func (ctrl AssetCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.AssetsOne(Env(ctrl, r), obj, valid.Result{}))
+	Render(w, r, http.StatusOK, views.AssetsOne(Env(ctrl, r), obj, valid.ValidationError{}))
 }
 
 func (ctrl AssetCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	dto := model.Asset{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
-	if err := Decode(r, &dto); err != nil {
-		Warn(w, r, err)
-		return
-	}
-
-	enums, err := ctrl.Store().ListEnums()
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	if vr := ValidateAsset(dto, enums); !vr.Valid() {
-		slog.Info("asset validation error", "dto", dto, "validation", vr)
+	err := Decode(ctrl.Store(), r, &dto, ValidateAsset)
+	if vr, ok := err.(valid.ValidationError); err != nil && ok {
 		Render(w, r, http.StatusUnprocessableEntity, views.AssetsOne(Env(ctrl, r), dto, vr))
+		return
+	} else if err != nil {
+		Warn(w, r, err)
 		return
 	}
 

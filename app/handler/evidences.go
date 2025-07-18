@@ -118,7 +118,7 @@ func (ctrl EvidenceCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	Render(w, r, http.StatusOK, views.EvidencesOne(Env(ctrl, r), obj, valid.Result{}))
+	Render(w, r, http.StatusOK, views.EvidencesOne(Env(ctrl, r), obj, valid.ValidationError{}))
 }
 
 func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
@@ -130,13 +130,11 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dto := model.Evidence{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
-	if err := Decode(r, &dto); err != nil {
-		Err(w, r, err)
+	err = Decode(ctrl.Store(), r, &dto, ValidateEvidence)
+	if vr, ok := err.(valid.ValidationError); err != nil && ok {
+		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(Env(ctrl, r), dto, vr))
 		return
-	}
-
-	enums, err := ctrl.Store().ListEnums()
-	if err != nil {
+	} else if err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -144,9 +142,6 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	// default values
 	dto.Size = int64(0)
 	dto.Name = filepath.Base(dto.Name) // sanitize name
-	if vr := ValidateEvidence(dto, enums); !vr.Valid() {
-		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(Env(ctrl, r), dto, vr))
-	}
 
 	// process file if present
 	if fh != nil && fh.Size > 0 {

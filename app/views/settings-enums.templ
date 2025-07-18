@@ -26,7 +26,7 @@ templ SettingsEnumsMany(env Env) {
 	}
 }
 
-templ SettingsEnumsOne(env Env, obj model.Enum, vr valid.Result) {
+templ SettingsEnumsOne(env Env, obj model.Enum, vr valid.ValidationError) {
 	{{ uri := "/settings/enums/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add case object", "Edit case object") }}
 	@form(uri, title) {

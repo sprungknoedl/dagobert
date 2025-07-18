@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/fs"
 	"log/slog"
+	"maps"
 	"net/http"
 	"os"
 	"strings"
@@ -18,6 +19,8 @@ import (
 	"github.com/gorilla/sessions"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 var ZeroID string = "0"
@@ -103,7 +106,29 @@ func Serve5xx(w http.ResponseWriter, r *http.Request) {
 	Err(w, r, errors.New("500: Internal Test Error"))
 }
 
-func Decode(r *http.Request, dst any) error {
+func JoinV(errs ...error) error {
+	verrs := fp.Apply(fp.Filter(errs,
+		func(err error) bool { _, ok := err.(valid.ValidationError); return err != nil && ok }),
+		func(in error) valid.ValidationError { return in.(valid.ValidationError) })
+	other := fp.Filter(errs,
+		func(err error) bool { _, ok := err.(valid.ValidationError); return err != nil && !ok })
+	if len(other) > 0 {
+		return errors.Join(other...)
+	}
+
+	vr := valid.ValidationError{}
+	for _, m := range verrs {
+		maps.Copy(vr, m)
+	}
+
+	if vr.Valid() {
+		return nil
+	} else {
+		return vr
+	}
+}
+
+func Decode[T any](db *model.Store, r *http.Request, dst T, validator func(T, model.Enums) valid.ValidationError) error {
 	if strings.Contains(r.Header.Get("Content-Type"), "application/json") {
 		return json.NewDecoder(r.Body).Decode(dst)
 	}
@@ -119,7 +144,29 @@ func Decode(r *http.Request, dst any) error {
 	}
 
 	decoder.IgnoreUnknownKeys(true)
-	return decoder.Decode(dst, r.PostForm)
+	err := decoder.Decode(dst, r.PostForm)
+	if merr, ok := err.(schema.MultiError); ok {
+		vr := valid.ValidationError{}
+		for key, val := range merr {
+			cerr := val.(schema.ConversionError)
+			vr[key] = valid.Condition{Name: key, Invalid: true, Message: cerr.Err.Error()}
+		}
+		return vr
+	} else if err != nil {
+		return err
+	}
+
+	if validator != nil {
+		enums, err := db.ListEnums()
+		if err != nil {
+			return err
+		}
+		if vr := validator(dst, enums); !vr.Valid() {
+			return vr
+		}
+	}
+
+	return nil
 }
 
 type Ctrl interface {

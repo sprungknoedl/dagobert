@@ -52,7 +52,7 @@ templ SettingsUsersMany(env Env, rows []model.User) {
 	}
 }
 
-templ SettingsUsersOne(env Env, obj model.User, vr valid.Result) {
+templ SettingsUsersOne(env Env, obj model.User, vr valid.ValidationError) {
 	{{ uri := "/settings/users/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add user", "Edit user") }}
 	@form(uri, title) {
@@ -79,7 +79,7 @@ templ SettingsUsersOne(env Env, obj model.User, vr valid.Result) {
 	}
 }
 
-templ SettingsUsersACL(env Env, obj model.User, cases []model.Case, perms []string, vr valid.Result) {
+templ SettingsUsersACL(env Env, obj model.User, cases []model.Case, perms []string, vr valid.ValidationError) {
 	{{ uri := "/settings/users/" + obj.ID + "/acl" }}
 	{{ title := "Access control" }}
 	@form(uri, title) {

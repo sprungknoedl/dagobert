@@ -124,29 +124,21 @@ func (ctrl CaseCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		sketches, _ = ctrl.ts.ListSketches()
 	}
 
-	Render(w, r, http.StatusOK, views.CasesOne(Env(ctrl, r), obj, sketches, valid.Result{}))
+	Render(w, r, http.StatusOK, views.CasesOne(Env(ctrl, r), obj, sketches, valid.ValidationError{}))
 }
 
 func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	dto := model.Case{ID: r.PathValue("cid")}
-	if err := Decode(r, &dto); err != nil {
-		Warn(w, r, err)
-		return
-	}
-
-	enums, err := ctrl.Store().ListEnums()
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	if vr := ValidateCase(dto, enums); !vr.Valid() {
+	err := Decode(ctrl.Store(), r, &dto, ValidateCase)
+	if vr, ok := err.(valid.ValidationError); err != nil && ok {
 		var sketches []timesketch.Sketch
 		if ctrl.ts != nil {
 			sketches, _ = ctrl.ts.ListSketches()
 		}
-
 		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(Env(ctrl, r), dto, sketches, vr))
+		return
+	} else if err != nil {
+		Warn(w, r, err)
 		return
 	}
 
@@ -209,7 +201,7 @@ func (ctrl CaseCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
 	}
 
 	form := struct{ Users []string }{}
-	if err := Decode(r, &form); err != nil {
+	if err := Decode(ctrl.Store(), r, &form, nil); err != nil {
 		Warn(w, r, err)
 		return
 	}

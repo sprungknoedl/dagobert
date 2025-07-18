@@ -99,7 +99,7 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 	}
 }
 
-templ EventsOne(env Env, obj model.Event, assets []model.Asset, indicators []model.Indicator, vr valid.Result) {
+templ EventsOne(env Env, obj model.Event, assets []model.Asset, indicators []model.Indicator, vr valid.ValidationError) {
 	{{ uri := "/cases/" + obj.CaseID + "/events/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add event", "Edit event") }}
 	@form(uri, title) {

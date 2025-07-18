@@ -90,24 +90,17 @@ func (ctrl NoteCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.NotesOne(Env(ctrl, r), obj, valid.Result{}))
+	Render(w, r, http.StatusOK, views.NotesOne(Env(ctrl, r), obj, valid.ValidationError{}))
 }
 
 func (ctrl NoteCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	dto := model.Note{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
-	if err := Decode(r, &dto); err != nil {
-		Warn(w, r, err)
-		return
-	}
-
-	enums, err := ctrl.Store().ListEnums()
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	if vr := ValidateNote(dto, enums); !vr.Valid() {
+	err := Decode(ctrl.Store(), r, &dto, ValidateNote)
+	if vr, ok := err.(valid.ValidationError); err != nil && ok {
 		Render(w, r, http.StatusUnprocessableEntity, views.NotesOne(Env(ctrl, r), dto, vr))
+		return
+	} else if err != nil {
+		Warn(w, r, err)
 		return
 	}
 
