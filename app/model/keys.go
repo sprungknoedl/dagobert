@@ -25,5 +25,5 @@ func (store *Store) SaveKey(obj Key) error {
 }
 
 func (store *Store) DeleteKey(key string) error {
-	return store.DB.Delete(Case{}, "key = ?", key).Error
+	return store.DB.Delete(Key{}, "key = ?", key).Error
 }
