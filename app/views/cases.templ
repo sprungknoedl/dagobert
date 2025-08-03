@@ -55,7 +55,7 @@ templ CasesMany(env Env, rows []model.Case) {
 templ CasesOne(env Env, obj model.Case, sketches []timesketch.Sketch, vr valid.ValidationError) {
 	{{ uri := "/cases/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add case", "Edit case") }}
-	@form(uri, title) {
+	@form(env, uri, title) {
 		@hiddenField("ID", obj.ID)
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
 		@stringField("Classification", obj.Classification, withLabel("Classification"), withError(vr["Classification"]))

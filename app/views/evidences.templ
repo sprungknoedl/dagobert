@@ -78,7 +78,7 @@ templ EvidencesMany(env Env, rows []model.Evidence) {
 templ EvidencesOne(env Env, obj model.Evidence, vr valid.ValidationError) {
 	{{ uri := "/cases/" + obj.CaseID + "/evidences/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add evidence", "Edit evidence") }}
-	@form(uri, title, enctype("multipart/form-data")) {
+	@form(env, uri, title, enctype("multipart/form-data")) {
 		@hiddenField("ID", obj.ID)
 		@hiddenField("CaseID", obj.CaseID)
 		@selectField("Type", obj.Type, env.Enums.EvidenceTypes, required(), withLabel("Type"), withError(vr["Type"]))

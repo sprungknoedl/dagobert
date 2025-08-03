@@ -29,7 +29,7 @@ templ SettingsEnumsMany(env Env) {
 templ SettingsEnumsOne(env Env, obj model.Enum, vr valid.ValidationError) {
 	{{ uri := "/settings/enums/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add case object", "Edit case object") }}
-	@form(uri, title) {
+	@form(env, uri, title) {
 		@hiddenField("ID", obj.ID)
 		@hiddenField("Category", obj.Category)
 		@numberField("Rank", obj.Rank, withLabel("Rank"), withError(vr["Rank"]))

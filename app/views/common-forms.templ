@@ -7,7 +7,7 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-templ form(uri string, title string, opts ...formOption) {
+templ form(env Env, uri string, title string, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
 	@layout() {
 		<main>
@@ -16,6 +16,7 @@ templ form(uri string, title string, opts ...formOption) {
 				<h1 class="font-serif text-2xl mb-4">{ title }</h1>
 				<!-- Modal body -->
 				<div class="mb-4">
+					@hiddenField(CsrfFieldName, env.CSRF)
 					{ children... }
 				</div>
 				<!-- Modal footer -->

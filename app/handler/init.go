@@ -62,11 +62,12 @@ func Run(cmd *cobra.Command, args []string) {
 	// --------------------------------------
 	slog.Debug("Creating router and registering handlers")
 	chain := alice.New(
-		authboss.ModuleListMiddleware(ab),
+		Recover,
+		Logger,
+		CSRF,
 		ab.LoadClientStateMiddleware,
 		auth.ApiKeyMiddleware(ab, db),
-		Logger,
-		Recover)
+		authboss.ModuleListMiddleware(ab))
 
 	router := http.NewServeMux()
 	secured := http.NewServeMux()

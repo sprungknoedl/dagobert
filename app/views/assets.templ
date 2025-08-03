@@ -64,7 +64,7 @@ templ AssetsMany(env Env, title string, rows []model.Asset) {
 templ AssetsOne(env Env, obj model.Asset, vr valid.ValidationError) {
 	{{ uri := "/cases/" + obj.CaseID + "/assets/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add asset", "Edit asset") }}
-	@form(uri, title) {
+	@form(env, uri, title) {
 		@hiddenField("ID", obj.ID)
 		@hiddenField("CaseID", obj.CaseID)
 		@selectField("Status", obj.Status, env.Enums.AssetStatus, required(), withLabel("Status"), withError(vr["Status"]))
@@ -80,7 +80,7 @@ templ AssetsOne(env Env, obj model.Asset, vr valid.ValidationError) {
 templ CasesACL(env Env, obj model.Case, users []model.User, perms []string) {
 	{{ uri := "/settings/cases/" + obj.ID + "/acl" }}
 	{{ title := "Access control" }}
-	@form(uri, title) {
+	@form(env, uri, title) {
 		<p class="mb-2">The following users are allowed to access <strong>{ obj.Name }</strong>:</p>
 		for _, user := range users {
 			if user.Role != "Administrator" {

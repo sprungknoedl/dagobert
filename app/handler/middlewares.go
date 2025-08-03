@@ -3,10 +3,30 @@ package handler
 import (
 	"log/slog"
 	"net/http"
+	"os"
 	"runtime/debug"
 	"strconv"
 	"time"
+
+	"github.com/gorilla/csrf"
+	"github.com/sprungknoedl/dagobert/app/auth"
 )
+
+func CSRF(next http.Handler) http.Handler {
+	xsrf := csrf.Protect([]byte(os.Getenv("WEB_SESSION_SECRET")))
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		slog.Info("... CSRF middleware")
+		if r.Header.Get(auth.HeaderApiKey) == "" {
+			xsrf(next).ServeHTTP(w, r)
+		} else {
+			// no csrf protection for api key based authentication.
+			// strip cookie and authorization header
+			r.Header.Del("Authorization")
+			r.Header.Del("Cookie")
+			next.ServeHTTP(w, r)
+		}
+	})
+}
 
 func Recover(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -23,12 +43,15 @@ func Recover(next http.Handler) http.Handler {
 			}
 		}()
 
+		slog.Info("... Recover middleware")
 		next.ServeHTTP(w, r)
 	})
 }
 
 func Logger(next http.Handler) http.Handler {
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		slog.Info("... Logger middleware")
 		lw := &LoggingResponseWriter{w: w, Status: http.StatusOK}
 
 		start := time.Now()
