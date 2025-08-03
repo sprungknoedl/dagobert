@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/app/worker"
@@ -23,7 +24,7 @@ type JobCtrl struct {
 	workers  map[string]worker.Worker
 }
 
-func NewJobCtrl(store *model.Store, acl *ACL) *JobCtrl {
+func NewJobCtrl(store *model.Store, acl *auth.ACL) *JobCtrl {
 	return &JobCtrl{
 		Ctrl:    BaseCtrl{store, acl},
 		workers: make(map[string]worker.Worker),

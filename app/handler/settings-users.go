@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
@@ -13,7 +14,7 @@ type UserCtrl struct {
 	Ctrl
 }
 
-func NewUserCtrl(store *model.Store, acl *ACL) *UserCtrl {
+func NewUserCtrl(store *model.Store, acl *auth.ACL) *UserCtrl {
 	return &UserCtrl{BaseCtrl{store, acl}}
 }
 

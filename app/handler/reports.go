@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/doct"
@@ -39,7 +40,7 @@ type ReportsCtrl struct {
 	Ctrl
 }
 
-func NewReportsCtrl(store *model.Store, acl *ACL) *ReportsCtrl {
+func NewReportsCtrl(store *model.Store, acl *auth.ACL) *ReportsCtrl {
 	return &ReportsCtrl{BaseCtrl{store, acl}}
 }
 

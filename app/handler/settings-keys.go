@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
@@ -15,7 +16,7 @@ type KeyCtrl struct {
 	jobctrl *JobCtrl
 }
 
-func NewKeyCtrl(store *model.Store, acl *ACL, jobctrl *JobCtrl) *KeyCtrl {
+func NewKeyCtrl(store *model.Store, acl *auth.ACL, jobctrl *JobCtrl) *KeyCtrl {
 	return &KeyCtrl{Ctrl: BaseCtrl{store, acl}, jobctrl: jobctrl}
 }
 

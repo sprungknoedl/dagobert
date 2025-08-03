@@ -7,6 +7,7 @@ import (
 	"slices"
 	"time"
 
+	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
@@ -16,7 +17,7 @@ type VisualsCtrl struct {
 	Ctrl
 }
 
-func NewVisualsCtrl(store *model.Store, acl *ACL) *VisualsCtrl {
+func NewVisualsCtrl(store *model.Store, acl *auth.ACL) *VisualsCtrl {
 	return &VisualsCtrl{BaseCtrl{store, acl}}
 }
 

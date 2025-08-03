@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
@@ -18,7 +19,7 @@ type TaskCtrl struct {
 	Ctrl
 }
 
-func NewTaskCtrl(store *model.Store, acl *ACL) *TaskCtrl {
+func NewTaskCtrl(store *model.Store, acl *auth.ACL) *TaskCtrl {
 	return &TaskCtrl{BaseCtrl{store, acl}}
 }
 

@@ -16,6 +16,7 @@ import (
 
 //go:embed migrations/*.sql
 var Migrations embed.FS
+var DefaultUrl = "file:files/dagobert.db?_pragma=foreign_keys(ON)&_pragma=journal_mode(WAL)"
 
 type Store struct {
 	RawConn *sql.DB

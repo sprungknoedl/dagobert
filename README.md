@@ -36,9 +36,6 @@ Generate polished reports with a single click. Customise templates and export in
 ### Prerequisites
 
 * Docker and Docker Compose (v2+)
-* Configurred OpenID Connect provder (e.g. [Keycloack](https://www.keycloak.org/), [Authentik](https://goauthentik.io/), [Microsoft Entra](https://learn.microsoft.com/en-us/entra/identity-platform/v2-protocols-oidc) or [Google Cloud](https://cloud.google.com/identity-platform/docs/web/oidc))
-
-Dagobert ships no built-in user authentication and instead relies on the presence of an OpenID Connect provider. You need to configure your identity platform first for Dagobert to verify the identity of the user.
 
 ### Installation
 
@@ -64,7 +61,24 @@ To ease the installation and upgrades, Dagobert is shipped in Docker containers.
     docker compose up -d
     ```
 
-    Access the app at [http://localhost:8080].
+4. Run database migrations
+    ```sh
+    docker compose exec app dagobert migrate
+    ```
+
+5. Create the first user
+    ```sh
+    docker compose exec app dagobert create-user <USERNAME>
+    ```
+
+6. Create the first api key (for dagobert communication)
+    ```sh
+    docker compose exec app dagobert create-key dagobert
+    nano dagobert.env # update settings
+    docker compose up -d # restart workers
+    ```
+
+Access the app at [http://localhost:8080].
 
 **Production Note:** Always deploy behind a HTTPS proxy like Apache, nginx or traefik.
 

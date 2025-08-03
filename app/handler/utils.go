@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"cmp"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
@@ -17,6 +16,7 @@ import (
 	"github.com/a-h/templ"
 	"github.com/gorilla/schema"
 	"github.com/gorilla/sessions"
+	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
@@ -30,7 +30,7 @@ var decoder = schema.NewDecoder()
 var SessionName = "default"
 var SessionStore = sessions.NewCookieStore([]byte(os.Getenv("WEB_SESSION_SECRET")))
 
-func ImportCSV(store *model.Store, acl *ACL, w http.ResponseWriter, r *http.Request, uri string, numFields int, cb func(rec []string)) error {
+func ImportCSV(store *model.Store, acl *auth.ACL, w http.ResponseWriter, r *http.Request, uri string, numFields int, cb func(rec []string)) error {
 	if r.Method == http.MethodGet {
 		views.ImportDialog().Render(r.Context(), w)
 		return nil
@@ -171,16 +171,16 @@ func Decode[T any](db *model.Store, r *http.Request, dst T, validator func(T, mo
 
 type Ctrl interface {
 	Store() *model.Store
-	ACL() *ACL
+	ACL() *auth.ACL
 }
 
 type BaseCtrl struct {
 	store *model.Store
-	acl   *ACL
+	acl   *auth.ACL
 }
 
 func (ctrl BaseCtrl) Store() *model.Store { return ctrl.store }
-func (ctrl BaseCtrl) ACL() *ACL           { return ctrl.acl }
+func (ctrl BaseCtrl) ACL() *auth.ACL      { return ctrl.acl }
 
 func Env(ctrl Ctrl, r *http.Request) views.Env {
 	kase := GetCase(ctrl.Store(), r)
@@ -199,11 +199,13 @@ func Env(ctrl Ctrl, r *http.Request) views.Env {
 }
 
 func GetUser(store *model.Store, r *http.Request) model.User {
-	sess, _ := SessionStore.Get(r, SessionName)
-	claims, _ := sess.Values["oidcClaims"].(map[string]interface{})
-	uid, _ := claims[cmp.Or(os.Getenv("OIDC_ID_CLAIM"), "sub")].(string)
-	user, _ := store.GetUser(uid)
-	return user
+	user, err := auth.CurrentUser(r)
+	if err != nil {
+		slog.Error("failed to get current user", "err", err)
+		return model.User{}
+	}
+
+	return *user
 }
 
 func GetCase(store *model.Store, r *http.Request) model.Case {
