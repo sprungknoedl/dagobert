@@ -5,7 +5,7 @@
 build: build-web build-go
 
 build-web:
-	npx @tailwindcss/cli -i app/assets/dagobert.css -o public/assets/dagobert.css
+	npx @tailwindcss/cli -m -i app/assets/dagobert.css -o public/assets/dagobert.css
 
 build-go:
 	go tool templ generate
