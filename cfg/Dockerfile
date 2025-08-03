@@ -33,6 +33,7 @@ COPY --from=app /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 RUN useradd -l -u 1000 -g users sprungknoedl
 RUN mkdir /home/sprungknoedl/files && chown -R sprungknoedl:users /home/sprungknoedl
+ENV PATH="$PATH:/home/sprungknoedl"
 
 USER sprungknoedl
 CMD ["/home/sprungknoedl/dagobert"]

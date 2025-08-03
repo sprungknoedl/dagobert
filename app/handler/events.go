@@ -6,10 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
+	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
@@ -23,7 +26,17 @@ type EventCtrl struct {
 	ts *timesketch.Client
 }
 
-func NewEventCtrl(store *model.Store, acl *ACL, ts *timesketch.Client) *EventCtrl {
+func NewEventCtrl(store *model.Store, acl *auth.ACL) *EventCtrl {
+	slog.Debug("Creating timesketch client", "url", os.Getenv("TIMESKETCH_URL"))
+	ts, err := timesketch.NewClient(
+		os.Getenv("TIMESKETCH_URL"),
+		os.Getenv("TIMESKETCH_USER"),
+		os.Getenv("TIMESKETCH_PASS"),
+	)
+	if err != nil {
+		slog.Warn("Failed to create timesketch client", "err", err)
+	}
+
 	return &EventCtrl{Ctrl: BaseCtrl{store, acl}, ts: ts}
 }
 

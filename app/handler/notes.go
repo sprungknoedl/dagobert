@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
@@ -16,7 +17,7 @@ type NoteCtrl struct {
 	Ctrl
 }
 
-func NewNoteCtrl(store *model.Store, acl *ACL) *NoteCtrl {
+func NewNoteCtrl(store *model.Store, acl *auth.ACL) *NoteCtrl {
 	return &NoteCtrl{BaseCtrl{store, acl}}
 }
 

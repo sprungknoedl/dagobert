@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
@@ -22,7 +23,7 @@ type EvidenceCtrl struct {
 	Ctrl
 }
 
-func NewEvidenceCtrl(store *model.Store, acl *ACL) *EvidenceCtrl {
+func NewEvidenceCtrl(store *model.Store, acl *auth.ACL) *EvidenceCtrl {
 	return &EvidenceCtrl{BaseCtrl{store, acl}}
 }
 

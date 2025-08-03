@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
@@ -16,7 +17,7 @@ type AssetCtrl struct {
 	Ctrl
 }
 
-func NewAssetCtrl(store *model.Store, acl *ACL) *AssetCtrl {
+func NewAssetCtrl(store *model.Store, acl *auth.ACL) *AssetCtrl {
 	return &AssetCtrl{Ctrl: BaseCtrl{store, acl}}
 }
 

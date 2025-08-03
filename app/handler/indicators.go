@@ -6,12 +6,15 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
@@ -24,7 +27,17 @@ type IndicatorCtrl struct {
 	ts *timesketch.Client
 }
 
-func NewIndicatorCtrl(store *model.Store, acl *ACL, ts *timesketch.Client) *IndicatorCtrl {
+func NewIndicatorCtrl(store *model.Store, acl *auth.ACL) *IndicatorCtrl {
+	slog.Debug("Creating timesketch client", "url", os.Getenv("TIMESKETCH_URL"))
+	ts, err := timesketch.NewClient(
+		os.Getenv("TIMESKETCH_URL"),
+		os.Getenv("TIMESKETCH_USER"),
+		os.Getenv("TIMESKETCH_PASS"),
+	)
+	if err != nil {
+		slog.Warn("Failed to create timesketch client", "err", err)
+	}
+
 	return &IndicatorCtrl{Ctrl: BaseCtrl{store, acl}, ts: ts}
 }
 

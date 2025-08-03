@@ -16,11 +16,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/spf13/cobra"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 )
 
-func StartWorker() {
+func Run(cmd *cobra.Command, args []string) {
 	modules := []string{}
 	modules = append(modules, ValidateHayabusa()...)
 	modules = append(modules, ValidatePlaso()...)

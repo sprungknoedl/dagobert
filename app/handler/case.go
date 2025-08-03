@@ -4,11 +4,14 @@ import (
 	"cmp"
 	"encoding/csv"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
@@ -21,7 +24,17 @@ type CaseCtrl struct {
 	ts *timesketch.Client
 }
 
-func NewCaseCtrl(store *model.Store, acl *ACL, ts *timesketch.Client) *CaseCtrl {
+func NewCaseCtrl(store *model.Store, acl *auth.ACL) *CaseCtrl {
+	slog.Debug("Creating timesketch client", "url", os.Getenv("TIMESKETCH_URL"))
+	ts, err := timesketch.NewClient(
+		os.Getenv("TIMESKETCH_URL"),
+		os.Getenv("TIMESKETCH_USER"),
+		os.Getenv("TIMESKETCH_PASS"),
+	)
+	if err != nil {
+		slog.Warn("Failed to create timesketch client", "err", err)
+	}
+
 	return &CaseCtrl{Ctrl: BaseCtrl{store, acl}, ts: ts}
 }
 

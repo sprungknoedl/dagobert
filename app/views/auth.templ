@@ -1,0 +1,87 @@
+package views
+
+import (
+	"github.com/aarondl/authboss/v3"
+	"github.com/sprungknoedl/dagobert/app/model"
+)
+
+templ Login(data authboss.HTMLData) {
+	@layout() {
+		<div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+			<div class="sm:mx-auto sm:w-full sm:max-w-sm text-neutral text-center">
+				<div class="m-4 mx-auto text-4xl font-serif">[d]</div>
+				<h2 class="mt-10 text-xl font-bold">Sign in to dagobert</h2>
+			</div>
+			<div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+				<form action="" method="POST" class="space-y-6">
+					if err, ok := data[authboss.DataErr].(string); ok {
+						<p class="text-error gap-2"><i class="hio hio-exclamation-circle"></i> { err }</p>
+					}
+					if dst, ok := data["redir"].(string); ok {
+						<input type="hidden" name="redir" value={ dst }/>
+					}
+					<div class="form-control mb-4">
+						<label class="label justify-start gap-2"><i class="hio hio-user"></i> E-Mail</label>
+						<input name="email" required type="email" autocomplete="email" class="input w-full"/>
+					</div>
+					<div class="form-control mb-4">
+						<label class="label justify-start gap-2"><i class="hio hio-lock-closed"></i> Password</label>
+						<input name="password" required type="password" autocomplete="current-password" class="input w-full"/>
+					</div>
+					<div class="form-control mb-4">
+						if modules, ok := data[authboss.DataModules].(map[string]bool); ok && modules["remember"] {
+							<label class="label cursor-pointer justify-start gap-2">
+								<input name="rm" value="true" type="checkbox" class="checkbox"/> Remember me
+							</label>
+						}
+					</div>
+					<div class="flex gap-2 items-center">
+						<button type="submit" class="btn btn-neutral w-full">Sign in</button>
+					</div>
+					<div class="divider mt-4 mb-6">OR</div>
+					<div class="flex gap-2 items-center">
+						<a href="/auth/oauth2/openid" class="btn btn-neutral w-full"><i class="hio hio-key"></i> Sign in with SSO</a>
+					</div>
+				</form>
+			</div>
+		</div>
+	}
+}
+
+templ ChangePassword(user *model.User) {
+	@layout() {
+		<main>
+			<form method="post" action="">
+				<!-- Modal header -->
+				<h3 class="font-bold text-lg mb-4">
+					Change password
+				</h3>
+				<!-- Modal body -->
+				<div class="mb-4">
+					<input name="ID" type="hidden" value={ user.ID }/>
+					<div class="form-control mb-4">
+						<label class="label justify-start gap-2">User</label>
+						<input disabled type="text" class="input w-full" value={ user.String() }/>
+					</div>
+					<div class="form-control mb-4">
+						<label class="label justify-start gap-2">Current password</label>
+						<input name="currentPassword" required type="password" autocomplete="current-password" class="input w-full"/>
+					</div>
+					<div class="form-control mb-4">
+						<label class="label justify-start gap-2">New password</label>
+						<input name="newPassword" required type="password" autocomplete="new-password" class="input w-full"/>
+					</div>
+					<div class="form-control mb-4">
+						<label class="label justify-start gap-2">Confirm password</label>
+						<input name="confirmPassword" required type="password" autocomplete="new-password" class="input w-full"/>
+					</div>
+				</div>
+				<!-- Modal footer -->
+				<div class="flex gap-2 items-center">
+					<button type="submit" class="btn btn-neutral"><i class="hio hio-key"></i> Change</button>
+					<a class="btn" up-dismiss>Cancel </a>
+				</div>
+			</form>
+		</main>
+	}
+}
