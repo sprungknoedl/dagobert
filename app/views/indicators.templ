@@ -76,7 +76,7 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 templ IndicatorsOne(env Env, obj model.Indicator, vr valid.ValidationError) {
 	{{ uri := "/cases/" + obj.CaseID + "/indicators/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add indicator", "Edit indicator") }}
-	@form(uri, title) {
+	@form(env, uri, title) {
 		@hiddenField("ID", obj.ID)
 		@hiddenField("CaseID", obj.CaseID)
 		@selectField("Status", obj.Status, env.Enums.IndicatorStatus, required(), withLabel("Status"), withError(vr["Status"]))

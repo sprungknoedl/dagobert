@@ -72,7 +72,7 @@ templ SettingsKeyMany(env Env, keys []model.Key, workers []worker.Worker) {
 templ SettingsKeysOne(env Env, obj model.Key, vr valid.ValidationError) {
 	{{ uri := "/settings/api-keys/" + obj.Key }}
 	{{ title := fp.If(obj.Key == "new", "Add API key", "Edit API key") }}
-	@form(uri, title) {
+	@form(env, uri, title) {
 		@hiddenField("Key", obj.Key)
 		@selectField("Type", obj.Type, env.Enums.KeyTypes, required(), withLabel("Type"), withError(vr["Type"]))
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))

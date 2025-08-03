@@ -57,7 +57,7 @@ templ TasksMany(env Env, rows []model.Task) {
 templ TasksOne(env Env, obj model.Task, vr valid.ValidationError) {
 	{{ uri := "/cases/" + obj.CaseID + "/tasks/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add task", "Edit task") }}
-	@form(uri, title) {
+	@form(env, uri, title) {
 		@hiddenField("ID", obj.ID)
 		@hiddenField("CaseID", obj.CaseID)
 		@selectField("Type", obj.Type, env.Enums.TaskTypes, required(), withLabel("Type"), withError(vr["Type"]))

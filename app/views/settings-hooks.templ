@@ -51,7 +51,7 @@ templ SettingsHooksMany(env Env, rows []model.Hook) {
 templ SettingsHooksOne(env Env, obj model.Hook, mods []worker.Module, vr valid.ValidationError) {
 	{{ uri := "/settings/hooks/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add automation rule", "Edit automation rule") }}
-	@form(uri, title) {
+	@form(env, uri, title) {
 		@hiddenField("ID", obj.ID)
 		@selectField("Trigger", obj.Trigger, env.Enums.HookTrigger, required(), withLabel("Trigger"), withError(vr["Trigger"]))
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))

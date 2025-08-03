@@ -30,10 +30,6 @@ func ApiKeyMiddleware(ab *authboss.Authboss, db *model.Store) func(http.Handler)
 				return
 			}
 
-			// strip cookie and authorization header
-			r.Header.Del("Authorization")
-			r.Header.Del("Cookie")
-
 			// embed system user into session
 			r = r.WithContext(context.WithValue(r.Context(), authboss.CTXKeyUser, &model.SystemUser))
 			next.ServeHTTP(w, r)

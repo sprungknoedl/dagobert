@@ -55,7 +55,7 @@ templ SettingsUsersMany(env Env, rows []model.User) {
 templ SettingsUsersOne(env Env, obj model.User, vr valid.ValidationError) {
 	{{ uri := "/settings/users/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add user", "Edit user") }}
-	@form(uri, title) {
+	@form(env, uri, title) {
 		@stringField("ID", obj.ID, required(), withLabel("ID"), withError(vr["ID"]))
 		@selectField("Role", obj.Role, env.Enums.UserRoles, required(), withLabel("Role"), withError(vr["Role"]))
 		@stringField("Name", obj.Name, withLabel("Name"), withError(vr["Name"]))
@@ -82,7 +82,7 @@ templ SettingsUsersOne(env Env, obj model.User, vr valid.ValidationError) {
 templ SettingsUsersACL(env Env, obj model.User, cases []model.Case, perms []string, vr valid.ValidationError) {
 	{{ uri := "/settings/users/" + obj.ID + "/acl" }}
 	{{ title := "Access control" }}
-	@form(uri, title) {
+	@form(env, uri, title) {
 		<p class="mb-2">User <strong>{ obj.Name } ({ obj.UPN })</strong> is allowed to access the following cases:</p>
 		for _, kase := range cases {
 			<div class="form-control mb-2">

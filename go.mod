@@ -12,6 +12,7 @@ require (
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/expr-lang/expr v1.16.9
 	github.com/golang-migrate/migrate/v4 v4.18.1
+	github.com/gorilla/csrf v1.7.2
 	github.com/gorilla/schema v1.4.1
 	github.com/gorilla/sessions v1.3.0
 	github.com/justinas/alice v1.2.0
