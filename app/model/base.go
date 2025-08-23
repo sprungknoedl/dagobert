@@ -64,6 +64,9 @@ func (t Time) Value() (driver.Value, error) {
 func (t *Time) Scan(src interface{}) (err error) {
 	switch src := src.(type) {
 	case string:
+		if src == "" {
+			return nil
+		}
 		t2, err := time.Parse(time.RFC3339Nano, src)
 		*t = Time(t2)
 		return err
