@@ -45,6 +45,7 @@ templ SettingsReportsOne(env Env, obj model.Report, vr valid.ValidationError) {
 	{{ title := fp.If(obj.ID == "new", "Add report template", "Edit report template") }}
 	@form(env, uri, title, enctype("multipart/form-data")) {
 		@hiddenField("ID", obj.ID)
+		@hiddenField(CsrfFieldName, env.CSRF)
 		<div class="form-control mb-2">
 			<label class="label justify-start gap-2">
 				File
