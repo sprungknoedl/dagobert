@@ -12,7 +12,8 @@ templ ReportsDialog(env Env, rows []model.Report) {
 				</h3>
 				<!-- Modal body -->
 				<div class="mb-4">
-					<input name="CaseID" type="hidden" value={ env.Case.ID }/>
+					@hiddenField("CaseID", env.Case.ID)
+					@hiddenField(CsrfFieldName, env.CSRF)
 					<div class="form-control mb-2">
 						<label class="label justify-start gap-2">
 							Template
