@@ -3,6 +3,7 @@ package doct
 import (
 	"archive/zip"
 	"io"
+	"time"
 )
 
 type Template interface {
@@ -31,18 +32,18 @@ func processZip(r io.ReaderAt, size int64, w io.Writer, fn Processor) error {
 			}
 			defer ir.Close()
 
-			header, err := zip.FileInfoHeader(item.FileInfo())
+			// Use a deterministic timestamp for reproducible archives
+			hdr := &zip.FileHeader{
+				Name:     item.Name,
+				Method:   zip.Deflate,
+				Modified: time.Unix(0, 0).UTC(),
+			}
+			target, err := zw.CreateHeader(hdr)
 			if err != nil {
 				return err
 			}
 
-			header.Name = item.Name
-			target, err := zw.CreateHeader(header)
-			if err != nil {
-				return err
-			}
-
-			return fn(header, ir, target)
+			return fn(hdr, ir, target)
 		}()
 		if err != nil {
 			return err
