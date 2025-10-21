@@ -1,6 +1,8 @@
 package views
 
 import (
+	"os"
+
 	"github.com/aarondl/authboss/v3"
 	"github.com/sprungknoedl/dagobert/app/model"
 )
@@ -39,10 +41,12 @@ templ Login(data authboss.HTMLData) {
 					<div class="flex gap-2 items-center">
 						<button type="submit" class="btn btn-neutral w-full">Sign in</button>
 					</div>
-					<div class="divider mt-4 mb-6">OR</div>
-					<div class="flex gap-2 items-center">
-						<a href="/auth/oauth2/openid" class="btn btn-neutral w-full"><i class="hio hio-key"></i> Sign in with SSO</a>
-					</div>
+					if os.Getenv("OIDC_ENABLED") == "true" {
+						<div class="divider mt-4 mb-6">OR</div>
+						<div class="flex gap-2 items-center">
+							<a href="/auth/oauth2/openid" class="btn btn-neutral w-full"><i class="hio hio-key"></i> Sign in with SSO</a>
+						</div>
+					}
 				</form>
 			</div>
 		</div>
