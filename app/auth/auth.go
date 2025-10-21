@@ -33,6 +33,7 @@ func Init(db *model.Store) (*authboss.Authboss, error) {
 	ab.Config.Storage.CookieState = abclientstate.NewCookieStorer([]byte(os.Getenv("WEB_SESSION_SECRET")), nil)
 	ab.Config.Storage.SessionState = abclientstate.NewSessionStorer(SessionName, []byte(os.Getenv("WEB_SESSION_SECRET")))
 
+	ab.Config.Paths.RootURL = os.Getenv("OIDC_CLIENT_URL")
 	ab.Config.Paths.Mount = "/auth"
 
 	ab.Config.Core.ViewRenderer = &Renderer{}
