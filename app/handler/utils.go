@@ -186,14 +186,12 @@ func Env(ctrl Ctrl, r *http.Request) views.Env {
 	kase := GetCase(ctrl.Store(), r)
 	user := GetUser(ctrl.Store(), r)
 	enums, _ := ctrl.Store().ListEnums()
-	csrf, _ := r.Context().Value(views.CsrfFieldName).(string)
 
 	return views.Env{
 		Route: r.URL.Path,
 		Case:  kase,
 		User:  user,
 		Enums: enums,
-		CSRF:  csrf,
 		Allowed: func(method, url string) (string, bool) {
 			return url, ctrl.ACL().Allowed(user.ID, url, method)
 		},

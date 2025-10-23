@@ -13,10 +13,10 @@ import (
 )
 
 func CSRF(next http.Handler) http.Handler {
-	xsrf := csrf.Protect([]byte(os.Getenv("WEB_SESSION_SECRET")))
+	xsrf := csrf.Protect([]byte(os.Getenv("WEB_SESSION_SECRET")))(next)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get(auth.HeaderApiKey) == "" {
-			xsrf(next).ServeHTTP(w, r)
+			xsrf.ServeHTTP(w, r)
 		} else {
 			// no csrf protection for api key based authentication.
 			// strip cookie and authorization header
@@ -47,7 +47,6 @@ func Recover(next http.Handler) http.Handler {
 }
 
 func Logger(next http.Handler) http.Handler {
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		lw := &LoggingResponseWriter{w: w, Status: http.StatusOK}
 
