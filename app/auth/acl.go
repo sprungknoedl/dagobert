@@ -3,6 +3,7 @@ package auth
 import (
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 
 	"github.com/casbin/casbin/v2"
@@ -31,6 +32,28 @@ func NewACL(db *model.Store) *ACL {
 
 	enforcer.EnableAutoSave(true)
 	return &ACL{db, enforcer}
+}
+
+func (acl *ACL) Protect(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		uid := ""
+		if usr, err := CurrentUser(r); err == nil {
+			uid = usr.ID
+		}
+
+		if !acl.Allowed(uid, r.URL.Path, r.Method) {
+			slog.Warn(http.StatusText(http.StatusForbidden),
+				"raddr", r.RemoteAddr,
+				"uid", uid,
+				"method", r.Method,
+				"url", r.URL)
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte(http.StatusText(http.StatusForbidden)))
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 // Enforce decides whether a "subject" can access a "object" with the operation "action", input parameters are usually: (sub, obj, act).

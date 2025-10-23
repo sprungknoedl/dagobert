@@ -67,7 +67,8 @@ func Run(cmd *cobra.Command, args []string) {
 		CSRF,
 		ab.LoadClientStateMiddleware,
 		auth.ApiKeyMiddleware(ab, db),
-		authboss.ModuleListMiddleware(ab))
+		authboss.ModuleListMiddleware(ab),
+		acl.Protect)
 
 	router := http.NewServeMux()
 	secured := http.NewServeMux()

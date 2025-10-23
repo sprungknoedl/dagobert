@@ -137,16 +137,18 @@ templ sidebar(env Env, title string) {
 		<div class="grow"></div>
 		<div class="divider"></div>
 		<ul class="menu gap-2">
-			<li class="dropdown dropdown-right dropdown-end">
-				<div tabindex="42" role="button"><i class="hio hio-6 hio-cog-6-tooth"></i></div>
-				<ul tabindex="42" class="dropdown-content menu bg-base-200 rounded-box z-2 w-52 p-2 shadow">
-					<li><a href="/settings/hooks/"><i class="hio hio-6 hio-bolt"></i> Automation Rules</a></li>
-					<li><a href="/settings/api-keys/"><i class="hio hio-6 hio-beaker"></i> API Keys</a></li>
-					<li><a href="/settings/enums/"><i class="hio hio-6 hio-briefcase"></i> Case Objects</a></li>
-					<li><a href="/settings/reports/"><i class="hio hio-6 hio-document-arrow-down"></i> Report Templates</a></li>
-					<li><a href="/settings/users/"><i class="hio hio-6 hio-users"></i> Users</a></li>
-				</ul>
-			</li>
+			if _, ok := env.Allowed("GET", "/settings/"); ok {
+				<li class="dropdown dropdown-right dropdown-end">
+					<div tabindex="42" role="button"><i class="hio hio-6 hio-cog-6-tooth"></i></div>
+					<ul tabindex="42" class="dropdown-content menu bg-base-200 rounded-box z-2 w-52 p-2 shadow">
+						<li><a href="/settings/hooks/"><i class="hio hio-6 hio-bolt"></i> Automation Rules</a></li>
+						<li><a href="/settings/api-keys/"><i class="hio hio-6 hio-beaker"></i> API Keys</a></li>
+						<li><a href="/settings/enums/"><i class="hio hio-6 hio-briefcase"></i> Case Objects</a></li>
+						<li><a href="/settings/reports/"><i class="hio hio-6 hio-document-arrow-down"></i> Report Templates</a></li>
+						<li><a href="/settings/users/"><i class="hio hio-6 hio-users"></i> Users</a></li>
+					</ul>
+				</li>
+			}
 			<li><a href="/auth/changepassword" title="Change password" class="" up-layer="new drawer"><i class="hio hio-6 hio-key"></i> </a></li>
 			<li><a href="/auth/logout" title="Logout" class=""><i class="hio hio-6 hio-arrow-right-start-on-rectangle"></i> </a></li>
 		</ul>
