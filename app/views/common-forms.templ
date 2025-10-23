@@ -16,7 +16,7 @@ templ form(env Env, uri string, title string, opts ...formOption) {
 				<h1 class="font-serif text-2xl mb-4">{ title }</h1>
 				<!-- Modal body -->
 				<div class="mb-4">
-					@hiddenField(CsrfFieldName, env.CSRF)
+					@csrfField()
 					{ children... }
 				</div>
 				<!-- Modal footer -->
@@ -76,6 +76,10 @@ templ validationError(vc valid.Condition) {
 	if vc.Missing || vc.Invalid {
 		<span class="ml-2 text-sm text-error">{ vc.String() }</span>
 	}
+}
+
+templ csrfField(opts ...formOption) {
+	@hiddenField(CsrfFieldName, csrf(ctx), opts...)
 }
 
 templ hiddenField(name string, value string, opts ...formOption) {

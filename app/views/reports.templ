@@ -13,7 +13,7 @@ templ ReportsDialog(env Env, rows []model.Report) {
 				<!-- Modal body -->
 				<div class="mb-4">
 					@hiddenField("CaseID", env.Case.ID)
-					@hiddenField(CsrfFieldName, env.CSRF)
+					@csrfField()
 					<div class="form-control mb-2">
 						<label class="label justify-start gap-2">
 							Template

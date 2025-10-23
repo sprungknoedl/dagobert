@@ -217,6 +217,7 @@ templ layout() {
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
+			<meta name="csrf-token" content={ csrf(ctx) }/>
 			<title>Dagobert</title>
 			<link href="/public/assets/dagobert.css" rel="stylesheet"/>
 			<script src="/public/assets/list-2.3.1.min.js" defer></script>

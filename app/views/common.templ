@@ -1,22 +1,24 @@
 package views
 
-import "github.com/sprungknoedl/dagobert/app/model"
+import (
+	"context"
+
+	"github.com/sprungknoedl/dagobert/app/model"
+)
 
 const CsrfFieldName string = "gorilla.csrf.Token" // #nosec G101
+
+func csrf(ctx context.Context) string {
+	csrf, _ := ctx.Value(CsrfFieldName).(string)
+	return csrf
+}
 
 type Env struct {
 	Case    model.Case
 	User    model.User
 	Enums   model.Enums
 	Route   string
-	CSRF    string
 	Allowed func(method, url string) (string, bool)
-}
-
-templ ErrorForbidden() {
-	@layout() {
-		<h1>Forbidden</h1>
-	}
 }
 
 templ ConfirmDialog(dst string) {
