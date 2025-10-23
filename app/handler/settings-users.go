@@ -54,25 +54,38 @@ func (ctrl UserCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	usr, err := ctrl.Store().GetUser(dto.ID)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	// Update fields
+	usr.ID = dto.ID
+	usr.Role = dto.Role
+	usr.Name = dto.Name
+	usr.UPN = dto.UPN
+	usr.Email = dto.Email
+
 	// Update user
-	if err := ctrl.Store().SaveUser(dto); err != nil {
+	if err := ctrl.Store().SaveUser(usr); err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	// Update role in casbin
-	if err := ctrl.ACL().SaveUserRole(dto.ID, dto.Role); err != nil {
+	if err := ctrl.ACL().SaveUserRole(usr.ID, usr.Role); err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	// Update permissions casbin, those need to be changed when a role change happens
-	perms, err := ctrl.Store().GetUserPermissions(dto.ID)
+	perms, err := ctrl.Store().GetUserPermissions(usr.ID)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
-	if err := ctrl.ACL().SaveUserPermissions(dto.ID, dto.Role, perms); err != nil {
+	if err := ctrl.ACL().SaveUserPermissions(usr.ID, usr.Role, perms); err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -101,7 +114,7 @@ func (ctrl UserCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	if GetUser(ctrl.Store(), r).ID == id {
 		http.Redirect(w, r, "/auth/logout", http.StatusSeeOther)
 	} else {
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Redirect(w, r, "/settings/users/", http.StatusSeeOther)
 	}
 }
 
