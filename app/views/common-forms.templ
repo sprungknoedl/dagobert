@@ -21,8 +21,12 @@ templ form(env Env, uri string, title string, opts ...formOption) {
 				</div>
 				<!-- Modal footer -->
 				<div class="flex gap-2 items-center">
-					<button type="submit" class="btn btn-neutral">Save </button>
-					<a class="btn" up-dismiss>Cancel </a>
+					if _, ok := env.Allowed("POST", uri); ok {
+						<button type="submit" class="btn btn-neutral">Save </button>
+						<a class="btn" up-dismiss>Cancel </a>
+					} else {
+						<a class="btn" up-dismiss>Close </a>
+					}
 				</div>
 			</form>
 		</main>
