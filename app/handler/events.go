@@ -78,7 +78,7 @@ func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Time", "Type", "Assets", "Indicators", "Event", "Raw"})
+	cw.Write([]string{"ID", "Time", "Type", "Assets", "Indicators", "Event", "Raw", "Source"})
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
@@ -88,6 +88,7 @@ func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
 			strings.Join(fp.Apply(e.Indicators, func(x model.Indicator) string { return x.Value }), " "),
 			e.Event,
 			e.Raw,
+			e.Source,
 		})
 	}
 
@@ -99,7 +100,7 @@ func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 	uri := fmt.Sprintf("/cases/%s/events/", cid)
 
 	ctrl.Store().Transaction(func(tx *model.Store) error {
-		return ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 7, func(rec []string) {
+		return ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 8, func(rec []string) {
 			t, err := time.Parse(time.RFC3339, rec[1])
 			if err != nil {
 				Warn(w, r, err)
@@ -129,6 +130,7 @@ func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 				Indicators: indicators,
 				Event:      rec[5],
 				Raw:        rec[6],
+				Source:     rec[7],
 			}
 
 			if err = ctrl.Store().SaveEvent(cid, obj, true); err != nil {
@@ -183,6 +185,7 @@ func (ctrl EventCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Request) {
 			Time:   model.Time(ev.Datetime),
 			Event:  ev.Message,
 			Raw:    buf.String(),
+			Source: "Timesketch",
 		}
 
 		if err = ctrl.Store().SaveEvent(cid, obj, false); err != nil {

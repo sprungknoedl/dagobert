@@ -38,8 +38,14 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 									<summary>
 										@highlightEvent(row, assets, indicators)
 									</summary>
+									if row.Source != "" {
+										<div class="card gap-2 p-2 mt-2">
+											<p class="font-bold">Source:</p>
+											<p>{ row.Source }</p>
+										</div>
+									}
 									if row.Raw != "" {
-										<div class="card bg-base-200 rounded-box gap-2 mt-4 p-4 overflow-scroll">
+										<div class="card gap-2 p-2 overflow-scroll">
 											<p class="font-bold">Raw:</p>
 											<pre><code>{ row.Raw }</code></pre>
 										</div>
@@ -119,6 +125,7 @@ templ EventsOne(env Env, obj model.Event, assets []model.Asset, indicators []mod
 		@selectField("Type", obj.Type, env.Enums.EventTypes, required(), withLabel("Type"), withError(vr["Type"]))
 		@textareaField("Event", obj.Event, required(), withLabel("Event"), withError(vr["Event"]))
 		@textareaField("Raw", obj.Raw, withLabel("Raw"), withError(vr["Raw"]))
+		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]))
 		@booleanField("Flagged", obj.Flagged, withLabel("Flagged"))
 		@choicesField("Assets", withLabel("Assets"), withError(vr["Assets"])) {
 			for _, x := range assets {
