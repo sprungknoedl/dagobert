@@ -13,6 +13,7 @@ type Event struct {
 	Type          string
 	Event         string
 	Raw           string
+	Source        string
 	Flagged       bool
 	CaseID        string
 	RawAssets     []byte `gorm:"-"`
