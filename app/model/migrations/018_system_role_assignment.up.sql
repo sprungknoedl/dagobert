@@ -1,0 +1,1 @@
+INSERT INTO policies (ptype, v0, v1) VALUES ("g", "<system>", "role::Administrator");
