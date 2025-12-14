@@ -242,7 +242,30 @@ templ list(env Env, title string, opts ...navbarOption) {
 			@navbar(env, title, opts...)
 			<div id="list">
 				{ children... }
+				<div class="mt-12"></div>
 			</div>
 		</main>
+		if env.Case.ID != "" {
+			<div class="fab fab-flower">
+				<!-- a focusable div with tabindex is necessary to work on all browsers. role="button" is necessary for accessibility -->
+				<div tabindex="0" role="button" class="btn btn-lg btn-circle btn-primary"><i class="hio hio-6 hio-plus"></i></div>
+				<div class="fab-close">
+					<span class="btn btn-circle btn-lg"><i class="hio hio-6 hio-x-mark"></i></span>
+				</div>
+				<!-- buttons that show up when FAB is open -->
+				@fabButton("tooltip-left", "/cases/"+env.Case.ID+"/events", "hio-clock", "Add event")
+				@fabButton("tooltip-left", "/cases/"+env.Case.ID+"/assets", "hio-computer-desktop", "Add asset")
+				@fabButton("tooltip-top", "/cases/"+env.Case.ID+"/indicators", "hio-finger-print", "Add indicator")
+				@fabButton("tooltip-top", "/cases/"+env.Case.ID+"/evidences", "hio-cube", "Add evidence")
+			</div>
+		}
+	</div>
+}
+
+templ fabButton(tooltipPos string, baseUrl string, icon string, title string) {
+	<div class={ "tooltip " + tooltipPos } data-tip={ title }>
+		<a class="btn btn-lg btn-circle" href={ baseUrl + "/new" } up-layer="new drawer" up-accept-location={ baseUrl } up-on-accepted="up.reload('#list')">
+			<i class={ "hio hio-6 " + icon }></i>
+		</a>
 	</div>
 }
