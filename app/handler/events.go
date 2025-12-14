@@ -238,7 +238,11 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		Decode(ctrl.Store(), r, &dto, ValidateEvent),
 		Decode(ctrl.Store(), r, &tmp, nil))
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		ev, err1 := ctrl.Store().GetEvent(dto.CaseID, dto.ID)
+		var ev model.Event
+		var err1 error
+		if dto.ID != "new" {
+			ev, err1 = ctrl.Store().GetEvent(dto.CaseID, dto.ID)
+		}
 		assets, err2 := ctrl.Store().ListAssets(dto.CaseID)
 		indicators, err3 := ctrl.Store().ListIndicators(dto.CaseID)
 		if err := errors.Join(err1, err2, err3); err != nil {
