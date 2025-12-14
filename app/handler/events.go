@@ -15,6 +15,7 @@ import (
 	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
+	"github.com/sprungknoedl/dagobert/pkg/attck"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
@@ -23,10 +24,11 @@ import (
 
 type EventCtrl struct {
 	Ctrl
-	ts *timesketch.Client
+	mitre *attck.KB
+	ts    *timesketch.Client
 }
 
-func NewEventCtrl(store *model.Store, acl *auth.ACL) *EventCtrl {
+func NewEventCtrl(store *model.Store, acl *auth.ACL, mitre *attck.KB) *EventCtrl {
 	slog.Debug("Creating timesketch client", "url", os.Getenv("TIMESKETCH_URL"))
 	ts, err := timesketch.NewClient(
 		os.Getenv("TIMESKETCH_URL"),
@@ -37,7 +39,7 @@ func NewEventCtrl(store *model.Store, acl *auth.ACL) *EventCtrl {
 		slog.Warn("Failed to create timesketch client", "err", err)
 	}
 
-	return &EventCtrl{Ctrl: BaseCtrl{store, acl}, ts: ts}
+	return &EventCtrl{Ctrl: BaseCtrl{store, acl}, mitre: mitre, ts: ts}
 }
 
 func (ctrl EventCtrl) List(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +63,7 @@ func (ctrl EventCtrl) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	env := Env(ctrl, r)
-	views.EventsMany(env, list, assets, indicators).Render(r.Context(), w)
+	views.EventsMany(env, list, assets, indicators, *ctrl.mitre).Render(r.Context(), w)
 }
 
 func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
@@ -223,7 +225,7 @@ func (ctrl EventCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.EventsOne(Env(ctrl, r), obj, assets, indicators, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.EventsOne(Env(ctrl, r), obj, assets, indicators, ctrl.mitre, valid.ValidationError{}))
 }
 
 func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
@@ -247,7 +249,7 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		// changes in the form to the selects will be lost, but this is easier than the other way around ...
 		dto.Assets = ev.Assets
 		dto.Indicators = ev.Indicators
-		Render(w, r, http.StatusUnprocessableEntity, views.EventsOne(Env(ctrl, r), dto, assets, indicators, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.EventsOne(Env(ctrl, r), dto, assets, indicators, ctrl.mitre, vr))
 		return
 	} else if err != nil {
 		Warn(w, r, err)

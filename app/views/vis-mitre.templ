@@ -1,0 +1,60 @@
+package views
+
+import "github.com/sprungknoedl/dagobert/pkg/attck"
+
+templ VisMitreAttack(env Env, counts map[string]int, matrix *attck.Matrix, hide bool) {
+	@layout() {
+		<section id="errors"></section>
+		@sidebar(env, "MITRE ATT&CK® Matrix")
+		<main class="pl-20 p-4 grow max-w-full flex flex-col h-screen">
+			<form method="get" up-autosubmit up-target="#list" up-history="true">
+				@navbar(env, "ATT&CK Navigator", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navPreButtons(mitreExtra(env, hide)))
+			</form>
+			<div id="list">
+				<table class="table table-default">
+					<thead>
+						<tr>
+							for tactic := range matrix.Tactics.Values() {
+								<th class="px-3 py-4 text-left"><a target="_blank" href={ tactic.URL }>{ tactic.Name }</a></th>
+							}
+						</tr>
+					</thead>
+					<tbody class="values">
+						for i := range matrix.DimY() {
+							<tr>
+								for tactic := range matrix.Tactics.Values() {
+									if i < len(tactic.Techniques) {
+										<td class={ templ.KV("bg-base-200", tactic.Techniques[i].IsSubTechnique), templ.KV("bg-info", counts[tactic.Techniques[i].ID] > 0) }>
+											<a target="_blank" href={ "https://attack.mitre.org/techniques/" + tactic.Techniques[i].ID }>{ tactic.Techniques[i].Name }</a>
+										</td>
+									} else {
+										<td></td>
+									}
+								}
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		</main>
+	}
+}
+
+templ mitreExtra(env Env, hide bool) {
+	<label class="join-item btn pr-4">
+		<input type="radio" name="matrix" value="enterprise" class="radio" checked="checked"/>
+		Enterprise
+	</label>
+	<label class="join-item btn pr-4">
+		<input type="radio" name="matrix" value="mobile" class="radio"/>
+		Mobile
+	</label>
+	<label class="join-item btn pr-4">
+		<input type="radio" name="matrix" value="ics" class="radio"/>
+		ICS
+	</label>
+	<label class="join-item btn pr-4">
+		<input type="checkbox" name="hide" class="toggle toggle-info" checked?={ hide }/>
+		Hide missing
+	</label>
+}

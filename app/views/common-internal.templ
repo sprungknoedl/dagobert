@@ -131,6 +131,7 @@ templ sidebar(env Env, title string) {
 			<ul class="menu gap-2">
 				@sidebarLink("/cases/"+env.Case.ID+"/vis/network", "Lateral Movement", "presentation-chart-line", title)
 				@sidebarLink("/cases/"+env.Case.ID+"/vis/timeline", "Visual Timeline", "presentation-chart-bar", title)
+				@sidebarLink("/cases/"+env.Case.ID+"/vis/mitre", "ATT&CK Navigator", "code-bracket-square", title)
 				<li><a href={ "/cases/" + env.Case.ID + "/reports" } title="Report" class="" up-layer="new drawer"><i class="hio hio-6 hio-document-arrow-down"></i> </a></li>
 			</ul>
 		}

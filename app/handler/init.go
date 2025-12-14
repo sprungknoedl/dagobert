@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/pkg/attck"
 	"github.com/sprungknoedl/dagobert/public"
 )
 
@@ -42,6 +43,19 @@ func Run(cmd *cobra.Command, args []string) {
 	}
 
 	// --------------------------------------
+	// MITRE ATT&CK
+	// --------------------------------------
+	mitre, err := attck.LoadKB(
+		"files/mitre/enterprise-attack.json",
+		"files/mitre/ics-attack.json",
+		"files/mitre/mobile-attack.json",
+	)
+	if err != nil {
+		slog.Error("Failed to load MITRE ATT&CK knowledge base", "err", err)
+		return
+	}
+
+	// --------------------------------------
 	// Automations & jobs
 	// --------------------------------------
 	slog.Debug("Loading hooks")
@@ -67,12 +81,11 @@ func Run(cmd *cobra.Command, args []string) {
 		CSRF,
 		ab.LoadClientStateMiddleware,
 		auth.ApiKeyMiddleware(ab, db),
-		authboss.ModuleListMiddleware(ab),
-		acl.Protect)
+		authboss.ModuleListMiddleware(ab))
 
 	router := http.NewServeMux()
 	secured := http.NewServeMux()
-	securedH := authboss.Middleware2(ab, authboss.RequireNone, authboss.RespondRedirect)(secured)
+	securedH := authboss.Middleware2(ab, authboss.RequireNone, authboss.RespondRedirect)(acl.Protect(secured))
 
 	// index
 	secured.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
@@ -135,7 +148,7 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("DELETE /settings/enums/{id}", settingsCtrl.DeleteEnum)
 
 	// events
-	eventCtrl := NewEventCtrl(db, acl)
+	eventCtrl := NewEventCtrl(db, acl, mitre)
 	secured.HandleFunc("GET /cases/{cid}/events/", eventCtrl.List)
 	secured.HandleFunc("GET /cases/{cid}/events/export/csv", eventCtrl.Export)
 	secured.HandleFunc("GET /cases/{cid}/events/import/csv", eventCtrl.ImportCSV)
@@ -210,9 +223,10 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("DELETE /cases/{cid}/notes/{id}", noteCtrl.Delete)
 
 	// visualizations
-	visualsCtrl := NewVisualsCtrl(db, acl)
+	visualsCtrl := NewVisualsCtrl(db, acl, mitre)
 	secured.HandleFunc("GET /cases/{cid}/vis/network", visualsCtrl.Network)
 	secured.HandleFunc("GET /cases/{cid}/vis/timeline", visualsCtrl.Timeline)
+	secured.HandleFunc("GET /cases/{cid}/vis/mitre", visualsCtrl.MitreAttack)
 
 	// reports
 	reportsCtrl := NewReportsCtrl(db, acl)

@@ -1,0 +1,1 @@
+ALTER TABLE events ADD COLUMN techniques TEXT NOT NULL DEFAULT '';

@@ -19,3 +19,10 @@ docker:
 
 run:
 	air -c cfg/air.toml
+
+ATTCK_RELEASE=18.1
+update: update-mitre
+update-mitre:
+	wget -O files/mitre/enterprise-attack.json https://github.com/mitre-attack/attack-stix-data/raw/refs/heads/master/enterprise-attack/enterprise-attack-${ATTCK_RELEASE}.json
+	wget -O files/mitre/ics-attack.json https://github.com/mitre-attack/attack-stix-data/raw/refs/heads/master/ics-attack/ics-attack-${ATTCK_RELEASE}.json
+	wget -O files/mitre/mobile-attack.json https://github.com/mitre-attack/attack-stix-data/raw/refs/heads/master/mobile-attack/mobile-attack-${ATTCK_RELEASE}.json

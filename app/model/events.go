@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"slices"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -16,29 +17,24 @@ type Event struct {
 	Source        string
 	Flagged       bool
 	CaseID        string
-	RawAssets     []byte `gorm:"-"`
-	RawIndicators []byte `gorm:"-"`
+	Techniques    Strings `gorm:"type:text"`
+	RawAssets     []byte  `gorm:"-"`
+	RawIndicators []byte  `gorm:"-"`
 
 	Assets     []Asset     `gorm:"many2many:event_assets;"`
 	Indicators []Indicator `gorm:"many2many:event_indicators;"`
 }
 
 func (e Event) HasAsset(aid string) bool {
-	for _, a := range e.Assets {
-		if a.ID == aid {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(e.Assets, func(x Asset) bool { return x.ID == aid })
 }
 
 func (e Event) HasIndicator(iid string) bool {
-	for _, i := range e.Indicators {
-		if i.ID == iid {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(e.Indicators, func(x Indicator) bool { return x.ID == iid })
+}
+
+func (e Event) HasTechnique(t string) bool {
+	return slices.Contains(e.Techniques, t)
 }
 
 func (store *Store) ListEvents(cid string) ([]Event, error) {
