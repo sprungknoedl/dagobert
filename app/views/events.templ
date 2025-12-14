@@ -2,13 +2,29 @@ package views
 
 import (
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/pkg/attck"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
+	"iter"
 	"strings"
 	"time"
 )
 
-templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators []model.Indicator) {
+func techniques(mitre attck.KB, e model.Event) iter.Seq[attck.Technique] {
+	return func(yield func(t attck.Technique) bool) {
+		for _, tid := range e.Techniques {
+			t, err := mitre.GetTechnique(tid)
+			if err != nil {
+				return
+			}
+			if !yield(t) {
+				return
+			}
+		}
+	}
+}
+
+templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators []model.Indicator, mitre attck.KB) {
 	@layout() {
 		@list(env, "Timeline", navHideImport(), navPreButtons(eventsManyExtra(env))) {
 			<div id="histogram" class="card bg-base-200 text-xs m-4 p-4"></div>
@@ -37,6 +53,11 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 								<details>
 									<summary>
 										@highlightEvent(row, assets, indicators)
+										<p>
+											for t := range techniques(mitre, row) {
+												<span class="badge badge-sm" title={ t.ID + " - " + t.Name }>{ t.ID }</span>
+											}
+										</p>
 									</summary>
 									if row.Source != "" {
 										<div class="card gap-2 p-2 mt-2">
@@ -105,7 +126,7 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 	}
 }
 
-templ EventsOne(env Env, obj model.Event, assets []model.Asset, indicators []model.Indicator, vr valid.ValidationError) {
+templ EventsOne(env Env, obj model.Event, assets []model.Asset, indicators []model.Indicator, mitre *attck.KB, vr valid.ValidationError) {
 	{{ uri := "/cases/" + obj.CaseID + "/events/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add event", "Edit event") }}
 	@form(env, uri, title) {
@@ -123,6 +144,11 @@ templ EventsOne(env Env, obj model.Event, assets []model.Asset, indicators []mod
 			</div>
 		</div>
 		@selectField("Type", obj.Type, env.Enums.EventTypes, required(), withLabel("Type"), withError(vr["Type"]))
+		@choicesField("Techniques", withLabel("Techniques"), withError(vr["Techniques"])) {
+			for x := range mitre.Techniques() {
+				<option value={ x.ID } selected?={ obj.HasTechnique(x.ID) }>{ x.ID + " - " + x.Name }</option>
+			}
+		}
 		@textareaField("Event", obj.Event, required(), withLabel("Event"), withError(vr["Event"]))
 		@textareaField("Raw", obj.Raw, withLabel("Raw"), withError(vr["Raw"]))
 		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]))

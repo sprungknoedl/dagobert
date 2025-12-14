@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"embed"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -85,4 +86,19 @@ func (t *Time) UnmarshalText(text []byte) (err error) {
 	t2, err := time.Parse(time.RFC3339Nano, string(text))
 	*t = Time(t2)
 	return err
+}
+
+type Strings []string
+
+func (o *Strings) Scan(src any) error {
+	str, ok := src.(string)
+	if !ok {
+		return errors.New("src value cannot cast to string")
+	}
+	*o = strings.Split(str, ",")
+	return nil
+}
+
+func (o Strings) Value() (driver.Value, error) {
+	return strings.Join(o, ","), nil
 }

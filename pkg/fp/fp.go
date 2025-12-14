@@ -1,9 +1,19 @@
 package fp
 
+import "iter"
+
 func Apply[A any, B any](in []A, fn func(A) B) []B {
 	out := make([]B, len(in))
 	for i, a := range in {
 		out[i] = fn(a)
+	}
+	return out
+}
+
+func ApplyS[A any, B any](in iter.Seq[A], fn func(A) B) []B {
+	out := make([]B, 0)
+	for a := range in {
+		out = append(out, fn(a))
 	}
 	return out
 }
@@ -19,6 +29,16 @@ func ApplyM[A any, B any, K comparable](in map[K]A, fn func(A) B) map[K]B {
 func Filter[A any](in []A, fn func(A) bool) []A {
 	out := make([]A, 0, len(in))
 	for _, a := range in {
+		if fn(a) {
+			out = append(out, a)
+		}
+	}
+	return out
+}
+
+func FilterS[A any](in iter.Seq[A], fn func(A) bool) []A {
+	out := make([]A, 0)
+	for a := range in {
 		if fn(a) {
 			out = append(out, a)
 		}

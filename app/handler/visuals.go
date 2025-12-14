@@ -10,15 +10,17 @@ import (
 	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
+	"github.com/sprungknoedl/dagobert/pkg/attck"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 )
 
 type VisualsCtrl struct {
 	Ctrl
+	Mitre *attck.KB
 }
 
-func NewVisualsCtrl(store *model.Store, acl *auth.ACL) *VisualsCtrl {
-	return &VisualsCtrl{BaseCtrl{store, acl}}
+func NewVisualsCtrl(store *model.Store, acl *auth.ACL, mitre *attck.KB) *VisualsCtrl {
+	return &VisualsCtrl{BaseCtrl{store, acl}, mitre}
 }
 
 func (ctrl VisualsCtrl) Network(w http.ResponseWriter, r *http.Request) {
@@ -117,4 +119,40 @@ func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
 
 	slog.Debug("rendering timeline", "items", items, "groups", groups)
 	Render(w, r, http.StatusOK, views.VisTimeLine(Env(ctrl, r), items, fp.ToList(groups)))
+}
+
+func (ctrl VisualsCtrl) MitreAttack(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	events, err := ctrl.Store().ListEvents(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	hide := r.URL.Query().Get("hide") == "on"
+
+	var matrix *attck.Matrix
+	switch r.URL.Query().Get("matrix") {
+	case "mobile":
+		matrix = ctrl.Mitre.Mobile
+	case "ics":
+		matrix = ctrl.Mitre.ICS
+	case "enterprise":
+		fallthrough
+	default:
+		matrix = ctrl.Mitre.Enterprise
+	}
+
+	counts := map[string]int{}
+	for _, ev := range events {
+		for _, tid := range ev.Techniques {
+			counts[tid] = counts[tid] + 1
+		}
+	}
+
+	if hide {
+		matrix = matrix.Filter(func(t attck.Technique) bool { return counts[t.ID] > 0 })
+	}
+
+	Render(w, r, http.StatusOK, views.VisMitreAttack(Env(ctrl, r), counts, matrix, hide))
 }
