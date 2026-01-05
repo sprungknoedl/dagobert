@@ -12,9 +12,9 @@ require (
 	github.com/casbin/casbin/v2 v2.128.0
 	github.com/coreos/go-oidc v2.4.0+incompatible
 	github.com/expr-lang/expr v1.17.6
+	github.com/go-playground/form v3.1.4+incompatible
 	github.com/golang-migrate/migrate/v4 v4.19.0
 	github.com/gorilla/csrf v1.7.2
-	github.com/gorilla/schema v1.4.1
 	github.com/gorilla/sessions v1.4.0
 	github.com/justinas/alice v1.2.0
 	github.com/lmittmann/tint v1.1.2
@@ -56,6 +56,7 @@ require (
 	golang.org/x/tools v0.38.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
+	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 

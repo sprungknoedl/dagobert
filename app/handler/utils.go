@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/a-h/templ"
-	"github.com/gorilla/schema"
+	"github.com/go-playground/form"
 	"github.com/gorilla/sessions"
 	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
@@ -26,7 +26,6 @@ import (
 var ZeroID string = "0"
 var ZeroTime time.Time
 
-var decoder = schema.NewDecoder()
 var SessionName = "default"
 var SessionStore = sessions.NewCookieStore([]byte(os.Getenv("WEB_SESSION_SECRET")))
 
@@ -143,16 +142,8 @@ func Decode[T any](db *model.Store, r *http.Request, dst T, validator func(T, mo
 		return err
 	}
 
-	decoder.IgnoreUnknownKeys(true)
-	err := decoder.Decode(dst, r.PostForm)
-	if merr, ok := err.(schema.MultiError); ok {
-		vr := valid.ValidationError{}
-		for key, val := range merr {
-			cerr := val.(schema.ConversionError)
-			vr[key] = valid.Condition{Name: key, Invalid: true, Message: cerr.Err.Error()}
-		}
-		return vr
-	} else if err != nil {
+	decoder := form.NewDecoder()
+	if err := decoder.Decode(dst, r.PostForm); err != nil {
 		return err
 	}
 
