@@ -105,7 +105,40 @@ templ EvidencesOne(env Env, obj model.Evidence, vr valid.ValidationError) {
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
 		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
 		<script>
+		function hashfile() {
+			var file = document.querySelector('input[name="File"]').files[0];
+			readbinaryfile(file).then(function(result) {
+				result = new Uint8Array(result);
+				return window.crypto.subtle.digest('SHA-1', result);
+			}).then(function(result) {
+				result = new Uint8Array(result);
+				var resulthex = Uint8ArrayToHexString(result);
+				document.querySelector('input[name="Hash"]').value = resulthex;
+			});
+		}
+
+		function readbinaryfile(file) {
+			return new Promise((resolve, reject) => {
+				var fr = new FileReader();
+				fr.onload = () => {
+				resolve(fr.result)
+				};
+				fr.readAsArrayBuffer(file);
+			});
+		}
+
+		function Uint8ArrayToHexString(ui8array) {
+			var hexstring = '', h;
+			for (var i = 0; i < ui8array.length; i++) {
+				h = ui8array[i].toString(16);
+				if (h.length == 1) { h = '0' + h; }
+				hexstring += h;
+			}
+			return hexstring;
+		}
+
 		document.querySelector('input[name="File"]').onchange = (e) => {
+			hashfile();
 			document.querySelector('input[name="Name"]').value = e.target.value.replace(/.*(\/|\\)/, '');
 		};
         </script>

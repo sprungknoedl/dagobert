@@ -9,6 +9,8 @@ github.com/aarondl/authboss-clientstate v0.0.0-20250626060916-e82140f194f2 h1:Yq
 github.com/aarondl/authboss-clientstate v0.0.0-20250626060916-e82140f194f2/go.mod h1:lX27OgtwmIMrYHW2oWcf4GsomXF9TlCXfxeZGmkN2b4=
 github.com/aarondl/authboss/v3 v3.5.2 h1:50JB8lF3kz+bTYedzwKp+zm5ILwcEML+am2X0wss42k=
 github.com/aarondl/authboss/v3 v3.5.2/go.mod h1:57MSjiaiuWi8jGvRvVBGFrM+2COST2jqkUGwjoP0fsM=
+github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0 h1:BVts5dexXf4i+JX8tXlKT0aKoi38JwTXSe+3WUneX0k=
+github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0/go.mod h1:FDIQmoMNJJl5/k7upZEnGvgWVZfFeE6qHeN7iCMbCsA=
 github.com/andybalholm/brotli v1.2.0 h1:ukwgCxwYrmACq68yiUqwIWnGY0cTPox/M94sVwToPjQ=
 github.com/andybalholm/brotli v1.2.0/go.mod h1:rzTDkvFWvIrjDXZHkuS16NPggd91W3kUSvPlQ1pLaKY=
 github.com/bmatcuk/doublestar/v4 v4.6.1/go.mod h1:xBQ8jztBU6kakFMg+8WGxn0c6z1fTSPVIjEY1Wr7jzc=
