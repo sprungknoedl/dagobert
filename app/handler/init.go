@@ -175,6 +175,7 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("GET /cases/{cid}/malware/import/csv", malwareCtrl.Import)
 	secured.HandleFunc("POST /cases/{cid}/malware/import/csv", malwareCtrl.Import)
 	secured.HandleFunc("GET /cases/{cid}/malware/{id}", malwareCtrl.Edit)
+	secured.HandleFunc("GET /cases/{cid}/malware/{id}/download", malwareCtrl.Download)
 	secured.HandleFunc("POST /cases/{cid}/malware/{id}", malwareCtrl.Save)
 	secured.HandleFunc("DELETE /cases/{cid}/malware/{id}", malwareCtrl.Delete)
 

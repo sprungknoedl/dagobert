@@ -8,6 +8,7 @@ require (
 	github.com/a-h/templ v0.3.960
 	github.com/aarondl/authboss-clientstate v0.0.0-20250626060916-e82140f194f2
 	github.com/aarondl/authboss/v3 v3.5.2
+	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/casbin/casbin/v2 v2.128.0
 	github.com/coreos/go-oidc v2.4.0+incompatible
 	github.com/expr-lang/expr v1.17.6
