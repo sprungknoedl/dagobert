@@ -415,6 +415,14 @@ func (ctrl IndicatorCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/indicators/", cid), http.StatusSeeOther)
 }
 
+func (ctrl *IndicatorCtrl) ListModules(w http.ResponseWriter, r *http.Request) {
+	ListModules(ctrl, w, r, ctrl.Store().GetIndicator)
+}
+
+func (ctrl *IndicatorCtrl) ScheduleModule(w http.ResponseWriter, r *http.Request) {
+	ScheduleModule(ctrl, w, r, ctrl.Store().GetEvidence)
+}
+
 // Removes any defanging done to indicator values.
 func refang(ioc string) string {
 	translate := map[string]string{

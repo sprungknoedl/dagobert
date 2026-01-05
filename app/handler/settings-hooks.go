@@ -33,7 +33,8 @@ func (ctrl SettingsCtrl) EditHook(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsHooksOne(Env(ctrl, r), obj, worker.List, valid.ValidationError{}))
+	enum := fp.ToList(fp.ApplyM(worker.Modules, func(m model.Module) model.Enum { return model.Enum{Name: m.Name()} }))
+	Render(w, r, http.StatusOK, views.SettingsHooksOne(Env(ctrl, r), obj, enum, valid.ValidationError{}))
 }
 
 func (ctrl SettingsCtrl) SaveHook(w http.ResponseWriter, r *http.Request) {
@@ -41,7 +42,8 @@ func (ctrl SettingsCtrl) SaveHook(w http.ResponseWriter, r *http.Request) {
 	dto := model.Hook{ID: r.PathValue("id")}
 	err := Decode(ctrl.Store(), r, &dto, ValidateHook)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.SettingsHooksOne(Env(ctrl, r), dto, worker.List, vr))
+		enum := fp.ToList(fp.ApplyM(worker.Modules, func(m model.Module) model.Enum { return model.Enum{Name: m.Name()} }))
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsHooksOne(Env(ctrl, r), dto, enum, vr))
 		return
 	} else if err != nil {
 		Err(w, r, err)

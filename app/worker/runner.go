@@ -1,31 +1,54 @@
 package worker
 
 import (
-	"archive/zip"
 	"bytes"
 	"cmp"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"io"
 	"log/slog"
-	"mime/multipart"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/worker/hayabusa"
+	"github.com/sprungknoedl/dagobert/app/worker/plaso"
+	"github.com/sprungknoedl/dagobert/app/worker/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 )
 
+var Modules = map[string]model.Module{}
+
+type Worker struct {
+	WorkerID   string
+	RemoteAddr string
+	Modules    []string
+	Workers    int
+}
+
+func init() {
+	ctors := []func() model.Module{
+		hayabusa.NewModule,
+		plaso.NewModule,
+		timesketch.NewModule,
+	}
+	for _, ctor := range ctors {
+		m := ctor()
+		Modules[m.Name()] = m
+	}
+}
+
+func Supported(obj any) []model.Module {
+	return fp.ToList(fp.FilterM(Modules, func(p model.Module) bool { return p.Supports(obj) }))
+}
+
 func Run(cmd *cobra.Command, args []string) {
-	modules := []string{}
-	modules = append(modules, ValidateHayabusa()...)
-	modules = append(modules, ValidatePlaso()...)
-	modules = append(modules, ValidateTimesketch()...)
+	// validate modules, keep only modules definitions we can run
+	modules := fp.FilterM(Modules, func(m model.Module) bool {
+		_, err := m.Validate()
+		return err == nil // TODO: error logging?
+	})
 
 	if len(modules) == 0 {
 		slog.Error("worker not ready")
@@ -40,9 +63,9 @@ func Run(cmd *cobra.Command, args []string) {
 	}
 
 	slog.Info("starting workers", "num", num)
-	ch := make(chan Job)
+	ch := make(chan model.Job)
 	for i := 0; i < num; i++ {
-		go DispatchJob(ch)
+		go DispatchJob(modules, ch)
 	}
 
 	// dagobert client
@@ -64,11 +87,11 @@ func Run(cmd *cobra.Command, args []string) {
 	req.Header.Set("X-API-Key", os.Getenv("DAGOBERT_API_KEY"))
 
 	q := req.URL.Query()
-	q.Add("modules", strings.Join(modules, ","))
+	q.Add("modules", strings.Join(fp.Keys(modules), ","))
 	q.Add("workers", strconv.Itoa(num))
 	req.URL.RawQuery = q.Encode()
 
-	slog.Info("worker is ready", "upstream", os.Getenv("DAGOBERT_URL"), "modules", strings.Join(modules, ","))
+	slog.Info("worker is ready", "upstream", os.Getenv("DAGOBERT_URL"), "modules", strings.Join(fp.Keys(modules), ","))
 	resp, err := client.Do(req)
 	if err != nil {
 		slog.Error("failed to send request", "err", err)
@@ -77,7 +100,7 @@ func Run(cmd *cobra.Command, args []string) {
 
 	dec := json.NewDecoder(resp.Body)
 	for {
-		job := Job{}
+		job := model.Job{}
 		err = dec.Decode(&job)
 		if err != nil {
 			slog.Error("failed to decode job", "err", err)
@@ -90,26 +113,17 @@ func Run(cmd *cobra.Command, args []string) {
 	}
 }
 
-func DispatchJob(ch <-chan Job) {
+func DispatchJob(modules map[string]model.Module, ch <-chan model.Job) {
 	for job := range ch {
 		var err error
-		switch job.Name {
-		case "keep-alive":
+		if job.Name == "keep-alive" {
 			slog.Debug("received keep-alive")
 			continue
-		case "Hayabusa":
-			err = RunHayabusa(job)
-		case "Plaso (Windows Preset)":
-			err = RunPlasoWindows(job)
-		case "Plaso (Linux Preset)":
-			err = RunPlasoLinux(job)
-		case "Plaso (MacOS Preset)":
-			err = RunPlasoMacOS(job)
-		case "Plaso (Filesystem Timeline)":
-			err = RunPlasoMFT(job)
-		case "Timesketch Importer":
-			err = UploadToTimesketch(job)
-		default:
+		}
+
+		if m, ok := modules[job.Name]; ok {
+			err = m.Run(job)
+		} else {
 			slog.Error("unknown module name", "job", job.ID, "module", job.Name)
 			continue
 		}
@@ -149,91 +163,4 @@ func AckJob(job model.Job) error {
 	client := http.Client{}
 	_, err = client.Do(req)
 	return err
-}
-
-func AddFromFS(obj model.Evidence) error {
-	body := bytes.NewBuffer(nil)
-	form := multipart.NewWriter(body)
-
-	err := errors.Join(
-		form.WriteField("Name", obj.Name),
-		form.WriteField("Type", obj.Type),
-		form.WriteField("Source", obj.Source),
-		form.WriteField("Notes", obj.Notes))
-	if err != nil {
-		return err
-	}
-
-	err = form.Close()
-	if err != nil {
-		return err
-	}
-
-	uri := os.Getenv("DAGOBERT_URL") + "/cases/" + obj.CaseID + "/evidences/new"
-	req, err := http.NewRequest(http.MethodPost, uri, body)
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Content-Type", form.FormDataContentType())
-	req.Header.Set("X-API-Key", os.Getenv("DAGOBERT_API_KEY"))
-	client := http.Client{}
-	_, err = client.Do(req)
-	return err
-}
-
-func unpack(obj model.Evidence) (string, error) {
-	src := filepath.Join("files", "evidences", obj.CaseID, obj.Name)
-	reader, err := zip.OpenReader(src)
-	if err != nil {
-		return "", err
-	}
-	defer reader.Close()
-
-	dir := filepath.Join("files", "tmp", fp.Random(10))
-	if err = os.MkdirAll(dir, 0755); err != nil {
-		return "", err
-	}
-
-	cleanup := func(err error) error {
-		os.RemoveAll(dir) // try to cleanup but ignore if it fails
-		return err
-	}
-
-	for _, file := range reader.File {
-		dst := filepath.Clean(filepath.Join(dir, file.Name))
-
-		// Check for file traversal attack
-		if !strings.HasPrefix(dst, dir) {
-			return "", cleanup(fmt.Errorf("invalid file path: %s", file.Name))
-		}
-
-		if file.FileInfo().IsDir() {
-			if err := os.MkdirAll(dst, file.Mode()); err != nil {
-				return "", cleanup(err)
-			}
-		} else {
-			if err := os.MkdirAll(filepath.Dir(dst), os.ModePerm); err != nil {
-				return "", cleanup(err)
-			}
-
-			destFile, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
-			if err != nil {
-				return "", cleanup(err)
-			}
-			defer destFile.Close()
-
-			srcFile, err := file.Open()
-			if err != nil {
-				return "", cleanup(err)
-			}
-			defer srcFile.Close()
-
-			if _, err := io.Copy(destFile, srcFile); err != nil {
-				return "", cleanup(err)
-			}
-		}
-	}
-
-	return dir + string(filepath.Separator), nil
 }

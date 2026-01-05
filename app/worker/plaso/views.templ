@@ -1,0 +1,18 @@
+package plaso
+
+templ (m *Module) RenderResults() {
+}
+
+templ (m *Module) RenderSettings() {
+	<div class="form-control mb-2">
+		<label class="label justify-start gap-2">
+			Profile
+		</label>
+		<select name="Settings[profile]" class="select w-full">
+			<option>win7</option>
+			<option>linux</option>
+			<option>macos</option>
+			<option>mft</option>
+		</select>
+	</div>
+}

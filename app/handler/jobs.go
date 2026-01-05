@@ -12,7 +12,6 @@ import (
 
 	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
-	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/app/worker"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"gorm.io/gorm"
@@ -40,35 +39,6 @@ func (ctrl *JobCtrl) Workers() []worker.Worker {
 		workers = append(workers, worker)
 	}
 	return workers
-}
-
-func (ctrl *JobCtrl) ListMods(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	cid := r.PathValue("cid")
-	obj, err := ctrl.Store().GetEvidence(cid, id)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	modules := worker.Supported(obj)
-	jobs, err := ctrl.Store().GetJobs(obj.ID)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	m := fp.ToMap(jobs, func(obj model.Job) string { return obj.Name })
-	runs := fp.Apply(modules, func(obj worker.Module) worker.Module {
-		return worker.Module{
-			Name:        obj.Name,
-			Description: obj.Description,
-			Status:      m[obj.Name].Status,
-			Error:       m[obj.Name].Error,
-		}
-	})
-
-	Render(w, r, http.StatusOK, views.EvidencesProcess(Env(ctrl, r), runs))
 }
 
 func (ctrl *JobCtrl) registerWorker(w http.ResponseWriter, r *http.Request) (string, []string) {
@@ -118,7 +88,7 @@ func (ctrl *JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 			goto cleanup
 
 		case <-ka.C:
-			if err := sendJob(w, rc, worker.Job{
+			if err := sendJob(w, rc, model.Job{
 				Name:        "keep-alive",
 				WorkerToken: workerid,
 			}); err != nil {
@@ -127,7 +97,7 @@ func (ctrl *JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 			}
 
 		case <-t.C:
-			job, kase, evidence, err := ctrl.Store().PopJob(workerid, modules)
+			job, err := ctrl.Store().PopJob(workerid, modules)
 			if err != nil && err != gorm.ErrRecordNotFound {
 				log.Printf("error fetching job: %v", err)
 				goto cleanup
@@ -135,13 +105,7 @@ func (ctrl *JobCtrl) PopJob(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
-			if err := sendJob(w, rc, worker.Job{
-				ID:          job.ID,
-				WorkerToken: workerid,
-				Name:        job.Name,
-				Case:        kase,
-				Evidence:    evidence,
-			}); err != nil {
+			if err := sendJob(w, rc, job); err != nil {
 				log.Printf("%v", err)
 				goto cleanup
 			}
@@ -160,7 +124,7 @@ cleanup:
 	}
 }
 
-func sendJob(w http.ResponseWriter, rc *http.ResponseController, job worker.Job) error {
+func sendJob(w http.ResponseWriter, rc *http.ResponseController, job model.Job) error {
 	err := json.NewEncoder(w).Encode(job)
 	if err != nil {
 		return fmt.Errorf("error encoding job: %w", err)
@@ -181,30 +145,11 @@ func (ctrl *JobCtrl) AckJob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := ctrl.Store().AckJob(dto.ID, dto.Status, dto.Error)
+	err := ctrl.Store().AckJob(dto)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-}
-
-func (ctrl *JobCtrl) PushJob(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	cid := r.PathValue("cid")
-	name := r.FormValue("name")
-	err := ctrl.Store().PushJob(model.Job{
-		ID:         fp.Random(10),
-		CaseID:     cid,
-		EvidenceID: id,
-		Name:       name,
-		Status:     "Scheduled",
-	})
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	ctrl.ListMods(w, r)
 }

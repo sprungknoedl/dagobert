@@ -1,0 +1,80 @@
+package views
+
+import "github.com/sprungknoedl/dagobert/app/model"
+
+templ ModuleList(env Env, jobs []model.Job) {
+	@layout() {
+		<main>
+			<!-- Modal header -->
+			<h1 class="font-serif text-2xl mb-4">
+				Modules
+				<a class="ml-2" href={ env.Route } up-follow><i class="hio hio-5 hio-arrow-path inline-block mr-1"></i> </a>
+			</h1>
+			<!-- Modal body -->
+			<div class="mb-4">
+				<p class="mb-4">You may have to refresh the list to see the updated results after running a module.</p>
+				for _, run := range jobs {
+					<div class="card bg-base-100 mb-4">
+						<div class="card-body p-4">
+							<h2 class="card-title">{ run.Name }</h2>
+							<p>{ run.Module.Description() }</p>
+							switch run.Status {
+								case "Scheduled":
+									<p class="text-warning font-bold">
+										<i class="hio hio-5 hio-information-circle inline-block"></i>
+										Job currently scheduled
+									</p>
+								case "Running":
+									<p class="text-warning font-bold">
+										<i class="hio hio-5 hio-information-circle inline-block"></i>
+										Job currently running
+									</p>
+								case "Success":
+									<p class="text-success font-bold">
+										<i class="hio hio-5 hio-check-circle inline-block"></i>
+										Job ran successfully.
+									</p>
+									@run.Module.RenderResults()
+									<p>
+										<form action={ env.Route } method="post" up-submit>
+											<input type="hidden" name="Name" value={ run.Name }/>
+											@run.Module.RenderSettings()
+											<button class="btn btn-neutral" type="submit">Rerun</button>
+										</form>
+									</p>
+								case "Failed":
+									<p class="text-error font-bold">
+										<i class="hio hio-5 hio-x-circle-filled inline-block"></i>
+										Job failed: { run.Error }
+									</p>
+									<p>
+										<form action={ env.Route } method="post" up-submit>
+											<input type="hidden" name="Name" value={ run.Name }/>
+											@run.Module.RenderSettings()
+											<button class="btn btn-neutral" type="submit">Rerun</button>
+										</form>
+									</p>
+								default:
+									<p>
+										<form action={ env.Route } method="post" up-submit>
+											<input type="hidden" name="Name" value={ run.Name }/>
+											@run.Module.RenderSettings()
+											<button class="btn btn-neutral" type="submit">Run</button>
+										</form>
+									</p>
+							}
+						</div>
+					</div>
+				}
+				if len(jobs) == 0 {
+					<div class="alert alert-info">
+						<i class="hio hio-bolt-slash text-2xl"></i>
+						<span>Object not supported by any module. </span>
+					</div>
+				}
+			</div>
+			<!-- Modal footer -->
+			<div class="flex gap-2 items-center"></div>
+		</main>
+	}
+}

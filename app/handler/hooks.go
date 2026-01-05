@@ -10,13 +10,7 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 )
 
-var hooks = []Hook{}
-
-type Hook struct {
-	Name      string
-	Condition func(model.Evidence) bool
-	Mod       *worker.Module
-}
+var hooks = []model.Hook{}
 
 func LoadHooks(store *model.Store) error {
 	list, err := store.ListHooks()
@@ -25,7 +19,6 @@ func LoadHooks(store *model.Store) error {
 		return err
 	}
 
-	hooks = []Hook{}
 	for _, def := range list {
 		if !def.Enabled {
 			continue
@@ -44,59 +37,68 @@ func LoadHooks(store *model.Store) error {
 }
 
 func TriggerOnEvidenceAdded(store *model.Store, obj model.Evidence) {
+	kase, err := store.GetCase(obj.CaseID)
+	if err != nil {
+		// TODO: error logging
+		return
+	}
+
 	for _, hook := range hooks {
-		if hook.Condition(obj) {
-			log.Printf("running %s -> %s", hook.Name, hook.Mod.Name)
-			// go Run(store, hook.Mod.Name, obj)
+		if hook.ConditionFn(obj) {
+			log.Printf("running %s -> %s", hook.Name, hook.ModuleObj.Name())
 
 			err := store.PushJob(model.Job{
-				ID:         fp.Random(10),
-				CaseID:     obj.CaseID,
-				EvidenceID: obj.ID,
-				Name:       hook.Mod.Name,
-				Status:     "Scheduled",
+				ID:          fp.Random(10),
+				Name:        hook.ModuleObj.Name(),
+				Status:      "Scheduled",
+				Case:        kase,
+				ObjectID:    obj.ID,
+				Object:      model.Object{Payload: obj},
+				ServerToken: model.ServerToken,
 			})
 			if err != nil {
-				log.Printf("error scheduling job for %s -> %s", hook.Mod.Name, err)
+				log.Printf("error scheduling job for %s -> %s", hook.ModuleObj.Name(), err)
 				return
 			}
 		}
 	}
 }
 
-func compile(def model.Hook) (Hook, error) {
-	hook := Hook{Name: def.Name}
-
+func compile(hook model.Hook) (model.Hook, error) {
 	// search mod
-	for _, mod := range worker.List {
-		if mod.Name == def.Mod {
-			hook.Mod = &mod
+	for _, mod := range worker.Modules {
+		if mod.Name() == hook.Module {
+			hook.ModuleObj = mod
 			break
 		}
 	}
-	if hook.Mod == nil {
-		return hook, errors.New("unkown mod")
+	if hook.ModuleObj == nil {
+		return model.Hook{}, errors.New("unkown mod")
 	}
 
 	// compile condition
-	program, err := expr.Compile(def.Condition,
+	var obj any
+	switch hook.Trigger {
+	case "OnEvidenceAdded":
+		obj = model.Evidence{}
+	}
+
+	program, err := expr.Compile(hook.Condition,
 		expr.AsBool(),
 		expr.Env(map[string]any{
-			"evidence": model.Evidence{},
+			"obj": obj,
 		}))
 	if err != nil {
-		return hook, err
+		return model.Hook{}, err
 	}
-	hook.Condition = func(e model.Evidence) bool {
-		out, err := expr.Run(program, map[string]any{
-			"evidence": e,
-		})
+
+	hook.ConditionFn = func(obj any) bool {
+		out, err := expr.Run(program, map[string]any{"obj": obj})
 		if err != nil {
 			log.Printf("error evaluating hook expression: %v", err)
 			return false
 		}
 
-		log.Printf("expr result: %v", out)
 		return out.(bool)
 	}
 
