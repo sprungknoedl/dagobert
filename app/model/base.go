@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"database/sql/driver"
 	"embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -62,6 +63,10 @@ func (t Time) Value() (driver.Value, error) {
 	return time.Time(t).Format(time.RFC3339Nano), nil
 }
 
+func (t Time) MarshalJSON() ([]byte, error) {
+	return json.Marshal(time.Time(t).Format(time.RFC3339Nano))
+}
+
 func (t *Time) Scan(src interface{}) (err error) {
 	switch src := src.(type) {
 	case string:
@@ -84,6 +89,17 @@ func (t *Time) Scan(src interface{}) (err error) {
 
 func (t *Time) UnmarshalText(text []byte) (err error) {
 	t2, err := time.Parse(time.RFC3339Nano, string(text))
+	*t = Time(t2)
+	return err
+}
+
+func (t *Time) UnmarshalJSON(text []byte) (err error) {
+	str := ""
+	if err = json.Unmarshal(text, &str); err != nil {
+		return err
+	}
+
+	t2, err := time.Parse(time.RFC3339Nano, str)
 	*t = Time(t2)
 	return err
 }

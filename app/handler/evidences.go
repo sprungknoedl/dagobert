@@ -257,3 +257,11 @@ func (ctrl EvidenceCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/", cid), http.StatusSeeOther)
 }
+
+func (ctrl *EvidenceCtrl) ListModules(w http.ResponseWriter, r *http.Request) {
+	ListModules(ctrl, w, r, ctrl.Store().GetEvidence)
+}
+
+func (ctrl *EvidenceCtrl) ScheduleModule(w http.ResponseWriter, r *http.Request) {
+	ScheduleModule(ctrl, w, r, ctrl.Store().GetEvidence)
+}

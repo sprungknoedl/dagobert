@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"cmp"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
@@ -10,6 +11,7 @@ import (
 	"maps"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -19,6 +21,7 @@ import (
 	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
+	"github.com/sprungknoedl/dagobert/app/worker"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -67,6 +70,76 @@ func ImportCSV(store *model.Store, acl *auth.ACL, w http.ResponseWriter, r *http
 
 	http.Redirect(w, r, uri, http.StatusSeeOther)
 	return nil
+}
+
+func ListModules[T any](ctrl Ctrl, w http.ResponseWriter, r *http.Request, fn func(cid string, oid string) (T, error)) {
+	oid := r.PathValue("id")
+	cid := r.PathValue("cid")
+	obj, err := fn(cid, oid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	modules := worker.Supported(obj)
+	list, err := ctrl.Store().GetJobs(oid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	jobs := fp.ToMap(list, func(j model.Job) string { return j.Name })
+	runs := fp.Apply(modules, func(m model.Module) model.Job {
+		return model.Job{
+			Module: m,
+			Name:   m.Name(),
+			Status: jobs[m.Name()].Status,
+			Error:  jobs[m.Name()].Error,
+		}
+	})
+
+	slices.SortFunc(runs, func(a, b model.Job) int { return cmp.Compare(a.Name, b.Name) })
+	Render(w, r, http.StatusOK, views.ModuleList(Env(ctrl, r), runs))
+}
+
+func ScheduleModule[T any](ctrl Ctrl, w http.ResponseWriter, r *http.Request, fn func(cid string, oid string) (T, error)) {
+	oid := r.PathValue("id")
+	cid := r.PathValue("cid")
+	obj, err := fn(cid, oid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	dto := model.Job{}
+	err = Decode(ctrl.Store(), r, &dto, nil)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	kase, err := ctrl.Store().GetCase(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	err = ctrl.Store().PushJob(model.Job{
+		ID:          fp.Random(10),
+		Name:        dto.Name,
+		Status:      "Scheduled",
+		Case:        kase,
+		ObjectID:    oid,
+		Object:      model.Object{Payload: obj},
+		Settings:    dto.Settings,
+		ServerToken: model.ServerToken,
+	})
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	ListModules(ctrl, w, r, fn)
 }
 
 func Warn(w http.ResponseWriter, r *http.Request, err error) {

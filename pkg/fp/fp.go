@@ -80,3 +80,17 @@ func ToList[A any, K comparable](in map[K]A) []A {
 	}
 	return out
 }
+
+func Values[A any, K comparable](in map[K]A) []A {
+	return ToList(in)
+}
+
+func Keys[A any, K comparable](in map[K]A) []K {
+	i := 0
+	out := make([]K, len(in))
+	for k := range in {
+		out[i] = k
+		i++
+	}
+	return out
+}

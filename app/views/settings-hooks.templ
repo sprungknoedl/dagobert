@@ -2,7 +2,6 @@ package views
 
 import (
 	"github.com/sprungknoedl/dagobert/app/model"
-	"github.com/sprungknoedl/dagobert/app/worker"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -34,7 +33,7 @@ templ SettingsHooksMany(env Env, rows []model.Hook) {
 							<td class="value-1" data-search={ row.Trigger }>{ row.Trigger } </td>
 							<td class="value-2" data-search={ row.Name }>{ row.Name } </td>
 							<td class="value-3" data-search={ row.Condition }>{ row.Condition } </td>
-							<td class="value-4" data-search={ row.Mod }>{ row.Mod } </td>
+							<td class="value-4" data-search={ row.Module }>{ row.Module } </td>
 							<td class="text-right">
 								<div class="join">
 									@defaultActionBtns(env, env.Route+row.ID)
@@ -48,7 +47,7 @@ templ SettingsHooksMany(env Env, rows []model.Hook) {
 	}
 }
 
-templ SettingsHooksOne(env Env, obj model.Hook, mods []worker.Module, vr valid.ValidationError) {
+templ SettingsHooksOne(env Env, obj model.Hook, enum []model.Enum, vr valid.ValidationError) {
 	{{ uri := "/settings/hooks/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add automation rule", "Edit automation rule") }}
 	@form(env, uri, title) {
@@ -57,8 +56,7 @@ templ SettingsHooksOne(env Env, obj model.Hook, mods []worker.Module, vr valid.V
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
 		@stringField("Condition", obj.Condition, required(), withLabel("Condition"), withError(vr["Condition"]))
 		<!-- TODO: explain condition language -->
-		{{ modenum := fp.Apply(mods, func(m worker.Module) model.Enum { return model.Enum{Name: m.Name} }) }}
-		@selectField("Mod", obj.Mod, modenum, required(), withLabel("Mod"), withError(vr["Mod"]))
+		@selectField("Module", obj.Module, enum, required(), withLabel("Mod"), withError(vr["Module"]))
 		@booleanField("Enabled", obj.Enabled, withLabel("Enabled"), withError(vr["Enabled"]))
 		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
 	}

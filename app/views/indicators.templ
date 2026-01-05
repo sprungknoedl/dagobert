@@ -62,6 +62,11 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 										@externalBtn("https://www.virustotal.com/gui/search/"+row.Value, "VT")
 										@externalBtn("https://www.hybrid-analysis.com/search?query="+row.Value, "HA")
 									}
+									if url, ok := env.Allowed("POST", env.Route+row.ID+"/run"); ok {
+										@actionBtn(env, "GET", url) {
+											<i class="hio hio-5 hio-bolt"></i>
+										}
+									}
 									@defaultActionBtns(env, env.Route+row.ID)
 								</div>
 							</td>

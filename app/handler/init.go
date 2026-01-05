@@ -114,12 +114,10 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("GET /settings/users/{id}/acl", userCtrl.EditACL)
 	secured.HandleFunc("POST /settings/users/{id}/acl", userCtrl.SaveACL)
 
-	// evidence processing jobs
+	// jobs
 	jobCtrl := NewJobCtrl(db, acl)
 	secured.HandleFunc("GET /internal/jobs", jobCtrl.PopJob)
 	secured.HandleFunc("POST /internal/jobs/ack", jobCtrl.AckJob)
-	secured.HandleFunc("GET /cases/{cid}/evidences/{id}/run", jobCtrl.ListMods)
-	secured.HandleFunc("POST /cases/{cid}/evidences/{id}/run", jobCtrl.PushJob)
 
 	// api keys
 	keyCtrl := NewKeyCtrl(db, acl, jobCtrl)
@@ -178,6 +176,8 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("GET /cases/{cid}/malware/{id}/download", malwareCtrl.Download)
 	secured.HandleFunc("POST /cases/{cid}/malware/{id}", malwareCtrl.Save)
 	secured.HandleFunc("DELETE /cases/{cid}/malware/{id}", malwareCtrl.Delete)
+	secured.HandleFunc("GET /cases/{cid}/malware/{id}/run", malwareCtrl.ListModules)
+	secured.HandleFunc("POST /cases/{cid}/malware/{id}/run", malwareCtrl.ScheduleModule)
 
 	// indicators
 	indicatorCtrl := NewIndicatorCtrl(db, acl)
@@ -191,6 +191,8 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("GET /cases/{cid}/indicators/{id}", indicatorCtrl.Edit)
 	secured.HandleFunc("POST /cases/{cid}/indicators/{id}", indicatorCtrl.Save)
 	secured.HandleFunc("DELETE /cases/{cid}/indicators/{id}", indicatorCtrl.Delete)
+	secured.HandleFunc("GET /cases/{cid}/indicators/{id}/run", indicatorCtrl.ListModules)
+	secured.HandleFunc("POST /cases/{cid}/indicators/{id}/run", indicatorCtrl.ScheduleModule)
 
 	// evidence
 	evidenceCtrl := NewEvidenceCtrl(db, acl)
@@ -202,6 +204,8 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("GET /cases/{cid}/evidences/{id}/download", evidenceCtrl.Download)
 	secured.HandleFunc("POST /cases/{cid}/evidences/{id}", evidenceCtrl.Save)
 	secured.HandleFunc("DELETE /cases/{cid}/evidences/{id}", evidenceCtrl.Delete)
+	secured.HandleFunc("GET /cases/{cid}/evidences/{id}/run", evidenceCtrl.ListModules)
+	secured.HandleFunc("POST /cases/{cid}/evidences/{id}/run", evidenceCtrl.ScheduleModule)
 
 	// tasks
 	taskCtrl := NewTaskCtrl(db, acl)

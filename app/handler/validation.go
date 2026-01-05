@@ -4,7 +4,6 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/expr-lang/expr"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/worker"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
@@ -107,15 +106,11 @@ func ValidateUser(dto *model.User, enums model.Enums) valid.ValidationError {
 }
 
 func ValidateHook(dto *model.Hook, enums model.Enums) valid.ValidationError {
-	mods := fp.Apply(worker.List, func(m worker.Module) string { return m.Name })
+	modules := fp.Keys(worker.Modules)
 
 	// compile condition
 	msg := ""
-	_, err := expr.Compile(dto.Condition,
-		expr.AsBool(),
-		expr.Env(map[string]any{
-			"evidence": model.Evidence{},
-		}))
+	_, err := compile(*dto)
 	if err != nil {
 		msg = err.Error()
 	}
@@ -123,7 +118,7 @@ func ValidateHook(dto *model.Hook, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "ID", Missing: dto.ID == ""},
 		{Name: "Trigger", Message: "Invalid trigger", Invalid: !InEnum(enums.HookTrigger, dto.Trigger)},
-		{Name: "Mod", Message: "Invalid mod", Invalid: !slices.Contains(mods, dto.Mod)},
+		{Name: "Module", Message: "Invalid module", Invalid: !slices.Contains(modules, dto.Module)},
 		{Name: "Condition", Message: msg, Invalid: err != nil},
 	})
 }

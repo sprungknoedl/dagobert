@@ -3,7 +3,6 @@ package views
 import (
 	"fmt"
 	"github.com/sprungknoedl/dagobert/app/model"
-	"github.com/sprungknoedl/dagobert/app/worker"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 	"math"
@@ -60,7 +59,7 @@ templ EvidencesMany(env Env, rows []model.Evidence) {
 										}
 									}
 									if url, ok := env.Allowed("POST", env.Route+row.ID+"/run"); ok {
-										@actionBtn(env, "POST", url) {
+										@actionBtn(env, "GET", url) {
 											<i class="hio hio-5 hio-bolt"></i>
 										}
 									}
@@ -142,78 +141,5 @@ templ EvidencesOne(env Env, obj model.Evidence, vr valid.ValidationError) {
 			document.querySelector('input[name="Name"]').value = e.target.value.replace(/.*(\/|\\)/, '');
 		};
         </script>
-	}
-}
-
-templ EvidencesProcess(env Env, runs []worker.Module) {
-	@layout() {
-		<main>
-			<!-- Modal header -->
-			<h1 class="font-serif text-2xl mb-4">
-				Process evidence
-				<a class="ml-2" href={ env.Route } up-follow><i class="hio hio-5 hio-arrow-path inline-block mr-1"></i> </a>
-			</h1>
-			<!-- Modal body -->
-			<div class="mb-4">
-				<p class="mb-4">You may have to refresh the evidence list to see the updated results after running a plugin.</p>
-				for _, run := range runs {
-					<div class="card bg-base-100 mb-4">
-						<div class="card-body p-4">
-							<h2 class="card-title">{ run.Name }</h2>
-							<p>{ run.Description }</p>
-							switch run.Status {
-								case "Scheduled":
-									<p class="text-warning font-bold">
-										<i class="hio hio-5 hio-information-circle inline-block"></i>
-										Job currently scheduled
-									</p>
-								case "Running":
-									<p class="text-warning font-bold">
-										<i class="hio hio-5 hio-information-circle inline-block"></i>
-										Job currently running
-									</p>
-								case "Success":
-									<p class="text-success font-bold">
-										<i class="hio hio-5 hio-check-circle inline-block"></i>
-										Job ran successfully.
-									</p>
-									<div class="card-actions justify-end">
-										<form action={ env.Route } method="post" up-submit>
-											<input type="hidden" name="name" value={ run.Name }/>
-											<button class="btn btn-neutral" type="submit">Rerun</button>
-										</form>
-									</div>
-								case "Failed":
-									<p class="text-error font-bold">
-										<i class="hio hio-5 hio-x-circle-filled inline-block"></i>
-										Job failed: { run.Error }
-									</p>
-									<div class="card-actions justify-end">
-										<form action={ env.Route } method="post" up-submit>
-											<input type="hidden" name="name" value={ run.Name }/>
-											<button class="btn btn-neutral" type="submit">Rerun</button>
-										</form>
-									</div>
-								default:
-									<div class="card-actions justify-end">
-										<form action={ env.Route } method="post" up-submit>
-											<input type="hidden" name="name" value={ run.Name }/>
-											<button class="btn btn-neutral" type="submit">Run</button>
-										</form>
-									</div>
-							}
-						</div>
-					</div>
-				}
-				if len(runs) == 0 {
-					<div class="alert alert-info">
-						<i class="hio hio-bolt-slash text-2xl"></i>
-						<span>Evidence type not supported by any plugins. </span>
-					</div>
-				}
-			</div>
-			<!-- Modal footer -->
-			<div class="flex gap-2 items-center"></div>
-		</main>
 	}
 }
