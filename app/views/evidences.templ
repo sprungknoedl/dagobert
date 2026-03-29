@@ -41,32 +41,36 @@ templ EvidencesMany(env Env, rows []model.Evidence) {
 					</tr>
 				</thead>
 				<tbody class="values">
-					for _, row := range rows {
-						<tr class="hover">
-							<td class="value-0 truncate">
-								@enum(env.Enums.EvidenceTypes, row.Type)
-							</td>
-							<td class="value-1" data-search={ row.Name }>{ row.Name } </td>
-							<td class="value-2" data-search={ row.Hash }>{ row.Hash } </td>
-							<td class="value-3" data-search={ row.Size }>{ humanizeSize(row.Size) } </td>
-							<td class="value-4" data-search={ row.Source }>{ row.Source } </td>
-							<td class="value-5" data-search={ row.Notes }>{ row.Notes } </td>
-							<td class="text-right">
-								<div class="join">
-									if url, ok := env.Allowed("GET", env.Route+row.ID+"/download"); ok {
-										@externalBtn(url, "") {
-											<i class="hio hio-5 hio-arrow-down-tray"></i>
+					if len(rows) == 0 {
+						@emptyTable(env)
+					} else {
+						for _, row := range rows {
+							<tr class="hover">
+								<td class="value-0 truncate">
+									@enum(env.Enums.EvidenceTypes, row.Type)
+								</td>
+								<td class="value-1" data-search={ row.Name }>{ row.Name } </td>
+								<td class="value-2" data-search={ row.Hash }>{ row.Hash } </td>
+								<td class="value-3" data-search={ row.Size }>{ humanizeSize(row.Size) } </td>
+								<td class="value-4" data-search={ row.Source }>{ row.Source } </td>
+								<td class="value-5" data-search={ row.Notes }>{ row.Notes } </td>
+								<td class="text-right">
+									<div class="join">
+										if url, ok := env.Allowed("GET", env.Route+row.ID+"/download"); ok {
+											@externalBtn(url, "") {
+												<i class="hio hio-5 hio-arrow-down-tray"></i>
+											}
 										}
-									}
-									if url, ok := env.Allowed("POST", env.Route+row.ID+"/run"); ok {
-										@actionBtn(env, "GET", url) {
-											<i class="hio hio-5 hio-bolt"></i>
+										if url, ok := env.Allowed("POST", env.Route+row.ID+"/run"); ok {
+											@actionBtn(env, "GET", url) {
+												<i class="hio hio-5 hio-bolt"></i>
+											}
 										}
-									}
-									@defaultActionBtns(env, env.Route+row.ID)
-								</div>
-							</td>
-						</tr>
+										@defaultActionBtns(env, env.Route+row.ID)
+									</div>
+								</td>
+							</tr>
+						}
 					}
 				</tbody>
 			</table>

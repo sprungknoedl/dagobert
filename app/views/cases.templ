@@ -23,27 +23,31 @@ templ CasesMany(env Env, rows []model.Case) {
 					</tr>
 				</thead>
 				<tbody class="values">
-					for _, row := range rows {
-						if url, ok := env.Allowed("GET", env.Route+row.ID+"/summary/"); ok {
-							<tr class="hover">
-								<td class="value-0" data-search={ row.ID }><a class="link" href={ url }>{ row.ID }</a> </td>
-								<td class="value-1" data-search={ row.Name }><a class="link" href={ url }>{ row.Name }</a> </td>
-								<td class="value-2" data-search={ row.Classification }>{ row.Classification } </td>
-								<td class="value-3" data-search={ row.Severity }>
-									@enum(env.Enums.CaseSeverities, row.Severity)
-								</td>
-								<td class="value-4" data-search={ row.Outcome }>
-									@enum(env.Enums.CaseOutcomes, row.Outcome)
-								</td>
-								<td class="text-right">
-									<div class="join">
-										@actionBtn(env, "GET", env.Route+row.ID+"/acl") {
-											ACL 
-										}
-										@defaultActionBtns(env, env.Route+row.ID)
-									</div>
-								</td>
-							</tr>
+					if len(rows) == 0 {
+						@emptyTable(env)
+					} else {
+						for _, row := range rows {
+							if url, ok := env.Allowed("GET", env.Route+row.ID+"/summary/"); ok {
+								<tr class="hover">
+									<td class="value-0" data-search={ row.ID }><a class="link" href={ url }>{ row.ID }</a> </td>
+									<td class="value-1" data-search={ row.Name }><a class="link" href={ url }>{ row.Name }</a> </td>
+									<td class="value-2" data-search={ row.Classification }>{ row.Classification } </td>
+									<td class="value-3" data-search={ row.Severity }>
+										@enum(env.Enums.CaseSeverities, row.Severity)
+									</td>
+									<td class="value-4" data-search={ row.Outcome }>
+										@enum(env.Enums.CaseOutcomes, row.Outcome)
+									</td>
+									<td class="text-right">
+										<div class="join">
+											@actionBtn(env, "GET", env.Route+row.ID+"/acl") {
+												ACL
+											}
+											@defaultActionBtns(env, env.Route+row.ID)
+										</div>
+									</td>
+								</tr>
+							}
 						}
 					}
 				</tbody>
