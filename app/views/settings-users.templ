@@ -24,27 +24,31 @@ templ SettingsUsersMany(env Env, rows []model.User) {
 					</tr>
 				</thead>
 				<tbody class="values">
-					for _, row := range rows {
-						<tr class="hover">
-							<td class="value-0" data-search={ row.ID }>{ row.ID } </td>
-							<td class="value-1" data-search={ row.Name }>{ row.Name } </td>
-							<td class="value-2" data-search={ row.UPN }>{ row.UPN } </td>
-							<td class="value-3" data-search={ row.Email }>{ row.Email } </td>
-							<td class="value-4" data-search={ row.Role }>{ row.Role } </td>
-							<td class="value-5" data-search={ row.LastLogin.Format(time.RFC3339) }>
-								@formatTime(row.LastLogin)
-							</td>
-							<td class="text-right">
-								<div class="join">
-									if url, ok := env.Allowed("GET", env.Route+row.ID+"/acl"); ok && row.Role != "Administrator" {
-										@actionBtn(env, "GET", url) {
-											ACL
+					if len(rows) == 0 {
+						@emptyTable(env)
+					} else {
+						for _, row := range rows {
+							<tr class="hover">
+								<td class="value-0" data-search={ row.ID }>{ row.ID } </td>
+								<td class="value-1" data-search={ row.Name }>{ row.Name } </td>
+								<td class="value-2" data-search={ row.UPN }>{ row.UPN } </td>
+								<td class="value-3" data-search={ row.Email }>{ row.Email } </td>
+								<td class="value-4" data-search={ row.Role }>{ row.Role } </td>
+								<td class="value-5" data-search={ row.LastLogin.Format(time.RFC3339) }>
+									@formatTime(row.LastLogin)
+								</td>
+								<td class="text-right">
+									<div class="join">
+										if url, ok := env.Allowed("GET", env.Route+row.ID+"/acl"); ok && row.Role != "Administrator" {
+											@actionBtn(env, "GET", url) {
+												ACL
+											}
 										}
-									}
-									@defaultActionBtns(env, env.Route+row.ID)
-								</div>
-							</td>
-						</tr>
+										@defaultActionBtns(env, env.Route+row.ID)
+									</div>
+								</td>
+							</tr>
+						}
 					}
 				</tbody>
 			</table>

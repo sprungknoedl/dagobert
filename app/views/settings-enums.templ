@@ -74,24 +74,28 @@ templ enumList(env Env, title string, rows []model.Enum) {
 					</tr>
 				</thead>
 				<tbody class="values">
-					for _, row := range rows {
-						<tr class="hover">
-							<td class="value-0" data-search={ row.Rank }>{ row.Rank } </td>
-							<td class="value-1" data-search={ row.Name }>
-								if row.Name != "" {
-									{ row.Name }
-								} else {
-									<em>&lt;Empty&gt;</em>
-								}
-							</td>
-							<td class="value-2" data-search={ row.Icon }><i class={ "hio hio-5 " + row.Icon }></i> { row.Icon } </td>
-							<td class="value-3" data-search={ row.State }><span class={ "text-" + row.State }>{ row.State } </span> </td>
-							<td class="text-right">
-								<div class="join">
-									@defaultActionBtns(env, env.Route+row.ID)
-								</div>
-							</td>
-						</tr>
+					if len(rows) == 0 {
+						@emptyTable(env)
+					} else {
+						for _, row := range rows {
+							<tr class="hover">
+								<td class="value-0" data-search={ row.Rank }>{ row.Rank } </td>
+								<td class="value-1" data-search={ row.Name }>
+									if row.Name != "" {
+										{ row.Name }
+									} else {
+										<em>&lt;Empty&gt;</em>
+									}
+								</td>
+								<td class="value-2" data-search={ row.Icon }><i class={ "hio hio-5 " + row.Icon }></i> { row.Icon } </td>
+								<td class="value-3" data-search={ row.State }><span class={ "text-" + row.State }>{ row.State } </span> </td>
+								<td class="text-right">
+									<div class="join">
+										@defaultActionBtns(env, env.Route+row.ID)
+									</div>
+								</td>
+							</tr>
+						}
 					}
 				</tbody>
 			</table>

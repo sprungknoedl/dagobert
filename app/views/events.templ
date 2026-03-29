@@ -41,6 +41,9 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 					</tr>
 				</thead>
 				<tbody class="values">
+					if len(rows) == 0 {
+						@emptyTable(env)
+					} else {
 					for _, row := range rows {
 						<tr class={ fp.If(row.Flagged, "hover bg-flagged", "hover") }>
 							<td class="value-0" data-search={ row.Time.Format(time.RFC3339) }>
@@ -98,6 +101,7 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 								</div>
 							</td>
 						</tr>
+					}
 					}
 				</tbody>
 			</table>

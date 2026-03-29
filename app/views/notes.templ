@@ -19,19 +19,23 @@ templ NotesMany(env Env, rows []model.Note) {
 					</tr>
 				</thead>
 				<tbody class="values">
-					for _, row := range rows {
-						<tr class="hover">
-							<td class="value-0" data-search={ row.Category }>{ row.Category }</td>
-							<td class="value-1" data-search={ row.Title }>{ row.Title }</td>
-							<td class="value-2 prose" data-search={ row.Description }>
-								@markdown(row.Description)
-							</td>
-							<td class="text-right">
-								<div class="join">
-									@defaultActionBtns(env, env.Route+row.ID)
-								</div>
-							</td>
-						</tr>
+					if len(rows) == 0 {
+						@emptyTable(env)
+					} else {
+						for _, row := range rows {
+							<tr class="hover">
+								<td class="value-0" data-search={ row.Category }>{ row.Category }</td>
+								<td class="value-1" data-search={ row.Title }>{ row.Title }</td>
+								<td class="value-2 prose" data-search={ row.Description }>
+									@markdown(row.Description)
+								</td>
+								<td class="text-right">
+									<div class="join">
+										@defaultActionBtns(env, env.Route+row.ID)
+									</div>
+								</td>
+							</tr>
+						}
 					}
 				</tbody>
 			</table>

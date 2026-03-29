@@ -31,46 +31,50 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 					</tr>
 				</thead>
 				<tbody class="values">
-					for _, row := range rows {
-						<tr class="hover">
-							<td class="value-0 truncate" data-search={ row.Status }>
-								@enum(env.Enums.IndicatorStatus, row.Status)
-							</td>
-							<td class="value-1 truncate" data-search={ row.Type }>
-								@enum(env.Enums.IndicatorTypes, row.Type)
-							</td>
-							<td class="value-2" data-search={ row.Value }>{ row.Value } </td>
-							<td class="value-3" data-search={ row.TLP }>
-								@enum(env.Enums.IndicatorTLPs, row.TLP)
-							</td>
-							<td class="value-4" data-search={ row.Source }>{ row.Source } </td>
-							<td class="value-5 truncate" data-search={ row.FirstSeen.Format(time.RFC3339) }>
-								@formatTime(row.FirstSeen)
-							</td>
-							<td class="value-6 truncate" data-search={ row.LastSeen.Format(time.RFC3339) }>
-								@formatTime(row.LastSeen)
-							</td>
-							<td class="value-7" data-search={ row.Events }>{ row.Events } </td>
-							<td class="text-right">
-								<div class="join">
-									if row.Type == "IP" && row.TLP != "TLP:RED" {
-										@externalBtn("https://www.virustotal.com/gui/search/"+row.Value, "VT")
-										@externalBtn("https://www.abuseipdb.com/check/"+row.Value, "AB")
-									} else if row.Type == "Domain" && row.TLP != "TLP:RED" {
-										@externalBtn("https://www.virustotal.com/gui/search/"+row.Value, "VT")
-									} else if row.Type == "Hash" && row.TLP != "TLP:RED" {
-										@externalBtn("https://www.virustotal.com/gui/search/"+row.Value, "VT")
-										@externalBtn("https://www.hybrid-analysis.com/search?query="+row.Value, "HA")
-									}
-									if url, ok := env.Allowed("POST", env.Route+row.ID+"/run"); ok {
-										@actionBtn(env, "GET", url) {
-											<i class="hio hio-5 hio-bolt"></i>
+					if len(rows) == 0 {
+						@emptyTable(env)
+					} else {
+						for _, row := range rows {
+							<tr class="hover">
+								<td class="value-0 truncate" data-search={ row.Status }>
+									@enum(env.Enums.IndicatorStatus, row.Status)
+								</td>
+								<td class="value-1 truncate" data-search={ row.Type }>
+									@enum(env.Enums.IndicatorTypes, row.Type)
+								</td>
+								<td class="value-2" data-search={ row.Value }>{ row.Value } </td>
+								<td class="value-3" data-search={ row.TLP }>
+									@enum(env.Enums.IndicatorTLPs, row.TLP)
+								</td>
+								<td class="value-4" data-search={ row.Source }>{ row.Source } </td>
+								<td class="value-5 truncate" data-search={ row.FirstSeen.Format(time.RFC3339) }>
+									@formatTime(row.FirstSeen)
+								</td>
+								<td class="value-6 truncate" data-search={ row.LastSeen.Format(time.RFC3339) }>
+									@formatTime(row.LastSeen)
+								</td>
+								<td class="value-7" data-search={ row.Events }>{ row.Events } </td>
+								<td class="text-right">
+									<div class="join">
+										if row.Type == "IP" && row.TLP != "TLP:RED" {
+											@externalBtn("https://www.virustotal.com/gui/search/"+row.Value, "VT")
+											@externalBtn("https://www.abuseipdb.com/check/"+row.Value, "AB")
+										} else if row.Type == "Domain" && row.TLP != "TLP:RED" {
+											@externalBtn("https://www.virustotal.com/gui/search/"+row.Value, "VT")
+										} else if row.Type == "Hash" && row.TLP != "TLP:RED" {
+											@externalBtn("https://www.virustotal.com/gui/search/"+row.Value, "VT")
+											@externalBtn("https://www.hybrid-analysis.com/search?query="+row.Value, "HA")
 										}
-									}
-									@defaultActionBtns(env, env.Route+row.ID)
-								</div>
-							</td>
-						</tr>
+										if url, ok := env.Allowed("POST", env.Route+row.ID+"/run"); ok {
+											@actionBtn(env, "GET", url) {
+												<i class="hio hio-5 hio-bolt"></i>
+											}
+										}
+										@defaultActionBtns(env, env.Route+row.ID)
+									</div>
+								</td>
+							</tr>
+						}
 					}
 				</tbody>
 			</table>

@@ -22,31 +22,35 @@ templ TasksMany(env Env, rows []model.Task) {
 					</tr>
 				</thead>
 				<tbody class="values">
-					for _, row := range rows {
-						<tr class="hover">
-							<td class={ "value-0 truncate " + fp.If(!row.Done && time.Now().After(time.Time(row.DateDue)), "text-error", "") } data-search={ row.DateDue.Format("2006-01-02") }>
-								{ row.DateDue.Format("2006-01-02") }
-							</td>
-							<td class="value-1 truncate" data-search={ row.Type }>
-								@enum(env.Enums.TaskTypes, row.Type)
-							</td>
-							<td class="value-2" data-search={ row.Task }>{ row.Task } </td>
-							<td class="value-3" data-search={ row.Owner }>{ row.Owner } </td>
-							<td class="value-4" data-search={ fp.If(row.Done, "Done", "Open") }>
-								if row.Done {
-									<i class="hio hio-5 hio-check-circle text-green-500"></i>
-									Done
-								} else {
-									<i class="hio hio-5 hio-x-circle text-red-500"></i>
-									Open
-								}
-							</td>
-							<td class="text-right">
-								<div class="join">
-									@defaultActionBtns(env, env.Route+row.ID)
-								</div>
-							</td>
-						</tr>
+					if len(rows) == 0 {
+						@emptyTable(env)
+					} else {
+						for _, row := range rows {
+							<tr class="hover">
+								<td class={ "value-0 truncate " + fp.If(!row.Done && time.Now().After(time.Time(row.DateDue)), "text-error", "") } data-search={ row.DateDue.Format("2006-01-02") }>
+									{ row.DateDue.Format("2006-01-02") }
+								</td>
+								<td class="value-1 truncate" data-search={ row.Type }>
+									@enum(env.Enums.TaskTypes, row.Type)
+								</td>
+								<td class="value-2" data-search={ row.Task }>{ row.Task } </td>
+								<td class="value-3" data-search={ row.Owner }>{ row.Owner } </td>
+								<td class="value-4" data-search={ fp.If(row.Done, "Done", "Open") }>
+									if row.Done {
+										<i class="hio hio-5 hio-check-circle text-green-500"></i>
+										Done
+									} else {
+										<i class="hio hio-5 hio-x-circle text-red-500"></i>
+										Open
+									}
+								</td>
+								<td class="text-right">
+									<div class="join">
+										@defaultActionBtns(env, env.Route+row.ID)
+									</div>
+								</td>
+							</tr>
+						}
 					}
 				</tbody>
 			</table>

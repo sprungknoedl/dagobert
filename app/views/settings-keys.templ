@@ -21,19 +21,23 @@ templ SettingsKeyMany(env Env, keys []model.Key, workers []worker.Worker) {
 					</tr>
 				</thead>
 				<tbody class="values">
-					for _, row := range keys {
-						<tr class="hover">
-							<td class="value-0 truncate" data-search={ row.Type }>
-								@enum(env.Enums.KeyTypes, row.Type)
-							</td>
-							<td class="value-1" data-search={ row.Name }>{ row.Name } </td>
-							<td class="value-2" data-search={ row.Key }>{ row.Key } </td>
-							<td class="text-right">
-								<div class="join">
-									@defaultActionBtns(env, env.Route+row.Key)
-								</div>
-							</td>
-						</tr>
+					if len(keys) == 0 {
+						@emptyTable(env)
+					} else {
+						for _, row := range keys {
+							<tr class="hover">
+								<td class="value-0 truncate" data-search={ row.Type }>
+									@enum(env.Enums.KeyTypes, row.Type)
+								</td>
+								<td class="value-1" data-search={ row.Name }>{ row.Name } </td>
+								<td class="value-2" data-search={ row.Key }>{ row.Key } </td>
+								<td class="text-right">
+									<div class="join">
+										@defaultActionBtns(env, env.Route+row.Key)
+									</div>
+								</td>
+							</tr>
+						}
 					}
 				</tbody>
 			</table>

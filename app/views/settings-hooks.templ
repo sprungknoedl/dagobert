@@ -21,25 +21,29 @@ templ SettingsHooksMany(env Env, rows []model.Hook) {
 					</tr>
 				</thead>
 				<tbody class="values">
-					for _, row := range rows {
-						<tr class="hover">
-							<td class="value-0" data-search={ fp.If(row.Enabled, "Enabled", "Disabled") }>
-								if row.Enabled {
-									<div class="text-success"><i class="hio hio-5 hio-check inline-block"></i> Enabled</div>
-								} else {
-									<div class="text-error"><i class="hio hio-5 hio-x-mark inline-block"></i> Disabled</div>
-								}
-							</td>
-							<td class="value-1" data-search={ row.Trigger }>{ row.Trigger } </td>
-							<td class="value-2" data-search={ row.Name }>{ row.Name } </td>
-							<td class="value-3" data-search={ row.Condition }>{ row.Condition } </td>
-							<td class="value-4" data-search={ row.Module }>{ row.Module } </td>
-							<td class="text-right">
-								<div class="join">
-									@defaultActionBtns(env, env.Route+row.ID)
-								</div>
-							</td>
-						</tr>
+					if len(rows) == 0 {
+						@emptyTable(env)
+					} else {
+						for _, row := range rows {
+							<tr class="hover">
+								<td class="value-0" data-search={ fp.If(row.Enabled, "Enabled", "Disabled") }>
+									if row.Enabled {
+										<div class="text-success"><i class="hio hio-5 hio-check inline-block"></i> Enabled</div>
+									} else {
+										<div class="text-error"><i class="hio hio-5 hio-x-mark inline-block"></i> Disabled</div>
+									}
+								</td>
+								<td class="value-1" data-search={ row.Trigger }>{ row.Trigger } </td>
+								<td class="value-2" data-search={ row.Name }>{ row.Name } </td>
+								<td class="value-3" data-search={ row.Condition }>{ row.Condition } </td>
+								<td class="value-4" data-search={ row.Module }>{ row.Module } </td>
+								<td class="text-right">
+									<div class="join">
+										@defaultActionBtns(env, env.Route+row.ID)
+									</div>
+								</td>
+							</tr>
+						}
 					}
 				</tbody>
 			</table>

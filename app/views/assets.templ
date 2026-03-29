@@ -31,29 +31,33 @@ templ AssetsMany(env Env, title string, rows []model.Asset) {
 					</tr>
 				</thead>
 				<tbody class="values">
-					for _, row := range rows {
-						<tr class="hover">
-							<td class="value-0 truncate" data-search={ row.Status }>
-								@enum(env.Enums.AssetStatus, row.Status)
-							</td>
-							<td class="value-1 truncate" data-search={ row.Type }>
-								@enum(env.Enums.AssetTypes, row.Type)
-							</td>
-							<td class="value-2" data-search={ row.Name }>{ row.Name } </td>
-							<td class="value-3" data-search={ row.Addr }>{ row.Addr } </td>
-							<td class="value-4 truncate" data-search={ row.FirstSeen.Format(time.RFC3339) }>
-								@formatTime(row.FirstSeen)
-							</td>
-							<td class="value-5 truncate" data-search={ row.LastSeen.Format(time.RFC3339) }>
-								@formatTime(row.LastSeen)
-							</td>
-							<td class="value-6" data-search={ row.Notes }>{ row.Notes } </td>
-							<td class="text-right">
-								<div class="join">
-									@defaultActionBtns(env, env.Route+row.ID)
-								</div>
-							</td>
-						</tr>
+					if len(rows) == 0 {
+						@emptyTable(env)
+					} else {
+						for _, row := range rows {
+							<tr class="hover">
+								<td class="value-0 truncate" data-search={ row.Status }>
+									@enum(env.Enums.AssetStatus, row.Status)
+								</td>
+								<td class="value-1 truncate" data-search={ row.Type }>
+									@enum(env.Enums.AssetTypes, row.Type)
+								</td>
+								<td class="value-2" data-search={ row.Name }>{ row.Name } </td>
+								<td class="value-3" data-search={ row.Addr }>{ row.Addr } </td>
+								<td class="value-4 truncate" data-search={ row.FirstSeen.Format(time.RFC3339) }>
+									@formatTime(row.FirstSeen)
+								</td>
+								<td class="value-5 truncate" data-search={ row.LastSeen.Format(time.RFC3339) }>
+									@formatTime(row.LastSeen)
+								</td>
+								<td class="value-6" data-search={ row.Notes }>{ row.Notes } </td>
+								<td class="text-right">
+									<div class="join">
+										@defaultActionBtns(env, env.Route+row.ID)
+									</div>
+								</td>
+							</tr>
+						}
 					}
 				</tbody>
 			</table>
