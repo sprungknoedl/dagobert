@@ -56,11 +56,10 @@ templ SettingsHooksOne(env Env, obj model.Hook, enum []model.Enum, vr valid.Vali
 	{{ title := fp.If(obj.ID == "new", "Add automation rule", "Edit automation rule") }}
 	@form(env, uri, title) {
 		@hiddenField("ID", obj.ID)
-		@selectField("Trigger", obj.Trigger, env.Enums.HookTrigger, required(), withLabel("Trigger"), withError(vr["Trigger"]))
+		@selectField("Trigger", obj.Trigger, env.Enums.HookTrigger, required(), withLabel("Trigger"), withError(vr["Trigger"]), withHint("The event that activates this rule. \"object.created\" fires when a new case object is saved; \"object.updated\" fires on every edit."))
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
-		@stringField("Condition", obj.Condition, required(), withLabel("Condition"), withError(vr["Condition"]))
-		<!-- TODO: explain condition language -->
-		@selectField("Module", obj.Module, enum, required(), withLabel("Mod"), withError(vr["Module"]))
+		@stringField("Condition", obj.Condition, required(), withLabel("Condition"), withError(vr["Condition"]), withHint("Expression evaluated before the module runs. Access fields with dot notation, e.g. object.Type == \"IP\". Leave empty to always trigger."))
+		@selectField("Module", obj.Module, enum, required(), withLabel("Module"), withError(vr["Module"]), withHint("The worker module to run when the condition matches. Modules are registered by the background worker process."))
 		@booleanField("Enabled", obj.Enabled, withLabel("Enabled"), withError(vr["Enabled"]))
 		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
 	}

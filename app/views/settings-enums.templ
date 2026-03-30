@@ -34,12 +34,14 @@ templ SettingsEnumsOne(env Env, obj model.Enum, vr valid.ValidationError) {
 		@hiddenField("Category", obj.Category)
 		@numberField("Rank", obj.Rank, withLabel("Rank"), withError(vr["Rank"]))
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
-		@stringField("Icon", obj.Icon, withLabel("Icon"), withError(vr["Icon"]))
-		<p class="text-sm mb-2">All icon from the <a href="https://heroicons.com/" target="_blank" class="underline">heroicons</a> library are supported.</p>
+		@stringField("Icon", obj.Icon, withLabel("Icon"), withError(vr["Icon"]), withHint("Heroicon name without the \"hio-\" prefix (e.g. \"check-circle\", \"x-mark\"). Browse icons at heroicons.com."))
 		<div class="form-control mb-2">
 			<label class="label justify-start gap-2">
 				State
 				@validationError(vr["State"])
+				<span class="tooltip tooltip-right" data-tip="Colour token used to render this value (e.g. &quot;success&quot;, &quot;warning&quot;, &quot;error&quot;, &quot;info&quot;). Leave empty for default text colour.">
+					<i class="hio hio-4 hio-question-mark-circle text-base-content/40 cursor-help"></i>
+				</span>
 			</label>
 			<select name="State" class="select w-full">
 				<option disabled value="" selected?={ obj.State == "" }>Select an option</option>

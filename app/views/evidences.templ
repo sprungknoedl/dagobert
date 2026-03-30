@@ -123,7 +123,7 @@ templ EvidencesOne(env Env, obj model.Evidence, vr valid.ValidationError) {
 			</label>
 			<input name="EndsAt" type="datetime-local" class="input w-full" value={ fp.If(obj.EndsAt.IsZero(), "", obj.EndsAt.Format("2006-01-02T15:04")) }/>
 		</div>
-		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]))
+		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]), withHint("Where this evidence came from — system name, custodian, or acquisition tool used."))
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
 		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
 		<script>
