@@ -3,6 +3,7 @@ package handler
 import (
 	"path/filepath"
 	"slices"
+	"time"
 
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/worker"
@@ -45,6 +46,8 @@ func ValidateEvidence(dto *model.Evidence, enums model.Enums) valid.ValidationEr
 	return valid.Check([]valid.Condition{
 		{Name: "Name", Missing: dto.Name == ""},
 		{Name: "Type", Missing: dto.Type == ""},
+		{Name: "StartsAt", Message: "Start time is required when end time is set.", Invalid: !dto.EndsAt.IsZero() && dto.StartsAt.IsZero()},
+		{Name: "EndsAt", Message: "End time must be after start time.", Invalid: !dto.StartsAt.IsZero() && !dto.EndsAt.IsZero() && time.Time(dto.EndsAt).Before(time.Time(dto.StartsAt))},
 	})
 }
 

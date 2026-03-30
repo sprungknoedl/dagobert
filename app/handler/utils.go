@@ -216,6 +216,16 @@ func Decode[T any](db *model.Store, r *http.Request, dst T, validator func(T, mo
 	}
 
 	decoder := form.NewDecoder()
+	decoder.RegisterCustomTypeFunc(func(vals []string) (interface{}, error) {
+		if len(vals) == 0 || vals[0] == "" {
+			return model.Time{}, nil
+		}
+		var t model.Time
+		if err := t.UnmarshalText([]byte(vals[0])); err != nil {
+			return nil, err
+		}
+		return t, nil
+	}, model.Time{})
 	if err := decoder.Decode(dst, r.PostForm); err != nil {
 		return err
 	}

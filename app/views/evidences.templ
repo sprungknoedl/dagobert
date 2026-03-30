@@ -6,6 +6,7 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 	"math"
+	"time"
 )
 
 func humanizeSize(s int64) string {
@@ -35,8 +36,10 @@ templ EvidencesMany(env Env, rows []model.Evidence) {
 						<th data-sort="value-1" class="sort px-3 py-4 text-left">Name</th>
 						<th data-sort="value-2" class="sort px-3 py-4 text-left">Hash</th>
 						<th data-sort="value-3" class="sort px-3 py-4 text-left">Size</th>
-						<th data-sort="value-4" class="sort px-3 py-4 text-left">Source</th>
-						<th data-sort="value-5" class="sort px-3 py-4 text-left">Notes</th>
+						<th data-sort="value-4" class="sort px-3 py-4 text-left">Starts at</th>
+						<th data-sort="value-5" class="sort px-3 py-4 text-left">Ends at</th>
+						<th data-sort="value-6" class="sort px-3 py-4 text-left">Source</th>
+						<th data-sort="value-7" class="sort px-3 py-4 text-left">Notes</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
@@ -52,8 +55,10 @@ templ EvidencesMany(env Env, rows []model.Evidence) {
 								<td class="value-1" data-search={ row.Name }>{ row.Name } </td>
 								<td class="value-2" data-search={ row.Hash }>{ row.Hash } </td>
 								<td class="value-3" data-search={ row.Size }>{ humanizeSize(row.Size) } </td>
-								<td class="value-4" data-search={ row.Source }>{ row.Source } </td>
-								<td class="value-5" data-search={ row.Notes }>{ row.Notes } </td>
+								<td class="value-4" data-search={ fp.If(row.StartsAt.IsZero(), "", row.StartsAt.Format(time.RFC3339)) }>{ fp.If(row.StartsAt.IsZero(), "", row.StartsAt.Format(time.RFC3339)) } </td>
+								<td class="value-5" data-search={ fp.If(row.EndsAt.IsZero(), "", row.EndsAt.Format(time.RFC3339)) }>{ fp.If(row.EndsAt.IsZero(), "", row.EndsAt.Format(time.RFC3339)) } </td>
+								<td class="value-6" data-search={ row.Source }>{ row.Source } </td>
+								<td class="value-7" data-search={ row.Notes }>{ row.Notes } </td>
 								<td class="text-right">
 									<div class="join">
 										if url, ok := env.Allowed("GET", env.Route+row.ID+"/download"); ok {
@@ -103,6 +108,20 @@ templ EvidencesOne(env Env, obj model.Evidence, vr valid.ValidationError) {
 				}
 			</label>
 			<input disabled?={ obj.Size == 0 } name="Hash" type="text" class="input w-full" value={ obj.Hash }/>
+		</div>
+		<div class="form-control mb-2">
+			<label class="label justify-start gap-2">
+				Starts at
+				@validationError(vr["StartsAt"])
+			</label>
+			<input name="StartsAt" type="datetime-local" class="input w-full" value={ fp.If(obj.StartsAt.IsZero(), "", obj.StartsAt.Format("2006-01-02T15:04")) }/>
+		</div>
+		<div class="form-control mb-2">
+			<label class="label justify-start gap-2">
+				Ends at
+				@validationError(vr["EndsAt"])
+			</label>
+			<input name="EndsAt" type="datetime-local" class="input w-full" value={ fp.If(obj.EndsAt.IsZero(), "", obj.EndsAt.Format("2006-01-02T15:04")) }/>
 		</div>
 		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]))
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))

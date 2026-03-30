@@ -1,14 +1,16 @@
 package model
 
 type Evidence struct {
-	ID     string
-	Type   string
-	Name   string
-	Hash   string
-	Size   int64
-	Source string
-	Notes  string
-	CaseID string
+	ID       string
+	Type     string
+	Name     string
+	Hash     string
+	Size     int64
+	Source   string
+	Notes    string
+	CaseID   string
+	StartsAt Time
+	EndsAt   Time
 }
 
 func (store *Store) ListEvidences(cid string) ([]Evidence, error) {

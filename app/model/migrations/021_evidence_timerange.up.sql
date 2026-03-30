@@ -1,0 +1,2 @@
+ALTER TABLE evidences ADD COLUMN starts_at TEXT NOT NULL DEFAULT '';
+ALTER TABLE evidences ADD COLUMN ends_at   TEXT NOT NULL DEFAULT '';
