@@ -23,7 +23,7 @@ templ TasksMany(env Env, rows []model.Task) {
 				</thead>
 				<tbody class="values">
 					if len(rows) == 0 {
-						@emptyTable(env)
+						@emptyTable(env, "Create a task for each action item the team needs to work on. Assign an owner, set a due date, and track progress as the investigation moves forward.")
 					} else {
 						for _, row := range rows {
 							<tr class="hover">

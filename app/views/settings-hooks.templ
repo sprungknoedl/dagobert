@@ -22,7 +22,7 @@ templ SettingsHooksMany(env Env, rows []model.Hook) {
 				</thead>
 				<tbody class="values">
 					if len(rows) == 0 {
-						@emptyTable(env)
+						@emptyTable(env, "Create a rule to automate an action when a case object is created or updated. Write a condition expression to filter when it fires, then select the module to run.")
 					} else {
 						for _, row := range rows {
 							<tr class="hover">

@@ -45,7 +45,7 @@ templ EvidencesMany(env Env, rows []model.Evidence) {
 				</thead>
 				<tbody class="values">
 					if len(rows) == 0 {
-						@emptyTable(env)
+						@emptyTable(env, "Upload the first piece of collected evidence — a memory image, disk dump, log archive, or PCAP. Dagobert will calculate the hash automatically on upload.")
 					} else {
 						for _, row := range rows {
 							<tr class="hover">

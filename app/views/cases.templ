@@ -24,7 +24,7 @@ templ CasesMany(env Env, rows []model.Case) {
 				</thead>
 				<tbody class="values">
 					if len(rows) == 0 {
-						@emptyTable(env)
+						@emptyTable(env, "Start by creating a case for the incident you're investigating. Give it a name and severity — you can fill in the details as the investigation unfolds.")
 					} else {
 						for _, row := range rows {
 							if url, ok := env.Allowed("GET", env.Route+row.ID+"/summary/"); ok {

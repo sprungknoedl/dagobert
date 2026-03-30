@@ -20,7 +20,7 @@ templ NotesMany(env Env, rows []model.Note) {
 				</thead>
 				<tbody class="values">
 					if len(rows) == 0 {
-						@emptyTable(env)
+						@emptyTable(env, "Add a note to capture a hypothesis, finding, or research thread that doesn't fit neatly into the timeline. Notes are free-form and support markdown.")
 					} else {
 						for _, row := range rows {
 							<tr class="hover">

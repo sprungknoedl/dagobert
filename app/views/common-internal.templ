@@ -269,14 +269,21 @@ templ list(env Env, title string, opts ...navbarOption) {
 	</div>
 }
 
-templ emptyTable(env Env) {
+templ emptyTable(env Env, desc string) {
 	<tr>
 		<td colspan="100" class="py-16 text-center text-base-content/50">
 			<i class="hio hio-inbox text-4xl block mx-auto mb-2"></i>
-			if _, ok := env.Allowed("POST", env.Route+"new"); ok {
-				Nothing here yet — use <strong><i class="hio hio-4 hio-plus inline-block"></i> Add</strong> to create the first one.
+			if desc != "" {
+				<p class="mb-2">{ desc }</p>
+				if _, ok := env.Allowed("POST", env.Route+"new"); ok {
+					<p class="text-sm text-base-content/40">Use <strong><i class="hio hio-4 hio-plus inline-block"></i> Add</strong> to get started.</p>
+				}
 			} else {
-				Nothing here yet.
+				if _, ok := env.Allowed("POST", env.Route+"new"); ok {
+					Nothing here yet — use <strong><i class="hio hio-4 hio-plus inline-block"></i> Add</strong> to create the first one.
+				} else {
+					Nothing here yet.
+				}
 			}
 		</td>
 	</tr>

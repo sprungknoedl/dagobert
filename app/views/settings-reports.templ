@@ -18,6 +18,9 @@ templ SettingsReportsMany(env Env, rows []model.Report) {
 					</tr>
 				</thead>
 				<tbody class="values">
+					if len(rows) == 0 {
+						@emptyTable(env, "Upload a .docx, .odt, or .ods file with template placeholders to generate formatted investigation reports. Download the default templates from the project repository to get started.")
+					}
 					for _, row := range rows {
 						<tr class="hover">
 							<td class="value-0" data-search={ row.Name }>{ row.Name } </td>

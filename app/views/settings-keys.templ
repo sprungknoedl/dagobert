@@ -22,7 +22,7 @@ templ SettingsKeyMany(env Env, keys []model.Key, workers []worker.Worker) {
 				</thead>
 				<tbody class="values">
 					if len(keys) == 0 {
-						@emptyTable(env)
+						@emptyTable(env, "Generate a key to authenticate a background worker process or external integration. Give each key a descriptive name so you can revoke specific ones later.")
 					} else {
 						for _, row := range keys {
 							<tr class="hover">

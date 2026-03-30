@@ -32,7 +32,7 @@ templ AssetsMany(env Env, title string, rows []model.Asset) {
 				</thead>
 				<tbody class="values">
 					if len(rows) == 0 {
-						@emptyTable(env)
+						@emptyTable(env, "Add the first affected host, account, or service you've identified. Assets become link targets for timeline events and appear in the network visualisation.")
 					} else {
 						for _, row := range rows {
 							<tr class="hover">
