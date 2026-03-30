@@ -156,7 +156,7 @@ templ EventsOne(env Env, obj model.Event, assets []model.Asset, indicators []mod
 		@textareaField("Event", obj.Event, required(), withLabel("Event"), withError(vr["Event"]))
 		@textareaField("Raw", obj.Raw, withLabel("Raw"), withError(vr["Raw"]))
 		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]))
-		@booleanField("Flagged", obj.Flagged, withLabel("Flagged"))
+		@booleanField("Flagged", obj.Flagged, withLabel("Flagged"), withHint("Mark an event as significant or requiring follow-up. Flagged events are highlighted in the timeline."))
 		@choicesField("Assets", withLabel("Assets"), withError(vr["Assets"])) {
 			for _, x := range assets {
 				<option value={ x.Name } selected?={ obj.HasAsset(x.ID) }>{ x.Name }</option>

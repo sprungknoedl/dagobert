@@ -37,6 +37,7 @@ type formConfig struct {
 	label      templ.Component
 	required   templ.Component
 	validation templ.Component
+	hint       string
 	enctype    string
 }
 
@@ -68,6 +69,10 @@ func withError(vc valid.Condition) formOption {
 	return func(fc *formConfig) { fc.validation = validationError(vc) }
 }
 
+func withHint(hint string) formOption {
+	return func(fc *formConfig) { fc.hint = hint }
+}
+
 func enctype(enc string) formOption {
 	return func(fc *formConfig) { fc.enctype = enc }
 }
@@ -97,6 +102,11 @@ templ stringField(name string, value string, opts ...formOption) {
 			@cfg.label
 			@cfg.required
 			@cfg.validation
+			if cfg.hint != "" {
+				<span class="tooltip tooltip-right" data-tip={ cfg.hint }>
+					<i class="hio hio-4 hio-question-mark-circle text-base-content/40 cursor-help"></i>
+				</span>
+			}
 		</label>
 		<input name={ name } type="text" class="input w-full" value={ value }/>
 	</div>
@@ -109,6 +119,11 @@ templ numberField(name string, value int, opts ...formOption) {
 			@cfg.label
 			@cfg.required
 			@cfg.validation
+			if cfg.hint != "" {
+				<span class="tooltip tooltip-right" data-tip={ cfg.hint }>
+					<i class="hio hio-4 hio-question-mark-circle text-base-content/40 cursor-help"></i>
+				</span>
+			}
 		</label>
 		<input name={ name } type="text" class="input w-full" value={ strconv.Itoa(value) }/>
 	</div>
@@ -121,6 +136,11 @@ templ selectField(name string, value string, enum []model.Enum, opts ...formOpti
 			@cfg.label
 			@cfg.required
 			@cfg.validation
+			if cfg.hint != "" {
+				<span class="tooltip tooltip-right" data-tip={ cfg.hint }>
+					<i class="hio hio-4 hio-question-mark-circle text-base-content/40 cursor-help"></i>
+				</span>
+			}
 		</label>
 		<select name={ name } class="select w-full">
 			for _, e := range enum {
@@ -137,6 +157,11 @@ templ choicesField(name string, opts ...formOption) {
 			@cfg.label
 			@cfg.required
 			@cfg.validation
+			if cfg.hint != "" {
+				<span class="tooltip tooltip-right" data-tip={ cfg.hint }>
+					<i class="hio hio-4 hio-question-mark-circle text-base-content/40 cursor-help"></i>
+				</span>
+			}
 		</label>
 		<select multiple name={ name } class="choices select w-full">
 			{ children... }
@@ -150,6 +175,11 @@ templ booleanField(name string, value bool, opts ...formOption) {
 		<label class="label cursor-pointer justify-start gap-2">
 			<input name={ name } value="true" type="checkbox" class="checkbox" checked?={ value }/>
 			@cfg.label
+			if cfg.hint != "" {
+				<span class="tooltip tooltip-right" data-tip={ cfg.hint }>
+					<i class="hio hio-4 hio-question-mark-circle text-base-content/40 cursor-help"></i>
+				</span>
+			}
 		</label>
 	</div>
 }
@@ -161,6 +191,11 @@ templ textareaField(name string, value string, opts ...formOption) {
 			@cfg.label
 			@cfg.required
 			@cfg.validation
+			if cfg.hint != "" {
+				<span class="tooltip tooltip-right" data-tip={ cfg.hint }>
+					<i class="hio hio-4 hio-question-mark-circle text-base-content/40 cursor-help"></i>
+				</span>
+			}
 		</label>
 		<textarea name={ name } rows="3" class="textarea w-full">{ value }</textarea>
 	</div>
