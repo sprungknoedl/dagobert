@@ -77,7 +77,7 @@ templ enumList(env Env, title string, rows []model.Enum) {
 				</thead>
 				<tbody class="values">
 					if len(rows) == 0 {
-						@emptyTable(env)
+						@emptyTable(env, "Each category lists the values available in a drop-down elsewhere in the app. Add, remove, or reorder entries to match your organisation's taxonomy.")
 					} else {
 						for _, row := range rows {
 							<tr class="hover">

@@ -25,7 +25,7 @@ templ SettingsUsersMany(env Env, rows []model.User) {
 				</thead>
 				<tbody class="values">
 					if len(rows) == 0 {
-						@emptyTable(env)
+						@emptyTable(env, "Add an account for each analyst who needs access. Assign Administrator for full access, User for standard write access, or Read-Only for view-only.")
 					} else {
 						for _, row := range rows {
 							<tr class="hover">

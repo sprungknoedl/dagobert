@@ -32,7 +32,7 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 				</thead>
 				<tbody class="values">
 					if len(rows) == 0 {
-						@emptyTable(env)
+						@emptyTable(env, "Add an IP address, domain, file hash, or other observable that can be used for detection or hunting. Set the TLP to control how widely it can be shared.")
 					} else {
 						for _, row := range rows {
 							<tr class="hover">
