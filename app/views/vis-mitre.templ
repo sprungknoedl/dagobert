@@ -8,7 +8,7 @@ templ VisMitreAttack(env Env, counts map[string]int, matrix *attck.Matrix, hide 
 		@sidebar(env, "MITRE ATT&CK® Matrix")
 		<main class="pl-20 p-4 grow max-w-full flex flex-col h-screen">
 			<form method="get" up-autosubmit up-target="#list" up-history="true">
-				@navbar(env, "ATT&CK Navigator", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navPreButtons(mitreExtra(env, hide)))
+				@navbar(env, "ATT&CK Navigator", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navPreButtons(mitreExtra(env, hide)), navSubtitle("Map observed techniques to the MITRE ATT&CK framework"))
 			</form>
 			<div id="list">
 				<table class="table table-default">

@@ -8,7 +8,7 @@ import (
 
 templ NotesMany(env Env, rows []model.Note) {
 	@layout() {
-		@list(env, "Notes") {
+		@list(env, "Notes", navSubtitle("Free-form findings, hypotheses, and research threads")) {
 			<table class="table table-default" data-default-sort="value-0">
 				<thead>
 					<tr>

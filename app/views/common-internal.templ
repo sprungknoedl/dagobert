@@ -8,6 +8,7 @@ import (
 type navbarConfig struct {
 	preTitle    templ.Component
 	preButtons  templ.Component
+	subtitle    string
 	hideImport  bool
 	hideExport  bool
 	hideRefresh bool
@@ -32,7 +33,8 @@ func navPreButtons(c templ.Component) navbarOption {
 	return func(nc *navbarConfig) { nc.preButtons = c }
 }
 
-func navHideImport() navbarOption  { return func(nc *navbarConfig) { nc.hideImport = true } }
+func navSubtitle(subtitle string) navbarOption { return func(nc *navbarConfig) { nc.subtitle = subtitle } }
+func navHideImport() navbarOption              { return func(nc *navbarConfig) { nc.hideImport = true } }
 func navHideExport() navbarOption  { return func(nc *navbarConfig) { nc.hideExport = true } }
 func navHideRefresh() navbarOption { return func(nc *navbarConfig) { nc.hideRefresh = true } }
 func navHideAdd() navbarOption     { return func(nc *navbarConfig) { nc.hideAdd = true } }
@@ -47,19 +49,24 @@ templ navSettingsTitle() {
 templ navbar(env Env, title string, opts ...navbarOption) {
 	{{ cfg := applynavOptions(opts) }}
 	<nav class="navbar sticky top-0 bg-base-100 z-10 p-2 -mt-4">
-		<div class="flex-none breadcrumbs font-serif text-3xl">
-			<ul>
-				if cfg.preTitle != nil {
-					@cfg.preTitle
-				}
-				if env.Case.ID != "" {
-					<li class="inline-flex gap-4">
-						<i class="hio hio-6 hio-briefcase inline-block"></i>
-						{ env.Case.Name }
-					</li>
-				}
-				<li class="text-neutral">{ title }</li>
-			</ul>
+		<div class="flex-none flex flex-col justify-center">
+			<div class="breadcrumbs font-serif text-3xl">
+				<ul>
+					if cfg.preTitle != nil {
+						@cfg.preTitle
+					}
+					if env.Case.ID != "" {
+						<li class="inline-flex gap-4">
+							<i class="hio hio-6 hio-briefcase inline-block"></i>
+							{ env.Case.Name }
+						</li>
+					}
+					<li class="text-neutral">{ title }</li>
+				</ul>
+			</div>
+			if cfg.subtitle != "" {
+				<p class="text-sm text-base-content/40 ml-1 -mt-1">{ cfg.subtitle }</p>
+			}
 		</div>
 		<div class="flex-1"></div>
 		<div class="flex-none flex gap-4">
