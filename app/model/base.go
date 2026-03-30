@@ -88,7 +88,17 @@ func (t *Time) Scan(src interface{}) (err error) {
 }
 
 func (t *Time) UnmarshalText(text []byte) (err error) {
-	t2, err := time.Parse(time.RFC3339Nano, string(text))
+	s := string(text)
+	if s == "" {
+		*t = Time(time.Time{})
+		return nil
+	}
+	// Try RFC3339 first (API / CSV input)
+	t2, err := time.Parse(time.RFC3339Nano, s)
+	if err != nil {
+		// Fall back to datetime-local format from HTML inputs (no timezone, assume UTC)
+		t2, err = time.Parse("2006-01-02T15:04", s)
+	}
 	*t = Time(t2)
 	return err
 }

@@ -52,8 +52,16 @@ func (ctrl EvidenceCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Type", "Name", "Hash", "Size", "Notes"})
+	cw.Write([]string{"ID", "Type", "Name", "Hash", "Size", "Notes", "StartsAt", "EndsAt"})
 	for _, e := range list {
+		startsAt := ""
+		if !e.StartsAt.IsZero() {
+			startsAt = e.StartsAt.Format(time.RFC3339)
+		}
+		endsAt := ""
+		if !e.EndsAt.IsZero() {
+			endsAt = e.EndsAt.Format(time.RFC3339)
+		}
 		cw.Write([]string{
 			e.ID,
 			e.Type,
@@ -61,6 +69,8 @@ func (ctrl EvidenceCtrl) Export(w http.ResponseWriter, r *http.Request) {
 			e.Hash,
 			strconv.FormatInt(e.Size, 10),
 			e.Notes,
+			startsAt,
+			endsAt,
 		})
 	}
 
@@ -70,7 +80,7 @@ func (ctrl EvidenceCtrl) Export(w http.ResponseWriter, r *http.Request) {
 func (ctrl EvidenceCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/evidences/", cid)
-	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 6, func(rec []string) {
+	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 0, func(rec []string) {
 		size, err := strconv.ParseInt(rec[4], 10, 64)
 		if err != nil {
 			Warn(w, r, err)
@@ -83,14 +93,36 @@ func (ctrl EvidenceCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		var startsAt model.Time
+		if len(rec) > 6 && rec[6] != "" {
+			t, err := time.Parse(time.RFC3339, rec[6])
+			if err != nil {
+				Warn(w, r, err)
+			} else {
+				startsAt = model.Time(t)
+			}
+		}
+
+		var endsAt model.Time
+		if len(rec) > 7 && rec[7] != "" {
+			t, err := time.Parse(time.RFC3339, rec[7])
+			if err != nil {
+				Warn(w, r, err)
+			} else {
+				endsAt = model.Time(t)
+			}
+		}
+
 		obj := model.Evidence{
-			ID:     fp.If(rec[0] == "", fp.Random(10), rec[0]),
-			CaseID: cid,
-			Type:   rec[1],
-			Name:   loc,
-			Hash:   rec[3],
-			Size:   size, // rec[4]
-			Notes:  rec[5],
+			ID:       fp.If(rec[0] == "", fp.Random(10), rec[0]),
+			CaseID:   cid,
+			Type:     rec[1],
+			Name:     loc,
+			Hash:     rec[3],
+			Size:     size, // rec[4]
+			Notes:    rec[5],
+			StartsAt: startsAt,
+			EndsAt:   endsAt,
 		}
 
 		if err := ctrl.Store().SaveEvidence(cid, obj); err != nil {
