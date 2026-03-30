@@ -10,7 +10,7 @@ import (
 templ IndicatorsMany(env Env, rows []model.Indicator) {
 	{{ summary := summarizeIndicators(rows) }}
 	@layout() {
-		@list(env, "Indicators", navHideImport(), navHideExport(), navPreButtons(indicatorsManyExtra(env))) {
+		@list(env, "Indicators", navHideImport(), navHideExport(), navPreButtons(indicatorsManyExtra(env)), navSubtitle("Atomic artefacts for detection and threat hunting")) {
 			<div class="stats w-full mb-4">
 				for _, status := range env.Enums.IndicatorStatus {
 					@stat(status.State, status.Icon, status.Name, summary[status.Name])

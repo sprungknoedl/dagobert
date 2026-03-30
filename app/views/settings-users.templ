@@ -10,7 +10,7 @@ import (
 
 templ SettingsUsersMany(env Env, rows []model.User) {
 	@layout() {
-		@list(env, "Users", navSettings(), navHideExport(), navHideImport()) {
+		@list(env, "Users", navSettings(), navHideExport(), navHideImport(), navSubtitle("Manage user accounts and role assignments")) {
 			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>

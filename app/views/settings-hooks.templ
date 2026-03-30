@@ -8,7 +8,7 @@ import (
 
 templ SettingsHooksMany(env Env, rows []model.Hook) {
 	@layout() {
-		@list(env, "Hooks", navSettings(), navHideExport(), navHideImport()) {
+		@list(env, "Hooks", navSettings(), navHideExport(), navHideImport(), navSubtitle("Automation rules triggered by case object changes")) {
 			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>

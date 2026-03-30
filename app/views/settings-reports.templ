@@ -8,7 +8,7 @@ import (
 
 templ SettingsReportsMany(env Env, rows []model.Report) {
 	@layout() {
-		@list(env, "Reports", navSettings(), navHideExport(), navHideImport()) {
+		@list(env, "Reports", navSettings(), navHideExport(), navHideImport(), navSubtitle("Templates for generating investigation reports")) {
 			<table class="table table-default" data-default-sort="value-0">
 				<thead>
 					<tr>

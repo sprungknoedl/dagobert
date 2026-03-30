@@ -10,7 +10,7 @@ import (
 
 templ SettingsEnumsMany(env Env) {
 	@layout() {
-		@list(env, "Case Objects", navSettings(), navHideAdd(), navHideExport(), navHideImport()) {
+		@list(env, "Case Objects", navSettings(), navHideAdd(), navHideExport(), navHideImport(), navSubtitle("Customisable value lists used across the app")) {
 			@enumList(env, "Asset Status", env.Enums.AssetStatus)
 			@enumList(env, "Asset Types", env.Enums.AssetTypes)
 			@enumList(env, "Case Severities", env.Enums.CaseSeverities)

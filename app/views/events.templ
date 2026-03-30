@@ -26,7 +26,7 @@ func techniques(mitre attck.KB, e model.Event) iter.Seq[attck.Technique] {
 
 templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators []model.Indicator, mitre attck.KB) {
 	@layout() {
-		@list(env, "Timeline", navHideImport(), navPreButtons(eventsManyExtra(env))) {
+		@list(env, "Timeline", navHideImport(), navPreButtons(eventsManyExtra(env)), navSubtitle("Chronological log of attacker activity and analyst findings")) {
 			<div id="histogram" class="card bg-base-200 text-xs m-4 p-4"></div>
 			<!-- -->
 			<table class="table table-default" data-default-sort="value-0">

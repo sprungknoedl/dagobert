@@ -9,7 +9,7 @@ import (
 
 templ SettingsKeyMany(env Env, keys []model.Key, workers []worker.Worker) {
 	@layout() {
-		@list(env, "API Keys", navSettings(), navHideExport(), navHideImport()) {
+		@list(env, "API Keys", navSettings(), navHideExport(), navHideImport(), navSubtitle("Long-lived keys for worker processes and integrations")) {
 			<h2 class="text-xl font-serif p-2">Keys</h2>
 			<table class="table table-default" data-default-sort="value-1">
 				<thead>
