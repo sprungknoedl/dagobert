@@ -5,14 +5,15 @@ import (
 )
 
 type Indicator struct {
-	ID     string
-	Status string
-	Type   string
-	Value  string
-	TLP    string
-	Source string
-	Notes  string
-	CaseID string
+	ID      string
+	Flagged bool
+	Status  string
+	Type    string
+	Value   string
+	TLP     string
+	Source  string
+	Notes   string
+	CaseID  string
 
 	FirstSeen Time `gorm:"->"`
 	LastSeen  Time `gorm:"->"`
