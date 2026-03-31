@@ -35,7 +35,7 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 						@emptyTable(env, "Add an IP address, domain, file hash, or other observable that can be used for detection or hunting. Set the TLP to control how widely it can be shared.")
 					} else {
 						for _, row := range rows {
-							<tr class="hover">
+							<tr class={ fp.If(row.Flagged, "hover bg-flagged", "hover") }>
 								<td class="value-0 truncate" data-search={ row.Status }>
 									@enum(env.Enums.IndicatorStatus, row.Status)
 								</td>
@@ -54,8 +54,13 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 									@formatTime(row.LastSeen)
 								</td>
 								<td class="value-7" data-search={ row.Events }>{ row.Events } </td>
-								<td class="text-right">
+								<td class="text-right value-8" data-search={ fp.If(row.Flagged, "flagged:true", "") }>
 									<div class="join">
+										if row.Flagged {
+											@actionBtn(env, "GET", env.Route+row.ID) {
+												<i class="hio hio-5 hio-flag btn-flagged"></i>
+											}
+										}
 										if row.Type == "IP" && row.TLP != "TLP:RED" {
 											@externalBtn("https://www.virustotal.com/gui/search/"+row.Value, "VT")
 											@externalBtn("https://www.abuseipdb.com/check/"+row.Value, "AB")
@@ -92,6 +97,7 @@ templ IndicatorsOne(env Env, obj model.Indicator, vr valid.ValidationError) {
 		@selectField("Type", obj.Type, env.Enums.IndicatorTypes, required(), withLabel("Type"), withError(vr["Type"]))
 		@stringField("Value", obj.Value, required(), withLabel("Value"), withError(vr["Value"]))
 		@selectField("TLP", obj.TLP, env.Enums.IndicatorTLPs, required(), withLabel("TLP"), withError(vr["TLP"]), withHint("Traffic Light Protocol: controls how widely this indicator can be shared. TLP:RED = named recipients only; TLP:GREEN = community; TLP:WHITE = public."))
+		@booleanField("Flagged", obj.Flagged, withLabel("Flagged"), withHint("Mark this indicator as significant. Flagged indicators are highlighted in the list and appear on the case summary page."))
 		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]), withHint("Where this indicator was found or provided by (e.g. \"VirusTotal\", \"customer firewall logs\", analyst name)."))
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
 		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>

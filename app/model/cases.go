@@ -7,12 +7,7 @@ import (
 type Case struct {
 	ID             string
 	Name           string
-	SummaryWho     string
-	SummaryWhat    string
-	SummaryWhen    string
-	SummaryWhere   string
-	SummaryWhy     string
-	SummaryHow     string
+	Summary        string
 	Classification string
 	Severity       string
 	Outcome        string

@@ -60,7 +60,7 @@ func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Name", "Severity", "Classification", "Closed", "Outcome", "Who", "What", "When", "Where", "Why", "How"})
+	cw.Write([]string{"ID", "Name", "Severity", "Classification", "Closed", "Outcome", "Summary"})
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
@@ -69,12 +69,7 @@ func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
 			e.Classification,
 			strconv.FormatBool(e.Closed),
 			e.Outcome,
-			e.SummaryWho,
-			e.SummaryWhat,
-			e.SummaryWhen,
-			e.SummaryWhere,
-			e.SummaryWhy,
-			e.SummaryHow,
+			e.Summary,
 		})
 	}
 
@@ -83,7 +78,7 @@ func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	uri := "/"
-	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 12, func(rec []string) {
+	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 7, func(rec []string) {
 		closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
 		if err != nil {
 			Warn(w, r, err)
@@ -97,12 +92,7 @@ func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Classification: rec[3],
 			Closed:         closed,
 			Outcome:        rec[5],
-			SummaryWho:     rec[6],
-			SummaryWhat:    rec[6],
-			SummaryWhen:    rec[6],
-			SummaryWhere:   rec[6],
-			SummaryWhy:     rec[6],
-			SummaryHow:     rec[6],
+			Summary:        rec[6],
 		}
 
 		if err = ctrl.Store().SaveCase(obj); err != nil {
@@ -114,15 +104,7 @@ func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl CaseCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	obj := model.Case{
-		ID:           cid,
-		SummaryWho:   "Identified actor [user/process/IP] involved in the incident",
-		SummaryWhat:  "Detected [action/event] leading to [impact/artifact]",
-		SummaryWhen:  "Occurred at [timestamp], duration [timeframe]",
-		SummaryWhere: "Location [host/path/network] affected",
-		SummaryWhy:   "Root cause [vulnerability/misconfiguration/intent] leading to incident",
-		SummaryHow:   "Execution method [tool/technique/tactic] used",
-	}
+	obj := model.Case{ID: cid}
 	if cid != "new" {
 		var err error
 		obj, err = ctrl.Store().GetCase(cid)

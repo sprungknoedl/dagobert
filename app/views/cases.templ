@@ -19,6 +19,7 @@ templ CasesMany(env Env, rows []model.Case) {
 						<th data-sort="value-2" class="sort px-3 py-4 text-left">Classification</th>
 						<th data-sort="value-3" class="sort px-3 py-4 text-left">Severity</th>
 						<th data-sort="value-4" class="sort px-3 py-4 text-left">Outcome</th>
+						<th data-sort="value-5" class="sort px-3 py-4 text-left">Status</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
@@ -37,6 +38,9 @@ templ CasesMany(env Env, rows []model.Case) {
 									</td>
 									<td class="value-4" data-search={ row.Outcome }>
 										@enum(env.Enums.CaseOutcomes, row.Outcome)
+									</td>
+									<td class="value-5" data-search={ fp.If(row.Closed, "closed", "open") }>
+										@caseStatusPill(row.Closed)
 									</td>
 									<td class="text-right">
 										<div class="join">
@@ -68,12 +72,7 @@ templ CasesOne(env Env, obj model.Case, sketches []timesketch.Sketch, vr valid.V
 		@booleanField("Closed", obj.Closed, withLabel("Closed"))
 		<!-- x -->
 		<h2 class="text-xl font-serif mb-2 mt-4">Summary</h2>
-		@textareaField("SummaryWho", obj.SummaryWho, withLabel("Who?"), withError(vr["SummaryWho"]))
-		@textareaField("SummaryWhat", obj.SummaryWhat, withLabel("What?"), withError(vr["SummaryWhat"]))
-		@textareaField("SummaryWhen", obj.SummaryWhen, withLabel("When?"), withError(vr["SummaryWhen"]))
-		@textareaField("SummaryWhere", obj.SummaryWhere, withLabel("Where?"), withError(vr["SummaryWhere"]))
-		@textareaField("SummaryWhy", obj.SummaryWhy, withLabel("Why?"), withError(vr["SummaryWhy"]))
-		@textareaField("SummaryHow", obj.SummaryHow, withLabel("How?"), withError(vr["SummaryHow"]))
+		@textareaField("Summary", obj.Summary, withLabel("Executive summary"), withHint("Markdown supported. Describe what happened, scope of impact, root cause, and resolution."))
 		<!-- x -->
 		<h2 class="text-xl font-serif mb-2 mt-4">Integrations</h2>
 		<div class="form-control mb-2">
@@ -93,57 +92,132 @@ templ CasesOne(env Env, obj model.Case, sketches []timesketch.Sketch, vr valid.V
 }
 
 templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model.Asset, indicators []model.Indicator) {
-	{{ summary := summarizeAssets(assets) }}
 	{{ keyEvents := fp.Filter(events, func(e model.Event) bool { return e.Flagged }) }}
+	{{ compromisedAssets := fp.Filter(assets, func(a model.Asset) bool { return a.Status == "Compromised" }) }}
+	{{ flaggedIndicators := fp.Filter(indicators, func(i model.Indicator) bool { return i.Flagged }) }}
 	@layout() {
-		@list(env, "Summary", navHideSearch(), navHideAdd(), navHideExport(), navHideImport(), navPreButtons(caseSummaryExtra(env))) {
-			<h2 class="text-xl font-serif p-2">Assets</h2>
+		@list(env, "Summary", navHideSearch(), navHideAdd(), navHideExport(), navHideImport(), navPreButtons(caseSummaryExtra(env)), navSubtitle("One-page overview of the current investigation status")) {
+			<!-- Case metadata bar (stats style) -->
 			<div class="stats w-full">
-				for _, status := range env.Enums.AssetStatus {
-					@stat(status.State, status.Icon, status.Name, summary[status.Name])
+				<div class="stat">
+					<div class="stat-title">Case ID</div>
+					<div class="stat-value text-2xl">{ "#" + obj.ID }</div>
+				</div>
+				<div class="stat">
+					<div class="stat-title">Name</div>
+					<div class="stat-value text-2xl">{ obj.Name }</div>
+				</div>
+				<div class="stat">
+					<div class="stat-title">Severity</div>
+					<div class="stat-value text-2xl">{ obj.Severity }</div>
+				</div>
+				<div class="stat">
+					<div class="stat-title">Classification</div>
+					<div class="stat-value text-2xl">{ fp.If(obj.Classification != "", obj.Classification, "—") }</div>
+				</div>
+				<div class="stat">
+					<div class="stat-title">Outcome</div>
+					<div class="stat-value text-2xl">{ obj.Outcome }</div>
+				</div>
+				<div class="stat">
+					<div class="stat-title">Status</div>
+					<div class="stat-value text-2xl">
+						@caseStatusPill(obj.Closed)
+					</div>
+				</div>
+			</div>
+			<!-- Executive summary -->
+			<h2 class="text-xl font-serif px-4 pt-6 pb-2">Executive Summary</h2>
+			<div class="px-4">
+				if obj.Summary == "" {
+					<p class="text-base-content/50 italic">No executive summary written yet. Use the Edit button to add a narrative describing what happened, the scope of impact, and how it was resolved.</p>
+				} else {
+					<article class="prose max-w-none">
+						@markdown(obj.Summary)
+					</article>
 				}
 			</div>
-			<h2 class="text-xl font-serif p-2 mt-6">Summary</h2>
-			<div class="grid grid-cols-3 gap-4">
-				@card("Who?", obj.SummaryWho)
-				@card("What?", obj.SummaryWhat)
-				@card("When?", obj.SummaryWhen)
-				@card("Where?", obj.SummaryWhere)
-				@card("Why?", obj.SummaryWhy)
-				@card("How?", obj.SummaryHow)
+			<!-- Key items: 3-column grid -->
+			<div class="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 pt-6">
+				<!-- Flagged events -->
+				<div>
+					<h2 class="text-xl font-serif mb-3">Key Events</h2>
+					if len(keyEvents) == 0 {
+						<p class="text-base-content/50 italic">No events have been flagged yet.</p>
+					} else {
+						<table class="table table-sm w-full">
+							<tbody>
+								for _, ev := range keyEvents {
+									<tr>
+										<td class="w-1/3 text-base-content/60 align-top">
+											@enumIcon(env.Enums.EventTypes, ev.Type) {
+												@formatTime(ev.Time)
+											}
+										</td>
+										<td class="text-sm">
+											@highlightEvent(ev, assets, indicators)
+										</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					}
+				</div>
+				<!-- Compromised assets -->
+				<div>
+					<h2 class="text-xl font-serif mb-3">Compromised Assets</h2>
+					if len(compromisedAssets) == 0 {
+						<p class="text-base-content/50 italic">No assets are currently marked as Compromised.</p>
+					} else {
+						<table class="table table-sm w-full">
+							<tbody>
+								for _, a := range compromisedAssets {
+									<tr>
+										<td class="w-1/3 text-base-content/60">
+											@enumIcon(env.Enums.AssetTypes, a.Type) {
+												{ a.Type }
+											}
+										</td>
+										<td>{ a.Name }</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					}
+				</div>
+				<!-- Flagged indicators -->
+				<div>
+					<h2 class="text-xl font-serif mb-3">Key Indicators</h2>
+					if len(flaggedIndicators) == 0 {
+						<p class="text-base-content/50 italic">No indicators have been flagged yet.</p>
+					} else {
+						<table class="table table-sm w-full">
+							<tbody>
+								for _, i := range flaggedIndicators {
+									<tr>
+										<td class="w-1/3 text-base-content/60">
+											@enumIcon(env.Enums.IndicatorTypes, i.Type) {
+												{ i.Type }
+											}
+										</td>
+										<td class="font-mono text-sm">{ i.Value }</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					}
+				</div>
 			</div>
-			<h2 class="text-xl font-serif p-2 mt-6">Key Events</h2>
-			<ul class="timeline timeline-vertical">
-				for _, ev := range keyEvents {
-					<li>
-						<div class="timeline-start">
-							@formatTime(ev.Time)
-						</div>
-						<div class="timeline-middle">
-							@enumIcon(env.Enums.EventTypes, ev.Type)
-						</div>
-						<div class="timeline-end timeline-box">
-							@highlightEvent(ev, assets, indicators)
-						</div>
-						<hr/>
-					</li>
-				}
-				if len(keyEvents) == 0 {
-					<li>
-						<div class="timeline-end timeline-box">No key events selected</div>
-					</li>
-				}
-			</ul>
 		}
 	}
 }
 
-func summarizeAssets(rows []model.Asset) map[string]int {
-	summary := map[string]int{}
-	for _, row := range rows {
-		summary[row.Status]++
+templ caseStatusPill(closed bool) {
+	if closed {
+		<span class="badge badge-success">Closed</span>
+	} else {
+		<span class="badge badge-error">Open</span>
 	}
-	return summary
 }
 
 templ stat(status, icon, title string, value int) {
@@ -152,17 +226,6 @@ templ stat(status, icon, title string, value int) {
 		<div class="stat-title">{ title }</div>
 		<div class="stat-value">{ value }</div>
 		<div class="stat-desc">&nbsp;</div>
-	</div>
-}
-
-templ card(title, value string) {
-	<div class="card bg-base-200">
-		<div class="card-body">
-			<h2 class="card-title">{ title }</h2>
-			<article class="prose">
-				@markdown(value)
-			</article>
-		</div>
 	</div>
 }
 

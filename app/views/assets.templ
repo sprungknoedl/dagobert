@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+func summarizeAssets(rows []model.Asset) map[string]int {
+	summary := map[string]int{}
+	for _, row := range rows {
+		summary[row.Status]++
+	}
+	return summary
+}
+
 templ AssetsMany(env Env, title string, rows []model.Asset) {
 	{{ summary := summarizeAssets(rows) }}
 	@layout() {
