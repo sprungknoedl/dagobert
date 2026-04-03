@@ -26,6 +26,11 @@
     background-color: var(--color-primary) !important;
 }
 
+.vis-item.flagged {
+    border-color: var(--color-warning) !important;
+    background-color: color-mix(in srgb, var(--color-warning) 20%, var(--color-neutral-content)) !important;
+}
+
 .vis-labelset .vis-label {
     display: flex;
     align-items: center;

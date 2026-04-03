@@ -80,6 +80,7 @@ func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
 	}
 
 	groupBy := cmp.Or(r.URL.Query().Get("group"), "asset")
+	flaggedOnly := r.URL.Query().Get("flagged") == "on"
 	items := []views.DataItem{}
 	groups := map[string]views.DataItem{}
 
@@ -92,18 +93,19 @@ func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for _, ev := range events {
-			if !ev.Flagged {
+			if flaggedOnly && !ev.Flagged {
 				continue
 			}
 
 			category := cmp.Or(ev.Type, "Uncategorized")
 			groups[category] = views.DataItem{ID: category, Content: category}
 			items = append(items, views.DataItem{
-				ID:      ev.ID,
-				Content: ev.Event,
-				Title:   ev.Time.Format(time.RFC3339) + " - " + ev.Event,
-				Start:   ev.Time.Format(time.RFC3339),
-				Group:   category,
+				ID:        ev.ID,
+				Content:   ev.Event,
+				Title:     ev.Time.Format(time.RFC3339) + " - " + ev.Event,
+				Start:     ev.Time.Format(time.RFC3339),
+				Group:     category,
+				ClassName: fp.If(ev.Flagged, "flagged", ""),
 			})
 		}
 
@@ -127,32 +129,34 @@ func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
 		})
 
 		slog.Debug("rendering timeline", "items", items, "groups", groupList)
-		Render(w, r, http.StatusOK, views.VisTimeLine(Env(ctrl, r), items, groupList, groupBy))
+		Render(w, r, http.StatusOK, views.VisTimeLine(Env(ctrl, r), items, groupList, groupBy, flaggedOnly))
 
 	default: // "asset"
 		for _, ev := range events {
-			if !ev.Flagged {
+			if flaggedOnly && !ev.Flagged {
 				continue
 			}
 
 			for _, g := range ev.Assets {
 				groups[g.Name] = views.DataItem{ID: g.Name, Content: g.Name}
 				items = append(items, views.DataItem{
-					ID:      ev.ID + "_" + g.ID,
-					Content: ev.Event,
-					Title:   ev.Time.Format(time.RFC3339) + " - " + ev.Event,
-					Start:   ev.Time.Format(time.RFC3339),
-					Group:   g.Name,
+					ID:        ev.ID + "_" + g.ID,
+					Content:   ev.Event,
+					Title:     ev.Time.Format(time.RFC3339) + " - " + ev.Event,
+					Start:     ev.Time.Format(time.RFC3339),
+					Group:     g.Name,
+					ClassName: fp.If(ev.Flagged, "flagged", ""),
 				})
 			}
 			if len(ev.Assets) == 0 {
 				groups["Unknown"] = views.DataItem{ID: "Unknown", Content: "Unknown"}
 				items = append(items, views.DataItem{
-					ID:      ev.ID + "_Unknown",
-					Content: ev.Event,
-					Title:   ev.Time.Format(time.RFC3339) + " - " + ev.Event,
-					Start:   ev.Time.Format(time.RFC3339),
-					Group:   "Unknown",
+					ID:        ev.ID + "_Unknown",
+					Content:   ev.Event,
+					Title:     ev.Time.Format(time.RFC3339) + " - " + ev.Event,
+					Start:     ev.Time.Format(time.RFC3339),
+					Group:     "Unknown",
+					ClassName: fp.If(ev.Flagged, "flagged", ""),
 				})
 			}
 		}
@@ -163,7 +167,7 @@ func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
 		})
 
 		slog.Debug("rendering timeline", "items", items, "groups", groupList)
-		Render(w, r, http.StatusOK, views.VisTimeLine(Env(ctrl, r), items, groupList, groupBy))
+		Render(w, r, http.StatusOK, views.VisTimeLine(Env(ctrl, r), items, groupList, groupBy, flaggedOnly))
 	}
 }
 
