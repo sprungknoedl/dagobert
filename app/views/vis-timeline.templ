@@ -1,14 +1,15 @@
 package views
 
 type DataItem struct {
-	ID      string `json:"id"`
-	Content string `json:"content"`
-	Title   string `json:"title"`
-	Start   string `json:"start"`
-	Group   string `json:"group"`
+	ID        string `json:"id"`
+	Content   string `json:"content"`
+	Title     string `json:"title"`
+	Start     string `json:"start"`
+	Group     string `json:"group"`
+	ClassName string `json:"className,omitempty"`
 }
 
-templ timelineExtra(groupBy string) {
+templ timelineExtra(groupBy string, flaggedOnly bool) {
 	<label class="join-item btn pr-4">
 		<input type="radio" name="group" value="asset" class="radio" checked?={ groupBy == "asset" }/>
 		By asset
@@ -17,15 +18,20 @@ templ timelineExtra(groupBy string) {
 		<input type="radio" name="group" value="category" class="radio" checked?={ groupBy == "category" }/>
 		By category
 	</label>
+	<label class="join-item btn pr-4">
+		<input type="checkbox" name="flagged" value="on" class="toggle toggle-warning" checked?={ flaggedOnly }/>
+		<i class="hio hio-5 hio-flag btn-flagged"></i>
+		Flagged only
+	</label>
 }
 
-templ VisTimeLine(env Env, items []DataItem, groups []DataItem, groupBy string) {
+templ VisTimeLine(env Env, items []DataItem, groups []DataItem, groupBy string, flaggedOnly bool) {
 	@layout() {
 		<section id="errors"></section>
 		@sidebar(env, "Visual Timeline")
 		<main class="pl-20 p-4 grow max-w-full flex flex-col h-screen">
 			<form method="get" up-autosubmit up-target="#visjs" up-history="true">
-				@navbar(env, "Visual Timeline", navHideSearch(), navHideRefresh(), navHideAdd(), navHideImport(), navHideExport(), navPreButtons(timelineExtra(groupBy)), navSubtitle("Gantt-style view of activity across the investigation period"))
+				@navbar(env, "Visual Timeline", navHideSearch(), navHideRefresh(), navHideAdd(), navHideImport(), navHideExport(), navPreButtons(timelineExtra(groupBy, flaggedOnly)), navSubtitle("Gantt-style view of activity across the investigation period"))
 			</form>
 			<div id="visjs" class="h-full">
 				@templ.JSONScript("visjs-data", map[string]any{"items": items, "groups": groups})
