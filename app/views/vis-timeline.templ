@@ -8,26 +8,40 @@ type DataItem struct {
 	Group   string `json:"group"`
 }
 
-templ VisTimeLine(env Env, items []DataItem, groups []DataItem) {
+templ timelineExtra(groupBy string) {
+	<label class="join-item btn pr-4">
+		<input type="radio" name="group" value="asset" class="radio" checked?={ groupBy == "asset" }/>
+		By asset
+	</label>
+	<label class="join-item btn pr-4">
+		<input type="radio" name="group" value="category" class="radio" checked?={ groupBy == "category" }/>
+		By category
+	</label>
+}
+
+templ VisTimeLine(env Env, items []DataItem, groups []DataItem, groupBy string) {
 	@layout() {
 		<section id="errors"></section>
 		@sidebar(env, "Visual Timeline")
 		<main class="pl-20 p-4 grow max-w-full flex flex-col h-screen">
-			@navbar(env, "Visual Timeline", navHideSearch(), navHideRefresh(), navHideAdd(), navHideImport(), navHideExport(), navSubtitle("Gantt-style view of activity across the investigation period"))
-			<div id="visjs" class="h-full"></div>
+			<form method="get" up-autosubmit up-target="#visjs" up-history="true">
+				@navbar(env, "Visual Timeline", navHideSearch(), navHideRefresh(), navHideAdd(), navHideImport(), navHideExport(), navPreButtons(timelineExtra(groupBy)), navSubtitle("Gantt-style view of activity across the investigation period"))
+			</form>
+			<div id="visjs" class="h-full">
+				@templ.JSONScript("visjs-data", map[string]any{"items": items, "groups": groups})
+			</div>
 		</main>
 		<script src="/public/assets/vis-timeline-7.7.3.min.js"></script>
 		<script>
-        function initializeChart(items, groups) {
+        up.compiler('#visjs', function(element) {
+            var data = JSON.parse(document.getElementById('visjs-data').textContent);
             const options = {
                 orientation: 'top',
                 height: '100%',
             };
-
-            var container = document.getElementById("visjs");
-            var timeline = new vis.Timeline(container, new vis.DataSet(items), new vis.DataSet(groups), options);
-        }
+            var timeline = new vis.Timeline(element, new vis.DataSet(data.items), new vis.DataSet(data.groups), options);
+            return function() { timeline.destroy(); };
+        });
         </script>
-		@templ.JSFuncCall("initializeChart", items, groups)
 	}
 }
