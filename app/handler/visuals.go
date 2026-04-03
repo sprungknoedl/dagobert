@@ -79,46 +79,92 @@ func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	groupBy := cmp.Or(r.URL.Query().Get("group"), "asset")
 	items := []views.DataItem{}
 	groups := map[string]views.DataItem{}
-	for _, ev := range events {
-		if !ev.Flagged {
-			continue
+
+	switch groupBy {
+	case "category":
+		enums, err := ctrl.Store().ListEnums()
+		if err != nil {
+			Err(w, r, err)
+			return
 		}
 
-		for _, g := range ev.Assets {
-			groups[g.Name] = views.DataItem{
-				ID:      g.Name,
-				Content: g.Name,
+		for _, ev := range events {
+			if !ev.Flagged {
+				continue
 			}
 
+			category := cmp.Or(ev.Type, "Uncategorized")
+			groups[category] = views.DataItem{ID: category, Content: category}
 			items = append(items, views.DataItem{
-				ID:      ev.ID + "_" + g.ID,
+				ID:      ev.ID,
 				Content: ev.Event,
 				Title:   ev.Time.Format(time.RFC3339) + " - " + ev.Event,
 				Start:   ev.Time.Format(time.RFC3339),
-				Group:   g.Name,
+				Group:   category,
 			})
 		}
-		if len(ev.Assets) == 0 {
-			groups["Unknown"] = views.DataItem{
-				ID:      "Unknown",
-				Content: "Unknown",
+
+		rankMap := map[string]int{"Uncategorized": len(enums.EventTypes) + 1}
+		for i, e := range enums.EventTypes {
+			rankMap[e.Name] = i
+		}
+		getRank := func(name string) int {
+			if r, ok := rankMap[name]; ok {
+				return r
+			}
+			return len(enums.EventTypes) + 2
+		}
+		groupList := fp.ToList(groups)
+		slices.SortFunc(groupList, func(a, b views.DataItem) int {
+			ra, rb := getRank(a.Content), getRank(b.Content)
+			if ra != rb {
+				return cmp.Compare(ra, rb)
+			}
+			return cmp.Compare(a.Content, b.Content)
+		})
+
+		slog.Debug("rendering timeline", "items", items, "groups", groupList)
+		Render(w, r, http.StatusOK, views.VisTimeLine(Env(ctrl, r), items, groupList, groupBy))
+
+	default: // "asset"
+		for _, ev := range events {
+			if !ev.Flagged {
+				continue
 			}
 
-			// add without group when no assets are linked to the event
-			items = append(items, views.DataItem{
-				ID:      ev.ID + "_Unknown",
-				Content: ev.Event,
-				Title:   ev.Time.Format(time.RFC3339) + " - " + ev.Event,
-				Start:   ev.Time.Format(time.RFC3339),
-				Group:   "Unknown",
-			})
+			for _, g := range ev.Assets {
+				groups[g.Name] = views.DataItem{ID: g.Name, Content: g.Name}
+				items = append(items, views.DataItem{
+					ID:      ev.ID + "_" + g.ID,
+					Content: ev.Event,
+					Title:   ev.Time.Format(time.RFC3339) + " - " + ev.Event,
+					Start:   ev.Time.Format(time.RFC3339),
+					Group:   g.Name,
+				})
+			}
+			if len(ev.Assets) == 0 {
+				groups["Unknown"] = views.DataItem{ID: "Unknown", Content: "Unknown"}
+				items = append(items, views.DataItem{
+					ID:      ev.ID + "_Unknown",
+					Content: ev.Event,
+					Title:   ev.Time.Format(time.RFC3339) + " - " + ev.Event,
+					Start:   ev.Time.Format(time.RFC3339),
+					Group:   "Unknown",
+				})
+			}
 		}
+
+		groupList := fp.ToList(groups)
+		slices.SortFunc(groupList, func(a, b views.DataItem) int {
+			return cmp.Compare(a.Content, b.Content)
+		})
+
+		slog.Debug("rendering timeline", "items", items, "groups", groupList)
+		Render(w, r, http.StatusOK, views.VisTimeLine(Env(ctrl, r), items, groupList, groupBy))
 	}
-
-	slog.Debug("rendering timeline", "items", items, "groups", groups)
-	Render(w, r, http.StatusOK, views.VisTimeLine(Env(ctrl, r), items, fp.ToList(groups)))
 }
 
 func (ctrl VisualsCtrl) MitreAttack(w http.ResponseWriter, r *http.Request) {

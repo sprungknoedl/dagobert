@@ -33,8 +33,10 @@ func navPreButtons(c templ.Component) navbarOption {
 	return func(nc *navbarConfig) { nc.preButtons = c }
 }
 
-func navSubtitle(subtitle string) navbarOption { return func(nc *navbarConfig) { nc.subtitle = subtitle } }
-func navHideImport() navbarOption              { return func(nc *navbarConfig) { nc.hideImport = true } }
+func navSubtitle(subtitle string) navbarOption {
+	return func(nc *navbarConfig) { nc.subtitle = subtitle }
+}
+func navHideImport() navbarOption  { return func(nc *navbarConfig) { nc.hideImport = true } }
 func navHideExport() navbarOption  { return func(nc *navbarConfig) { nc.hideExport = true } }
 func navHideRefresh() navbarOption { return func(nc *navbarConfig) { nc.hideRefresh = true } }
 func navHideAdd() navbarOption     { return func(nc *navbarConfig) { nc.hideAdd = true } }
@@ -232,8 +234,8 @@ templ layout() {
 			<link href="/public/assets/dagobert.css" rel="stylesheet"/>
 			<script src="/public/assets/list-2.3.1.min.js" defer></script>
 			<script src="/public/assets/choices-11.1.0.min.js" defer></script>
-			<script src="/public/assets/unpoly-3.10.2.min.js" defer></script>
-			<script src="/public/assets/dagobert.js" defer></script>
+			<script src="/public/assets/unpoly-3.10.2.min.js"></script>
+			<script src="/public/assets/dagobert.js"></script>
 		</head>
 		<body>
 			{ children... }
