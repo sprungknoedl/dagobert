@@ -37,13 +37,26 @@ templ VisTimeLine(env Env, items []DataItem, groups []DataItem, groupBy string, 
 				@templ.JSONScript("visjs-data", map[string]any{"items": items, "groups": groups})
 			</div>
 		</main>
-		<script src="/public/assets/vis-timeline-7.7.3.min.js"></script>
+		<script src="/public/assets/vis-timeline-8.5.0.min.js"></script>
+		<style>
+			.tl-item { display: inline-flex; align-items: center; gap: 0.25rem; }
+			.tl-item strong { font-weight: 600; }
+		</style>
 		<script>
         up.compiler('#visjs', function(element) {
             var data = JSON.parse(document.getElementById('visjs-data').textContent);
             const options = {
                 orientation: 'top',
                 height: '100%',
+                xss: {
+                    filterOptions: {
+                        onIgnoreTagAttr: function(tag, name, value) {
+                            if ((tag === 'i' || tag === 'span') && name === 'class') {
+                                return name + '="' + value + '"';
+                            }
+                        },
+                    },
+                },
             };
             var timeline = new vis.Timeline(element, new vis.DataSet(data.items), new vis.DataSet(data.groups), options);
             return function() { timeline.destroy(); };

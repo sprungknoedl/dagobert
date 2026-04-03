@@ -2,9 +2,11 @@ package handler
 
 import (
 	"cmp"
+	"html"
 	"log/slog"
 	"net/http"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/sprungknoedl/dagobert/app/auth"
@@ -21,6 +23,41 @@ type VisualsCtrl struct {
 
 func NewVisualsCtrl(store *model.Store, acl *auth.ACL, mitre *attck.KB) *VisualsCtrl {
 	return &VisualsCtrl{BaseCtrl{store, acl}, mitre}
+}
+
+func buildTimelineContent(eventTypes []model.Enum, ev model.Event) string {
+	icon := iconForEnum(eventTypes, ev.Type)
+	escaped := html.EscapeString(ev.Event)
+
+	terms := make([]string, 0, len(ev.Assets)+len(ev.Indicators))
+	for _, a := range ev.Assets {
+		if a.Name != "" {
+			terms = append(terms, a.Name)
+		}
+	}
+	for _, i := range ev.Indicators {
+		if i.Value != "" {
+			terms = append(terms, i.Value)
+		}
+	}
+	slices.SortFunc(terms, func(a, b string) int { return cmp.Compare(len(b), len(a)) })
+
+	for _, term := range terms {
+		escapedTerm := html.EscapeString(term)
+		if idx := strings.Index(escaped, escapedTerm); idx >= 0 {
+			escaped = escaped[:idx] + "<strong>" + escapedTerm + "</strong>" + escaped[idx+len(escapedTerm):]
+		}
+	}
+
+	iconHTML := ""
+	if icon != "" {
+		iconHTML = `<i class="hio hio-4 ` + html.EscapeString(icon) + `"></i>`
+	}
+	return `<span class="tl-item">` + iconHTML + escaped + `</span>`
+}
+
+func buildTimelineTitle(ev model.Event) string {
+	return ev.Time.Format(time.RFC3339) + " — " + ev.Event
 }
 
 func (ctrl VisualsCtrl) Network(w http.ResponseWriter, r *http.Request) {
@@ -79,6 +116,12 @@ func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	enums, err := ctrl.Store().ListEnums()
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
 	groupBy := cmp.Or(r.URL.Query().Get("group"), "asset")
 	flaggedOnly := r.URL.Query().Get("flagged") == "on"
 	items := []views.DataItem{}
@@ -86,12 +129,6 @@ func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
 
 	switch groupBy {
 	case "category":
-		enums, err := ctrl.Store().ListEnums()
-		if err != nil {
-			Err(w, r, err)
-			return
-		}
-
 		for _, ev := range events {
 			if flaggedOnly && !ev.Flagged {
 				continue
@@ -101,8 +138,8 @@ func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
 			groups[category] = views.DataItem{ID: category, Content: category}
 			items = append(items, views.DataItem{
 				ID:        ev.ID,
-				Content:   ev.Event,
-				Title:     ev.Time.Format(time.RFC3339) + " - " + ev.Event,
+				Content:   buildTimelineContent(enums.EventTypes, ev),
+				Title:     buildTimelineTitle(ev),
 				Start:     ev.Time.Format(time.RFC3339),
 				Group:     category,
 				ClassName: fp.If(ev.Flagged, "flagged", ""),
@@ -141,8 +178,8 @@ func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
 				groups[g.Name] = views.DataItem{ID: g.Name, Content: g.Name}
 				items = append(items, views.DataItem{
 					ID:        ev.ID + "_" + g.ID,
-					Content:   ev.Event,
-					Title:     ev.Time.Format(time.RFC3339) + " - " + ev.Event,
+					Content:   buildTimelineContent(enums.EventTypes, ev),
+					Title:     buildTimelineTitle(ev),
 					Start:     ev.Time.Format(time.RFC3339),
 					Group:     g.Name,
 					ClassName: fp.If(ev.Flagged, "flagged", ""),
@@ -152,8 +189,8 @@ func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
 				groups["Unknown"] = views.DataItem{ID: "Unknown", Content: "Unknown"}
 				items = append(items, views.DataItem{
 					ID:        ev.ID + "_Unknown",
-					Content:   ev.Event,
-					Title:     ev.Time.Format(time.RFC3339) + " - " + ev.Event,
+					Content:   buildTimelineContent(enums.EventTypes, ev),
+					Title:     buildTimelineTitle(ev),
 					Start:     ev.Time.Format(time.RFC3339),
 					Group:     "Unknown",
 					ClassName: fp.If(ev.Flagged, "flagged", ""),
