@@ -296,6 +296,15 @@ func GetObject[T any](id string, obj T, getfn func(string) (T, error)) (T, error
 	return obj, nil
 }
 
+func iconForEnum(enums []model.Enum, value string) string {
+	for _, e := range enums {
+		if e.Name == value {
+			return e.Icon
+		}
+	}
+	return ""
+}
+
 func ServeDir(prefix string, root fs.FS) http.Handler {
 	fs := http.FileServer(http.FS(root))
 	return http.StripPrefix("/public/", fs)
