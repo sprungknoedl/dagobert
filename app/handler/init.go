@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/aarondl/authboss/v3"
-	"github.com/justinas/alice"
 	"github.com/spf13/cobra"
 	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
@@ -75,14 +74,6 @@ func Run(cmd *cobra.Command, args []string) {
 	// Router
 	// --------------------------------------
 	slog.Debug("Creating router and registering handlers")
-	chain := alice.New(
-		Recover,
-		Logger,
-		CSRF,
-		ab.LoadClientStateMiddleware,
-		auth.ApiKeyMiddleware(ab, db),
-		authboss.ModuleListMiddleware(ab))
-
 	router := http.NewServeMux()
 	secured := http.NewServeMux()
 	securedH := authboss.Middleware2(ab, authboss.RequireNone, authboss.RespondRedirect)(acl.Protect(secured))
@@ -252,8 +243,16 @@ func Run(cmd *cobra.Command, args []string) {
 	// --------------------------------------
 	// Server
 	// --------------------------------------
+	var h http.Handler = router
+	h = authboss.ModuleListMiddleware(ab)(h)
+	h = auth.ApiKeyMiddleware(ab, db)(h)
+	h = ab.LoadClientStateMiddleware(h)
+	h = CSRF(h)
+	h = Logger(h)
+	h = Recover(h)
+
 	slog.Info("Starting web server", "addr", ":8080")
-	err = http.ListenAndServe(":8080", chain.Then(router))
+	err = http.ListenAndServe(":8080", h)
 	if err != nil {
 		slog.Error("Failed to start web server", "err", err)
 		return
