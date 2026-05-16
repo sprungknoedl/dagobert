@@ -16,7 +16,6 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.19.0
 	github.com/gorilla/csrf v1.7.2
 	github.com/gorilla/sessions v1.4.0
-	github.com/justinas/alice v1.2.0
 	github.com/lmittmann/tint v1.1.2
 	github.com/mattn/go-shellwords v1.0.12
 	github.com/spf13/cobra v1.10.1
