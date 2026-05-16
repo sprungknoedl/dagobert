@@ -5,3 +5,5 @@ dagobert.env
 files
 node_modules
 *_templ.go
+specs
+.claude
