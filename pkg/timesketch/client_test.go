@@ -1,3 +1,11 @@
+//go:build integration
+
+// These are integration tests: they require a live Timesketch instance and
+// machine-specific fixtures (see hardcoded host/credentials/paths below).
+// They are excluded from the default `go test ./...` run. To run them:
+//
+//	go test -tags=integration ./pkg/timesketch/...
+
 package timesketch
 
 import (

@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  check:
+    name: make check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      # Runs build-go (templ generate + go build), go vet, go test,
+      # and a non-mutating gofmt check. Single source of truth shared
+      # with local development — see the `check` target in the Makefile.
+      - name: Verify
+        run: make check
