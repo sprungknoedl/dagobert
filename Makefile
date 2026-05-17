@@ -1,4 +1,4 @@
-.PHONY: build build-web build-go docker run
+.PHONY: build build-web build-go check fmt vet test docker run
 .EXPORT_ALL_VARIABLES:
 -include dagobert.env
 
@@ -10,6 +10,24 @@ build-web:
 build-go:
 	go tool templ generate
 	CGO_ENABLED=0 go build -o dagobert .
+
+# Canonical verification: run this (and CI runs it) before trusting a change.
+# build-go runs `templ generate` first, so vet/test see the generated *_templ.go.
+check: build-go vet test
+	@unformatted=$$(gofmt -l . | grep -v '_templ\.go$$' || true); \
+	if [ -n "$$unformatted" ]; then \
+		echo "gofmt needed on:"; echo "$$unformatted"; exit 1; \
+	fi
+	@echo "✓ check passed"
+
+fmt:
+	gofmt -w $$(find . -name '*.go' -not -name '*_templ.go' -not -path './node_modules/*')
+
+vet:
+	go vet ./...
+
+test:
+	go test ./...
 
 docker:
 	docker build . -f cfg/Dockerfile -t sprungknoedl/dagobert
