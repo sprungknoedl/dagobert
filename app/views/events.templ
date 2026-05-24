@@ -44,69 +44,69 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 					if len(rows) == 0 {
 						@emptyTable(env, "Start by logging the earliest known attacker action. Work forward from there — each event builds the chain of activity. Link events to assets and indicators as you identify them.")
 					} else {
-					for _, row := range rows {
-						<tr class={ fp.If(row.Flagged, "hover bg-flagged", "hover") }>
-							<td class="value-0" data-search={ row.Time.Format(time.RFC3339) }>
-								@formatTime(row.Time)
-							</td>
-							<td class="value-1" data-search={ row.Type }>
-								@enum(env.Enums.EventTypes, row.Type)
-							</td>
-							<td class="fixed-width value-2" data-search={ row.Event }>
-								<details>
-									<summary>
-										@highlightEvent(row, assets, indicators)
-										<p>
-											for t := range techniques(mitre, row) {
-												<span class="badge badge-sm" title={ t.ID + " - " + t.Name }>{ t.ID }</span>
-											}
-										</p>
-									</summary>
-									if row.Source != "" {
-										<div class="card gap-2 p-2 mt-2">
-											<p class="font-bold">Source:</p>
-											<p>{ row.Source }</p>
-										</div>
-									}
-									if row.Raw != "" {
-										<div class="card gap-2 p-2 overflow-scroll">
-											<p class="font-bold">Raw:</p>
-											<pre><code>{ row.Raw }</code></pre>
-										</div>
-									}
-								</details>
-							</td>
-							<td class="value-3" data-search={ strings.Join(fp.Apply(row.Assets, func(x model.Asset) string { return x.Name }), " ") }>
-								for _, x := range row.Assets {
-									@enumIcon(env.Enums.AssetTypes, x.Type) {
-										{ x.Name }
-									}
-								}
-							</td>
-							<td class="value-4" data-search={ strings.Join(fp.Apply(row.Indicators, func(x model.Indicator) string { return x.Value }), " ") }>
-								for _, x := range row.Indicators {
-									@enumIcon(env.Enums.IndicatorTypes, x.Type) {
-										{ x.Value }
-									}
-								}
-							</td>
-							<td class="text-right value-5" data-search={ fp.If(row.Flagged, "flagged:true", "") }>
-								<div class="join">
-									if row.Flagged {
-										@actionBtn(env, "GET", env.Route+row.ID) {
-											<i class="hio hio-5 hio-flag btn-flagged"></i>
+						for _, row := range rows {
+							<tr class={ fp.If(row.Flagged, "hover bg-flagged", "hover") }>
+								<td class="value-0" data-search={ row.Time.Format(time.RFC3339) }>
+									@formatTime(row.Time)
+								</td>
+								<td class="value-1" data-search={ row.Type }>
+									@enum(env.Enums.EventTypes, row.Type)
+								</td>
+								<td class="fixed-width value-2" data-search={ row.Event }>
+									<details>
+										<summary>
+											@highlightEvent(row, assets, indicators)
+											<p>
+												for t := range techniques(mitre, row) {
+													<span class="badge badge-sm" title={ t.ID + " - " + t.Name }>{ t.ID }</span>
+												}
+											</p>
+										</summary>
+										if row.Source != "" {
+											<div class="card gap-2 p-2 mt-2">
+												<p class="font-bold">Source:</p>
+												<p>{ row.Source }</p>
+											</div>
+										}
+										if row.Raw != "" {
+											<div class="card gap-2 p-2 overflow-scroll">
+												<p class="font-bold">Raw:</p>
+												<pre><code>{ row.Raw }</code></pre>
+											</div>
+										}
+									</details>
+								</td>
+								<td class="value-3" data-search={ strings.Join(fp.Apply(row.Assets, func(x model.Asset) string { return x.Name }), " ") }>
+									for _, x := range row.Assets {
+										@enumIcon(env.Enums.AssetTypes, x.Type) {
+											{ x.Name }
 										}
 									}
-									@defaultActionBtns(env, env.Route+row.ID)
-								</div>
-							</td>
-						</tr>
-					}
+								</td>
+								<td class="value-4" data-search={ strings.Join(fp.Apply(row.Indicators, func(x model.Indicator) string { return x.Value }), " ") }>
+									for _, x := range row.Indicators {
+										@enumIcon(env.Enums.IndicatorTypes, x.Type) {
+											{ x.Value }
+										}
+									}
+								</td>
+								<td class="text-right value-5" data-search={ fp.If(row.Flagged, "flagged:true", "") }>
+									<div class="join">
+										if row.Flagged {
+											@actionBtn(env, "GET", env.Route+row.ID) {
+												<i class="hio hio-5 hio-flag btn-flagged"></i>
+											}
+										}
+										@defaultActionBtns(env, env.Route+row.ID)
+									</div>
+								</td>
+							</tr>
+						}
 					}
 				</tbody>
 			</table>
 			// histogram
-			<script src="/public/assets/vis-timeline-7.7.3.min.js"></script>
+			<script src="/public/assets/vis-timeline-8.5.1.min.js"></script>
 			<script>
 			function initializeChart(items) {
 				var options = {

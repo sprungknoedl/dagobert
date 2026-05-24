@@ -25,6 +25,22 @@ func NewVisualsCtrl(store *model.Store, acl *auth.ACL, mitre *attck.KB) *Visuals
 	return &VisualsCtrl{BaseCtrl{store, acl}, mitre}
 }
 
+func buildSearchStr(ev model.Event) string {
+	parts := []string{
+		ev.Event,
+		ev.Type,
+		ev.Time.Format(time.RFC3339),
+		fp.If(ev.Flagged, "flagged", ""),
+	}
+	for _, a := range ev.Assets {
+		parts = append(parts, a.Name, a.Addr)
+	}
+	for _, i := range ev.Indicators {
+		parts = append(parts, i.Value)
+	}
+	return strings.ToLower(strings.Join(parts, " "))
+}
+
 func buildTimelineContent(eventTypes []model.Enum, ev model.Event) string {
 	icon := iconForEnum(eventTypes, ev.Type)
 	escaped := html.EscapeString(ev.Event)
@@ -143,6 +159,7 @@ func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
 				Start:     ev.Time.Format(time.RFC3339),
 				Group:     category,
 				ClassName: fp.If(ev.Flagged, "flagged", ""),
+				SearchStr: buildSearchStr(ev),
 			})
 		}
 
@@ -174,6 +191,7 @@ func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 
+			searchStr := buildSearchStr(ev)
 			for _, g := range ev.Assets {
 				groups[g.Name] = views.DataItem{ID: g.Name, Content: g.Name}
 				items = append(items, views.DataItem{
@@ -183,6 +201,7 @@ func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
 					Start:     ev.Time.Format(time.RFC3339),
 					Group:     g.Name,
 					ClassName: fp.If(ev.Flagged, "flagged", ""),
+					SearchStr: searchStr,
 				})
 			}
 			if len(ev.Assets) == 0 {
@@ -194,6 +213,7 @@ func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
 					Start:     ev.Time.Format(time.RFC3339),
 					Group:     "Unknown",
 					ClassName: fp.If(ev.Flagged, "flagged", ""),
+					SearchStr: searchStr,
 				})
 			}
 		}
