@@ -1,17 +1,11 @@
 package doct
 
 import (
-	"archive/zip"
 	"bytes"
 	"io"
-	"os"
-	"path/filepath"
-	"text/template"
 
 	"go.arsenm.dev/pcre"
 )
-
-const odfMainFile = "content.xml"
 
 var (
 	libre_pRegexp   = pcre.MustCompile(`<text:p[^>]*?>(?:(?!<text:p[ >]).)*{{p (.+?)}}.*?<\/text:p>`)
@@ -26,47 +20,7 @@ var (
 	libre_clean2SubRegexp = pcre.MustCompile(`<\/?text:span[^>]*>`)
 )
 
-type LibreTemplate struct {
-	name string
-	src  io.ReaderAt
-	len  int64
-}
-
-func LoadLibreTemplate(path string) (Template, error) {
-	buf := new(bytes.Buffer)
-
-	stat, err := os.Stat(path)
-	if err != nil {
-		return nil, err
-	}
-
-	fh, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-
-	defer fh.Close()
-	err = processZip(fh, stat.Size(), buf, func(header *zip.FileHeader, r io.Reader, w io.Writer) error {
-		if header.Name == odfMainFile {
-			// preprocess xml to transform it into a valid text/template AND docx document
-			err = preprocessLibreContent(w, r)
-			return err
-		} else {
-			// just copy all other files
-			_, err = io.Copy(w, r)
-			return err
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return LibreTemplate{
-		name: filepath.Base(path),
-		src:  bytes.NewReader(buf.Bytes()),
-		len:  int64(buf.Len()),
-	}, nil
-}
+func LoadLibreTemplate(path string) (Template, error) { return load(path, odtConfig) }
 
 func preprocessLibreContent(w io.Writer, r io.Reader) error {
 	b, err := io.ReadAll(r)
@@ -105,42 +59,5 @@ func preprocessLibreContent(w io.Writer, r io.Reader) error {
 	})
 
 	_, err = w.Write(b)
-	return err
-}
-
-func (tpl LibreTemplate) Name() string {
-	return tpl.name
-}
-
-func (tpl LibreTemplate) Type() string {
-	return "application/vnd.oasis.opendocument.text"
-}
-
-func (tpl LibreTemplate) Ext() string {
-	return filepath.Ext(tpl.name)
-}
-
-func (tpl LibreTemplate) Render(dst io.Writer, data interface{}) error {
-	err := processZip(tpl.src, tpl.len, dst, func(header *zip.FileHeader, r io.Reader, w io.Writer) error {
-		if header.Name == odfMainFile {
-			b, err := io.ReadAll(r)
-			if err != nil {
-				return err
-			}
-
-			// process xml with text/template
-			tpl, err := template.New(header.Name).Parse(string(b))
-			if err != nil {
-				return err
-			}
-
-			err = tpl.Execute(w, data)
-			return err
-		} else {
-			// just copy all other files
-			_, err := io.Copy(w, r)
-			return err
-		}
-	})
 	return err
 }
