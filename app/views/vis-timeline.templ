@@ -12,15 +12,15 @@ type DataItem struct {
 
 templ timelineExtra(groupBy string, flaggedOnly bool) {
 	<label class="join-item btn pr-4">
-		<input type="radio" name="group" value="asset" class="radio" up-autosubmit checked?={ groupBy == "asset" }/>
+		<input type="radio" name="group" value="asset" class="radio" checked?={ groupBy == "asset" }/>
 		By asset
 	</label>
 	<label class="join-item btn pr-4">
-		<input type="radio" name="group" value="category" class="radio" up-autosubmit checked?={ groupBy == "category" }/>
+		<input type="radio" name="group" value="category" class="radio" checked?={ groupBy == "category" }/>
 		By category
 	</label>
 	<label class="join-item btn pr-4">
-		<input type="checkbox" name="flagged" value="on" class="toggle toggle-warning" up-autosubmit checked?={ flaggedOnly }/>
+		<input type="checkbox" name="flagged" value="on" class="toggle toggle-warning" checked?={ flaggedOnly }/>
 		<i class="hio hio-5 hio-flag btn-flagged"></i>
 		Flagged only
 	</label>
