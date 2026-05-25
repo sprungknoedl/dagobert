@@ -82,7 +82,7 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 				</label>
 			}
 			<!-- buttons -->
-			<div class="join" role="group">
+			<div class="join" role="group" up-autosubmit>
 				if cfg.preButtons != nil {
 					@cfg.preButtons
 				}
