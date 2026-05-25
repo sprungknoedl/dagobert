@@ -3,6 +3,8 @@ package doct
 import (
 	"archive/zip"
 	"bytes"
+	"encoding/xml"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -33,6 +35,15 @@ type OfficeTpl struct {
 	cfg  formatConfig
 	src  io.ReaderAt
 	len  int64
+	tpl  *template.Template
+}
+
+func xmlEscape(s string) (string, error) {
+	var buf bytes.Buffer
+	if err := xml.EscapeText(&buf, []byte(s)); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
 
 func load(path string, cfg formatConfig) (Template, error) {
@@ -47,10 +58,14 @@ func load(path string, cfg formatConfig) (Template, error) {
 	}
 	defer fh.Close()
 
+	var contentBytes []byte
 	buf := new(bytes.Buffer)
 	err = processZip(fh, stat.Size(), buf, func(header *zip.FileHeader, r io.Reader, w io.Writer) error {
 		if header.Name == cfg.contentFile {
-			return cfg.preprocess(w, r)
+			var content bytes.Buffer
+			err := cfg.preprocess(io.MultiWriter(w, &content), r)
+			contentBytes = content.Bytes()
+			return err
 		}
 		_, err := io.Copy(w, r)
 		return err
@@ -59,11 +74,21 @@ func load(path string, cfg formatConfig) (Template, error) {
 		return nil, err
 	}
 
+	funcMap := template.FuncMap{"xml": xmlEscape}
+	tpl, err := template.New(cfg.contentFile).
+		Option("missingkey=error").
+		Funcs(funcMap).
+		Parse(string(contentBytes))
+	if err != nil {
+		return nil, fmt.Errorf("parsing template in %q: %w", path, err)
+	}
+
 	return OfficeTpl{
 		name: filepath.Base(path),
 		cfg:  cfg,
 		src:  bytes.NewReader(buf.Bytes()),
 		len:  int64(buf.Len()),
+		tpl:  tpl,
 	}, nil
 }
 
@@ -74,17 +99,10 @@ func (tpl OfficeTpl) Ext() string  { return filepath.Ext(tpl.name) }
 func (tpl OfficeTpl) Render(dst io.Writer, data interface{}) error {
 	return processZip(tpl.src, tpl.len, dst, func(header *zip.FileHeader, r io.Reader, w io.Writer) error {
 		if header.Name == tpl.cfg.contentFile {
-			b, err := io.ReadAll(r)
-			if err != nil {
-				return err
+			if err := tpl.tpl.Execute(w, data); err != nil {
+				return fmt.Errorf("rendering %q: %w", tpl.name, err)
 			}
-
-			t, err := template.New(header.Name).Parse(string(b))
-			if err != nil {
-				return err
-			}
-
-			return t.Execute(w, data)
+			return nil
 		}
 		_, err := io.Copy(w, r)
 		return err
