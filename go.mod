@@ -21,7 +21,6 @@ require (
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
 	github.com/yuin/goldmark v1.7.13
-	go.arsenm.dev/pcre v0.0.0-20220530205550-74594f6c8b0e
 	golang.org/x/oauth2 v0.32.0
 	golang.org/x/term v0.36.0
 	gorm.io/driver/sqlite v1.6.0
