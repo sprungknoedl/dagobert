@@ -7,8 +7,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -92,128 +92,6 @@ func TestXmlEscape(t *testing.T) {
 			assert.Equal(t, c.want, got)
 		})
 	}
-}
-
-// --- preprocessMsContent -----------------------------------------------------
-
-func applyMs(t *testing.T, in string) string {
-	t.Helper()
-	var buf bytes.Buffer
-	require.NoError(t, preprocessMsContent(&buf, strings.NewReader(in)))
-	return buf.String()
-}
-
-func TestPreprocessMsContent(t *testing.T) {
-	t.Run("passthrough - no template tags", func(t *testing.T) {
-		in := `<w:p><w:r><w:t>Hello World</w:t></w:r></w:p>`
-		assert.Equal(t, in, applyMs(t, in))
-	})
-
-	t.Run("clean1 - strips XML tags between opening braces", func(t *testing.T) {
-		assert.Equal(t, `{{.Name}}`, applyMs(t, `{<w:r>{.Name}}`))
-	})
-
-	t.Run("clean1 - strips XML tags between closing braces", func(t *testing.T) {
-		assert.Equal(t, `{{.Name}}`, applyMs(t, `{{.Name}<w:r>}`))
-	})
-
-	t.Run("clean2 - strips w:t tags inside expression", func(t *testing.T) {
-		assert.Equal(t,
-			`<w:r>{{.Name}}</w:r>`,
-			applyMs(t, `<w:r>{{<w:t>.Name</w:t>}}</w:r>`),
-		)
-	})
-
-	t.Run("clean2 - strips w:t tags with attributes", func(t *testing.T) {
-		assert.Equal(t,
-			`{{.Name}}`,
-			applyMs(t, `{{<w:t xml:space="preserve">.Name</w:t>}}`),
-		)
-	})
-
-	t.Run("paragraph block replaced with bare expression", func(t *testing.T) {
-		in := `<w:p><w:r><w:t>{{p range .Items}}</w:t></w:r></w:p>`
-		assert.Equal(t, `{{ range .Items }}`, applyMs(t, in))
-	})
-
-	t.Run("table row block replaced with bare expression", func(t *testing.T) {
-		in := `<w:tr><w:r><w:t>{{tr range .Items}}</w:t></w:r></w:tr>`
-		assert.Equal(t, `{{ range .Items }}`, applyMs(t, in))
-	})
-
-	t.Run("entity unescape - &quot;", func(t *testing.T) {
-		assert.Equal(t, `{{.Name == "foo"}}`, applyMs(t, `{{.Name == &quot;foo&quot;}}`))
-	})
-
-	t.Run("entity unescape - &lt; and &gt;", func(t *testing.T) {
-		assert.Equal(t, `{{.Count > 5}}`, applyMs(t, `{{.Count &gt; 5}}`))
-		assert.Equal(t, `{{.Count < 5}}`, applyMs(t, `{{.Count &lt; 5}}`))
-	})
-
-	t.Run("smart double-quote unescape", func(t *testing.T) {
-		// U+201C and U+201D — Word curly-quotes these when autocorrect is on
-		assert.Equal(t, `{{"hello"}}`, applyMs(t, "{{“hello”}}"))
-	})
-
-	t.Run("smart single-quote unescape", func(t *testing.T) {
-		assert.Equal(t, `{{'hello'}}`, applyMs(t, "{{‘hello’}}"))
-	})
-}
-
-// --- preprocessLibreContent --------------------------------------------------
-
-func applyLibre(t *testing.T, in string) string {
-	t.Helper()
-	var buf bytes.Buffer
-	require.NoError(t, preprocessLibreContent(&buf, strings.NewReader(in)))
-	return buf.String()
-}
-
-func TestPreprocessLibreContent(t *testing.T) {
-	t.Run("passthrough - no template tags", func(t *testing.T) {
-		in := `<text:p><text:span>Hello World</text:span></text:p>`
-		assert.Equal(t, in, applyLibre(t, in))
-	})
-
-	t.Run("clean1 - strips XML tags between opening braces", func(t *testing.T) {
-		assert.Equal(t, `{{.Name}}`, applyLibre(t, `{<text:span>{.Name}}`))
-	})
-
-	t.Run("clean2 - strips text:span tags inside expression", func(t *testing.T) {
-		assert.Equal(t,
-			`{{.Name}}`,
-			applyLibre(t, `{{<text:span>.Name</text:span>}}`),
-		)
-	})
-
-	t.Run("clean2 - strips text:span tags with attributes", func(t *testing.T) {
-		assert.Equal(t,
-			`{{.Name}}`,
-			applyLibre(t, `{{<text:span text:style-name="T1">.Name</text:span>}}`),
-		)
-	})
-
-	t.Run("paragraph block replaced with bare expression", func(t *testing.T) {
-		in := `<text:p><text:span>{{p range .Items}}</text:span></text:p>`
-		assert.Equal(t, `{{ range .Items }}`, applyLibre(t, in))
-	})
-
-	t.Run("table row block replaced with bare expression", func(t *testing.T) {
-		in := `<table:table-row><table:table-cell>{{tr range .Items}}</table:table-cell></table:table-row>`
-		assert.Equal(t, `{{ range .Items }}`, applyLibre(t, in))
-	})
-
-	t.Run("entity unescape - &quot;", func(t *testing.T) {
-		assert.Equal(t, `{{.Name == "foo"}}`, applyLibre(t, `{{.Name == &quot;foo&quot;}}`))
-	})
-
-	t.Run("entity unescape - &lt; and &gt;", func(t *testing.T) {
-		assert.Equal(t, `{{.Count > 5}}`, applyLibre(t, `{{.Count &gt; 5}}`))
-	})
-
-	t.Run("smart double-quote unescape", func(t *testing.T) {
-		assert.Equal(t, `{{"hello"}}`, applyLibre(t, "{{“hello”}}"))
-	})
 }
 
 // --- processZip --------------------------------------------------------------
@@ -311,7 +189,8 @@ func TestOfficeTpl_Ms_Render(t *testing.T) {
 	})
 
 	t.Run("xml funcmap escapes special characters", func(t *testing.T) {
-		path := writeTempDocx(t, `<w:document>{{xml .Name}}</w:document>`)
+		// The walker adds | xml automatically; verify it actually escapes.
+		path := writeTempDocx(t, `<w:document>{{.Name}}</w:document>`)
 		tpl, err := LoadMsTemplate(path)
 		require.NoError(t, err)
 
