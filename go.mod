@@ -1,31 +1,29 @@
 module github.com/sprungknoedl/dagobert
 
-go 1.24.0
-
-toolchain go1.24.5
+go 1.25.0
 
 require (
-	github.com/a-h/templ v0.3.960
+	github.com/a-h/templ v0.3.1020
 	github.com/aarondl/authboss-clientstate v0.0.0-20250626060916-e82140f194f2
-	github.com/aarondl/authboss/v3 v3.5.2
+	github.com/aarondl/authboss/v3 v3.5.3
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
-	github.com/casbin/casbin/v2 v2.128.0
-	github.com/coreos/go-oidc v2.4.0+incompatible
-	github.com/expr-lang/expr v1.17.6
+	github.com/casbin/casbin/v2 v2.135.0
+	github.com/coreos/go-oidc v2.5.0+incompatible
+	github.com/expr-lang/expr v1.17.8
 	github.com/go-playground/form v3.1.4+incompatible
-	github.com/golang-migrate/migrate/v4 v4.19.0
-	github.com/gorilla/csrf v1.7.2
+	github.com/golang-migrate/migrate/v4 v4.19.1
+	github.com/gorilla/csrf v1.7.3
 	github.com/gorilla/sessions v1.4.0
-	github.com/lmittmann/tint v1.1.2
-	github.com/mattn/go-shellwords v1.0.12
-	github.com/spf13/cobra v1.10.1
+	github.com/lmittmann/tint v1.1.3
+	github.com/mattn/go-shellwords v1.0.13
+	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
-	github.com/yuin/goldmark v1.7.13
-	golang.org/x/oauth2 v0.32.0
-	golang.org/x/term v0.36.0
+	github.com/yuin/goldmark v1.8.2
+	golang.org/x/oauth2 v0.36.0
+	golang.org/x/term v0.43.0
 	gorm.io/driver/sqlite v1.6.0
-	gorm.io/gorm v1.31.0
-	modernc.org/sqlite v1.39.1
+	gorm.io/gorm v1.31.1
+	modernc.org/sqlite v1.51.0
 )
 
 require (
@@ -33,25 +31,22 @@ require (
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cli/browser v1.3.0 // indirect
-	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/friendsofgo/errors v0.9.2 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
-	github.com/mattn/go-sqlite3 v1.14.32 // indirect
+	github.com/mattn/go-sqlite3 v1.14.44 // indirect
 	github.com/natefinch/atomic v1.0.1 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
-	golang.org/x/exp v0.0.0-20251017212417-90e834f514db // indirect
-	golang.org/x/mod v0.29.0 // indirect
-	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/text v0.30.0 // indirect
-	golang.org/x/tools v0.38.0 // indirect
+	golang.org/x/mod v0.36.0 // indirect
+	golang.org/x/sync v0.20.0 // indirect
+	golang.org/x/text v0.37.0 // indirect
+	golang.org/x/tools v0.45.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	gopkg.in/go-jose/go-jose.v2 v2.6.3 // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
@@ -59,19 +54,19 @@ require (
 )
 
 require (
-	github.com/bmatcuk/doublestar/v4 v4.9.1 // indirect
+	github.com/bmatcuk/doublestar/v4 v4.10.0 // indirect
 	github.com/casbin/govaluate v1.10.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/securecookie v1.1.2 // indirect
-	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/mattn/go-isatty v0.0.22 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/pquerna/cachecontrol v0.2.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
-	golang.org/x/crypto v0.43.0 // indirect
-	golang.org/x/net v0.46.0
-	golang.org/x/sys v0.37.0 // indirect
-	modernc.org/libc v1.66.10 // indirect
+	golang.org/x/crypto v0.52.0 // indirect
+	golang.org/x/net v0.55.0
+	golang.org/x/sys v0.45.0 // indirect
+	modernc.org/libc v1.72.5 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 )
