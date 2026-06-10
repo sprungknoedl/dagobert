@@ -25,7 +25,6 @@ import (
 var ab *authboss.Authboss
 
 const SessionName = "authboss"
-const CsrfFieldName string = "gorilla.csrf.Token" // #nosec G101
 
 func Init(db *model.Store) (*authboss.Authboss, error) {
 	ab = authboss.New()
@@ -108,7 +107,6 @@ func (r *Renderer) Render(ctx context.Context, page string, data authboss.HTMLDa
 
 	switch page {
 	case auth.PageLogin:
-		data[CsrfFieldName] = ctx.Value(CsrfFieldName)
 		err = views.Login(data).Render(ctx, buf)
 
 	default:

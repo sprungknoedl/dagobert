@@ -12,7 +12,6 @@ require (
 	github.com/expr-lang/expr v1.17.8
 	github.com/go-playground/form v3.1.4+incompatible
 	github.com/golang-migrate/migrate/v4 v4.19.1
-	github.com/gorilla/csrf v1.7.3
 	github.com/gorilla/sessions v1.4.0
 	github.com/lmittmann/tint v1.1.3
 	github.com/mattn/go-shellwords v1.0.13

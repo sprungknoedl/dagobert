@@ -1,17 +1,8 @@
 package views
 
 import (
-	"context"
-
 	"github.com/sprungknoedl/dagobert/app/model"
 )
-
-const CsrfFieldName string = "gorilla.csrf.Token" // #nosec G101
-
-func csrf(ctx context.Context) string {
-	csrf, _ := ctx.Value(CsrfFieldName).(string)
-	return csrf
-}
 
 type Env struct {
 	Case    model.Case
