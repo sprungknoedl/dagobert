@@ -1,107 +1,141 @@
 # Dagobert
-**A Collaborative Platform for Incident Response**
 
-Dagobert streamlines incident investigations by helping teams share technical details, track progress, and generate comprehensive reports—all in one place. Inspired by tools like [IRIS](https://dfir-iris.org/) and [Aurora Incident Response](https://github.com/cyb3rfox/Aurora-Incident-Response), Dagobert enhances collaboration and documentation for faster, more effective incident response.
+**A collaborative platform for incident response**
 
+Dagobert gives incident response teams a shared workspace for forensic
+investigations: technical findings, timelines, tasks, and notes live in one
+place, and reports are generated from your own document templates instead of
+being written by hand at 2am.
 
-## ✨ Key Features
+It is inspired by [IRIS](https://github.com/dfir-iris/iris-web) and
+[Aurora Incident Response](https://github.com/cyb3rfox/Aurora-Incident-Response),
+but takes a deliberately lighter approach: where IRIS runs as a multi-container
+Python stack with PostgreSQL, Dagobert is a single Go binary backed by SQLite —
+one container, no external database, and a backup is a file copy. Unlike
+Aurora's desktop, file-locking model, Dagobert is web-based, so the whole team
+can work on a case concurrently.
 
-### 📂 Multi-Case Management
-Manage multiple investigations at once with dedicated workspaces for each case. Track progress in real time and coordinate with your team without losing context.
+![Case timeline](docs/screenshot-timeline.png)
 
-### 🔍 Evidence & IOC Tracking
-Record technical details, assets, IOCs, and forensic evidence in a structured way. Dagobert automatically links findings to past investigations for deeper insights.
+| Lateral movement graph | Assets | Indicators |
+|---|---|---|
+| [![Lateral movement graph](docs/screenshot-graph.png)](docs/screenshot-graph.png) | [![Assets](docs/screenshot-assets.png)](docs/screenshot-assets.png) | [![Indicators](docs/screenshot-indicators.png)](docs/screenshot-indicators.png) |
 
-### ⏳ Timeline Reconstruction
-Build a clear chronology of attack events and investigative actions. Visualize the sequence of compromise and key decision points in one unified timeline.
+## Features
 
-### 📝 Collaborative Notes & Comments
-Document every step of your investigation in a flexible, wiki-style format. Add comments, observations, and technical notes with team-wide visibility.
+- **Multi-case management** — separate workspaces per investigation, with
+  per-case access control (role-based, managed in the UI).
+- **Timeline** — a unified chronology of attacker activity and investigative
+  actions, with MITRE ATT&CK technique mapping.
+- **Evidence, indicators & malware tracking** — structured records for assets,
+  IOCs, collected evidence, and malware samples, with CSV import/export.
+- **Lateral movement graph** — visualize the relationships between
+  compromised hosts, accounts, and indicators as the attack unfolds.
+- **Tasks** — assign work to team members with owners and due dates.
+- **Notes & comments** — document findings as you go, visible to the whole team.
+- **Report generation** — render Word, Excel/Calc, and Writer templates
+  (`.docx`, `.ods`, `.odt`) from case data; bring your own corporate template.
+- **Evidence processing workers** — run [Hayabusa](https://github.com/Yamato-Security/hayabusa)
+  (EVTX triage) and [Plaso](https://github.com/log2timeline/plaso)
+  (super-timelines) against uploaded evidence as background jobs.
+- **Timesketch integration** — upload timelines to
+  [Timesketch](https://github.com/google/timesketch) or import events back for
+  analysis.
+- **Hooks** — trigger automations when records are created or updated,
+  with conditions written as [expr](https://expr-lang.org/) expressions.
+- **Authentication** — local users or any OIDC provider (tested with
+  Azure AD), with optional auto-provisioning.
 
-### ✅ Task Assignment & Tracking
-Delegate tasks to team members directly within the platform. Monitor progress, deadlines, and dependencies to keep the investigation on track.
-
-### 📄 Automated Reporting
-Generate polished reports with a single click. Customise templates and export in multiple formats to share findings with stakeholders effortlessly.
-
-### 🔌 Extensible Plugin System
-
-**Automated Evidence Processing:** Integrate tools like [Hayabusa](https://github.com/Yamato-Security/hayabusa) for EVTX parsing or [Plaso](https://github.com/log2timeline/plaso) for timeline generation.
-
-**Timesketch Integration:** Upload timelines to Timesketch with one click or automatically import events for deeper analysis.
-
-
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
-* Docker and Docker Compose (v2+)
+- Docker and Docker Compose (v2+)
 
 ### Installation
 
-To ease the installation and upgrades, Dagobert is shipped in Docker containers. Thanks to Docker Compose, it can be ready in a few minutes.
+1. Clone the repository:
 
-1. Clone the repository
+   ```sh
+   git clone https://github.com/sprungknoedl/dagobert
+   cd dagobert
+   ```
 
-    ```sh
-    git clone https://github.com/sprungknoedl/dagobert
-    cd dagobert
-    ```
+2. Configure the environment:
 
-2. Configure environment
+   ```sh
+   cp dagobert.env.example dagobert.env
+   $EDITOR dagobert.env
+   ```
 
-    ```sh
-    cp dagobert.env.example dagobert.env
-    nano dagobert.env # update settings
-    ```
+3. Start the stack:
 
-3. Start the stack
+   ```sh
+   docker compose up -d
+   ```
 
-    ```sh
-    docker compose up -d
-    ```
+4. Run the database migrations:
 
-4. Run database migrations
-    ```sh
-    docker compose exec app dagobert migrate
-    ```
+   ```sh
+   docker compose exec app dagobert db
+   ```
 
-5. Create the first user
-    ```sh
-    docker compose exec app dagobert create-user <USERNAME>
-    ```
+5. Create the first user:
 
-6. Create the first api key (for dagobert communication)
-    ```sh
-    docker compose exec app dagobert create-key dagobert
-    nano dagobert.env # update settings
-    docker compose up -d # restart workers
-    ```
+   ```sh
+   docker compose exec app dagobert create-user <USERNAME>
+   ```
 
-Access the app at [http://localhost:8080].
+6. Create an API key for the background worker, then add it to `dagobert.env`
+   as `DAGOBERT_API_KEY` and restart:
 
-**Production Note:** Always deploy behind a HTTPS proxy like Apache, nginx or traefik.
+   ```sh
+   docker compose exec app dagobert create-key worker
+   $EDITOR dagobert.env   # set DAGOBERT_API_KEY to the generated key
+   docker compose up -d
+   ```
 
+Dagobert is now available at <http://localhost:8080>.
 
-## 📝 Configuration
+> [!WARNING]
+> Do not expose Dagobert directly to the internet. Always deploy it behind an
+> HTTPS reverse proxy (nginx, Apache, traefik, caddy, ...) and restrict access
+> to your team.
 
-Dagobert uses environment variables for all runtime configuration. See [📝 Wiki:Configuration](https://github.com/sprungknoedl/dagobert/wiki/📝-Configuration) for a complete reference for all available settings.
+## Configuration
 
+All runtime configuration is done through environment variables — see
+`dagobert.env.example` for an annotated starting point and the
+[Configuration reference](https://github.com/sprungknoedl/dagobert/wiki/Configuration)
+in the wiki for the complete list.
+
+## Development
+
+You need Go 1.25+ and Node.js (for TailwindCSS).
+
+```sh
+make build   # build CSS + templ templates + Go binary
+make run     # dev server with hot reload (air)
+make check   # templ generate + build + vet + test + gofmt — run before committing
+```
+
+HTML templates are [templ](https://templ.guide/) files in `app/views/`; run
+`go tool templ generate` (included in `make build-go` and `make check`) after
+editing them. Database migrations are plain SQL files in
+`app/model/migrations/`, applied with `dagobert db`.
 
 ## Contributing
 
-All contributions in any form (be it code, documentation, design) are highly welcome!
+Contributions of any kind — code, documentation, design, bug reports — are
+welcome:
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feat/your-idea`.
-3. Submit a PR with a clear description.
+2. Create a feature branch: `git checkout -b feature/your-idea`
+3. Submit a PR with a clear description
 
+For questions and bug reports, please open a
+[GitHub issue](https://github.com/sprungknoedl/dagobert/issues).
 
 ## License
 
-Dagobert is released under the MIT License.
-
-
-## Contact
-
-For issues and inquiries, please create a GitHub Issue.
+Dagobert is released under the [MIT License](LICENSE).
