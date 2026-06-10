@@ -69,8 +69,13 @@ func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// create file (but don't truncate if it exists)
-		fw, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE, 0666)
+		// create or replace file; without O_TRUNC a smaller upload would
+		// leave the tail of the previous template behind, corrupting the zip
+		existed := false
+		if _, err := os.Stat(dst); err == nil {
+			existed = true
+		}
+		fw, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 		if err != nil {
 			Err(w, r, err)
 			return
@@ -78,8 +83,19 @@ func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 
 		// write file
 		_, err = io.Copy(fw, fr)
+		fw.Close()
 		if err != nil {
 			Err(w, r, err)
+			return
+		}
+
+		// validate the uploaded template so marker reconstruction, hoisting
+		// and template syntax errors surface now instead of at report time
+		if _, err := LoadTemplate(dto.Name); err != nil {
+			if !existed {
+				os.Remove(dst)
+			}
+			Warn(w, r, err)
 			return
 		}
 	}

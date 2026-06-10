@@ -7,47 +7,38 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestPreNormalise(t *testing.T) {
+func TestDecodeMarkerExpr(t *testing.T) {
 	tests := []struct {
 		name  string
 		input string
 		want  string
 	}{
-		// XML character entities must NOT be replaced — raw < breaks XML parsing.
-		// They are decoded later in decodeMarkerExpr on the extracted expression.
-		{name: "&lt; preserved", input: `&lt;`, want: `&lt;`},
-		{name: "&gt; preserved", input: `&gt;`, want: `&gt;`},
-		{name: "&quot; preserved", input: `&quot;`, want: `&quot;`},
+		// Tags interleaved by split runs are stripped, {{ }} and whitespace
+		// trimmed.
+		{name: "plain", input: `{{ .Name }}`, want: `.Name`},
+		{name: "cross-run", input: `{{ .Na</t><t>me }}`, want: `.Name`},
 
-		// XML numeric character references for typographic quotes are safe to
-		// replace because the resulting ASCII character is valid everywhere the
-		// reference would be valid.
-		{name: "&#x201C; to straight double quote", input: `&#x201C;`, want: `"`},
-		{name: "&#x201D; to straight double quote", input: `&#x201D;`, want: `"`},
-		{name: "&#x2018; to straight single quote", input: `&#x2018;`, want: `'`},
-		{name: "&#x2019; to straight single quote", input: `&#x2019;`, want: `'`},
+		// Typographic quotes that office autocorrect injects inside markers
+		// become ASCII quotes — as UTF-8 bytes or numeric character references.
+		{name: "UTF-8 double quotes", input: "{{ .Foo “bar” }}", want: `.Foo "bar"`},
+		{name: "UTF-8 single quotes", input: "{{ .Foo ‘bar’ }}", want: `.Foo 'bar'`},
+		{name: "hex refs", input: `{{ .Foo &#x201C;bar&#x201D; }}`, want: `.Foo "bar"`},
+		{name: "decimal refs", input: `{{ .Foo &#8220;bar&#8221; }}`, want: `.Foo "bar"`},
 
-		// UTF-8 typographic quotes stored as raw bytes in the XML file
-		{name: "UTF-8 left double quote to straight", input: "“", want: `"`},
-		{name: "UTF-8 right double quote to straight", input: "”", want: `"`},
-		{name: "UTF-8 left single quote to straight", input: "‘", want: `'`},
-		{name: "UTF-8 right single quote to straight", input: "’", want: `'`},
+		// XML entities are decoded to the operators the author intended.
+		{name: "&lt; &gt;", input: `{{ .Count &lt; 5 &gt; .X }}`, want: `.Count < 5 > .X`},
+		{name: "&quot;", input: `{{ eq .X &quot;y&quot; }}`, want: `eq .X "y"`},
+		{name: "&apos;", input: `{{ .S &apos;x&apos; }}`, want: `.S 'x'`},
 
-		// Only typographic-quote substitutions fire; XML entities are untouched.
-		{
-			name:  "typographic quotes replaced, XML entities preserved",
-			input: `{{ .Foo &#x201C;bar&#x201D; &lt;baz&gt; }}`,
-			want:  `{{ .Foo "bar" &lt;baz&gt; }}`,
-		},
-
-		// Input without any replaceable sequences must pass through unchanged
-		{name: "plain text unchanged", input: `<t>hello</t>`, want: `<t>hello</t>`},
+		// &amp; decodes one level only: the single-pass replacer never
+		// re-examines a replacement, so double-encoded forms stay entities.
+		{name: "&amp; decoded last", input: `{{ .A &amp;lt; .B }}`, want: `.A &lt; .B`},
+		{name: "&amp; alone", input: `{{ .A &amp; .B }}`, want: `.A & .B`},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := preNormalise([]byte(tt.input))
-			assert.Equal(t, tt.want, string(got))
+			assert.Equal(t, tt.want, decodeMarkerExpr([]byte(tt.input)))
 		})
 	}
 }
@@ -61,6 +52,7 @@ func TestBuildEmission(t *testing.T) {
 		// Value expressions get the | xml pipe so data cannot inject raw XML
 		{name: "field access", expr: ".Name", want: "{{ .Name | xml }}"},
 		{name: "method call", expr: ".Events | len", want: "{{ .Events | len | xml }}"},
+		{name: "bare variable emits a value", expr: "$x", want: "{{ $x | xml }}"},
 
 		// Control words are structural; Go template interprets them, not the xml pipe
 		{name: "range", expr: "range .Events", want: "{{ range .Events }}"},
@@ -71,6 +63,12 @@ func TestBuildEmission(t *testing.T) {
 		{name: "define", expr: `define "name"`, want: `{{ define "name" }}`},
 		{name: "block", expr: `block "header" .`, want: `{{ block "header" . }}`},
 		{name: "template", expr: `template "footer" .`, want: `{{ template "footer" . }}`},
+		{name: "break", expr: "break", want: "{{ break }}"},
+		{name: "continue", expr: "continue", want: "{{ continue }}"},
+
+		// Assignments emit nothing; piping them would escape the stored value
+		{name: "declaration", expr: "$x := .Y", want: "{{ $x := .Y }}"},
+		{name: "assignment", expr: "$x = .Y", want: "{{ $x = .Y }}"},
 
 		// A word that merely starts like a control keyword is a value expression
 		{name: "ranger is not a control word", expr: "ranger", want: "{{ ranger | xml }}"},
@@ -96,10 +94,9 @@ func TestReconstructMarkers(t *testing.T) {
 		name    string
 		input   string
 		want    string
-		wantErr bool
+		wantErr string // substring the error must contain; empty = no error
 	}{
 		{
-			// --- cases from the spec ---
 			name:  "single-run marker",
 			input: `<t>{{ .Name }}</t>`,
 			want:  `<t>{{ .Name | xml }}</t>`,
@@ -132,16 +129,20 @@ func TestReconstructMarkers(t *testing.T) {
 			// A marker without a closing }} means the template is broken.
 			name:    "unclosed marker",
 			input:   `<t>{{ .Foo</t>`,
-			wantErr: true,
+			wantErr: "unclosed marker",
 		},
-
-		// --- additional cases ---
-
 		{
 			// Surrounding XML that contains no markers must be returned unchanged.
 			name:  "no markers",
 			input: `<t>plain text</t>`,
 			want:  `<t>plain text</t>`,
+		},
+		{
+			// Typography in document prose must survive — normalisation only
+			// applies to marker expressions, not to report text.
+			name:  "prose typography untouched",
+			input: "<t>“quoted” prose and Tom’s notes</t>",
+			want:  "<t>“quoted” prose and Tom’s notes</t>",
 		},
 		{
 			// Both markers must be replaced; the literal XML between them is kept.
@@ -173,20 +174,55 @@ func TestReconstructMarkers(t *testing.T) {
 			input: `<t>{{ end }}</t>`,
 			want:  `<t>{{ end }}</t>`,
 		},
+		{
+			// Office apps sometimes split "}}" across two runs so the raw bytes
+			// contain "}</t><t>}" with no consecutive "}}" anywhere.
+			name:  "split closing braces across runs",
+			input: `<t>{{ .Event}</t><t>}{{ end }}</t>`,
+			want:  `<t>{{ .Event | xml }}{{ end }}</t>`,
+		},
+		{
+			// The opening "{{" can be split across runs as well: a trailing
+			// lone "{" pairs with a leading "{" in the next run.
+			name:  "split opening braces across runs",
+			input: `<t>{</t><t>{ .X }}</t>`,
+			want:  `<t>{{ .X | xml }}</t>`,
+		},
+		{
+			// Three-way split: "{" / "{" / expression.
+			name:  "opening braces in two separate runs",
+			input: `<t>{</t><t>{</t><t> .X }}</t>`,
+			want:  `<t>{{ .X | xml }}</t>`,
+		},
+		{
+			// A lone trailing "{" that is NOT followed by a "{" is literal text.
+			name:  "trailing brace is not an opener",
+			input: `<t>a {</t><t>b</t>`,
+			want:  `<t>a {</t><t>b</t>`,
+		},
+		{
+			// "}}" inside a string literal must not close the marker.
+			name:  "closing braces inside string literal",
+			input: `<t>{{ printf "}}" }}</t>`,
+			want:  `<t>{{ printf "}}" | xml }}</t>`,
+		},
+		{
+			// "{{" inside a string literal of a multi-run marker: the text run
+			// containing it lies inside the consumed span and must not start a
+			// second, overlapping marker.
+			name:  "no overlapping marker from consumed span",
+			input: `<t>{{ .A "</t><t>{{" }}</t>`,
+			want:  `<t>{{ .A "{{" | xml }}</t>`,
+		},
 
 		// --- regression: XML entities in document content and markers ---
 
 		{
-			// &lt; in regular document text (e.g. "Price < 100") must survive
-			// intact. Before the fix, preNormalise replaced it with raw <, which
-			// made the XML invalid and caused "expected element name after <".
 			name:  "&lt; in document content preserved",
 			input: `<t>Price &lt; 100</t>`,
 			want:  `<t>Price &lt; 100</t>`,
 		},
 		{
-			// &gt; and &lt; inside a marker must be decoded to the comparison
-			// operators the template author intended.
 			name:  "&gt; in marker decoded",
 			input: `<t>{{ .Count &gt; 5 }}</t>`,
 			want:  `<t>{{ .Count > 5 | xml }}</t>`,
@@ -196,13 +232,27 @@ func TestReconstructMarkers(t *testing.T) {
 			input: `<t>{{ .Count &lt; 5 }}</t>`,
 			want:  `<t>{{ .Count < 5 | xml }}</t>`,
 		},
+
+		// --- legacy markers fail with a migration hint ---
+
+		{
+			name:    "legacy tr marker",
+			input:   `<t>{{tr range .Assets }}</t>`,
+			wantErr: "legacy",
+		},
+		{
+			name:    "legacy p marker",
+			input:   `<t>{{p end }}</t>`,
+			wantErr: "legacy",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, _, err := reconstructMarkers([]byte(tt.input))
-			if tt.wantErr {
+			if tt.wantErr != "" {
 				require.Error(t, err)
+				assert.Contains(t, err.Error(), tt.wantErr)
 				return
 			}
 			require.NoError(t, err)
