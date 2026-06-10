@@ -3,17 +3,15 @@ package handler
 import (
 	"log/slog"
 	"net/http"
-	"os"
 	"runtime/debug"
 	"strconv"
 	"time"
 
-	"github.com/gorilla/csrf"
 	"github.com/sprungknoedl/dagobert/app/auth"
 )
 
 func CSRF(next http.Handler) http.Handler {
-	xsrf := csrf.Protect([]byte(os.Getenv("WEB_SESSION_SECRET")))(next)
+	xsrf := http.NewCrossOriginProtection().Handler(next)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get(auth.HeaderApiKey) == "" {
 			xsrf.ServeHTTP(w, r)
