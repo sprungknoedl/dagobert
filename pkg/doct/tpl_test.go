@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -248,6 +249,73 @@ func TestLoadMsTemplate_Errors(t *testing.T) {
 		_, err := LoadMsTemplate(path)
 		assert.Error(t, err)
 	})
+
+	t.Run("marker spanning asymmetric structures", func(t *testing.T) {
+		// A marker accidentally reaching into a hyperlink swallows tags whose
+		// removal unbalances the tree; the well-formedness check must reject
+		// the template at load time instead of producing corrupt documents.
+		path := writeTempDocx(t, `<w:document><w:p>`+
+			`<w:r><w:t>{{ .A</w:t></w:r>`+
+			`<w:hyperlink><w:r><w:t>b }}</w:t></w:r></w:hyperlink>`+
+			`</w:p></w:document>`)
+		_, err := LoadMsTemplate(path)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "invalid XML")
+	})
+
+	t.Run("legacy tr marker gets migration hint", func(t *testing.T) {
+		path := writeTempDocx(t, `<w:document><w:p><w:t>{{tr range .X }}</w:t></w:p></w:document>`)
+		_, err := LoadMsTemplate(path)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "legacy")
+	})
+}
+
+// --- end to end: dedicated marker rows ----------------------------------------
+
+func TestOfficeTpl_DedicatedRowLoop(t *testing.T) {
+	path := writeTempDocx(t, `<w:document><w:body><w:tbl>`+
+		`<w:tr><w:tc><w:p><w:r><w:t>Name</w:t></w:r></w:p></w:tc></w:tr>`+
+		`<w:tr><w:tc><w:p><w:r><w:t>{{ range .Assets }}</w:t></w:r></w:p></w:tc></w:tr>`+
+		`<w:tr><w:tc><w:p><w:r><w:t>{{ .Name }}</w:t></w:r></w:p></w:tc></w:tr>`+
+		`<w:tr><w:tc><w:p><w:r><w:t>{{ end }}</w:t></w:r></w:p></w:tc></w:tr>`+
+		`</w:tbl></w:body></w:document>`)
+
+	tpl, err := LoadMsTemplate(path)
+	require.NoError(t, err)
+
+	var out bytes.Buffer
+	require.NoError(t, tpl.Render(&out, map[string]any{
+		"Assets": []map[string]string{{"Name": "a1"}, {"Name": "a2"}, {"Name": "a3"}},
+	}))
+
+	content := readFromZip(t, out.Bytes(), "word/document.xml")
+	assert.NoError(t, validateXML([]byte(content)), "rendered XML must be well-formed")
+	// one header row + one row per asset, no leftover marker rows
+	assert.Equal(t, 4, strings.Count(content, "<w:tr>"))
+	for _, name := range []string{"a1", "a2", "a3"} {
+		assert.Contains(t, content, name)
+	}
+	assert.NotContains(t, content, "{{")
+}
+
+// --- shipped templates ---------------------------------------------------------
+
+func TestLoadShippedTemplates(t *testing.T) {
+	cases := map[string]func(string) (Template, error){
+		"../../templates/Demo Word Report.docx":  LoadMsTemplate,
+		"../../templates/Demo Writer Report.odt": LoadLibreTemplate,
+		"../../templates/Demo Calc Report.ods":   LoadLibreTemplate,
+	}
+	for path, loadFn := range cases {
+		t.Run(filepath.Base(path), func(t *testing.T) {
+			if _, err := os.Stat(path); err != nil {
+				t.Skipf("template not present: %v", err)
+			}
+			_, err := loadFn(path)
+			assert.NoError(t, err)
+		})
+	}
 }
 
 // --- OfficeTpl (Libre / odt) -------------------------------------------------

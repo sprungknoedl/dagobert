@@ -78,9 +78,8 @@ var (
 type OfficeTpl struct {
 	name string
 	cfg  formatConfig
-	src  io.ReaderAt
-	len  int64
-	tpl  *template.Template
+	src  []byte             // raw bytes of the template file, read once at load
+	tpl  *template.Template // compiled once at load time
 }
 
 func xmlEscape(s string) (string, error) {
@@ -91,39 +90,61 @@ func xmlEscape(s string) (string, error) {
 	return buf.String(), nil
 }
 
-func load(path string, cfg formatConfig) (Template, error) {
-	stat, err := os.Stat(path)
-	if err != nil {
-		return nil, err
-	}
-
-	fh, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer fh.Close()
-
-	var contentBytes []byte
-	buf := new(bytes.Buffer)
-	err = processZip(fh, stat.Size(), buf, func(header *zip.FileHeader, r io.Reader, w io.Writer) error {
-		if header.Name == cfg.contentFile {
-			raw, err := io.ReadAll(r)
-			if err != nil {
-				return err
+// validateXML checks that the preprocessed content is still well-formed.
+// Token (unlike RawToken) verifies that start and end elements match, so
+// marker reconstruction or hoisting that broke the tree fails at load time
+// instead of producing corrupt documents.
+func validateXML(content []byte) error {
+	d := xml.NewDecoder(bytes.NewReader(content))
+	for {
+		if _, err := d.Token(); err != nil {
+			if err == io.EOF {
+				return nil
 			}
-			processed, _, err := reconstructMarkers(raw)
-			if err != nil {
-				return err
-			}
-			contentBytes = processed
-			_, err = w.Write(processed)
 			return err
 		}
-		_, err := io.Copy(w, r)
-		return err
-	})
+	}
+}
+
+func load(path string, cfg formatConfig) (Template, error) {
+	src, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
+	}
+
+	zr, err := zip.NewReader(bytes.NewReader(src), int64(len(src)))
+	if err != nil {
+		return nil, err
+	}
+
+	var contentBytes []byte
+	for _, item := range zr.File {
+		if item.Name != cfg.contentFile {
+			continue
+		}
+		ir, err := item.Open()
+		if err != nil {
+			return nil, err
+		}
+		raw, err := io.ReadAll(ir)
+		ir.Close()
+		if err != nil {
+			return nil, err
+		}
+
+		processed, markers, err := reconstructMarkers(raw)
+		if err != nil {
+			return nil, fmt.Errorf("template %q: %w", path, err)
+		}
+		hoisted, err := hoistPivots(processed, markers)
+		if err != nil {
+			return nil, fmt.Errorf("template %q: %w", path, err)
+		}
+		if err := validateXML(hoisted); err != nil {
+			return nil, fmt.Errorf("template %q: preprocessing produced invalid XML "+
+				"(check for markers spanning structural boundaries): %w", path, err)
+		}
+		contentBytes = hoisted
 	}
 
 	funcMap := template.FuncMap{"xml": xmlEscape}
@@ -138,8 +159,7 @@ func load(path string, cfg formatConfig) (Template, error) {
 	return OfficeTpl{
 		name: filepath.Base(path),
 		cfg:  cfg,
-		src:  bytes.NewReader(buf.Bytes()),
-		len:  int64(buf.Len()),
+		src:  src,
 		tpl:  tpl,
 	}, nil
 }
@@ -152,7 +172,7 @@ func (tpl OfficeTpl) Type() string { return tpl.cfg.mimeType }
 func (tpl OfficeTpl) Ext() string  { return filepath.Ext(tpl.name) }
 
 func (tpl OfficeTpl) Render(dst io.Writer, data interface{}) error {
-	return processZip(tpl.src, tpl.len, dst, func(header *zip.FileHeader, r io.Reader, w io.Writer) error {
+	return processZip(bytes.NewReader(tpl.src), int64(len(tpl.src)), dst, func(header *zip.FileHeader, r io.Reader, w io.Writer) error {
 		if header.Name == tpl.cfg.contentFile {
 			if err := tpl.tpl.Execute(w, data); err != nil {
 				return fmt.Errorf("rendering %q: %w", tpl.name, err)
