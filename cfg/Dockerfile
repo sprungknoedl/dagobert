@@ -10,7 +10,7 @@ RUN make build-web
 
 # ---------------------------------
 
-FROM golang:1.24 AS app
+FROM golang:1.25 AS app
 WORKDIR /src
 
 COPY go.mod .
