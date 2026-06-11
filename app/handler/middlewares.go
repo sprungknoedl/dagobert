@@ -6,24 +6,7 @@ import (
 	"runtime/debug"
 	"strconv"
 	"time"
-
-	"github.com/sprungknoedl/dagobert/app/auth"
 )
-
-func CSRF(next http.Handler) http.Handler {
-	xsrf := http.NewCrossOriginProtection().Handler(next)
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get(auth.HeaderApiKey) == "" {
-			xsrf.ServeHTTP(w, r)
-		} else {
-			// no csrf protection for api key based authentication.
-			// strip cookie and authorization header
-			r.Header.Del("Authorization")
-			r.Header.Del("Cookie")
-			next.ServeHTTP(w, r)
-		}
-	})
-}
 
 func Recover(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
