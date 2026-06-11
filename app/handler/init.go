@@ -245,9 +245,9 @@ func Run(cmd *cobra.Command, args []string) {
 	// --------------------------------------
 	var h http.Handler = router
 	h = authboss.ModuleListMiddleware(ab)(h)
-	h = auth.ApiKeyMiddleware(ab, db)(h)
 	h = ab.LoadClientStateMiddleware(h)
-	h = CSRF(h)
+	h = auth.ApiKeyMiddleware(db)(h) // strips browser credentials before session state is loaded
+	h = http.NewCrossOriginProtection().Handler(h)
 	h = Logger(h)
 	h = Recover(h)
 

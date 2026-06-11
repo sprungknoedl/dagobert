@@ -12,7 +12,7 @@ import (
 
 const HeaderApiKey = "X-API-Key"
 
-func ApiKeyMiddleware(ab *authboss.Authboss, db *model.Store) func(http.Handler) http.Handler {
+func ApiKeyMiddleware(db *model.Store) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			key := r.Header.Get(HeaderApiKey)
@@ -29,6 +29,11 @@ func ApiKeyMiddleware(ab *authboss.Authboss, db *model.Store) func(http.Handler)
 				// TODO add error and traceid
 				return
 			}
+
+			// api key requests must not ride along browser credentials,
+			// strip them before any session state is loaded
+			r.Header.Del("Authorization")
+			r.Header.Del("Cookie")
 
 			// embed system user into session
 			r = r.WithContext(context.WithValue(r.Context(), authboss.CTXKeyUser, &model.SystemUser))
