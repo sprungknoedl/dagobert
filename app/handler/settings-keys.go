@@ -7,17 +7,17 @@ import (
 	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
+	"github.com/sprungknoedl/dagobert/app/worker"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 type KeyCtrl struct {
 	Ctrl
-	jobctrl *JobCtrl
 }
 
-func NewKeyCtrl(store *model.Store, acl *auth.ACL, jobctrl *JobCtrl) *KeyCtrl {
-	return &KeyCtrl{Ctrl: BaseCtrl{store, acl}, jobctrl: jobctrl}
+func NewKeyCtrl(store *model.Store, acl *auth.ACL) *KeyCtrl {
+	return &KeyCtrl{Ctrl: BaseCtrl{store, acl}}
 }
 
 func (ctrl KeyCtrl) List(w http.ResponseWriter, r *http.Request) {
@@ -27,7 +27,7 @@ func (ctrl KeyCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsKeyMany(Env(ctrl, r), list, ctrl.jobctrl.Workers()))
+	Render(w, r, http.StatusOK, views.SettingsKeyMany(Env(ctrl, r), list, worker.Status()))
 }
 
 func (ctrl KeyCtrl) Edit(w http.ResponseWriter, r *http.Request) {

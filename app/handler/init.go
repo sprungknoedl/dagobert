@@ -2,14 +2,20 @@ package handler
 
 import (
 	"cmp"
+	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/aarondl/authboss/v3"
 	"github.com/spf13/cobra"
 	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/worker"
 	"github.com/sprungknoedl/dagobert/pkg/attck"
 	"github.com/sprungknoedl/dagobert/public"
 )
@@ -44,10 +50,12 @@ func Run(cmd *cobra.Command, args []string) {
 	// --------------------------------------
 	// MITRE ATT&CK
 	// --------------------------------------
+	// system data lives outside files/, which holds user data only (and is
+	// shadowed by the volume mount in Docker)
 	mitre, err := attck.LoadKB(
-		"files/mitre/enterprise-attack.json",
-		"files/mitre/ics-attack.json",
-		"files/mitre/mobile-attack.json",
+		"mitre/enterprise-attack.json",
+		"mitre/ics-attack.json",
+		"mitre/mobile-attack.json",
 	)
 	if err != nil {
 		slog.Error("Failed to load MITRE ATT&CK knowledge base", "err", err)
@@ -58,7 +66,7 @@ func Run(cmd *cobra.Command, args []string) {
 	// Automations & jobs
 	// --------------------------------------
 	slog.Debug("Loading hooks")
-	err = LoadHooks(db)
+	err = worker.LoadHooks(db)
 	if err != nil {
 		slog.Error("Failed to load hooks", "err", err)
 		return
@@ -69,6 +77,12 @@ func Run(cmd *cobra.Command, args []string) {
 	if err != nil {
 		slog.Error("Failed to reschedule state jobs", "err", err)
 	}
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	slog.Debug("Starting job runners")
+	go worker.Start(ctx, db)
 
 	// --------------------------------------
 	// Router
@@ -105,13 +119,8 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("GET /settings/users/{id}/acl", userCtrl.EditACL)
 	secured.HandleFunc("POST /settings/users/{id}/acl", userCtrl.SaveACL)
 
-	// jobs
-	jobCtrl := NewJobCtrl(db, acl)
-	secured.HandleFunc("GET /internal/jobs", jobCtrl.PopJob)
-	secured.HandleFunc("POST /internal/jobs/ack", jobCtrl.AckJob)
-
 	// api keys
-	keyCtrl := NewKeyCtrl(db, acl, jobCtrl)
+	keyCtrl := NewKeyCtrl(db, acl)
 	secured.HandleFunc("GET /settings/api-keys/", keyCtrl.List)
 	secured.HandleFunc("GET /settings/api-keys/{key}", keyCtrl.Edit)
 	secured.HandleFunc("POST /settings/api-keys/{key}", keyCtrl.Save)
@@ -251,9 +260,17 @@ func Run(cmd *cobra.Command, args []string) {
 	h = Logger(h)
 	h = Recover(h)
 
+	srv := &http.Server{Addr: ":8080", Handler: h}
+	go func() {
+		<-ctx.Done()
+		sctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		srv.Shutdown(sctx)
+	}()
+
 	slog.Info("Starting web server", "addr", ":8080")
-	err = http.ListenAndServe(":8080", h)
-	if err != nil {
+	err = srv.ListenAndServe()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		slog.Error("Failed to start web server", "err", err)
 		return
 	}

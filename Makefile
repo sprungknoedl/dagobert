@@ -31,9 +31,7 @@ test:
 
 docker:
 	docker build . -f cfg/Dockerfile -t sprungknoedl/dagobert
-	docker build . -f cfg/Dockerfile-hayabusa -t sprungknoedl/dagobert-hayabusa
-	docker build . -f cfg/Dockerfile-plaso -t sprungknoedl/dagobert-plaso
-	docker build . -f cfg/Dockerfile-timesketch -t sprungknoedl/dagobert-timesketch
+	docker build . -f cfg/Dockerfile-full -t sprungknoedl/dagobert-full
 
 run:
 	air -c cfg/air.toml
@@ -41,7 +39,7 @@ run:
 ATTCK_RELEASE=18.1
 update: update-mitre
 update-mitre:
-	mkdir -p files/mitre
-	wget -O files/mitre/enterprise-attack.json https://github.com/mitre-attack/attack-stix-data/raw/refs/heads/master/enterprise-attack/enterprise-attack-${ATTCK_RELEASE}.json
-	wget -O files/mitre/ics-attack.json https://github.com/mitre-attack/attack-stix-data/raw/refs/heads/master/ics-attack/ics-attack-${ATTCK_RELEASE}.json
-	wget -O files/mitre/mobile-attack.json https://github.com/mitre-attack/attack-stix-data/raw/refs/heads/master/mobile-attack/mobile-attack-${ATTCK_RELEASE}.json
+	mkdir -p mitre
+	wget -O mitre/enterprise-attack.json https://github.com/mitre-attack/attack-stix-data/raw/refs/heads/master/enterprise-attack/enterprise-attack-${ATTCK_RELEASE}.json
+	wget -O mitre/ics-attack.json https://github.com/mitre-attack/attack-stix-data/raw/refs/heads/master/ics-attack/ics-attack-${ATTCK_RELEASE}.json
+	wget -O mitre/mobile-attack.json https://github.com/mitre-attack/attack-stix-data/raw/refs/heads/master/mobile-attack/mobile-attack-${ATTCK_RELEASE}.json

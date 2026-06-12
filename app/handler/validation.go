@@ -113,7 +113,7 @@ func ValidateHook(dto *model.Hook, enums model.Enums) valid.ValidationError {
 
 	// compile condition
 	msg := ""
-	_, err := compile(*dto)
+	_, err := worker.CompileHook(*dto)
 	if err != nil {
 		msg = err.Error()
 	}

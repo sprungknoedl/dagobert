@@ -1,31 +1,41 @@
 package worker
 
 import (
-	"bytes"
 	"cmp"
-	"encoding/json"
+	"context"
+	"errors"
 	"log/slog"
-	"net/http"
+	"maps"
 	"os"
+	"slices"
 	"strconv"
-	"strings"
+	"time"
 
-	"github.com/spf13/cobra"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/worker/hayabusa"
 	"github.com/sprungknoedl/dagobert/app/worker/plaso"
 	"github.com/sprungknoedl/dagobert/app/worker/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"gorm.io/gorm"
 )
 
 var Modules = map[string]model.Module{}
 
-type Worker struct {
-	WorkerID   string
-	RemoteAddr string
-	Modules    []string
-	Workers    int
+// envvars maps module names to the environment variable holding their command.
+var envvars = map[string]string{
+	"Hayabusa":            "MODULE_HAYABUSA",
+	"Plaso":               "MODULE_PLASO",
+	"Timesketch Importer": "MODULE_TIMESKETCH",
 }
+
+// ModuleStatus holds the validation result of a module for the settings UI.
+type ModuleStatus struct {
+	Name    string
+	Command string
+	Error   string
+}
+
+var status []ModuleStatus
 
 func init() {
 	ctors := []func() model.Module{
@@ -43,124 +53,71 @@ func Supported(obj any) []model.Module {
 	return fp.ToList(fp.FilterM(Modules, func(p model.Module) bool { return p.Supports(obj) }))
 }
 
-func Run(cmd *cobra.Command, args []string) {
-	// validate modules, keep only modules definitions we can run
-	modules := fp.FilterM(Modules, func(m model.Module) bool {
-		_, err := m.Validate()
-		return err == nil // TODO: error logging?
-	})
+// Status returns the validation results recorded by Start.
+func Status() []ModuleStatus { return status }
 
-	if len(modules) == 0 {
-		slog.Error("worker not ready")
-		return
-	}
-
-	// starting workers
-	num, err := strconv.Atoi(cmp.Or(os.Getenv("DAGOBERT_WORKERS"), "3"))
-	if len(modules) == 0 {
-		slog.Error("invalid number of workers", "err", err)
-		return
-	}
-
-	slog.Info("starting workers", "num", num)
-	ch := make(chan model.Job)
-	for i := 0; i < num; i++ {
-		go DispatchJob(modules, ch)
-	}
-
-	// dagobert client
-	tr := http.DefaultTransport.(*http.Transport).Clone()
-	tr.TLSClientConfig.InsecureSkipVerify = os.Getenv("DAGOBERT_SKIP_VERIFY_TLS") == "true"
-
-	client := http.Client{
-		Transport: tr,
-	}
-	req, err := http.NewRequest(http.MethodGet, os.Getenv("DAGOBERT_URL")+"/internal/jobs", nil)
-	if err != nil {
-		slog.Error("failed to create request", "err", err)
-	}
-
-	// set SSE specific headers
-	req.Header.Set("Cache-Control", "no-cache")
-	req.Header.Set("Accept", "text/event-stream")
-	req.Header.Set("Connection", "keep-alive")
-	req.Header.Set("X-API-Key", os.Getenv("DAGOBERT_API_KEY"))
-
-	q := req.URL.Query()
-	q.Add("modules", strings.Join(fp.Keys(modules), ","))
-	q.Add("workers", strconv.Itoa(num))
-	req.URL.RawQuery = q.Encode()
-
-	slog.Info("worker is ready", "upstream", os.Getenv("DAGOBERT_URL"), "modules", strings.Join(fp.Keys(modules), ","))
-	resp, err := client.Do(req)
-	if err != nil {
-		slog.Error("failed to send request", "err", err)
-		return
-	}
-
-	dec := json.NewDecoder(resp.Body)
-	for {
-		job := model.Job{}
-		err = dec.Decode(&job)
-		if err != nil {
-			slog.Error("failed to decode job", "err", err)
-			return
-		}
-
-		slog.Info("received job", "job", job)
-		job.Ctx = req.Context()
-		ch <- job
-	}
-}
-
-func DispatchJob(modules map[string]model.Module, ch <-chan model.Job) {
-	for job := range ch {
-		var err error
-		if job.Name == "keep-alive" {
-			slog.Debug("received keep-alive")
-			continue
-		}
-
-		if m, ok := modules[job.Name]; ok {
-			err = m.Run(job)
+// Start validates modules and launches the runner pool. Called from
+// handler.Run; ctx is the server's shutdown context.
+func Start(ctx context.Context, store *model.Store) {
+	modules := map[string]model.Module{}
+	results := []ModuleStatus{}
+	for _, name := range slices.Sorted(maps.Keys(Modules)) {
+		st := ModuleStatus{Name: name, Command: os.Getenv(envvars[name])}
+		if _, err := Modules[name].Validate(); err != nil {
+			st.Error = err.Error()
 		} else {
-			slog.Error("unknown module name", "job", job.ID, "module", job.Name)
-			continue
+			modules[name] = Modules[name]
 		}
+		results = append(results, st)
+	}
+	status = results
 
-		errmsg := ""
-		if err != nil {
-			errmsg = err.Error()
-			slog.Warn("failed to process job", "job", job.ID, "module", job.Name, "err", err)
-		}
+	if len(modules) == 0 {
+		slog.Warn("no job modules available — configure MODULE_* env vars")
+		return
+	}
 
-		err = AckJob(model.Job{
-			ID:     job.ID,
-			Status: fp.If(err != nil, "Failed", "Success"),
-			Error:  errmsg,
-		})
-		if err != nil {
-			slog.Warn("failed to ack job", "job", job.ID, "module", job.Name, "err", err)
-		}
+	num, _ := strconv.Atoi(cmp.Or(os.Getenv("DAGOBERT_WORKERS"), "3"))
+	slog.Info("starting job runners", "num", num, "modules", fp.Keys(modules))
+	for range num {
+		go runner(ctx, store, modules)
 	}
 }
 
-func AckJob(job model.Job) error {
-	body := bytes.NewBuffer(nil)
-	err := json.NewEncoder(body).Encode(job)
-	if err != nil {
-		return err
-	}
+func runner(ctx context.Context, store *model.Store, modules map[string]model.Module) {
+	t := time.NewTicker(time.Second)
+	defer t.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+			job, err := store.PopJob(fp.Keys(modules))
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				continue
+			} else if err != nil {
+				slog.Error("failed to fetch job", "err", err)
+				continue
+			}
 
-	uri := os.Getenv("DAGOBERT_URL") + "/internal/jobs/ack"
-	req, err := http.NewRequest(http.MethodPost, uri, body)
-	if err != nil {
-		return err
-	}
+			slog.Info("running job", "job", job.ID, "module", job.Name)
+			job.Ctx = ctx
+			job.Store = store
 
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-API-Key", os.Getenv("DAGOBERT_API_KEY"))
-	client := http.Client{}
-	_, err = client.Do(req)
-	return err
+			errmsg := ""
+			if err := modules[job.Name].Run(job); err != nil {
+				errmsg = err.Error()
+				slog.Warn("failed to process job", "job", job.ID, "module", job.Name, "err", err)
+			}
+
+			err = store.AckJob(model.Job{
+				ID:     job.ID,
+				Status: fp.If(errmsg != "", "Failed", "Success"),
+				Error:  errmsg,
+			})
+			if err != nil {
+				slog.Warn("failed to ack job", "job", job.ID, "module", job.Name, "err", err)
+			}
+		}
+	}
 }

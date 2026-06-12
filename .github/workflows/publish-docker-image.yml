@@ -35,29 +35,11 @@ jobs:
           tags: sprungknoedl/dagobert:latest
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Build and push Docker image (dagobert-hayabusa)
+      - name: Build and push Docker image (dagobert-full)
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
         with:
           context: .
-          file: ./cfg/Dockerfile-hayabusa
+          file: ./cfg/Dockerfile-full
           push: true
-          tags: sprungknoedl/dagobert-hayabusa:latest
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Build and push Docker image (dagobert-plaso)
-        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
-        with:
-          context: .
-          file: ./cfg/Dockerfile-plaso
-          push: true
-          tags: sprungknoedl/dagobert-plaso:latest
-          labels: ${{ steps.meta.outputs.labels }}
-
-      - name: Build and push Docker image (dagobert-timesketch)
-        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
-        with:
-          context: .
-          file: ./cfg/Dockerfile-timesketch
-          push: true
-          tags: sprungknoedl/dagobert-timesketch:latest
+          tags: sprungknoedl/dagobert-full:latest
           labels: ${{ steps.meta.outputs.labels }}

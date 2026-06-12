@@ -2,6 +2,7 @@ package plaso
 
 import (
 	"cmp"
+	"errors"
 	"fmt"
 	"log"
 	"log/slog"
@@ -45,15 +46,22 @@ func (m *Module) Supports(obj any) bool {
 func (m *Module) Validate() (model.Module, error) {
 	var err error
 	_, m.args, err = shellwords.ParseWithEnvs(os.Getenv("MODULE_PLASO"))
-	if err != nil || len(m.args) < 1 {
-		slog.Warn("validating module prerequisites failed", "module", "plaso", "step", "shell parsing", "err", err)
+	if err != nil {
+		err = fmt.Errorf("invalid command in MODULE_PLASO: %w", err)
+		slog.Warn("validating module prerequisites failed", "module", "plaso", "err", err)
+		return nil, err
+	}
+	if len(m.args) < 1 {
+		err = errors.New("MODULE_PLASO is not set, module disabled")
+		slog.Warn("validating module prerequisites failed", "module", "plaso", "err", err)
 		return nil, err
 	}
 
 	slog.Info("validating module prerequisites", "module", "plaso")
 	cmd := exec.Command(m.args[0], append(m.args[1:], "-V")...)
 	if out, err := cmd.CombinedOutput(); err != nil {
-		slog.Warn("validating module prerequisites failed", "module", "plaso", "step", "cmd running", "err", err)
+		err = fmt.Errorf("command %q is not runnable: %w", m.args[0], err)
+		slog.Warn("validating module prerequisites failed", "module", "plaso", "err", err)
 		os.Stderr.Write(out)
 		return nil, err
 	}
@@ -95,8 +103,7 @@ func (m *Module) Run(job model.Job) error {
 		return err
 	}
 
-	if err := workerutils.AddFromFS(model.Evidence{
-		ID:     "new",
+	if err := workerutils.AddFromFS(job.Store, model.Evidence{
 		CaseID: evidence.CaseID,
 		Type:   "Other",
 		Name:   filepath.Base(dst),
@@ -106,8 +113,7 @@ func (m *Module) Run(job model.Job) error {
 		return err
 	}
 
-	if err := workerutils.AddFromFS(model.Evidence{
-		ID:     "new",
+	if err := workerutils.AddFromFS(job.Store, model.Evidence{
 		CaseID: evidence.CaseID,
 		Type:   "Other",
 		Name:   filepath.Base(dst) + ".csv",

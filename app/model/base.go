@@ -26,6 +26,17 @@ type Store struct {
 }
 
 func Connect(dburl string) (*Store, error) {
+	// the job runners poll the database concurrently; without a busy timeout
+	// a second writer fails immediately with SQLITE_BUSY instead of waiting
+	// for the write lock
+	if strings.HasPrefix(dburl, "file:") && !strings.Contains(dburl, "busy_timeout") {
+		if strings.Contains(dburl, "?") {
+			dburl += "&_pragma=busy_timeout(10000)"
+		} else {
+			dburl += "?_pragma=busy_timeout(10000)"
+		}
+	}
+
 	var err error
 	conn, err := sql.Open("sqlite", dburl)
 	if err != nil {

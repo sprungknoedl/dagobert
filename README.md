@@ -35,7 +35,7 @@ can work on a case concurrently.
 - **Notes & comments** — document findings as you go, visible to the whole team.
 - **Report generation** — render Word, Excel/Calc, and Writer templates
   (`.docx`, `.ods`, `.odt`) from case data; bring your own corporate template.
-- **Evidence processing workers** — run [Hayabusa](https://github.com/Yamato-Security/hayabusa)
+- **Evidence processing** — run [Hayabusa](https://github.com/Yamato-Security/hayabusa)
   (EVTX triage) and [Plaso](https://github.com/log2timeline/plaso)
   (super-timelines) against uploaded evidence as background jobs.
 - **Timesketch integration** — upload timelines to
@@ -86,16 +86,15 @@ can work on a case concurrently.
    docker compose exec app dagobert create-user <USERNAME>
    ```
 
-6. Create an API key for the background worker, then add it to `dagobert.env`
-   as `DAGOBERT_API_KEY` and restart:
-
-   ```sh
-   docker compose exec app dagobert create-key worker
-   $EDITOR dagobert.env   # set DAGOBERT_API_KEY to the generated key
-   docker compose up -d
-   ```
-
 Dagobert is now available at <http://localhost:8080>.
+
+Two Docker images are published: `sprungknoedl/dagobert` (slim, the app only)
+and `sprungknoedl/dagobert-full` (app plus Plaso, Hayabusa, and the Timesketch
+importer). The compose file defaults to the full image so evidence processing
+works out of the box. Jobs run in-process, with the tool commands configured
+via the `MODULE_*` environment variables — the full image presets these to
+the bundled tools, so leave them unset in `dagobert.env` unless you want to
+override them.
 
 > [!WARNING]
 > Do not expose Dagobert directly to the internet. Always deploy it behind an

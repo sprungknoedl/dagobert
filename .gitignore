@@ -3,6 +3,7 @@ dagobert
 dagobert.env
 .DS_Store
 files
+mitre
 node_modules
 *_templ.go
 CLAUDE.md

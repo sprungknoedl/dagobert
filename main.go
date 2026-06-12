@@ -9,7 +9,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sprungknoedl/dagobert/app/cli"
 	"github.com/sprungknoedl/dagobert/app/handler"
-	"github.com/sprungknoedl/dagobert/app/worker"
 )
 
 type Configuration struct {
@@ -56,7 +55,6 @@ func main() {
 	cmd.Run = handler.Run // default command
 	cmd.CompletionOptions = cobra.CompletionOptions{DisableDefaultCmd: true}
 	cmd.AddCommand(&cobra.Command{Use: "server", Short: "Start web server and API.", Run: handler.Run})
-	cmd.AddCommand(&cobra.Command{Use: "worker", Short: "Start background job worker.", Run: worker.Run})
 	cmd.AddCommand(&cobra.Command{Use: "db", Short: "Perform database migrations.", RunE: cli.Migrate})
 	cmd.AddCommand(&cobra.Command{Use: "create-user USERNAME", Short: "Create a user.", RunE: cli.CreateUser, Args: cobra.ExactArgs(1)})
 	cmd.AddCommand(&cobra.Command{Use: "create-key NAME", Short: "Create a API key.", RunE: cli.CreateKey, Args: cobra.ExactArgs(1)})

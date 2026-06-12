@@ -125,14 +125,13 @@ func ScheduleModule[T any](ctrl Ctrl, w http.ResponseWriter, r *http.Request, fn
 	}
 
 	err = ctrl.Store().PushJob(model.Job{
-		ID:          fp.Random(10),
-		Name:        dto.Name,
-		Status:      "Scheduled",
-		Case:        kase,
-		ObjectID:    oid,
-		Object:      model.Object{Payload: obj},
-		Settings:    dto.Settings,
-		ServerToken: model.ServerToken,
+		ID:       fp.Random(10),
+		Name:     dto.Name,
+		Status:   "Scheduled",
+		Case:     kase,
+		ObjectID: oid,
+		Object:   model.Object{Payload: obj},
+		Settings: dto.Settings,
 	})
 	if err != nil {
 		Err(w, r, err)
