@@ -89,12 +89,13 @@ can work on a case concurrently.
 Dagobert is now available at <http://localhost:8080>.
 
 Two Docker images are published: `sprungknoedl/dagobert` (slim, the app only)
-and `sprungknoedl/dagobert-full` (app plus Plaso, Hayabusa, and the Timesketch
-importer). The compose file defaults to the full image so evidence processing
-works out of the box. Jobs run in-process, with the tool commands configured
-via the `MODULE_*` environment variables — the full image presets these to
-the bundled tools, so leave them unset in `dagobert.env` unless you want to
-override them.
+and `sprungknoedl/dagobert-full` (app plus Plaso and Hayabusa). The compose
+file defaults to the full image so evidence processing works out of the box.
+Jobs run in-process, with the tool commands configured via the `MODULE_*`
+environment variables — the full image presets these to the bundled tools, so
+leave them unset in `dagobert.env` unless you want to override them. The
+Timesketch importer is built into the app itself and configured solely via
+the `TIMESKETCH_*` variables.
 
 > [!WARNING]
 > Do not expose Dagobert directly to the internet. Always deploy it behind an

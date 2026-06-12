@@ -17,6 +17,7 @@ import (
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/worker"
 	"github.com/sprungknoedl/dagobert/pkg/attck"
+	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/public"
 )
 
@@ -63,6 +64,18 @@ func Run(cmd *cobra.Command, args []string) {
 	}
 
 	// --------------------------------------
+	// Timesketch
+	// --------------------------------------
+	// shared lazy client; an empty TIMESKETCH_URL yields an unconfigured
+	// client that fails with a friendly error on use
+	ts := timesketch.NewClient(timesketch.Config{
+		URL:           os.Getenv("TIMESKETCH_URL"),
+		Username:      os.Getenv("TIMESKETCH_USER"),
+		Password:      os.Getenv("TIMESKETCH_PASS"),
+		SkipVerifyTLS: os.Getenv("TIMESKETCH_SKIP_VERIFY_TLS") == "true",
+	})
+
+	// --------------------------------------
 	// Automations & jobs
 	// --------------------------------------
 	slog.Debug("Loading hooks")
@@ -82,7 +95,7 @@ func Run(cmd *cobra.Command, args []string) {
 	defer stop()
 
 	slog.Debug("Starting job runners")
-	go worker.Start(ctx, db)
+	go worker.Start(ctx, db, ts)
 
 	// --------------------------------------
 	// Router
@@ -98,7 +111,7 @@ func Run(cmd *cobra.Command, args []string) {
 	})
 
 	// cases
-	caseCtrl := NewCaseCtrl(db, acl)
+	caseCtrl := NewCaseCtrl(db, acl, ts)
 	secured.HandleFunc("GET /cases/", caseCtrl.List)
 	secured.HandleFunc("GET /cases/export/csv", caseCtrl.Export)
 	secured.HandleFunc("GET /cases/import/csv", caseCtrl.Import)
@@ -146,7 +159,7 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("DELETE /settings/enums/{id}", settingsCtrl.DeleteEnum)
 
 	// events
-	eventCtrl := NewEventCtrl(db, acl, mitre)
+	eventCtrl := NewEventCtrl(db, acl, mitre, ts)
 	secured.HandleFunc("GET /cases/{cid}/events/", eventCtrl.List)
 	secured.HandleFunc("GET /cases/{cid}/events/export/csv", eventCtrl.Export)
 	secured.HandleFunc("GET /cases/{cid}/events/import/csv", eventCtrl.ImportCSV)
@@ -180,7 +193,7 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("POST /cases/{cid}/malware/{id}/run", malwareCtrl.ScheduleModule)
 
 	// indicators
-	indicatorCtrl := NewIndicatorCtrl(db, acl)
+	indicatorCtrl := NewIndicatorCtrl(db, acl, ts)
 	secured.HandleFunc("GET /cases/{cid}/indicators/", indicatorCtrl.List)
 	secured.HandleFunc("GET /cases/{cid}/indicators/export/csv", indicatorCtrl.ExportCSV)
 	secured.HandleFunc("GET /cases/{cid}/indicators/export/ioc", indicatorCtrl.ExportOpenIOC)

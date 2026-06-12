@@ -1,28 +1,24 @@
 package timesketch
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strconv"
 	"strings"
+	"time"
 
-	"github.com/mattn/go-shellwords"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/worker/workerutils"
-	"github.com/sprungknoedl/dagobert/pkg/tty"
+	ts "github.com/sprungknoedl/dagobert/pkg/timesketch"
 )
 
 type Module struct {
-	args []string
+	client *ts.Client
 }
 
-func NewModule() model.Module {
-	return &Module{}
+func NewModule(client *ts.Client) model.Module {
+	return &Module{client: client}
 }
 
 func (m *Module) Name() string {
@@ -41,25 +37,18 @@ func (m *Module) Supports(obj any) bool {
 }
 
 func (m *Module) Validate() (model.Module, error) {
-	var err error
-	_, m.args, err = shellwords.ParseWithEnvs(os.Getenv("MODULE_TIMESKETCH"))
-	if err != nil {
-		err = fmt.Errorf("invalid command in MODULE_TIMESKETCH: %w", err)
-		slog.Warn("validating module prerequisites failed", "module", "timesketch", "err", err)
-		return nil, err
-	}
-	if len(m.args) < 1 {
-		err = errors.New("MODULE_TIMESKETCH is not set, module disabled")
+	if !m.client.Configured() {
+		err := errors.New("TIMESKETCH_URL is not set, module disabled")
 		slog.Warn("validating module prerequisites failed", "module", "timesketch", "err", err)
 		return nil, err
 	}
 
 	slog.Info("validating module prerequisites", "module", "timesketch")
-	cmd := exec.Command(m.args[0], append(m.args[1:], "--version")...)
-	if out, err := cmd.CombinedOutput(); err != nil {
-		err = fmt.Errorf("command %q is not runnable: %w", m.args[0], err)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := m.client.Login(ctx); err != nil {
+		err = fmt.Errorf("login failed: %w", err)
 		slog.Warn("validating module prerequisites failed", "module", "timesketch", "err", err)
-		os.Stderr.Write(out)
 		return nil, err
 	}
 
@@ -71,23 +60,10 @@ func (m *Module) Run(job model.Job) error {
 	if !ok {
 		return fmt.Errorf("timesketch: unsupported type '%T'", job.Object.Payload)
 	}
+	if job.Case.SketchID == 0 {
+		return errors.New("timesketch: case is not linked to a sketch")
+	}
 
 	src := workerutils.Filepath(evidence)
-	cmd := exec.CommandContext(job.Ctx, m.args[0], append(m.args[1:],
-		"--quick",
-		"--host", os.Getenv("TIMESKETCH_URL"),
-		"-u", os.Getenv("TIMESKETCH_USER"),
-		"-p", os.Getenv("TIMESKETCH_PASS"),
-		"--sketch_id", strconv.Itoa(job.Case.SketchID),
-		"--timeline-name", filepath.Base(src),
-		"--context", "upload of dagobert evidence: "+filepath.Base(src),
-		src,
-	)...)
-
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	log.Printf("|%s| running command: %s", tty.Cyan(" DEB "), cmd.Args)
-	err := cmd.Run()
-	return err
+	return m.client.Upload(job.Ctx, job.Case.SketchID, src)
 }
