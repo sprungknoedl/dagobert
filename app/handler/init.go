@@ -243,7 +243,6 @@ func Run(cmd *cobra.Command, args []string) {
 	// visualizations
 	visualsCtrl := NewVisualsCtrl(db, acl, mitre)
 	secured.HandleFunc("GET /cases/{cid}/vis/network", visualsCtrl.Network)
-	secured.HandleFunc("GET /cases/{cid}/vis/timeline", visualsCtrl.Timeline)
 	secured.HandleFunc("GET /cases/{cid}/vis/mitre", visualsCtrl.MitreAttack)
 
 	// reports

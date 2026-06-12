@@ -2,12 +2,9 @@ package handler
 
 import (
 	"cmp"
-	"html"
 	"log/slog"
 	"net/http"
 	"slices"
-	"strings"
-	"time"
 
 	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
@@ -23,57 +20,6 @@ type VisualsCtrl struct {
 
 func NewVisualsCtrl(store *model.Store, acl *auth.ACL, mitre *attck.KB) *VisualsCtrl {
 	return &VisualsCtrl{BaseCtrl{store, acl}, mitre}
-}
-
-func buildSearchStr(ev model.Event) string {
-	parts := []string{
-		ev.Event,
-		ev.Type,
-		ev.Time.Format(time.RFC3339),
-		fp.If(ev.Flagged, "flagged", ""),
-	}
-	for _, a := range ev.Assets {
-		parts = append(parts, a.Name, a.Addr)
-	}
-	for _, i := range ev.Indicators {
-		parts = append(parts, i.Value)
-	}
-	return strings.ToLower(strings.Join(parts, " "))
-}
-
-func buildTimelineContent(eventTypes []model.Enum, ev model.Event) string {
-	icon := iconForEnum(eventTypes, ev.Type)
-	escaped := html.EscapeString(ev.Event)
-
-	terms := make([]string, 0, len(ev.Assets)+len(ev.Indicators))
-	for _, a := range ev.Assets {
-		if a.Name != "" {
-			terms = append(terms, a.Name)
-		}
-	}
-	for _, i := range ev.Indicators {
-		if i.Value != "" {
-			terms = append(terms, i.Value)
-		}
-	}
-	slices.SortFunc(terms, func(a, b string) int { return cmp.Compare(len(b), len(a)) })
-
-	for _, term := range terms {
-		escapedTerm := html.EscapeString(term)
-		if idx := strings.Index(escaped, escapedTerm); idx >= 0 {
-			escaped = escaped[:idx] + "<strong>" + escapedTerm + "</strong>" + escaped[idx+len(escapedTerm):]
-		}
-	}
-
-	iconHTML := ""
-	if icon != "" {
-		iconHTML = `<i class="hio hio-4 ` + html.EscapeString(icon) + `"></i>`
-	}
-	return `<span class="tl-item">` + iconHTML + escaped + `</span>`
-}
-
-func buildTimelineTitle(ev model.Event) string {
-	return ev.Time.Format(time.RFC3339) + " — " + ev.Event
 }
 
 func (ctrl VisualsCtrl) Network(w http.ResponseWriter, r *http.Request) {
@@ -122,110 +68,6 @@ func (ctrl VisualsCtrl) Network(w http.ResponseWriter, r *http.Request) {
 
 	slog.Debug("rendering network", "nodes", nodes, "edges", edges)
 	Render(w, r, http.StatusOK, views.VisNetwork(Env(ctrl, r), fp.ToList(nodes), edges))
-}
-
-func (ctrl VisualsCtrl) Timeline(w http.ResponseWriter, r *http.Request) {
-	cid := r.PathValue("cid")
-	events, err := ctrl.Store().ListEvents(cid)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	enums, err := ctrl.Store().ListEnums()
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	groupBy := cmp.Or(r.URL.Query().Get("group"), "asset")
-	flaggedOnly := r.URL.Query().Get("flagged") == "on"
-	items := []views.DataItem{}
-	groups := map[string]views.DataItem{}
-
-	switch groupBy {
-	case "category":
-		for _, ev := range events {
-			if flaggedOnly && !ev.Flagged {
-				continue
-			}
-
-			category := cmp.Or(ev.Type, "Uncategorized")
-			groups[category] = views.DataItem{ID: category, Content: category}
-			items = append(items, views.DataItem{
-				ID:        ev.ID,
-				Content:   buildTimelineContent(enums.EventTypes, ev),
-				Title:     buildTimelineTitle(ev),
-				Start:     ev.Time.Format(time.RFC3339),
-				Group:     category,
-				ClassName: fp.If(ev.Flagged, "flagged", ""),
-				SearchStr: buildSearchStr(ev),
-			})
-		}
-
-		rankMap := map[string]int{"Uncategorized": len(enums.EventTypes) + 1}
-		for i, e := range enums.EventTypes {
-			rankMap[e.Name] = i
-		}
-		getRank := func(name string) int {
-			if r, ok := rankMap[name]; ok {
-				return r
-			}
-			return len(enums.EventTypes) + 2
-		}
-		groupList := fp.ToList(groups)
-		slices.SortFunc(groupList, func(a, b views.DataItem) int {
-			ra, rb := getRank(a.Content), getRank(b.Content)
-			if ra != rb {
-				return cmp.Compare(ra, rb)
-			}
-			return cmp.Compare(a.Content, b.Content)
-		})
-
-		slog.Debug("rendering timeline", "items", items, "groups", groupList)
-		Render(w, r, http.StatusOK, views.VisTimeLine(Env(ctrl, r), items, groupList, groupBy, flaggedOnly))
-
-	default: // "asset"
-		for _, ev := range events {
-			if flaggedOnly && !ev.Flagged {
-				continue
-			}
-
-			searchStr := buildSearchStr(ev)
-			for _, g := range ev.Assets {
-				groups[g.Name] = views.DataItem{ID: g.Name, Content: g.Name}
-				items = append(items, views.DataItem{
-					ID:        ev.ID + "_" + g.ID,
-					Content:   buildTimelineContent(enums.EventTypes, ev),
-					Title:     buildTimelineTitle(ev),
-					Start:     ev.Time.Format(time.RFC3339),
-					Group:     g.Name,
-					ClassName: fp.If(ev.Flagged, "flagged", ""),
-					SearchStr: searchStr,
-				})
-			}
-			if len(ev.Assets) == 0 {
-				groups["Unknown"] = views.DataItem{ID: "Unknown", Content: "Unknown"}
-				items = append(items, views.DataItem{
-					ID:        ev.ID + "_Unknown",
-					Content:   buildTimelineContent(enums.EventTypes, ev),
-					Title:     buildTimelineTitle(ev),
-					Start:     ev.Time.Format(time.RFC3339),
-					Group:     "Unknown",
-					ClassName: fp.If(ev.Flagged, "flagged", ""),
-					SearchStr: searchStr,
-				})
-			}
-		}
-
-		groupList := fp.ToList(groups)
-		slices.SortFunc(groupList, func(a, b views.DataItem) int {
-			return cmp.Compare(a.Content, b.Content)
-		})
-
-		slog.Debug("rendering timeline", "items", items, "groups", groupList)
-		Render(w, r, http.StatusOK, views.VisTimeLine(Env(ctrl, r), items, groupList, groupBy, flaggedOnly))
-	}
 }
 
 func (ctrl VisualsCtrl) MitreAttack(w http.ResponseWriter, r *http.Request) {
