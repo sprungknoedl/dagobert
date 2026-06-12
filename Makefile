@@ -1,11 +1,53 @@
-.PHONY: build build-web build-go check fmt vet test docker run
+.PHONY: build build-web build-go check fmt vet test docker run clean
 .EXPORT_ALL_VARIABLES:
 -include dagobert.env
 
+TAILWIND_VERSION = 4.1.18
+DAISYUI_VERSION  = 5.5.14
+
+UNAME_S := $(shell uname -s)
+UNAME_M := $(shell uname -m)
+ifeq ($(UNAME_S),Darwin)
+  TW_OS = macos
+else
+  TW_OS = linux
+endif
+ifneq ($(filter $(UNAME_M),arm64 aarch64),)
+  TW_ARCH = arm64
+else
+  TW_ARCH = x64
+endif
+
+TAILWIND_BIN = bin/tailwindcss-$(TAILWIND_VERSION)
+
 build: build-web build-go
 
-build-web:
-	npx @tailwindcss/cli -m -i app/assets/dagobert.css -o public/assets/dagobert.css
+$(TAILWIND_BIN):
+	mkdir -p bin
+	wget -O $@ https://github.com/tailwindlabs/tailwindcss/releases/download/v$(TAILWIND_VERSION)/tailwindcss-$(TW_OS)-$(TW_ARCH)
+	chmod +x $@
+
+bin/daisyui-$(DAISYUI_VERSION).js:
+	mkdir -p bin
+	wget -O $@ https://github.com/saadeghi/daisyui/releases/download/v$(DAISYUI_VERSION)/daisyui.js
+
+bin/daisyui-theme-$(DAISYUI_VERSION).js:
+	mkdir -p bin
+	wget -O $@ https://github.com/saadeghi/daisyui/releases/download/v$(DAISYUI_VERSION)/daisyui-theme.js
+
+# Unversioned copies so the @plugin paths in dagobert.css stay version-free.
+app/assets/daisyui.js: bin/daisyui-$(DAISYUI_VERSION).js
+	cp $< $@
+
+app/assets/daisyui-theme.js: bin/daisyui-theme-$(DAISYUI_VERSION).js
+	cp $< $@
+
+build-web: $(TAILWIND_BIN) app/assets/daisyui.js app/assets/daisyui-theme.js
+	$(TAILWIND_BIN) -m -i app/assets/dagobert.css -o public/assets/dagobert.css
+
+clean:
+	rm -f bin/tailwindcss-* bin/daisyui-*.js
+	rm -f app/assets/daisyui.js app/assets/daisyui-theme.js
 
 build-go:
 	go tool templ generate
@@ -21,7 +63,7 @@ check: build-go vet test
 	@echo "✓ check passed"
 
 fmt:
-	gofmt -w $$(find . -name '*.go' -not -name '*_templ.go' -not -path './node_modules/*')
+	gofmt -w $$(find . -name '*.go' -not -name '*_templ.go')
 
 vet:
 	go vet ./...

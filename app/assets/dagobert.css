@@ -4,8 +4,8 @@
 
 @import 'tailwindcss';
 @plugin "@tailwindcss/typography";
-@plugin "daisyui";
-@plugin "daisyui/theme" {
+@plugin "./daisyui.js";
+@plugin "./daisyui-theme.js" {
     name: "cupcake";
     default: true;
     --radius-field: 1rem;

@@ -111,7 +111,8 @@ in the wiki for the complete list.
 
 ## Development
 
-You need Go 1.25+ and Node.js (for TailwindCSS).
+You need Go 1.25+. TailwindCSS is built with the standalone CLI — `make
+build-web` downloads the pinned binary and daisyUI plugin files automatically, no Node.js required.
 
 ```sh
 make build   # build CSS + templ templates + Go binary
