@@ -4,9 +4,7 @@ import (
 	"cmp"
 	"encoding/csv"
 	"fmt"
-	"log/slog"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -24,18 +22,23 @@ type CaseCtrl struct {
 	ts *timesketch.Client
 }
 
-func NewCaseCtrl(store *model.Store, acl *auth.ACL) *CaseCtrl {
-	slog.Debug("Creating timesketch client", "url", os.Getenv("TIMESKETCH_URL"))
-	ts, err := timesketch.NewClient(
-		os.Getenv("TIMESKETCH_URL"),
-		os.Getenv("TIMESKETCH_USER"),
-		os.Getenv("TIMESKETCH_PASS"),
-	)
-	if err != nil {
-		slog.Warn("Failed to create timesketch client", "err", err)
+func NewCaseCtrl(store *model.Store, acl *auth.ACL, ts *timesketch.Client) *CaseCtrl {
+	return &CaseCtrl{Ctrl: BaseCtrl{store, acl}, ts: ts}
+}
+
+// fetchSketches loads the sketches for the case form. It reports whether the
+// sketch dropdown should be shown at all (Timesketch is configured) and a
+// warning when the configured instance can not be queried.
+func (ctrl CaseCtrl) fetchSketches(r *http.Request) (show bool, sketches []timesketch.Sketch, warning string) {
+	if !ctrl.ts.Configured() {
+		return false, nil, ""
 	}
 
-	return &CaseCtrl{Ctrl: BaseCtrl{store, acl}, ts: ts}
+	sketches, err := ctrl.ts.ListSketches(r.Context())
+	if err != nil {
+		return true, nil, "Failed to fetch sketches from Timesketch: " + err.Error()
+	}
+	return true, sketches, ""
 }
 
 func (ctrl CaseCtrl) List(w http.ResponseWriter, r *http.Request) {
@@ -114,23 +117,16 @@ func (ctrl CaseCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var sketches []timesketch.Sketch
-	if ctrl.ts != nil {
-		sketches, _ = ctrl.ts.ListSketches()
-	}
-
-	Render(w, r, http.StatusOK, views.CasesOne(Env(ctrl, r), obj, sketches, valid.ValidationError{}))
+	show, sketches, warning := ctrl.fetchSketches(r)
+	Render(w, r, http.StatusOK, views.CasesOne(Env(ctrl, r), obj, show, sketches, warning, valid.ValidationError{}))
 }
 
 func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	dto := model.Case{ID: r.PathValue("cid")}
 	err := Decode(ctrl.Store(), r, &dto, ValidateCase)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		var sketches []timesketch.Sketch
-		if ctrl.ts != nil {
-			sketches, _ = ctrl.ts.ListSketches()
-		}
-		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(Env(ctrl, r), dto, sketches, vr))
+		show, sketches, warning := ctrl.fetchSketches(r)
+		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(Env(ctrl, r), dto, show, sketches, warning, vr))
 		return
 	} else if err != nil {
 		Warn(w, r, err)

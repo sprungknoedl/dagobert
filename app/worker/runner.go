@@ -16,16 +16,18 @@ import (
 	"github.com/sprungknoedl/dagobert/app/worker/plaso"
 	"github.com/sprungknoedl/dagobert/app/worker/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
+	tsclient "github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"gorm.io/gorm"
 )
 
 var Modules = map[string]model.Module{}
 
-// envvars maps module names to the environment variable holding their command.
+// envvars maps module names to the environment variable holding their
+// command (or, for the in-process Timesketch importer, the server URL).
 var envvars = map[string]string{
 	"Hayabusa":            "MODULE_HAYABUSA",
 	"Plaso":               "MODULE_PLASO",
-	"Timesketch Importer": "MODULE_TIMESKETCH",
+	"Timesketch Importer": "TIMESKETCH_URL",
 }
 
 // ModuleStatus holds the validation result of a module for the settings UI.
@@ -37,18 +39,6 @@ type ModuleStatus struct {
 
 var status []ModuleStatus
 
-func init() {
-	ctors := []func() model.Module{
-		hayabusa.NewModule,
-		plaso.NewModule,
-		timesketch.NewModule,
-	}
-	for _, ctor := range ctors {
-		m := ctor()
-		Modules[m.Name()] = m
-	}
-}
-
 func Supported(obj any) []model.Module {
 	return fp.ToList(fp.FilterM(Modules, func(p model.Module) bool { return p.Supports(obj) }))
 }
@@ -57,8 +47,17 @@ func Supported(obj any) []model.Module {
 func Status() []ModuleStatus { return status }
 
 // Start validates modules and launches the runner pool. Called from
-// handler.Run; ctx is the server's shutdown context.
-func Start(ctx context.Context, store *model.Store) {
+// handler.Run; ctx is the server's shutdown context, ts the shared
+// Timesketch client.
+func Start(ctx context.Context, store *model.Store, ts *tsclient.Client) {
+	for _, m := range []model.Module{
+		hayabusa.NewModule(),
+		plaso.NewModule(),
+		timesketch.NewModule(ts),
+	} {
+		Modules[m.Name()] = m
+	}
+
 	modules := map[string]model.Module{}
 	results := []ModuleStatus{}
 	for _, name := range slices.Sorted(maps.Keys(Modules)) {

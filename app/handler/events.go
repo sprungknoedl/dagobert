@@ -6,9 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -28,17 +26,7 @@ type EventCtrl struct {
 	ts    *timesketch.Client
 }
 
-func NewEventCtrl(store *model.Store, acl *auth.ACL, mitre *attck.KB) *EventCtrl {
-	slog.Debug("Creating timesketch client", "url", os.Getenv("TIMESKETCH_URL"))
-	ts, err := timesketch.NewClient(
-		os.Getenv("TIMESKETCH_URL"),
-		os.Getenv("TIMESKETCH_USER"),
-		os.Getenv("TIMESKETCH_PASS"),
-	)
-	if err != nil {
-		slog.Warn("Failed to create timesketch client", "err", err)
-	}
-
+func NewEventCtrl(store *model.Store, acl *auth.ACL, mitre *attck.KB, ts *timesketch.Client) *EventCtrl {
 	return &EventCtrl{Ctrl: BaseCtrl{store, acl}, mitre: mitre, ts: ts}
 }
 
@@ -151,18 +139,22 @@ func (ctrl EventCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if ctrl.ts == nil || kase.SketchID == 0 {
-		Err(w, r, errors.New("invalid timesketch configuration"))
+	if !ctrl.ts.Configured() {
+		Warn(w, r, errors.New("Timesketch integration is not configured"))
+		return
+	}
+	if kase.SketchID == 0 {
+		Warn(w, r, errors.New("Case is not linked to a Timesketch sketch"))
 		return
 	}
 
-	sketch, err := ctrl.ts.GetSketch(kase.SketchID)
+	sketch, err := ctrl.ts.GetSketch(r.Context(), kase.SketchID)
 	if err != nil {
-		Err(w, r, err)
+		Warn(w, r, err)
 		return
 	}
 
-	events, err := ctrl.ts.Explore(1, "*", timesketch.Filter{
+	events, err := ctrl.ts.ExploreAll(r.Context(), kase.SketchID, "*", timesketch.Filter{
 		Size:    1024,
 		Order:   "asc",
 		Indices: fp.Apply(sketch.Timelines, func(t timesketch.Timeline) int { return t.ID }),
@@ -170,7 +162,7 @@ func (ctrl EventCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Request) {
 		Fields:  sketch.Mappings,
 	})
 	if err != nil {
-		Err(w, r, err)
+		Warn(w, r, err)
 		return
 	}
 
@@ -178,7 +170,10 @@ func (ctrl EventCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Request) {
 		buf := &bytes.Buffer{}
 		enc := json.NewEncoder(buf)
 		enc.SetIndent("", "  ")
-		enc.Encode(ev.Source) // FIXME: ignore json errors?
+		if err := enc.Encode(ev.Source); err != nil {
+			Err(w, r, err)
+			return
+		}
 
 		obj := model.Event{
 			ID:     "_ts_" + ev.ID,

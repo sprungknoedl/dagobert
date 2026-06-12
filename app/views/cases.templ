@@ -60,7 +60,7 @@ templ CasesMany(env Env, rows []model.Case) {
 	}
 }
 
-templ CasesOne(env Env, obj model.Case, sketches []timesketch.Sketch, vr valid.ValidationError) {
+templ CasesOne(env Env, obj model.Case, showSketches bool, sketches []timesketch.Sketch, sketchWarning string, vr valid.ValidationError) {
 	{{ uri := "/cases/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add case", "Edit case") }}
 	@form(env, uri, title) {
@@ -74,18 +74,24 @@ templ CasesOne(env Env, obj model.Case, sketches []timesketch.Sketch, vr valid.V
 		<h2 class="text-xl font-serif mb-2 mt-4">Summary</h2>
 		@textareaField("Summary", obj.Summary, withLabel("Executive summary"), withHint("Markdown supported. Describe what happened, scope of impact, root cause, and resolution."))
 		<!-- x -->
-		<h2 class="text-xl font-serif mb-2 mt-4">Integrations</h2>
-		<div class="form-control mb-2">
-			<label class="label justify-start gap-2">
-				Timesketch Sketch
-				@validationError(vr["SketchID"])
-			</label>
-			<select name="SketchID" class="select w-full">
-				for _, e := range sketches {
-					<option value={ e.ID } selected?={ e.ID == obj.SketchID }>{ strconv.Itoa(e.ID) } - { e.Name }</option>
+		if showSketches {
+			<h2 class="text-xl font-serif mb-2 mt-4">Integrations</h2>
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">
+					Timesketch Sketch
+					@validationError(vr["SketchID"])
+				</label>
+				if sketchWarning != "" {
+					<div class="alert alert-warning alert-soft" role="alert">{ sketchWarning }</div>
+				} else {
+					<select name="SketchID" class="select w-full">
+						for _, e := range sketches {
+							<option value={ e.ID } selected?={ e.ID == obj.SketchID }>{ strconv.Itoa(e.ID) } - { e.Name }</option>
+						}
+					</select>
 				}
-			</select>
-		</div>
+			</div>
+		}
 		<!-- x -->
 		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
 	}
