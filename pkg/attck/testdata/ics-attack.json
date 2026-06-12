@@ -1,0 +1,60 @@
+{
+    "type": "bundle",
+    "id": "bundle--ics-test",
+    "objects": [
+        {
+            "type": "x-mitre-matrix",
+            "id": "x-mitre-matrix--ics",
+            "name": "ICS ATT&CK",
+            "tactic_refs": [
+                "x-mitre-tactic--impair-process-control"
+            ]
+        },
+        {
+            "type": "x-mitre-tactic",
+            "id": "x-mitre-tactic--impair-process-control",
+            "name": "Impair Process Control",
+            "description": "The adversary is trying to manipulate physical control processes.",
+            "x_mitre_shortname": "impair-process-control",
+            "external_references": [
+                {
+                    "external_id": "TA0106",
+                    "url": "https://attack.mitre.org/tactics/TA0106",
+                    "source_name": "mitre-attack"
+                }
+            ]
+        },
+        {
+            "type": "attack-pattern",
+            "id": "attack-pattern--ics-only",
+            "name": "ICS Technique",
+            "description": "I",
+            "external_references": [
+                {
+                    "external_id": "T0801",
+                    "url": "https://attack.mitre.org/techniques/T0801",
+                    "source_name": "mitre-attack"
+                }
+            ],
+            "kill_chain_phases": [
+                {"phase_name": "impair-process-control"}
+            ]
+        },
+        {
+            "type": "attack-pattern",
+            "id": "attack-pattern--zeta-ics",
+            "name": "Zeta Technique",
+            "description": "Shared with enterprise, must be deduplicated by KB.Techniques.",
+            "external_references": [
+                {
+                    "external_id": "T1001",
+                    "url": "https://attack.mitre.org/techniques/T1001",
+                    "source_name": "mitre-attack"
+                }
+            ],
+            "kill_chain_phases": [
+                {"phase_name": "impair-process-control"}
+            ]
+        }
+    ]
+}

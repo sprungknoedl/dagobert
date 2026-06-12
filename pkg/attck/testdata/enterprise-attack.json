@@ -1,0 +1,150 @@
+{
+    "type": "bundle",
+    "id": "bundle--enterprise-test",
+    "objects": [
+        {
+            "type": "x-mitre-matrix",
+            "id": "x-mitre-matrix--enterprise",
+            "name": "Enterprise ATT&CK",
+            "tactic_refs": [
+                "x-mitre-tactic--execution",
+                "x-mitre-tactic--initial-access"
+            ]
+        },
+        {
+            "type": "x-mitre-tactic",
+            "id": "x-mitre-tactic--initial-access",
+            "name": "Initial Access",
+            "description": "The adversary is trying to get into your network.",
+            "x_mitre_shortname": "initial-access",
+            "external_references": [
+                {
+                    "external_id": "TA0001",
+                    "url": "https://attack.mitre.org/tactics/TA0001",
+                    "source_name": "mitre-attack"
+                }
+            ]
+        },
+        {
+            "type": "x-mitre-tactic",
+            "id": "x-mitre-tactic--execution",
+            "name": "Execution",
+            "description": "The adversary is trying to run malicious code.",
+            "x_mitre_shortname": "execution",
+            "external_references": [
+                {
+                    "external_id": "TA0002",
+                    "url": "https://attack.mitre.org/tactics/TA0002",
+                    "source_name": "mitre-attack"
+                }
+            ]
+        },
+        {
+            "type": "attack-pattern",
+            "id": "attack-pattern--zeta",
+            "name": "Zeta Technique",
+            "description": "Z",
+            "external_references": [
+                {
+                    "external_id": "CAPEC-1",
+                    "url": "https://capec.mitre.org/1",
+                    "source_name": "capec"
+                },
+                {
+                    "external_id": "T1001",
+                    "url": "https://attack.mitre.org/techniques/T1001",
+                    "source_name": "mitre-attack"
+                }
+            ],
+            "kill_chain_phases": [
+                {"phase_name": "initial-access"}
+            ]
+        },
+        {
+            "type": "attack-pattern",
+            "id": "attack-pattern--alpha",
+            "name": "Alpha Technique",
+            "description": "A",
+            "external_references": [
+                {
+                    "external_id": "T1002",
+                    "url": "https://attack.mitre.org/techniques/T1002",
+                    "source_name": "mitre-attack"
+                }
+            ],
+            "kill_chain_phases": [
+                {"phase_name": "initial-access"},
+                {"phase_name": "execution"}
+            ]
+        },
+        {
+            "type": "attack-pattern",
+            "id": "attack-pattern--alpha-sub",
+            "name": "Alpha Sub-Technique",
+            "x_mitre_is_subtechnique": true,
+            "external_references": [
+                {
+                    "external_id": "T1002.001",
+                    "url": "https://attack.mitre.org/techniques/T1002/001",
+                    "source_name": "mitre-attack"
+                }
+            ],
+            "kill_chain_phases": [
+                {"phase_name": "initial-access"}
+            ]
+        },
+        {
+            "type": "attack-pattern",
+            "id": "attack-pattern--deprecated",
+            "name": "Deprecated Technique",
+            "x_mitre_deprecated": true,
+            "external_references": [
+                {
+                    "external_id": "T1999",
+                    "url": "https://attack.mitre.org/techniques/T1999",
+                    "source_name": "mitre-attack"
+                }
+            ],
+            "kill_chain_phases": [
+                {"phase_name": "initial-access"}
+            ]
+        },
+        {
+            "type": "attack-pattern",
+            "id": "attack-pattern--revoked",
+            "name": "Revoked Technique",
+            "revoked": true,
+            "external_references": [
+                {
+                    "external_id": "T1998",
+                    "url": "https://attack.mitre.org/techniques/T1998",
+                    "source_name": "mitre-attack"
+                }
+            ],
+            "kill_chain_phases": [
+                {"phase_name": "execution"}
+            ]
+        },
+        {
+            "type": "attack-pattern",
+            "id": "attack-pattern--orphan",
+            "name": "Orphan Technique",
+            "description": "References a kill chain phase that has no tactic.",
+            "external_references": [
+                {
+                    "external_id": "T1003",
+                    "url": "https://attack.mitre.org/techniques/T1003",
+                    "source_name": "mitre-attack"
+                }
+            ],
+            "kill_chain_phases": [
+                {"phase_name": "unknown-phase"}
+            ]
+        },
+        {
+            "type": "intrusion-set",
+            "id": "intrusion-set--ignored",
+            "name": "Ignored Group"
+        }
+    ]
+}

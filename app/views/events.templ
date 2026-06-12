@@ -15,7 +15,7 @@ func techniques(mitre attck.KB, e model.Event) iter.Seq[attck.Technique] {
 		for _, tid := range e.Techniques {
 			t, err := mitre.GetTechnique(tid)
 			if err != nil {
-				return
+				continue
 			}
 			if !yield(t) {
 				return
