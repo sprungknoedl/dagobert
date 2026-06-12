@@ -56,7 +56,7 @@ func ValidateIndicator(dto *model.Indicator, enums model.Enums) valid.Validation
 		{Name: "Value", Missing: dto.Value == ""},
 		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !InEnum(enums.IndicatorStatus, dto.Status)},
 		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !InEnum(enums.IndicatorTypes, dto.Type)},
-		{Name: "TLP", Message: "Invalid value.", Missing: dto.Type == "", Invalid: !InEnum(enums.IndicatorTLPs, dto.TLP)},
+		{Name: "TLP", Message: "Invalid value.", Missing: dto.TLP == "", Invalid: !InEnum(enums.IndicatorTLPs, dto.TLP)},
 	})
 }
 
@@ -134,6 +134,6 @@ func ValidateEnum(dto *model.Enum, _ model.Enums) valid.ValidationError {
 		{Name: "ID", Missing: dto.ID == ""},
 		{Name: "Name", Missing: dto.Name == ""},
 		{Name: "Category", Invalid: !slices.Contains(enums, dto.Category), Message: "Invalid category"},
-		{Name: "States", Invalid: !slices.Contains(states, dto.State), Message: "Invalid state"},
+		{Name: "State", Invalid: !slices.Contains(states, dto.State), Message: "Invalid state"},
 	})
 }
