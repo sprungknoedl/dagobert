@@ -2,13 +2,9 @@ package workerutils
 
 import (
 	"archive/zip"
-	"bytes"
-	"cmp"
-	"errors"
+	"crypto/sha1"
 	"fmt"
 	"io"
-	"mime/multipart"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,39 +13,41 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 )
 
+// OnEvidenceAdded is wired to the hooks engine by the worker package; this
+// package can not import worker directly, because the module packages that
+// import workerutils are themselves imported by worker.
+var OnEvidenceAdded func(store *model.Store, obj model.Evidence)
+
 func Filepath(obj model.Evidence) string {
 	return filepath.Join("files", "evidences", obj.CaseID, obj.Name)
 }
 
-func AddFromFS(obj model.Evidence) error {
-	body := bytes.NewBuffer(nil)
-	form := multipart.NewWriter(body)
+func AddFromFS(store *model.Store, obj model.Evidence) error {
+	fr, err := os.Open(Filepath(obj))
+	if err != nil {
+		return err
+	}
+	defer fr.Close()
 
-	err := errors.Join(
-		form.WriteField("Name", obj.Name),
-		form.WriteField("Type", obj.Type),
-		form.WriteField("Source", obj.Source),
-		form.WriteField("Notes", obj.Notes))
+	stat, err := fr.Stat()
 	if err != nil {
 		return err
 	}
 
-	err = form.Close()
-	if err != nil {
+	hasher := sha1.New()
+	if _, err := io.Copy(hasher, fr); err != nil {
 		return err
 	}
 
-	uri := os.Getenv("DAGOBERT_URL") + "/cases/" + obj.CaseID + "/evidences/" + cmp.Or(obj.ID, "new")
-	req, err := http.NewRequest(http.MethodPost, uri, body)
-	if err != nil {
+	obj.ID = fp.Random(10)
+	obj.Size = stat.Size()
+	obj.Hash = fmt.Sprintf("%x", hasher.Sum(nil))
+	if err := store.SaveEvidence(obj.CaseID, obj); err != nil {
 		return err
 	}
 
-	req.Header.Set("Content-Type", form.FormDataContentType())
-	req.Header.Set("X-API-Key", os.Getenv("DAGOBERT_API_KEY"))
-	client := http.Client{}
-	_, err = client.Do(req)
-	return err
+	OnEvidenceAdded(store, obj)
+	return nil
 }
 
 func unpack(obj model.Evidence) (string, error) {

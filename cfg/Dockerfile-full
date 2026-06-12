@@ -1,0 +1,27 @@
+FROM sprungknoedl/dagobert:latest AS app
+
+# ---------------------------------
+
+FROM log2timeline/plaso
+USER root
+ADD https://github.com/Yamato-Security/hayabusa/releases/download/v3.2.0/hayabusa-3.2.0-lin-x64-musl.zip /usr/src/hayabusa.zip
+
+RUN apt update && apt install -y ca-certificates unzip python3-pip
+RUN unzip /usr/src/hayabusa.zip -d /opt/hayabusa && \
+    mv /opt/hayabusa/hayabusa-3.2.0-lin-x64-musl /opt/hayabusa/hayabusa && \
+    chmod +x /opt/hayabusa/hayabusa
+RUN cd /opt/hayabusa && ./hayabusa update-rules
+# six is required by timesketch-import-client but missing from its dependencies
+RUN pip3 install --break-system-packages timesketch-import-client six
+
+COPY --from=app /home/sprungknoedl/dagobert /home/plaso/dagobert
+COPY --from=app /home/sprungknoedl/mitre /home/plaso/mitre
+
+ENV MODULE_PLASO="/usr/bin/psteal.py --unattended"
+ENV MODULE_HAYABUSA="/opt/hayabusa/hayabusa"
+ENV MODULE_TIMESKETCH="/usr/local/bin/timesketch_importer"
+ENV PATH="$PATH:/home/plaso"
+
+WORKDIR /home/plaso
+ENTRYPOINT ["/home/plaso/dagobert"]
+CMD ["server"]

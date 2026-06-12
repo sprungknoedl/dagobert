@@ -16,8 +16,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-var ServerToken = fp.Random(20)
-
 var JobStatus = []string{
 	"Scheduled",
 	"Running",
@@ -36,22 +34,21 @@ type Module interface {
 }
 
 type Job struct {
-	ID          string
-	Name        string
-	Status      string
-	Error       string
-	Results     map[string]string `gorm:"serializer:json"`
-	Settings    map[string]string `gorm:"serializer:json"`
-	ServerToken string
-	WorkerToken string
+	ID       string
+	Name     string
+	Status   string
+	Error    string
+	Results  map[string]string `gorm:"serializer:json"`
+	Settings map[string]string `gorm:"serializer:json"`
 
 	CaseID   string
 	Case     Case
 	ObjectID string
 	Object   Object `gorm:"type:bytes"`
 
-	Module Module          `gorm:"-"` // used in handler/jobs.go to pass module information (like name and description) to ui
-	Ctx    context.Context `gorm:"-"` // used in worker/runner.go to pass request context through go channel to job runners
+	Module Module          `gorm:"-"` // used in handler/utils.go to pass module information (like name and description) to ui
+	Ctx    context.Context `gorm:"-"` // used in worker/runner.go to pass the shutdown context to job runners
+	Store  *Store          `gorm:"-"` // used in worker/runner.go to give modules a store handle for result write-back
 }
 
 type Hook struct {
@@ -207,7 +204,7 @@ func (store *Store) SaveJob(obj Job) error {
 }
 
 func (store *Store) PushJob(obj Job) error { return store.SaveJob(obj) }
-func (store *Store) PopJob(workerid string, modules []string) (Job, error) {
+func (store *Store) PopJob(modules []string) (Job, error) {
 	// slices are not supported as parameterized arguments in database/sql and sqlite.
 	// we have to use a workaround to pass the list of modules as a single argument.
 	re := regexp.MustCompile("^[()a-zA-Z0-9_ ]+$")
@@ -224,7 +221,7 @@ func (store *Store) PopJob(workerid string, modules []string) (Job, error) {
 	err := store.DB.Model(&obj).
 		Clauses(clause.Returning{}).
 		Where("rowid = (?)", rowid).
-		Updates(map[string]any{"status": "Running", "worker_token": workerid}).
+		Updates(map[string]any{"status": "Running"}).
 		Error
 	if err != nil {
 		return Job{}, err
@@ -248,17 +245,10 @@ func (store *Store) AckJob(job Job) error {
 		Error
 }
 
-func (store *Store) RescheduleWorkerJobs(workerToken string) error {
-	return store.DB.Model(&Job{}).
-		Where("worker_token = ? and status = ?", workerToken, "Running").
-		Updates(map[string]any{"status": "Scheduled", "worker_token": ""}).
-		Error
-}
-
 func (store *Store) RescheduleStaleJobs() error {
 	return store.DB.Model(&Job{}).
-		Where("server_token = ? and status = ?", ServerToken, "Running").
-		Updates(map[string]any{"status": "Scheduled", "server_token": ServerToken, "worker_token": ""}).
+		Where("status = ?", "Running").
+		Update("status", "Scheduled").
 		Error
 }
 

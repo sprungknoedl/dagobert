@@ -15,6 +15,7 @@ import (
 	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
+	"github.com/sprungknoedl/dagobert/app/worker"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -246,7 +247,7 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 
 	// trigger registered hooks
 	if new {
-		TriggerOnEvidenceAdded(ctrl.Store(), dto)
+		worker.TriggerOnEvidenceAdded(ctrl.Store(), dto)
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/", dto.CaseID), http.StatusSeeOther)

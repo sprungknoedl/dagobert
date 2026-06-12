@@ -1,4 +1,4 @@
-package handler
+package worker
 
 import (
 	"errors"
@@ -6,11 +6,17 @@ import (
 
 	"github.com/expr-lang/expr"
 	"github.com/sprungknoedl/dagobert/app/model"
-	"github.com/sprungknoedl/dagobert/app/worker"
+	"github.com/sprungknoedl/dagobert/app/worker/workerutils"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 )
 
 var hooks = []model.Hook{}
+
+// workerutils can not import this package (the module packages sit in
+// between), so the hook trigger is wired up via a function variable.
+func init() {
+	workerutils.OnEvidenceAdded = TriggerOnEvidenceAdded
+}
 
 func LoadHooks(store *model.Store) error {
 	list, err := store.ListHooks()
@@ -24,7 +30,7 @@ func LoadHooks(store *model.Store) error {
 			continue
 		}
 
-		hook, err := compile(def)
+		hook, err := CompileHook(def)
 		if err != nil {
 			log.Printf("error compiling hook %q (%s): %v", def.Name, def.Condition, err)
 			continue
@@ -48,13 +54,12 @@ func TriggerOnEvidenceAdded(store *model.Store, obj model.Evidence) {
 			log.Printf("running %s -> %s", hook.Name, hook.ModuleObj.Name())
 
 			err := store.PushJob(model.Job{
-				ID:          fp.Random(10),
-				Name:        hook.ModuleObj.Name(),
-				Status:      "Scheduled",
-				Case:        kase,
-				ObjectID:    obj.ID,
-				Object:      model.Object{Payload: obj},
-				ServerToken: model.ServerToken,
+				ID:       fp.Random(10),
+				Name:     hook.ModuleObj.Name(),
+				Status:   "Scheduled",
+				Case:     kase,
+				ObjectID: obj.ID,
+				Object:   model.Object{Payload: obj},
 			})
 			if err != nil {
 				log.Printf("error scheduling job for %s -> %s", hook.ModuleObj.Name(), err)
@@ -64,9 +69,9 @@ func TriggerOnEvidenceAdded(store *model.Store, obj model.Evidence) {
 	}
 }
 
-func compile(hook model.Hook) (model.Hook, error) {
+func CompileHook(hook model.Hook) (model.Hook, error) {
 	// search mod
-	for _, mod := range worker.Modules {
+	for _, mod := range Modules {
 		if mod.Name() == hook.Module {
 			hook.ModuleObj = mod
 			break

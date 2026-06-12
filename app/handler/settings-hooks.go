@@ -59,7 +59,7 @@ func (ctrl SettingsCtrl) SaveHook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// reload hooks
-	LoadHooks(ctrl.Store())
+	worker.LoadHooks(ctrl.Store())
 
 	http.Redirect(w, r, "/settings/hooks/", http.StatusSeeOther)
 }
@@ -79,6 +79,6 @@ func (ctrl SettingsCtrl) DeleteHook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// reload hooks
-	LoadHooks(ctrl.Store())
+	worker.LoadHooks(ctrl.Store())
 	http.Redirect(w, r, "/settings/hooks/", http.StatusSeeOther)
 }

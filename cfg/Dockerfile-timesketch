@@ -1,9 +1,0 @@
-FROM sprungknoedl/dagobert:latest
-USER root
-RUN apt update && apt install -y ca-certificates python3-pip
-RUN pip3 install --break-system-packages timesketch-import-client
-RUN mkdir -p /home/sprungknoedl/files && chown -R sprungknoedl:users /home/sprungknoedl
-
-USER sprungknoedl
-ENV MODULE_TIMESKETCH=/usr/local/bin/timesketch_importer
-CMD [ "/home/sprungknoedl/dagobert", "worker" ]

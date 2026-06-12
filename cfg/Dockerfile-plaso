@@ -1,9 +1,0 @@
-FROM sprungknoedl/dagobert:latest AS app
-
-# ---------------------------------
-
-FROM log2timeline/plaso
-COPY --from=app /home/sprungknoedl/dagobert /home/plaso/dagobert
-ENV MODULE_PLASO="/usr/bin/psteal.py --unattended"
-ENTRYPOINT [ "/home/plaso/dagobert" ]
-CMD [ "worker" ]

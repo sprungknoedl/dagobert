@@ -1,6 +1,7 @@
 package timesketch
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"log/slog"
@@ -42,15 +43,22 @@ func (m *Module) Supports(obj any) bool {
 func (m *Module) Validate() (model.Module, error) {
 	var err error
 	_, m.args, err = shellwords.ParseWithEnvs(os.Getenv("MODULE_TIMESKETCH"))
-	if err != nil || len(m.args) < 1 {
-		slog.Warn("validating module prerequisites failed", "module", "timesketch", "step", "shell parsing", "err", err)
+	if err != nil {
+		err = fmt.Errorf("invalid command in MODULE_TIMESKETCH: %w", err)
+		slog.Warn("validating module prerequisites failed", "module", "timesketch", "err", err)
+		return nil, err
+	}
+	if len(m.args) < 1 {
+		err = errors.New("MODULE_TIMESKETCH is not set, module disabled")
+		slog.Warn("validating module prerequisites failed", "module", "timesketch", "err", err)
 		return nil, err
 	}
 
 	slog.Info("validating module prerequisites", "module", "timesketch")
 	cmd := exec.Command(m.args[0], append(m.args[1:], "--version")...)
 	if out, err := cmd.CombinedOutput(); err != nil {
-		slog.Warn("validating module prerequisites failed", "module", "timesketch", "step", "cmd running", "err", err)
+		err = fmt.Errorf("command %q is not runnable: %w", m.args[0], err)
+		slog.Warn("validating module prerequisites failed", "module", "timesketch", "err", err)
 		os.Stderr.Write(out)
 		return nil, err
 	}

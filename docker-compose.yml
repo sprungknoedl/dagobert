@@ -3,40 +3,10 @@ volumes:
 
 services:
   app:
-    image: sprungknoedl/dagobert
+    image: sprungknoedl/dagobert-full
     restart: unless-stopped
-    volumes:
-      - data:/home/sprungknoedl/files
-    env_file: dagobert.env
-    ports:
-      - 8080:8080
-
-  worker-hayabusa:
-    image: sprungknoedl/dagobert-hayabusa
-    restart: unless-stopped
-    depends_on: [app]
-    volumes:
-      - data:/home/sprungknoedl/files
-    env_file: dagobert.env
-    environment:
-      - DAGOBERT_WORKERS=3
-
-  worker-plaso:
-    image: sprungknoedl/dagobert-plaso
-    restart: unless-stopped
-    depends_on: [app]
     volumes:
       - data:/home/plaso/files
     env_file: dagobert.env
-    environment:
-      - DAGOBERT_WORKERS=5
-
-  worker-timesketch:
-    image: sprungknoedl/dagobert-timesketch
-    restart: unless-stopped
-    depends_on: [app]
-    volumes:
-      - data:/home/sprungknoedl/files
-    env_file: dagobert.env
-    environment:
-      - DAGOBERT_WORKERS=3
+    ports:
+      - 8080:8080
