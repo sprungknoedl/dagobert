@@ -4,7 +4,8 @@ dagobert.env
 .DS_Store
 files
 mitre
-node_modules
+bin
+app/assets/daisyui*.js
 *_templ.go
 CLAUDE.md
 .claude

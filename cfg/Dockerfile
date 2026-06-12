@@ -1,24 +1,12 @@
-FROM node:23 AS web
-WORKDIR /src
-ENV PATH=$PATH:/src/node_modules/.bin
-
-COPY package*.json .
-RUN npm install
-
-COPY . .
-RUN make build-web
-
-# ---------------------------------
-
 FROM golang:1.25 AS app
 WORKDIR /src
 
 COPY go.mod .
 RUN go mod download
-COPY --from=web /src/public /src/public
 
 COPY . .
 RUN make update
+RUN make build-web
 RUN make build-go
 
 # ---------------------------------
