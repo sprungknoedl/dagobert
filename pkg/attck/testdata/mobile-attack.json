@@ -1,0 +1,44 @@
+{
+    "type": "bundle",
+    "id": "bundle--mobile-test",
+    "objects": [
+        {
+            "type": "x-mitre-matrix",
+            "id": "x-mitre-matrix--mobile",
+            "name": "Mobile ATT&CK",
+            "tactic_refs": [
+                "x-mitre-tactic--mobile-execution"
+            ]
+        },
+        {
+            "type": "x-mitre-tactic",
+            "id": "x-mitre-tactic--mobile-execution",
+            "name": "Execution",
+            "description": "The adversary is trying to run malicious code on a mobile device.",
+            "x_mitre_shortname": "execution",
+            "external_references": [
+                {
+                    "external_id": "TA0041",
+                    "url": "https://attack.mitre.org/tactics/TA0041",
+                    "source_name": "mitre-attack"
+                }
+            ]
+        },
+        {
+            "type": "attack-pattern",
+            "id": "attack-pattern--mobile-only",
+            "name": "Mobile Technique",
+            "description": "M",
+            "external_references": [
+                {
+                    "external_id": "T1401",
+                    "url": "https://attack.mitre.org/techniques/T1401",
+                    "source_name": "mitre-attack"
+                }
+            ],
+            "kill_chain_phases": [
+                {"phase_name": "execution"}
+            ]
+        }
+    ]
+}

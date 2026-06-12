@@ -157,6 +157,7 @@ func LoadMatrix(path string) (*Matrix, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer fh.Close()
 
 	c := collection{}
 	err = json.NewDecoder(fh).Decode(&c)
