@@ -7,7 +7,6 @@ import (
 
 	"github.com/aarondl/authboss/v3"
 	"github.com/sprungknoedl/dagobert/app/model"
-	"github.com/sprungknoedl/dagobert/pkg/fp"
 )
 
 const HeaderApiKey = "X-API-Key"
@@ -23,10 +22,8 @@ func ApiKeyMiddleware(db *model.Store) func(http.Handler) http.Handler {
 
 			_, err := db.GetKey(key)
 			if err != nil {
-				traceid := fp.Random(32)
-				slog.Warn("failed to get api key", "err", err, "trace", traceid)
+				slog.Warn("failed to get api key", "err", err)
 				w.WriteHeader(http.StatusUnauthorized)
-				// TODO add error and traceid
 				return
 			}
 
