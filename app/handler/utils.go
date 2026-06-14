@@ -10,14 +10,12 @@ import (
 	"log/slog"
 	"maps"
 	"net/http"
-	"os"
 	"slices"
 	"strings"
 	"time"
 
 	"github.com/a-h/templ"
 	"github.com/go-playground/form"
-	"github.com/gorilla/sessions"
 	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
@@ -28,9 +26,6 @@ import (
 
 var ZeroID string = "0"
 var ZeroTime time.Time
-
-var SessionName = "default"
-var SessionStore = sessions.NewCookieStore([]byte(os.Getenv("WEB_SESSION_SECRET")))
 
 func ImportCSV(store *model.Store, acl *auth.ACL, w http.ResponseWriter, r *http.Request, uri string, numFields int, cb func(rec []string)) error {
 	if r.Method == http.MethodGet {

@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/aarondl/authboss/v3"
 	"github.com/sprungknoedl/dagobert/app/model"
 )
 
@@ -33,7 +32,7 @@ func ApiKeyMiddleware(db *model.Store) func(http.Handler) http.Handler {
 			r.Header.Del("Cookie")
 
 			// embed system user into session
-			r = r.WithContext(context.WithValue(r.Context(), authboss.CTXKeyUser, &model.SystemUser))
+			r = r.WithContext(context.WithValue(r.Context(), ctxKeyUser, &model.SystemUser))
 			next.ServeHTTP(w, r)
 		})
 	}
