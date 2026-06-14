@@ -24,7 +24,7 @@ templ VisMitreAttack(env Env, counts map[string]int, matrix *attck.Matrix, hide 
 							<tr>
 								for tactic := range matrix.Tactics.Values() {
 									if i < len(tactic.Techniques) {
-										<td class={ templ.KV("bg-base-200", tactic.Techniques[i].IsSubTechnique), templ.KV("bg-info", counts[tactic.Techniques[i].ID] > 0) }>
+										<td class={ templ.KV("bg-base-200", tactic.Techniques[i].IsSubTechnique), templ.KV("bg-primary", counts[tactic.Techniques[i].ID] > 0) }>
 											<a target="_blank" href={ "https://attack.mitre.org/techniques/" + tactic.Techniques[i].ID }>{ tactic.Techniques[i].Name }</a>
 										</td>
 									} else {

@@ -40,7 +40,7 @@ templ AssetsMany(env Env, title string, rows []model.Asset) {
 				</thead>
 				<tbody class="values">
 					if len(rows) == 0 {
-						@emptyTable(env, "Add the first affected host, account, or service you've identified. Assets become link targets for timeline events and appear in the network visualisation.")
+						@emptyTable(env, "No assets identified yet.", "Add the first affected host, account, or service you've identified. Assets become link targets for timeline events and appear in the network visualisation.")
 					} else {
 						for _, row := range rows {
 							<tr class="hover">
@@ -51,7 +51,7 @@ templ AssetsMany(env Env, title string, rows []model.Asset) {
 									@enum(env.Enums.AssetTypes, row.Type)
 								</td>
 								<td class="value-2" data-search={ row.Name }>{ row.Name } </td>
-								<td class="value-3" data-search={ row.Addr }>{ row.Addr } </td>
+								<td class="value-3 font-mono text-[0.8125em]" data-search={ row.Addr }>{ row.Addr } </td>
 								<td class="value-4 truncate" data-search={ row.FirstSeen.Format(time.RFC3339) }>
 									@formatTime(row.FirstSeen)
 								</td>
