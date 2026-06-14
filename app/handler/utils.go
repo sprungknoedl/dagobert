@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/a-h/templ"
-	"github.com/go-playground/form"
+	"github.com/go-playground/form/v4"
 	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
