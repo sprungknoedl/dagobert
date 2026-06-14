@@ -53,7 +53,7 @@ templ EvidencesMany(env Env, rows []model.Evidence) {
 									@enum(env.Enums.EvidenceTypes, row.Type)
 								</td>
 								<td class="value-1" data-search={ row.Name }>{ row.Name } </td>
-								<td class="value-2 font-mono text-[0.8125em]" data-search={ row.Hash }>{ row.Hash } </td>
+								<td class="value-2 font-mono text-xs" data-search={ row.Hash }>{ row.Hash } </td>
 								<td class="value-3" data-search={ row.Size }>{ humanizeSize(row.Size) } </td>
 								<td class="value-4" data-search={ fp.If(row.StartsAt.IsZero(), "", row.StartsAt.Format(time.RFC3339)) }>{ fp.If(row.StartsAt.IsZero(), "", row.StartsAt.Format(time.RFC3339)) } </td>
 								<td class="value-5" data-search={ fp.If(row.EndsAt.IsZero(), "", row.EndsAt.Format(time.RFC3339)) }>{ fp.If(row.EndsAt.IsZero(), "", row.EndsAt.Format(time.RFC3339)) } </td>

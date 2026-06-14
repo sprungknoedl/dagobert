@@ -168,7 +168,7 @@ templ formatTime(t model.Time) {
 	if t.IsZero() {
 		-
 	} else {
-		<span class="font-mono text-[0.8125em]">{ t.Format("2006-01-02 15:04:05") } <span class="text-base-content/40">{ t.Format("Z07:00") }</span></span>
+		<span class="font-mono text-xs">{ t.Format("2006-01-02 15:04:05") } <span class="text-base-content/40">{ t.Format("Z07:00") }</span></span>
 	}
 }
 
