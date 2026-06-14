@@ -6,6 +6,15 @@ onload = (event) => {
     up.layer.config.drawer.position = 'right';
     up.layer.config.drawer.size = 'large';
 
+    // Show a success toast when an overlay is accepted with a {toast: "..."}
+    // value (set by the server via the X-Up-Accept-Layer header).
+    up.on('up:layer:accepted', function (event) {
+        const msg = event.value && event.value.toast;
+        if (msg) {
+            showToast(msg);
+        }
+    });
+
     up.on('up:fragment:loaded', function (event) {
         const isFailed = up.network.config.fail(event.renderOptions.response);
         if (isFailed && event.response.status != 422) {
@@ -85,3 +94,23 @@ onload = (event) => {
         });
     });
 };
+
+// showToast renders a transient success toast into the root #errors section,
+// matching the daisyUI markup of the server-rendered error/warning toasts.
+function showToast(message) {
+    const container = document.querySelector('#errors');
+    if (!container) { return; }
+    container.className = 'toast toast-top toast-center z-20';
+
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success w-[42rem] m-4';
+    alert.setAttribute('role', 'alert');
+    alert.onclick = () => alert.remove();
+    alert.innerHTML = '<i class="hio hio-check-circle text-3xl"></i><div>'
+        + '<h3 class="font-bold">Success</h3>'
+        + '<div class="text-xs"></div></div>';
+    alert.querySelector('.text-xs').textContent = message;
+    container.appendChild(alert);
+
+    setTimeout(() => alert.remove(), 4000);
+}
