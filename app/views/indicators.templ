@@ -32,7 +32,7 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 				</thead>
 				<tbody class="values">
 					if len(rows) == 0 {
-						@emptyTable(env, "Add an IP address, domain, file hash, or other observable that can be used for detection or hunting. Set the TLP to control how widely it can be shared.")
+						@emptyTable(env, "No indicators of compromise — yet.", "Add an IP address, domain, file hash, or other observable that can be used for detection or hunting. Set the TLP to control how widely it can be shared.")
 					} else {
 						for _, row := range rows {
 							<tr class={ fp.If(row.Flagged, "hover bg-flagged", "hover") }>
@@ -42,7 +42,7 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 								<td class="value-1 truncate" data-search={ row.Type }>
 									@enum(env.Enums.IndicatorTypes, row.Type)
 								</td>
-								<td class="value-2" data-search={ row.Value }>{ row.Value } </td>
+								<td class="value-2 font-mono text-[0.8125em]" data-search={ row.Value }>{ row.Value } </td>
 								<td class="value-3" data-search={ row.TLP }>
 									@enum(env.Enums.IndicatorTLPs, row.TLP)
 								</td>

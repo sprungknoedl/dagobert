@@ -1,0 +1,36 @@
+/* vis.js Graph2d histogram on the events page, restyled for the ledger theme */
+
+.vis-timeline {
+    border: none !important;
+}
+
+.vis-time-axis .vis-grid.vis-minor {
+    border-color: var(--color-base-300) !important;
+}
+
+.vis-time-axis .vis-grid.vis-major {
+    border-color: var(--color-base-300) !important;
+}
+
+.vis-time-axis .vis-text {
+    color: color-mix(in oklab, var(--color-base-content) 60%, transparent) !important;
+    padding: 0.5rem !important;
+}
+
+.vis-current-time {
+    background-color: var(--color-primary) !important;
+}
+
+.vis-bar {
+    fill: var(--color-primary) !important;
+    fill-opacity: 0.8 !important;
+    stroke-width: 0 !important;
+}
+
+#histogram .vis-horizontal {
+    border: none !important;
+}
+
+#histogram .vis-vertical {
+    border-color: var(--color-base-300) !important;
+}

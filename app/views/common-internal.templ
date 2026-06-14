@@ -52,7 +52,7 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 	{{ cfg := applynavOptions(opts) }}
 	<nav class="navbar sticky top-0 bg-base-100 z-10 p-2 -mt-4">
 		<div class="flex-none flex flex-col justify-center">
-			<div class="breadcrumbs font-serif text-3xl">
+			<div class="breadcrumbs font-serif font-semibold text-3xl">
 				<ul>
 					if cfg.preTitle != nil {
 						@cfg.preTitle
@@ -67,7 +67,7 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 				</ul>
 			</div>
 			if cfg.subtitle != "" {
-				<p class="text-sm text-base-content/40 ml-1 -mt-1">{ cfg.subtitle }</p>
+				<p class="font-serif italic text-sm text-base-content/50 ml-1 -mt-1">{ cfg.subtitle }</p>
 			}
 		</div>
 		<div class="flex-1"></div>
@@ -117,7 +117,7 @@ templ sidebarLink(url string, title string, icon string, page string) {
 
 templ sidebar(env Env, title string) {
 	<aside class="flex flex-col h-screen fixed z-1 bg-base-100">
-		<div class="m-4 mx-auto text-neutral text-center text-xl font-serif">
+		<div class="m-4 mx-auto text-neutral text-center text-xl font-serif font-semibold">
 			[d]
 		</div>
 		<div class="divider"></div>
@@ -168,7 +168,7 @@ templ formatTime(t model.Time) {
 	if t.IsZero() {
 		-
 	} else {
-		{ t.Format("2006-01-02 15:04:05") } <span class="text-neutral-content">{ t.Format("Z07:00") }</span>
+		<span class="font-mono text-[0.8125em]">{ t.Format("2006-01-02 15:04:05") } <span class="text-base-content/40">{ t.Format("Z07:00") }</span></span>
 	}
 }
 
@@ -224,7 +224,7 @@ templ enumIcon(list []model.Enum, value string) {
 
 templ layout() {
 	<!DOCTYPE html>
-	<html lang="en" data-theme="cupcake">
+	<html lang="en" data-theme="dagobert">
 		<head>
 			<meta charset="utf-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -269,10 +269,13 @@ templ list(env Env, title string, opts ...navbarOption) {
 	</div>
 }
 
-templ emptyTable(env Env, desc string) {
+templ emptyTable(env Env, voice string, desc string) {
 	<tr>
 		<td colspan="100" class="py-16 text-center text-base-content/50">
 			<i class="hio hio-inbox text-4xl block mx-auto mb-2"></i>
+			if voice != "" {
+				<p class="font-serif italic text-lg text-base-content/60 mb-2">{ voice }</p>
+			}
 			if desc != "" {
 				<p class="mb-2">{ desc }</p>
 				if _, ok := env.Allowed("POST", env.Route+"new"); ok {

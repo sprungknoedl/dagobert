@@ -47,8 +47,8 @@ templ VisNetwork(env Env, nodes []Node, edges []Edge) {
             const options = {
                 edges: {
                     color: {
-                        color: "oklch(85% 0.199 91.936)",
-                        highlight: "oklch(75% 0.183 55.934)",
+                        color: "oklch(72% 0.13 80)",
+                        highlight: "oklch(70% 0.15 70)",
                     },
                     smooth: {
                         forceDirection: "vertical"
@@ -58,8 +58,8 @@ templ VisNetwork(env Env, nodes []Node, edges []Edge) {
                     shape: "icon",
                     margin: 10,
                     font: {
-                        color: "oklch(20% 0 0)",
-                        background: "oklch(100% 0 0)",
+                        color: "oklch(25% 0.02 60)",
+                        background: "oklch(97.5% 0.01 90)",
                     },
                     icon: {
                         face: "'heroicons-outline'",
@@ -98,7 +98,7 @@ func networkGroups(assets []model.Enum, indicators []model.Enum) map[string]grou
 		groups["Asset"+enum.Name] = group{
 			Icon: icon{
 				Code:  string(iconMap[enum.Icon]),
-				Color: "oklch(37% 0.01 67.558)",
+				Color: "oklch(25% 0.02 60)",
 				Size:  32,
 			},
 		}
@@ -108,7 +108,7 @@ func networkGroups(assets []model.Enum, indicators []model.Enum) map[string]grou
 		groups["Indicator"+enum.Name] = group{
 			Icon: icon{
 				Code:  string(iconMap[enum.Icon]),
-				Color: "oklch(70% 0.191 22.216)",
+				Color: "oklch(45% 0.13 25)",
 				Size:  24,
 			},
 		}
