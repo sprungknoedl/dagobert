@@ -1,17 +1,5 @@
 package views
 
-import (
-	"github.com/sprungknoedl/dagobert/app/model"
-)
-
-type Env struct {
-	Case    model.Case
-	User    model.User
-	Enums   model.Enums
-	Route   string
-	Allowed func(method, url string) (string, bool)
-}
-
 templ ConfirmDialog(dst string) {
 	@layout() {
 		<main>

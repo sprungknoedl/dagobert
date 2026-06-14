@@ -61,6 +61,6 @@ templ SettingsHooksOne(env Env, obj model.Hook, enum []model.Enum, vr valid.Vali
 		@stringField("Condition", obj.Condition, required(), withLabel("Condition"), withError(vr["Condition"]), withHint("Expression evaluated before the module runs. Access fields with dot notation, e.g. object.Type == \"IP\". Leave empty to always trigger."))
 		@selectField("Module", obj.Module, enum, required(), withLabel("Module"), withError(vr["Module"]), withHint("The worker module to run when the condition matches. Modules are registered by the background worker process."))
 		@booleanField("Enabled", obj.Enabled, withLabel("Enabled"), withError(vr["Enabled"]))
-		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
+		@requiredFootnote()
 	}
 }

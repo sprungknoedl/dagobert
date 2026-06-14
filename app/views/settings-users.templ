@@ -79,7 +79,7 @@ templ SettingsUsersOne(env Env, obj model.User, vr valid.ValidationError) {
 			</label>
 			<input name="Email" type="text" class="input w-full" value={ obj.Email }/>
 		</div>
-		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
+		@requiredFootnote()
 	}
 }
 

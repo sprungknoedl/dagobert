@@ -50,7 +50,7 @@ templ SettingsEnumsOne(env Env, obj model.Enum, vr valid.ValidationError) {
 				<option selected?={ obj.State == "danger" }>danger</option>
 			</select>
 		</div>
-		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
+		@requiredFootnote()
 	}
 }
 

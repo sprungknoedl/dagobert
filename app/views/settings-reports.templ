@@ -57,7 +57,7 @@ templ SettingsReportsOne(env Env, obj model.Report, vr valid.ValidationError) {
 		</div>
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
-		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
+		@requiredFootnote()
 		<script>
         document.querySelector('input[name="File"]').onchange = (e) => {
             document.querySelector('input[name="Name"]').value = e.target.value.replace(/.*(\/|\\)/, '');
