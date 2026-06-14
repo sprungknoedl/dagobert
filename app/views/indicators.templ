@@ -42,7 +42,7 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 								<td class="value-1 truncate" data-search={ row.Type }>
 									@enum(env.Enums.IndicatorTypes, row.Type)
 								</td>
-								<td class="value-2 font-mono text-[0.8125em]" data-search={ row.Value }>{ row.Value } </td>
+								<td class="value-2 font-mono text-xs" data-search={ row.Value }>{ row.Value } </td>
 								<td class="value-3" data-search={ row.TLP }>
 									@enum(env.Enums.IndicatorTLPs, row.TLP)
 								</td>
