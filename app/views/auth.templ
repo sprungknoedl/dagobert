@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 templ Login(errmsg string) {
@@ -41,10 +42,10 @@ templ Login(errmsg string) {
 	}
 }
 
-templ ChangePassword(user *model.User) {
+templ ChangePassword(user *model.User, vr valid.ValidationError) {
 	@layout() {
 		<main>
-			<form method="post" action="" up-submit>
+			<form method="post" action="/auth/changepassword" up-submit>
 				<!-- Modal header -->
 				<h3 class="font-bold text-lg mb-4">
 					Change password
@@ -57,15 +58,24 @@ templ ChangePassword(user *model.User) {
 						<input disabled type="text" class="input w-full" value={ user.String() }/>
 					</div>
 					<div class="form-control mb-4">
-						<label class="label justify-start gap-2">Current password</label>
+						<label class="label justify-start gap-2">
+							Current password
+							@validationError(vr["currentPassword"])
+						</label>
 						<input name="currentPassword" required type="password" autocomplete="current-password" class="input w-full"/>
 					</div>
 					<div class="form-control mb-4">
-						<label class="label justify-start gap-2">New password</label>
+						<label class="label justify-start gap-2">
+							New password
+							@validationError(vr["newPassword"])
+						</label>
 						<input name="newPassword" required type="password" autocomplete="new-password" class="input w-full"/>
 					</div>
 					<div class="form-control mb-4">
-						<label class="label justify-start gap-2">Confirm password</label>
+						<label class="label justify-start gap-2">
+							Confirm password
+							@validationError(vr["confirmPassword"])
+						</label>
 						<input name="confirmPassword" required type="password" autocomplete="new-password" class="input w-full"/>
 					</div>
 				</div>
