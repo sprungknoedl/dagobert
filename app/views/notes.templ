@@ -52,6 +52,6 @@ templ NotesOne(env Env, obj model.Note, vr valid.ValidationError) {
 		@stringField("Category", obj.Category, required(), withLabel("Category"), withError(vr["Category"]))
 		@stringField("Title", obj.Title, required(), withLabel("Title"), withError(vr["Title"]))
 		@textareaField("Description", obj.Description, withLabel("Description"), withError(vr["Description"]))
-		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
+		@requiredFootnote()
 	}
 }

@@ -86,6 +86,23 @@ templ validationError(vc valid.Condition) {
 	}
 }
 
+templ fieldLabel(cfg formConfig) {
+	<label class="label justify-start gap-2">
+		@cfg.label
+		@cfg.required
+		@cfg.validation
+		if cfg.hint != "" {
+			<span class="tooltip tooltip-right" data-tip={ cfg.hint }>
+				<i class="hio hio-4 hio-question-mark-circle text-base-content/40 cursor-help"></i>
+			</span>
+		}
+	</label>
+}
+
+templ requiredFootnote() {
+	<p class="text-sm">Fields marked with @requiredLabel() are required.</p>
+}
+
 templ hiddenField(name string, value string, opts ...formOption) {
 	<input name={ name } type="hidden" value={ value }/>
 }
@@ -93,16 +110,7 @@ templ hiddenField(name string, value string, opts ...formOption) {
 templ stringField(name string, value string, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
 	<div class="form-control mb-2">
-		<label class="label justify-start gap-2">
-			@cfg.label
-			@cfg.required
-			@cfg.validation
-			if cfg.hint != "" {
-				<span class="tooltip tooltip-right" data-tip={ cfg.hint }>
-					<i class="hio hio-4 hio-question-mark-circle text-base-content/40 cursor-help"></i>
-				</span>
-			}
-		</label>
+		@fieldLabel(cfg)
 		<input name={ name } type="text" class="input w-full" value={ value }/>
 	</div>
 }
@@ -110,16 +118,7 @@ templ stringField(name string, value string, opts ...formOption) {
 templ numberField(name string, value int, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
 	<div class="form-control mb-2">
-		<label class="label justify-start gap-2">
-			@cfg.label
-			@cfg.required
-			@cfg.validation
-			if cfg.hint != "" {
-				<span class="tooltip tooltip-right" data-tip={ cfg.hint }>
-					<i class="hio hio-4 hio-question-mark-circle text-base-content/40 cursor-help"></i>
-				</span>
-			}
-		</label>
+		@fieldLabel(cfg)
 		<input name={ name } type="text" class="input w-full" value={ strconv.Itoa(value) }/>
 	</div>
 }
@@ -127,16 +126,7 @@ templ numberField(name string, value int, opts ...formOption) {
 templ selectField(name string, value string, enum []model.Enum, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
 	<div class="form-control mb-2">
-		<label class="label justify-start gap-2">
-			@cfg.label
-			@cfg.required
-			@cfg.validation
-			if cfg.hint != "" {
-				<span class="tooltip tooltip-right" data-tip={ cfg.hint }>
-					<i class="hio hio-4 hio-question-mark-circle text-base-content/40 cursor-help"></i>
-				</span>
-			}
-		</label>
+		@fieldLabel(cfg)
 		<select name={ name } class="select w-full">
 			for _, e := range enum {
 				<option selected?={ e.Name == value }>{ e.Name }</option>
@@ -148,16 +138,7 @@ templ selectField(name string, value string, enum []model.Enum, opts ...formOpti
 templ choicesField(name string, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
 	<div class="form-control mb-2">
-		<label class="label justify-start gap-2">
-			@cfg.label
-			@cfg.required
-			@cfg.validation
-			if cfg.hint != "" {
-				<span class="tooltip tooltip-right" data-tip={ cfg.hint }>
-					<i class="hio hio-4 hio-question-mark-circle text-base-content/40 cursor-help"></i>
-				</span>
-			}
-		</label>
+		@fieldLabel(cfg)
 		<select multiple name={ name } class="choices select w-full">
 			{ children... }
 		</select>
@@ -182,16 +163,7 @@ templ booleanField(name string, value bool, opts ...formOption) {
 templ textareaField(name string, value string, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
 	<div class="form-control mb-2">
-		<label class="label justify-start gap-2">
-			@cfg.label
-			@cfg.required
-			@cfg.validation
-			if cfg.hint != "" {
-				<span class="tooltip tooltip-right" data-tip={ cfg.hint }>
-					<i class="hio hio-4 hio-question-mark-circle text-base-content/40 cursor-help"></i>
-				</span>
-			}
-		</label>
+		@fieldLabel(cfg)
 		<textarea name={ name } rows="3" class="textarea w-full">{ value }</textarea>
 	</div>
 }

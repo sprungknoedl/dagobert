@@ -85,7 +85,7 @@ templ AssetsOne(env Env, obj model.Asset, vr valid.ValidationError) {
 		@stringField("Addr", obj.Addr, withLabel("Address / Domain"), withError(vr["Addr"]))
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
 		<!-- x -->
-		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
+		@requiredFootnote()
 	}
 }
 

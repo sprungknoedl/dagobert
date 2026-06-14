@@ -100,7 +100,7 @@ templ IndicatorsOne(env Env, obj model.Indicator, vr valid.ValidationError) {
 		@booleanField("Flagged", obj.Flagged, withLabel("Flagged"), withHint("Mark this indicator as significant. Flagged indicators are highlighted in the list and appear on the case summary page."))
 		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]), withHint("Where this indicator was found or provided by (e.g. \"VirusTotal\", \"customer firewall logs\", analyst name)."))
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
-		<p class="text-sm">Fields marked with <span class="text-neutral">*</span> are required.</p>
+		@requiredFootnote()
 	}
 }
 
