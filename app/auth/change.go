@@ -1,58 +1,61 @@
 package auth
 
 import (
-	"log/slog"
 	"net/http"
 
-	"github.com/aarondl/authboss/v3"
-	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
+	"golang.org/x/crypto/bcrypt"
 )
 
-func init() {
-	m := &ChangePassword{}
-	authboss.RegisterModule("changepassword", m)
+// ChangePasswordForm renders the self-service change-password form.
+// GET /auth/changepassword (registered on the secured mux — Require guarantees a user)
+func (a *Auth) ChangePasswordForm(w http.ResponseWriter, r *http.Request) {
+	user, err := CurrentUser(r)
+	if err != nil {
+		http.Redirect(w, r, "/auth/login", http.StatusFound)
+		return
+	}
+	views.ChangePassword(user).Render(r.Context(), w)
 }
 
-// ChangePassword module
-type ChangePassword struct {
-	*authboss.Authboss
-}
-
-// Init module
-func (m *ChangePassword) Init(ab *authboss.Authboss) (err error) {
-	m.Authboss = ab
-
-	m.Config.Core.Router.Get("/changepassword", m.Core.ErrorHandler.Wrap(m.Get))
-	m.Config.Core.Router.Post("/changepassword", m.Core.ErrorHandler.Wrap(m.Post))
-	return nil
-}
-
-func (m *ChangePassword) Get(w http.ResponseWriter, r *http.Request) error {
-	user, err := ab.CurrentUser(r)
+// ChangePassword verifies the current password and stores a new one.
+// POST /auth/changepassword
+func (a *Auth) ChangePassword(w http.ResponseWriter, r *http.Request) {
+	user, err := CurrentUser(r)
 	if err != nil {
-		slog.Warn("failed to get current user for change password action", "err", err)
-		http.Redirect(w, r, ab.Paths.NotAuthorized, http.StatusSeeOther)
+		http.Redirect(w, r, "/auth/login", http.StatusFound)
+		return
 	}
 
-	return views.ChangePassword(user.(*model.User)).Render(r.Context(), w)
-}
+	current := r.FormValue("currentPassword")
+	next := r.FormValue("newPassword")
+	confirm := r.FormValue("confirmPassword")
 
-func (m *ChangePassword) Post(w http.ResponseWriter, r *http.Request) error {
-	user, err := ab.CurrentUser(r)
-	if err != nil {
-		return err
+	if user.Password != "" && bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(current)) != nil {
+		// TODO: add and display validaton error
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		views.ChangePassword(user).Render(r.Context(), w)
+		return
+	}
+	if next == "" || next != confirm {
+		// TODO: add and display validaton error
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		views.ChangePassword(user).Render(r.Context(), w)
+		return
 	}
 
-	err = ab.VerifyPassword(user.(authboss.AuthableUser), "")
+	hash, err := bcrypt.GenerateFromPassword([]byte(next), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		http.Error(w, "failed to hash password", http.StatusInternalServerError)
+		return
 	}
 
-	err = ab.UpdatePassword(r.Context(), user.(authboss.AuthableUser), "")
-	if err != nil {
-		return err
+	user.Password = string(hash)
+	if err := a.store.SaveUser(*user); err != nil {
+		http.Error(w, "failed to save user", http.StatusInternalServerError)
+		return
 	}
 
-	return nil
+	a.session.RenewToken(r.Context())
+	views.ChangePassword(user).Render(r.Context(), w)
 }

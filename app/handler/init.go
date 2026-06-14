@@ -11,7 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/aarondl/authboss/v3"
 	"github.com/spf13/cobra"
 	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
@@ -42,9 +41,10 @@ func Run(cmd *cobra.Command, args []string) {
 	// --------------------------------------
 	// Authentication
 	// --------------------------------------
-	ab, err := auth.Init(db)
+	InitSession(db.RawConn)
+	a, err := auth.New(db, Session)
 	if err != nil {
-		slog.Error("Failed to initialize authboss", "err", err)
+		slog.Error("Failed to initialize auth", "err", err)
 		return
 	}
 
@@ -103,12 +103,16 @@ func Run(cmd *cobra.Command, args []string) {
 	slog.Debug("Creating router and registering handlers")
 	router := http.NewServeMux()
 	secured := http.NewServeMux()
-	securedH := authboss.Middleware2(ab, authboss.RequireNone, authboss.RespondRedirect)(acl.Protect(secured))
+	securedH := a.Require(acl.Protect(secured))
 
 	// index
 	secured.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/cases/", http.StatusTemporaryRedirect)
 	})
+
+	// change password (requires a logged-in user)
+	secured.HandleFunc("GET /auth/changepassword", a.ChangePasswordForm)
+	secured.HandleFunc("POST /auth/changepassword", a.ChangePassword)
 
 	// cases
 	caseCtrl := NewCaseCtrl(db, acl, ts)
@@ -257,16 +261,24 @@ func Run(cmd *cobra.Command, args []string) {
 	// static assets
 	router.Handle("GET /public/", ServeDir("/public/", public.AssetsFS))
 
-	// authboss
-	router.Handle("/auth/", http.StripPrefix("/auth", ab.Config.Core.Router))
+	// auth routes (unauthenticated)
+	router.HandleFunc("GET /auth/login", a.LoginLocal)
+	router.HandleFunc("POST /auth/login", a.LoginLocal)
+	router.HandleFunc("GET /auth/oidc", a.LoginOIDC)
+	router.HandleFunc("GET /auth/callback", a.Callback)
+	router.HandleFunc("GET /auth/logout", a.Logout)
 	router.Handle("/", securedH)
 
 	// --------------------------------------
 	// Server
 	// --------------------------------------
+	// Order matters: Session.LoadAndSave must wrap LoadUser (which reads the
+	// session), and ApiKeyMiddleware wraps both so its Cookie/Authorization
+	// strip happens before any session state is loaded and the system user it
+	// sets is found by LoadUser's context check.
 	var h http.Handler = router
-	h = authboss.ModuleListMiddleware(ab)(h)
-	h = ab.LoadClientStateMiddleware(h)
+	h = a.LoadUser(h)
+	h = Session.LoadAndSave(h)
 	h = auth.ApiKeyMiddleware(db)(h) // strips browser credentials before session state is loaded
 	h = http.NewCrossOriginProtection().Handler(h)
 	h = Logger(h)

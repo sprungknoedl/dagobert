@@ -1,10 +1,8 @@
 package model
 
 import (
-	"context"
 	"testing"
 
-	"github.com/aarondl/authboss/v3"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/sqlite"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
@@ -74,23 +72,22 @@ func TestSaveUser(t *testing.T) {
 	})
 }
 
-func TestSave(t *testing.T) {
+func TestGetUserByUPN(t *testing.T) {
 	db, close := setupDB()
 	defer close()
 
-	t.Run("Normal User", func(t *testing.T) {
-		user := User{ID: fp.Random(64), Name: "Max Musermann"}
+	t.Run("Existing User", func(t *testing.T) {
+		user := User{ID: fp.Random(64), Name: "Max Musermann", UPN: "max@mustermann.com"}
 		assert.Nil(t, db.SaveUser(user))
-		assert.Nil(t, db.Save(context.Background(), &user))
+
+		user2, err := db.GetUserByUPN(user.UPN)
+		assert.Nil(t, err)
+		assert.Equal(t, user, user2)
 	})
 
 	t.Run("Non-existant User", func(t *testing.T) {
-		err := db.Save(context.Background(), &User{
-			ID:   "this user does not exist",
-			Name: "this user does not exist",
-		})
-
-		assert.NotNil(t, err)
-		assert.Equal(t, authboss.ErrUserNotFound, err)
+		user, err := db.GetUserByUPN("nobody@example.com")
+		assert.Zero(t, user)
+		assert.Equal(t, gorm.ErrRecordNotFound, err)
 	})
 }
