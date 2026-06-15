@@ -104,6 +104,7 @@ func Run(cmd *cobra.Command, args []string) {
 	router := http.NewServeMux()
 	secured := http.NewServeMux()
 	securedH := a.Require(acl.Protect(secured))
+	a.SetRoutes(secured)
 
 	// index
 	secured.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
