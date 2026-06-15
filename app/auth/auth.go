@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -34,7 +35,12 @@ type Auth struct {
 	session  *scs.SessionManager
 	provider *oidc.Provider
 	oauth2   oauth2.Config
+	routes   *http.ServeMux // secured mux, used to validate post-login redirects
 }
+
+// SetRoutes registers the secured mux so redirectAfterLogin can verify that a
+// stored destination resolves to a real GET handler before redirecting to it.
+func (a *Auth) SetRoutes(mux *http.ServeMux) { a.routes = mux }
 
 func New(store *model.Store, session *scs.SessionManager) (*Auth, error) {
 	a := &Auth{store: store, session: session}
@@ -87,7 +93,13 @@ func CurrentUser(r *http.Request) (*model.User, error) {
 func (a *Auth) Require(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if _, err := CurrentUser(r); err != nil {
-			a.session.Put(r.Context(), SessionRedir, r.URL.Path)
+			// Only remember the destination for genuine page navigations.
+			// Background subresource fetches (e.g. /favicon.ico) also hit this
+			// middleware while unauthenticated and would otherwise clobber the
+			// stored redirect, sending the user there after login.
+			if isNavigation(r) {
+				a.session.Put(r.Context(), SessionRedir, r.URL.Path)
+			}
 			http.Redirect(w, r, "/auth/login", http.StatusFound)
 			return
 		}
@@ -95,14 +107,44 @@ func (a *Auth) Require(next http.Handler) http.Handler {
 	})
 }
 
+// isNavigation reports whether r is a top-level page navigation rather than a
+// background subresource request. It prefers the Sec-Fetch-Mode header (sent by
+// all modern browsers) and falls back to the Accept header for clients that
+// omit it.
+func isNavigation(r *http.Request) bool {
+	if r.Method != http.MethodGet {
+		return false
+	}
+	if mode := r.Header.Get("Sec-Fetch-Mode"); mode != "" {
+		return mode == "navigate"
+	}
+	return strings.Contains(r.Header.Get("Accept"), "text/html")
+}
+
 // redirectAfterLogin pops the stored post-login destination and redirects there
 // if it is a safe relative path, otherwise to the index.
 func (a *Auth) redirectAfterLogin(w http.ResponseWriter, r *http.Request) {
 	dst := a.session.PopString(r.Context(), SessionRedir)
-	if !strings.HasPrefix(dst, "/") || strings.HasPrefix(dst, "//") {
+	if !a.isPagePath(dst) {
 		dst = "/"
 	}
 	http.Redirect(w, r, dst, http.StatusFound)
+}
+
+// isPagePath reports whether dst is a safe relative path that resolves to a
+// registered GET handler on the secured mux. This rejects open redirects as
+// well as destinations that only exist for non-GET methods or aren't routes at
+// all.
+func (a *Auth) isPagePath(dst string) bool {
+	if !strings.HasPrefix(dst, "/") || strings.HasPrefix(dst, "//") {
+		return false
+	}
+	if a.routes == nil {
+		return true
+	}
+	probe := &http.Request{Method: http.MethodGet, URL: &url.URL{Path: dst}}
+	_, pattern := a.routes.Handler(probe)
+	return pattern != ""
 }
 
 // LoginOIDC is the entry point for the "Sign in with SSO" button.
