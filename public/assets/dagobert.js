@@ -95,6 +95,17 @@ onload = (event) => {
     });
 };
 
+// applyCaseTemplate fills the case form's case-level defaults from the picked
+// template's inline data-* attributes, with no server roundtrip. Wired to the
+// "Create from template" <select> on the new-case form (see CasesOne).
+function applyCaseTemplate(select) {
+    const opt = select.options[select.selectedIndex];
+    const form = select.form;
+    form.elements['Classification'].value = opt.dataset.classification || '';
+    form.elements['Severity'].value = opt.dataset.severity || '';
+    form.elements['Summary'].value = opt.dataset.summary || '';
+}
+
 // showToast renders a transient success toast into the root #errors section,
 // matching the daisyUI markup of the server-rendered error/warning toasts.
 function showToast(message) {

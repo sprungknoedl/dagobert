@@ -150,6 +150,14 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("POST /settings/reports/{id}", settingsCtrl.SaveReport)
 	secured.HandleFunc("DELETE /settings/reports/{id}", settingsCtrl.DeleteReport)
 
+	// settings (case templates)
+	secured.HandleFunc("GET /settings/templates/", settingsCtrl.ListTemplates)
+	secured.HandleFunc("GET /settings/templates/promote", settingsCtrl.PromoteForm)
+	secured.HandleFunc("POST /settings/templates/promote", settingsCtrl.Promote)
+	secured.HandleFunc("GET /settings/templates/{cid}", settingsCtrl.EditTemplate)
+	secured.HandleFunc("POST /settings/templates/{cid}", settingsCtrl.SaveTemplate)
+	secured.HandleFunc("DELETE /settings/templates/{cid}", settingsCtrl.DeleteTemplate)
+
 	// settings (hooks)
 	secured.HandleFunc("GET /settings/hooks/", settingsCtrl.ListHooks)
 	secured.HandleFunc("GET /settings/hooks/{id}", settingsCtrl.EditHook)

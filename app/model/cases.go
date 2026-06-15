@@ -2,6 +2,8 @@ package model
 
 import (
 	"fmt"
+
+	"github.com/sprungknoedl/dagobert/pkg/fp"
 )
 
 type Case struct {
@@ -12,6 +14,7 @@ type Case struct {
 	Severity       string
 	Outcome        string
 	Closed         bool
+	IsTemplate     bool
 
 	SketchID int
 
@@ -35,14 +38,73 @@ func (c Case) String() string {
 func (store *Store) ListCases() ([]Case, error) {
 	list := []Case{}
 	tx := store.DB.
+		Where("is_template = ?", false).
 		Order("name asc").
 		Find(&list)
 	return list, tx.Error
 }
 
+func (store *Store) ListTemplates() ([]Case, error) {
+	list := []Case{}
+	tx := store.DB.
+		Where("is_template = ?", true).
+		Order("name asc").
+		Find(&list)
+	return list, tx.Error
+}
+
+// CloneCaseContents creates dst (which the caller has populated with a fresh ID,
+// the IsTemplate flag, a name, and the three case-level defaults) and copies the
+// source case's tasks and notes into it. Findings are never copied. Each cloned
+// row gets a fresh ID and the destination CaseID; tasks are reset to not-done
+// with a blank due date. It returns the saved destination case.
+func (store *Store) CloneCaseContents(srcID string, dst Case) (Case, error) {
+	// run every insert in one transaction so a failure half-way leaves no
+	// partially-populated case behind
+	err := store.Transaction(func(tx *Store) error {
+		if err := tx.SaveCase(dst); err != nil {
+			return err
+		}
+
+		tasks, err := tx.ListTasks(srcID)
+		if err != nil {
+			return err
+		}
+		for _, t := range tasks {
+			t.ID = fp.Random(10)
+			t.CaseID = dst.ID
+			t.Done = false
+			t.DateDue = Time{}
+			if err := tx.SaveTask(dst.ID, t); err != nil {
+				return err
+			}
+		}
+
+		notes, err := tx.ListNotes(srcID)
+		if err != nil {
+			return err
+		}
+		for _, n := range notes {
+			n.ID = fp.Random(10)
+			n.CaseID = dst.ID
+			if err := tx.SaveNote(dst.ID, n); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return Case{}, err
+	}
+
+	return dst, nil
+}
+
 func (store *Store) GetCase(cid string) (Case, error) {
-	// special case for "dumb" routes
-	if cid == "" {
+	// special case for "dumb" routes and "add" forms, where the {cid} path
+	// value is empty or the "new" sentinel rather than a real case id
+	if cid == "" || cid == "new" {
 		return Case{}, nil
 	}
 

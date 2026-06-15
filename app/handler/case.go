@@ -108,7 +108,18 @@ func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 func (ctrl CaseCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	obj := model.Case{ID: cid}
-	if cid != "new" {
+
+	// the "create from template" dropdown is only offered on the new-case form;
+	// each template carries its defaults inline so the form fills client-side
+	var templates []model.Case
+	if cid == "new" {
+		var err error
+		templates, err = ctrl.Store().ListTemplates()
+		if err != nil {
+			Err(w, r, err)
+			return
+		}
+	} else {
 		var err error
 		obj, err = ctrl.Store().GetCase(cid)
 		if err != nil {
@@ -118,7 +129,7 @@ func (ctrl CaseCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	show, sketches, warning := ctrl.fetchSketches(r)
-	Render(w, r, http.StatusOK, views.CasesOne(Env(ctrl, r), obj, show, sketches, warning, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.CasesOne(Env(ctrl, r), obj, templates, "", show, sketches, warning, valid.ValidationError{}))
 }
 
 func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
@@ -126,7 +137,8 @@ func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	err := Decode(ctrl.Store(), r, &dto, ValidateCase)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
 		show, sketches, warning := ctrl.fetchSketches(r)
-		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(Env(ctrl, r), dto, show, sketches, warning, vr))
+		templates, _ := ctrl.Store().ListTemplates()
+		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(Env(ctrl, r), dto, templates, r.FormValue("Template"), show, sketches, warning, vr))
 		return
 	} else if err != nil {
 		Warn(w, r, err)
@@ -138,6 +150,15 @@ func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	if err := ctrl.Store().SaveCase(dto); err != nil {
 		Err(w, r, err)
 		return
+	}
+
+	// instantiate from a template: copy its tasks and notes into the new case.
+	// Only honored when creating; ignored when editing an existing case.
+	if template := r.FormValue("Template"); new && template != "" {
+		if _, err := ctrl.Store().CloneCaseContents(template, dto); err != nil {
+			Err(w, r, err)
+			return
+		}
 	}
 
 	dstSummary := strings.HasSuffix(r.Referer(), "?target=summary")
