@@ -60,11 +60,28 @@ templ CasesMany(env Env, rows []model.Case) {
 	}
 }
 
-templ CasesOne(env Env, obj model.Case, showSketches bool, sketches []timesketch.Sketch, sketchWarning string, vr valid.ValidationError) {
-	{{ uri := "/cases/" + obj.ID }}
-	{{ title := fp.If(obj.ID == "new", "Add case", "Edit case") }}
+templ CasesOne(env Env, obj model.Case, templates []model.Case, selectedTemplate string, showSketches bool, sketches []timesketch.Sketch, sketchWarning string, vr valid.ValidationError) {
+	{{ uri := env.Route }}
+	{{ noun := fp.If(obj.IsTemplate, "case template", "case") }}
+	{{ title := fp.If(obj.ID == "new", "Add "+noun, "Edit "+noun) }}
 	@form(env, uri, title) {
 		@hiddenField("ID", obj.ID)
+		@hiddenField("IsTemplate", strconv.FormatBool(obj.IsTemplate))
+		if obj.ID == "new" && !obj.IsTemplate && len(templates) > 0 {
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">Create from template</label>
+				// The template defaults are carried inline on each option so picking
+				// one fills the case-level fields client-side (applyCaseTemplate in
+				// dagobert.js), with no server roundtrip. selectedTemplate keeps the
+				// choice after a failed-validation re-render.
+				<select name="Template" class="select w-full" onchange="applyCaseTemplate(this)">
+					<option value="" selected?={ selectedTemplate == "" }>— Blank case —</option>
+					for _, t := range templates {
+						<option value={ t.ID } selected?={ t.ID == selectedTemplate } data-classification={ t.Classification } data-severity={ t.Severity } data-summary={ t.Summary }>{ t.Name }</option>
+					}
+				</select>
+			</div>
+		}
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
 		@stringField("Classification", obj.Classification, withLabel("Classification"), withError(vr["Classification"]))
 		@selectField("Severity", obj.Severity, env.Enums.CaseSeverities, withLabel("Severity"), withError(vr["Severity"]))
@@ -238,7 +255,9 @@ templ stat(status, icon, title string, value int) {
 
 templ caseSummaryExtra(env Env) {
 	if url, ok := env.Allowed("GET", "/cases/" + env.Case.ID + "?target=summary"); ok {
-		<a class="join-item btn" href={ url } up-layer="new drawer" up-accept-location={ env.Route }>
+		// The hungry #list swap only refreshes the body; reload the whole <main>
+		// on accept so the navbar title (case name) updates too.
+		<a class="join-item btn" href={ url } up-layer="new drawer" up-accept-location={ env.Route } up-on-accepted="up.reload('main', { layer: 'root' })">
 			<i class="hio hio-6 hio-pencil inline-block mr-1"></i> Edit
 		</a>
 	}

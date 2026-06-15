@@ -100,7 +100,12 @@ templ fieldLabel(cfg formConfig) {
 }
 
 templ requiredFootnote() {
-	<p class="text-sm">Fields marked with @requiredLabel() are required.</p>
+	<p class="text-sm">
+		Fields marked with &nbsp;
+		@requiredLabel()
+		&nbsp;
+		are required.
+	</p>
 }
 
 templ hiddenField(name string, value string, opts ...formOption) {
