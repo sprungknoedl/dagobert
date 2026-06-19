@@ -1,0 +1,32 @@
+package views
+
+// Decorative "duck pond" kit. The ducks are anthropomorphic Victorian
+// gentlemen — top hat, monocle, tweed three-piece — a nod to Dagobert Duck.
+// Used as portraits whose cream ground dissolves into a soft watercolour bleed
+// at the edges (the duck itself stays fully opaque), so the art soaks straight
+// into the ledger paper: login hero and empty-state art. The fleuron below
+// stays hand-drawn line-art.
+
+// plateGentleman — top-hatted duck gentleman, bust portrait with boutonnière.
+templ plateGentleman(class string) {
+	<img src="/public/assets/duck-gentleman.webp" alt="" aria-hidden="true" class={ class }/>
+}
+
+// plateStroller — top-hatted duck gentleman, full-length with walking cane.
+templ plateStroller(class string) {
+	<img src="/public/assets/duck-stroller.webp" alt="" aria-hidden="true" class={ class }/>
+}
+
+// fleuron — a hairline rule with a small diamond ornament at its centre,
+// a warmer alternative to the plain divider.
+templ fleuron(class string) {
+	<div class={ "flex items-center gap-3 text-base-content/30 " + class }>
+		<span class="h-px flex-1 bg-current"></span>
+		<svg viewBox="0 0 24 12" class="h-2 w-6 text-accent/70" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
+			<path d="M2,6 L9,6"/>
+			<path d="M12,2 L16,6 L12,10 L8,6 Z" fill="currentColor" stroke="none"/>
+			<path d="M16,6 L22,6"/>
+		</svg>
+		<span class="h-px flex-1 bg-current"></span>
+	</div>
+}
