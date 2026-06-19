@@ -11,11 +11,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/openioc"
+	"github.com/sprungknoedl/dagobert/pkg/stix"
 	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -82,98 +83,49 @@ func (ctrl IndicatorCtrl) ExportOpenIOC(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.WriteHeader(http.StatusOK)
 
-	export := OpenIOC{
-		Metadata: OpenIOCMetadata{
-			AuthoredBy:   GetUser(ctrl.Store(), r).Name,
-			AuthoredDate: time.Now(),
-		},
-		Criteria: []OpenIOCIndicator{{
-			ID:       uuid.NewString(),
-			Operator: "OR",
-		}},
-	}
+	export := buildOpenIOC(list, GetUser(ctrl.Store(), r).Name, time.Now())
+
+	xw := xml.NewEncoder(w)
+	xw.Encode(export)
+	xw.Flush()
+}
+
+// buildOpenIOC maps a list of indicators into an OpenIOC 1.1 document. The
+// pkg/openioc package owns the format; this function owns the Dagobert-specific
+// indicator-type to OpenIOC context mapping.
+func buildOpenIOC(list []model.Indicator, author string, now time.Time) *openioc.Document {
+	doc := openioc.New(author, now)
 
 	//var IndicatorTypes = FromEnv("VALUES_INDICATOR_TYPES", []string{"IP", "Domain", "URL", "Path", "Hash", "Service", "Other"})
 	for _, ioc := range list {
 		switch ioc.Type {
 		case "IP":
-			export.Criteria[0].Items = append(export.Criteria[0].Items, OpenIOCIndicatorItem{
-				Condition: "is",
-				ID:        uuid.NewString(),
-				Context:   OpenIOCContext{Document: "PortItem", Search: "PortItem/RemoteIP", Type: "mir"},
-				Content:   OpenIOCContent{Type: "IP", Value: ioc.Value},
-			})
+			doc.AddItem("is", openioc.Context{Document: "PortItem", Search: "PortItem/RemoteIP", Type: "mir"}, "IP", ioc.Value)
 		case "Domain":
-			export.Criteria[0].Items = append(export.Criteria[0].Items, OpenIOCIndicatorItem{
-				Condition: "contains",
-				ID:        uuid.NewString(),
-				Context:   OpenIOCContext{Document: "DnsEntryItem", Search: "DnsEntryItem/Host", Type: "mir"},
-				Content:   OpenIOCContent{Type: "string", Value: ioc.Value},
-			})
+			doc.AddItem("contains", openioc.Context{Document: "DnsEntryItem", Search: "DnsEntryItem/Host", Type: "mir"}, "string", ioc.Value)
 		case "URL":
-			export.Criteria[0].Items = append(export.Criteria[0].Items, OpenIOCIndicatorItem{
-				Condition: "contains",
-				ID:        uuid.NewString(),
-				Context:   OpenIOCContext{Document: "Network", Search: "Network/URI", Type: "mir"},
-				Content:   OpenIOCContent{Type: "string", Value: ioc.Value},
-			})
+			doc.AddItem("contains", openioc.Context{Document: "Network", Search: "Network/URI", Type: "mir"}, "string", ioc.Value)
 		case "Path":
-			export.Criteria[0].Items = append(export.Criteria[0].Items, OpenIOCIndicatorItem{
-				Condition: "contains",
-				ID:        uuid.NewString(),
-				Context:   OpenIOCContext{Document: "FileItem", Search: "FileItem/FileFullPath", Type: "mir"},
-				Content:   OpenIOCContent{Type: "string", Value: ioc.Value},
-			})
+			doc.AddItem("contains", openioc.Context{Document: "FileItem", Search: "FileItem/FileFullPath", Type: "mir"}, "string", ioc.Value)
 		case "Hash":
-			if len(ioc.Value) == 32 { // MD5
-				export.Criteria[0].Items = append(export.Criteria[0].Items, OpenIOCIndicatorItem{
-					Condition: "is",
-					ID:        uuid.NewString(),
-					Context:   OpenIOCContext{Document: "FileItem", Search: "FileItem/Md5sum", Type: "mir"},
-					Content:   OpenIOCContent{Type: "string", Value: ioc.Value},
-				})
-			} else if len(ioc.Value) == 40 { // SHA1
-				export.Criteria[0].Items = append(export.Criteria[0].Items, OpenIOCIndicatorItem{
-					Condition: "is",
-					ID:        uuid.NewString(),
-					Context:   OpenIOCContext{Document: "FileItem", Search: "FileItem/Sha1sum", Type: "mir"},
-					Content:   OpenIOCContent{Type: "string", Value: ioc.Value},
-				})
-			} else if len(ioc.Value) == 64 { // SHA256
-				export.Criteria[0].Items = append(export.Criteria[0].Items, OpenIOCIndicatorItem{
-					Condition: "is",
-					ID:        uuid.NewString(),
-					Context:   OpenIOCContext{Document: "FileItem", Search: "FileItem/Sha256sum", Type: "mir"},
-					Content:   OpenIOCContent{Type: "string", Value: ioc.Value},
-				})
-			} else { // Unknown hash
-				export.Criteria[0].Items = append(export.Criteria[0].Items, OpenIOCIndicatorItem{
-					Condition: "is",
-					ID:        uuid.NewString(),
-					Context:   OpenIOCContext{Document: "Other", Search: "FileItem/Other", Type: "mir"},
-					Content:   OpenIOCContent{Type: "string", Value: ioc.Value},
-				})
+			switch len(ioc.Value) {
+			case 32: // MD5
+				doc.AddItem("is", openioc.Context{Document: "FileItem", Search: "FileItem/Md5sum", Type: "mir"}, "string", ioc.Value)
+			case 40: // SHA1
+				doc.AddItem("is", openioc.Context{Document: "FileItem", Search: "FileItem/Sha1sum", Type: "mir"}, "string", ioc.Value)
+			case 64: // SHA256
+				doc.AddItem("is", openioc.Context{Document: "FileItem", Search: "FileItem/Sha256sum", Type: "mir"}, "string", ioc.Value)
+			default: // Unknown hash
+				doc.AddItem("is", openioc.Context{Document: "Other", Search: "FileItem/Other", Type: "mir"}, "string", ioc.Value)
 			}
 		case "Service":
-			export.Criteria[0].Items = append(export.Criteria[0].Items, OpenIOCIndicatorItem{
-				Condition: "is",
-				ID:        uuid.NewString(),
-				Context:   OpenIOCContext{Document: "ServiceItem", Search: "ServiceItem/Name", Type: "mir"},
-				Content:   OpenIOCContent{Type: "string", Value: ioc.Value},
-			})
-		case "Other":
-			export.Criteria[0].Items = append(export.Criteria[0].Items, OpenIOCIndicatorItem{
-				Condition: "is",
-				ID:        uuid.NewString(),
-				Context:   OpenIOCContext{Document: "Other", Search: "Other/Other", Type: "mir"},
-				Content:   OpenIOCContent{Type: "string", Value: ioc.Value},
-			})
+			doc.AddItem("is", openioc.Context{Document: "ServiceItem", Search: "ServiceItem/Name", Type: "mir"}, "string", ioc.Value)
+		default:
+			doc.AddItem("is", openioc.Context{Document: "Other", Search: "Other/Other", Type: "mir"}, "string", ioc.Value)
 		}
 	}
 
-	xw := xml.NewEncoder(w)
-	xw.Encode(export)
-	xw.Flush()
+	return doc
 }
 
 func (ctrl IndicatorCtrl) ExportStix(w http.ResponseWriter, r *http.Request) {
@@ -188,91 +140,49 @@ func (ctrl IndicatorCtrl) ExportStix(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.WriteHeader(http.StatusOK)
 
-	export := StixBundle{
-		ID:   "bundle--" + uuid.NewString(),
-		Type: "bundle",
-	}
-
-	//var IndicatorTypes = FromEnv("VALUES_INDICATOR_TYPES", []string{"IP", "Domain", "URL", "Path", "Hash", "Service", "Other"})
-	for _, ioc := range list {
-		switch ioc.Type {
-		case "IP":
-			export.Objects = append(export.Objects, StixIndicator{
-				Type:        "indicator",
-				Pattern:     fmt.Sprintf("[ipv4-addr:value='%s']", ioc.Value),
-				PatternType: "stix",
-				ValidFrom:   time.Now(),
-			})
-		case "Domain":
-			export.Objects = append(export.Objects, StixIndicator{
-				Type:        "indicator",
-				Pattern:     fmt.Sprintf("[domain-name:value='%s']", ioc.Value),
-				PatternType: "stix",
-				ValidFrom:   time.Now(),
-			})
-		case "URL":
-			export.Objects = append(export.Objects, StixIndicator{
-				Type:        "indicator",
-				Pattern:     fmt.Sprintf("[url:value='%s']", ioc.Value),
-				PatternType: "stix",
-				ValidFrom:   time.Now(),
-			})
-		case "Path":
-			export.Objects = append(export.Objects, StixIndicator{
-				Type:        "indicator",
-				Pattern:     fmt.Sprintf("[directory:path='%s' AND file:name='%s']", filepath.Dir(ioc.Value), filepath.Base(ioc.Value)),
-				PatternType: "stix",
-				ValidFrom:   time.Now(),
-			})
-		case "Hash":
-			if len(ioc.Value) == 32 { // MD5
-				export.Objects = append(export.Objects, StixIndicator{
-					Type:        "indicator",
-					Pattern:     fmt.Sprintf("[file:hashes.MD5='%s']", ioc.Value),
-					PatternType: "stix",
-					ValidFrom:   time.Now(),
-				})
-			} else if len(ioc.Value) == 40 { // SHA1
-				export.Objects = append(export.Objects, StixIndicator{
-					Type:        "indicator",
-					Pattern:     fmt.Sprintf("[file:hashes.SHA-1='%s']", ioc.Value),
-					PatternType: "stix",
-					ValidFrom:   time.Now(),
-				})
-			} else if len(ioc.Value) == 64 { // SHA256
-				export.Objects = append(export.Objects, StixIndicator{
-					Type:        "indicator",
-					Pattern:     fmt.Sprintf("[file:hashes.SHA-256='%s']", ioc.Value),
-					PatternType: "stix",
-					ValidFrom:   time.Now(),
-				})
-			} else { // Unknown hash
-				export.Objects = append(export.Objects, StixIndicator{
-					Type:        "indicator",
-					Pattern:     fmt.Sprintf("[file:hashes.Other='%s']", ioc.Value),
-					PatternType: "stix",
-					ValidFrom:   time.Now(),
-				})
-			}
-		case "Service":
-			export.Objects = append(export.Objects, StixIndicator{
-				Type:        "indicator",
-				Pattern:     fmt.Sprintf("[windows-service-ext:service_name='%s']", ioc.Value),
-				PatternType: "stix",
-				ValidFrom:   time.Now(),
-			})
-		case "Other":
-			export.Objects = append(export.Objects, StixIndicator{
-				Type:        "indicator",
-				Pattern:     fmt.Sprintf("[other='%s']", ioc.Value),
-				PatternType: "stix",
-				ValidFrom:   time.Now(),
-			})
-		}
-	}
+	export := buildStixBundle(list, time.Now())
 
 	jw := json.NewEncoder(w)
 	jw.Encode(export)
+}
+
+// buildStixBundle maps a list of indicators into a STIX 2.1 bundle. The pkg/stix
+// package owns the format; this function owns the Dagobert-specific
+// indicator-type to STIX pattern mapping.
+func buildStixBundle(list []model.Indicator, now time.Time) *stix.Bundle {
+	b := stix.NewBundle()
+
+	//var IndicatorTypes = FromEnv("VALUES_INDICATOR_TYPES", []string{"IP", "Domain", "URL", "Path", "Hash", "Service", "Other"})
+	for _, ioc := range list {
+		v := stix.QuoteLiteral(ioc.Value)
+		switch ioc.Type {
+		case "IP":
+			b.AddIndicator(fmt.Sprintf("[ipv4-addr:value='%s']", v), now)
+		case "Domain":
+			b.AddIndicator(fmt.Sprintf("[domain-name:value='%s']", v), now)
+		case "URL":
+			b.AddIndicator(fmt.Sprintf("[url:value='%s']", v), now)
+		case "Path":
+			b.AddIndicator(fmt.Sprintf("[directory:path='%s' AND file:name='%s']", stix.QuoteLiteral(filepath.Dir(ioc.Value)), stix.QuoteLiteral(filepath.Base(ioc.Value))), now)
+		case "Hash":
+			switch len(ioc.Value) {
+			case 32: // MD5
+				b.AddIndicator(fmt.Sprintf("[file:hashes.MD5='%s']", v), now)
+			case 40: // SHA1 — hash key contains a hyphen and must be quoted
+				b.AddIndicator(fmt.Sprintf("[file:hashes.'SHA-1'='%s']", v), now)
+			case 64: // SHA256 — hash key contains a hyphen and must be quoted
+				b.AddIndicator(fmt.Sprintf("[file:hashes.'SHA-256'='%s']", v), now)
+			default: // Unknown hash
+				b.AddIndicator(fmt.Sprintf("[file:hashes.Other='%s']", v), now)
+			}
+		case "Service":
+			b.AddIndicator(fmt.Sprintf("[process:extensions.'windows-service-ext'.service_name='%s']", v), now)
+		default:
+			b.AddIndicator(fmt.Sprintf("[x-dagobert:value='%s']", v), now)
+		}
+	}
+
+	return b
 }
 
 func (ctrl IndicatorCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
@@ -432,61 +342,4 @@ func refang(ioc string) string {
 		ioc = strings.ReplaceAll(ioc, old, new)
 	}
 	return ioc
-}
-
-// Types for OpenIOC export
-type OpenIOC struct {
-	XMLName       xml.Name  `xml:"OpenIOC"`
-	Namespace     string    `xml:"xmlns,attr"`
-	ID            string    `xml:"id,attr"`
-	LastModified  time.Time `xml:"last-modified,attr"`
-	PublishedDate time.Time `xml:"published-date,attr"`
-
-	Metadata OpenIOCMetadata    `xml:"metadata"`
-	Criteria []OpenIOCIndicator `xml:"criteria>Indicator"`
-}
-
-type OpenIOCMetadata struct {
-	ShortDescription string
-	Keywords         string
-	AuthoredBy       string
-	AuthoredDate     time.Time
-}
-
-type OpenIOCIndicator struct {
-	ID       string                 `xml:"id,attr"`
-	Operator string                 `xml:"operator,attr"`
-	Items    []OpenIOCIndicatorItem `xml:"IndicatorItem"`
-}
-
-type OpenIOCIndicatorItem struct {
-	ID        string         `xml:"id,attr"`
-	Condition string         `xml:"condition,attr"`
-	Context   OpenIOCContext `xml:"Context"`
-	Content   OpenIOCContent `xml:"Content"`
-}
-
-type OpenIOCContext struct {
-	Document string `xml:"document,attr"`
-	Search   string `xml:"search,attr"`
-	Type     string `xml:"type,attr"`
-}
-
-type OpenIOCContent struct {
-	Type  string `xml:"type,attr"`
-	Value string `xml:",innerxml"`
-}
-
-// Types for STIX export
-type StixBundle struct {
-	ID      string          `json:"id"`
-	Type    string          `json:"type"`
-	Objects []StixIndicator `json:"objects"`
-}
-
-type StixIndicator struct {
-	Type        string    `json:"type"`
-	Pattern     string    `json:"pattern"`
-	PatternType string    `json:"pattern_type"`
-	ValidFrom   time.Time `json:"valid_from"`
 }
