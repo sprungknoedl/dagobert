@@ -9,15 +9,15 @@
     name: "dagobert";
     default: true;
     color-scheme: light;
-    --color-base-100: oklch(97.5% 0.01 90);
-    --color-base-200: oklch(95% 0.012 90);
-    --color-base-300: oklch(90% 0.014 90);
+    --color-base-100: oklch(96% 0.022 88);
+    --color-base-200: oklch(93.5% 0.026 87);
+    --color-base-300: oklch(88% 0.032 85);
     --color-base-content: oklch(25% 0.02 60);
     --color-primary: oklch(72% 0.13 80);
     --color-primary-content: oklch(28% 0.06 70);
     --color-secondary: oklch(45% 0.09 150);
     --color-secondary-content: oklch(97% 0.01 150);
-    --color-accent: oklch(55% 0.12 40);
+    --color-accent: oklch(56% 0.15 38);
     --color-accent-content: oklch(97.5% 0.01 90);
     --color-neutral: oklch(25% 0.02 60);
     --color-neutral-content: oklch(95% 0.012 90);
@@ -162,3 +162,22 @@ HERO ICONS
     font-size: 18px;
     line-height: 18px;
 }
+
+/*
+SIDEBAR HUES
+muted, distinct tint per case section — echoes the Fable feature icons.
+sit ~52-62% lightness so they read gently on the cream paper.
+*/
+
+.hue-gold  { color: oklch(62% 0.11 78); }
+.hue-slate { color: oklch(54% 0.06 245); }
+.hue-teal  { color: oklch(55% 0.08 200); }
+.hue-moss  { color: oklch(52% 0.09 150); }
+.hue-rust  { color: oklch(55% 0.13 38); }
+.hue-plum  { color: oklch(52% 0.10 345); }
+.hue-amber { color: oklch(60% 0.10 65); }
+.hue-green { color: oklch(53% 0.10 160); }
+.hue-peri  { color: oklch(55% 0.08 285); }
+.hue-cyan  { color: oklch(56% 0.09 220); }
+.hue-brick { color: oklch(52% 0.13 28); }
+.hue-olive { color: oklch(54% 0.08 110); }

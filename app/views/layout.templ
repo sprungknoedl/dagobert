@@ -116,8 +116,8 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 	</nav>
 }
 
-templ sidebarLink(url string, title string, icon string, page string) {
-	<li><a href={ url } title={ title } class={ fp.If(title == page, "menu-active", "") }><i class={ "hio hio-6 hio-" + icon }></i> </a></li>
+templ sidebarLink(url string, title string, icon string, page string, tint string) {
+	<li><a href={ url } title={ title } class={ fp.If(title == page, "menu-active", "") }><i class={ "hio hio-6 hio-" + icon + " " + tint }></i> </a></li>
 }
 
 templ sidebar(env Env, title string) {
@@ -127,28 +127,28 @@ templ sidebar(env Env, title string) {
 		</div>
 		<div class="divider"></div>
 		<ul class="menu gap-2">
-			@sidebarLink("/", "Cases", "briefcase", title)
+			@sidebarLink("/", "Cases", "briefcase", title, "hue-gold")
 		</ul>
 		if env.Case.ID != "" {
 			<div class="divider"></div>
 			<ul class="menu gap-2">
-				@sidebarLink("/cases/"+env.Case.ID+"/summary/", "Summary", "home-modern", title)
+				@sidebarLink("/cases/"+env.Case.ID+"/summary/", "Summary", "home-modern", title, "hue-slate")
 				if !env.Case.IsTemplate {
-					@sidebarLink("/cases/"+env.Case.ID+"/events/", "Timeline", "clock", title)
-					@sidebarLink("/cases/"+env.Case.ID+"/assets/", "Assets", "computer-desktop", title)
-					@sidebarLink("/cases/"+env.Case.ID+"/malware/", "Malware/Tools", "bug-ant", title)
-					@sidebarLink("/cases/"+env.Case.ID+"/indicators/", "Indicators", "finger-print", title)
-					@sidebarLink("/cases/"+env.Case.ID+"/evidences/", "Evidences", "cube", title)
+					@sidebarLink("/cases/"+env.Case.ID+"/events/", "Timeline", "clock", title, "hue-teal")
+					@sidebarLink("/cases/"+env.Case.ID+"/assets/", "Assets", "computer-desktop", title, "hue-moss")
+					@sidebarLink("/cases/"+env.Case.ID+"/malware/", "Malware/Tools", "bug-ant", title, "hue-rust")
+					@sidebarLink("/cases/"+env.Case.ID+"/indicators/", "Indicators", "finger-print", title, "hue-plum")
+					@sidebarLink("/cases/"+env.Case.ID+"/evidences/", "Evidences", "cube", title, "hue-amber")
 				}
-				@sidebarLink("/cases/"+env.Case.ID+"/tasks/", "Tasks", "clipboard-document-check", title)
-				@sidebarLink("/cases/"+env.Case.ID+"/notes/", "Notes", "chat-bubble-left", title)
+				@sidebarLink("/cases/"+env.Case.ID+"/tasks/", "Tasks", "clipboard-document-check", title, "hue-green")
+				@sidebarLink("/cases/"+env.Case.ID+"/notes/", "Notes", "chat-bubble-left", title, "hue-peri")
 			</ul>
 			if !env.Case.IsTemplate {
 				<div class="divider"></div>
 				<ul class="menu gap-2">
-					@sidebarLink("/cases/"+env.Case.ID+"/vis/network", "Lateral Movement", "share", title)
-					@sidebarLink("/cases/"+env.Case.ID+"/vis/mitre", "ATT&CK Navigator", "table-cells", title)
-					<li><a href={ "/cases/" + env.Case.ID + "/reports" } title="Report" class="" up-layer="new drawer"><i class="hio hio-6 hio-document-arrow-down"></i> </a></li>
+					@sidebarLink("/cases/"+env.Case.ID+"/vis/network", "Lateral Movement", "share", title, "hue-cyan")
+					@sidebarLink("/cases/"+env.Case.ID+"/vis/mitre", "ATT&CK Navigator", "table-cells", title, "hue-brick")
+					<li><a href={ "/cases/" + env.Case.ID + "/reports" } title="Report" class="" up-layer="new drawer"><i class="hio hio-6 hio-document-arrow-down hue-olive"></i> </a></li>
 				</ul>
 			}
 		}
@@ -157,7 +157,7 @@ templ sidebar(env Env, title string) {
 		<ul class="menu gap-2">
 			if _, ok := env.Allowed("GET", "/settings/"); ok {
 				<li class="dropdown dropdown-right dropdown-end">
-					<div tabindex="42" role="button"><i class="hio hio-6 hio-cog-6-tooth"></i></div>
+					<div tabindex="42" role="button"><i class="hio hio-6 hio-cog-6-tooth hue-slate"></i></div>
 					<ul tabindex="42" class="dropdown-content menu bg-base-200 rounded-box z-2 w-52 p-2 shadow">
 						<li><a href="/settings/hooks/"><i class="hio hio-6 hio-bolt"></i> Automation Rules</a></li>
 						<li><a href="/settings/api-keys/"><i class="hio hio-6 hio-beaker"></i> API Keys</a></li>
@@ -168,8 +168,8 @@ templ sidebar(env Env, title string) {
 					</ul>
 				</li>
 			}
-			<li><a href="/auth/changepassword" title="Change password" class="" up-layer="new drawer"><i class="hio hio-6 hio-key"></i> </a></li>
-			<li><a href="/auth/logout" title="Logout" class=""><i class="hio hio-6 hio-arrow-right-start-on-rectangle"></i> </a></li>
+			<li><a href="/auth/changepassword" title="Change password" class="" up-layer="new drawer"><i class="hio hio-6 hio-key hue-amber"></i> </a></li>
+			<li><a href="/auth/logout" title="Logout" class=""><i class="hio hio-6 hio-arrow-right-start-on-rectangle hue-rust"></i> </a></li>
 		</ul>
 	</aside>
 }
@@ -281,8 +281,8 @@ templ list(env Env, title string, opts ...navbarOption) {
 
 templ emptyTable(env Env, voice string, desc string) {
 	<tr>
-		<td colspan="100" class="py-16 text-center text-base-content/50">
-			<i class="hio hio-inbox text-4xl block mx-auto mb-2"></i>
+		<td colspan="100" class="py-8 text-center text-base-content/50">
+			@plateStroller("w-52 max-w-full mx-auto mb-4")
 			if voice != "" {
 				<p class="font-serif italic text-lg text-base-content/60 mb-2">{ voice }</p>
 			}
