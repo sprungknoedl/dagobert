@@ -1,9 +1,17 @@
-.PHONY: build build-web build-go check fmt vet test docker run clean
+.PHONY: build build-web build-go check fmt vet test validate-exports docker run clean
 .EXPORT_ALL_VARIABLES:
 -include dagobert.env
 
 TAILWIND_VERSION = 4.1.18
 DAISYUI_VERSION  = 5.5.14
+
+# Export validation: external validators for the OpenIOC / STIX indicator
+# exports. The OpenIOC 1.1 XSD is vendored under pkg/openioc/testdata; the STIX
+# validator and its (submodule-pinned) JSON schemas are bootstrapped into bin/.
+STIX_VALIDATOR_VERSION = 3.3.1
+STIX_SCHEMAS_SHA       = c4f8d589acf2bdb3783655c89e0ffb6e150006ae
+STIX_VENV              = bin/stix-validator-venv
+STIX_READY             = $(STIX_VENV)/.ready-$(STIX_VALIDATOR_VERSION)-$(STIX_SCHEMAS_SHA)
 
 UNAME_S := $(shell uname -s)
 UNAME_M := $(shell uname -m)
@@ -48,6 +56,7 @@ build-web: $(TAILWIND_BIN) app/assets/daisyui.js app/assets/daisyui-theme.js
 clean:
 	rm -f bin/tailwindcss-* bin/daisyui-*.js
 	rm -f app/assets/daisyui.js app/assets/daisyui-theme.js
+	rm -rf $(STIX_VENV)
 
 build-go:
 	go tool templ generate
@@ -70,6 +79,29 @@ vet:
 
 test:
 	go test ./...
+
+# Validate the generated OpenIOC / STIX indicator exports against external
+# validators (xmllint + the OpenIOC 1.1 XSD, stix2-validator + STIX 2.1 schemas).
+# Not part of `check`: it needs network on first run and tools outside the Go
+# toolchain. Run it after changing the export mapping in app/handler/indicators.go.
+validate-exports: $(STIX_READY)
+	@command -v xmllint >/dev/null 2>&1 || { echo "xmllint not found — install libxml2 (macOS: brew install libxml2)"; exit 1; }
+	STIX2_VALIDATOR="$(CURDIR)/$(STIX_VENV)/bin/stix2_validator" \
+		go test -tags validate -run TestValidate -count=1 -v ./pkg/openioc ./pkg/stix
+
+# Bootstrap a pinned stix2-validator plus the exact JSON schemas it expects (the
+# pip wheel ships without them). Re-runs only when the pinned versions change.
+$(STIX_READY):
+	@command -v python3 >/dev/null 2>&1 || { echo "python3 not found — required for stix2-validator"; exit 1; }
+	rm -rf $(STIX_VENV)
+	python3 -m venv $(STIX_VENV)
+	$(STIX_VENV)/bin/pip -q install --upgrade pip
+	$(STIX_VENV)/bin/pip -q install stix2-validator==$(STIX_VALIDATOR_VERSION)
+	pkg=$$($(STIX_VENV)/bin/python -c "import stix2validator, os; print(os.path.dirname(stix2validator.__file__))"); \
+		mkdir -p "$$pkg/schemas-2.1"; \
+		curl -sSL "https://codeload.github.com/oasis-open/cti-stix2-json-schemas/tar.gz/$(STIX_SCHEMAS_SHA)" \
+			| tar -xz -C "$$pkg/schemas-2.1" --strip-components=1
+	touch $@
 
 docker:
 	docker build . -f cfg/Dockerfile -t sprungknoedl/dagobert
