@@ -1,6 +1,6 @@
 module github.com/sprungknoedl/dagobert
 
-go 1.25.0
+go 1.26.4
 
 require (
 	github.com/a-h/templ v0.3.1020
@@ -14,8 +14,8 @@ require (
 	github.com/lmittmann/tint v1.1.3
 	github.com/mattn/go-shellwords v1.0.13
 	github.com/spf13/cobra v1.10.2
+	github.com/sprungknoedl/zip v0.0.0-20260620204051-7b76ec53910c
 	github.com/stretchr/testify v1.11.1
-	github.com/yeka/zip v0.0.0-20231116150916-03d6312748a9
 	github.com/yuin/goldmark v1.8.2
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/term v0.44.0
