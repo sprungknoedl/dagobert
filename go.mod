@@ -6,7 +6,6 @@ require (
 	github.com/a-h/templ v0.3.1020
 	github.com/alexedwards/scs/sqlite3store v0.0.0-20251002162104-209de6e426de
 	github.com/alexedwards/scs/v2 v2.9.0
-	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/casbin/casbin/v2 v2.135.0
 	github.com/coreos/go-oidc/v3 v3.18.0
 	github.com/expr-lang/expr v1.17.8
@@ -16,6 +15,7 @@ require (
 	github.com/mattn/go-shellwords v1.0.13
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
+	github.com/yeka/zip v0.0.0-20231116150916-03d6312748a9
 	github.com/yuin/goldmark v1.8.2
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/term v0.44.0
