@@ -1,4 +1,4 @@
-FROM golang:1.25 AS app
+FROM golang:1.26 AS app
 WORKDIR /src
 
 COPY go.mod .
