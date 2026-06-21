@@ -144,7 +144,7 @@ func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/settings/reports/", http.StatusSeeOther)
+	RedirectAfterSave(w, r, "/settings/reports/")
 }
 
 func (ctrl SettingsCtrl) DownloadReport(w http.ResponseWriter, r *http.Request) {

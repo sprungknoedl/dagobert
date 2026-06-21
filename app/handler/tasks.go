@@ -128,7 +128,7 @@ func (ctrl TaskCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/cases/%s/tasks/", dto.CaseID), http.StatusSeeOther)
+	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/tasks/", dto.CaseID))
 }
 
 func (ctrl TaskCtrl) Delete(w http.ResponseWriter, r *http.Request) {

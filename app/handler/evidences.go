@@ -250,7 +250,7 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		worker.TriggerOnEvidenceAdded(ctrl.Store(), dto)
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/", dto.CaseID), http.StatusSeeOther)
+	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/evidences/", dto.CaseID))
 }
 
 func (ctrl EvidenceCtrl) Download(w http.ResponseWriter, r *http.Request) {

@@ -312,3 +312,16 @@ func Render(w http.ResponseWriter, r *http.Request, status int, c templ.Componen
 			"url", r.URL)
 	}
 }
+
+// RedirectAfterSave issues the post-save redirect to a list page for browser
+// (Unpoly) clients, but answers non-interactive API callers with 201 Created.
+// API clients follow 3xx redirects automatically; bouncing them to an HTML list
+// page they may not be permitted to read (e.g. a create-only Donald key) would
+// turn a successful write into a spurious 403.
+func RedirectAfterSave(w http.ResponseWriter, r *http.Request, url string) {
+	if auth.IsAPIRequest(r) {
+		w.WriteHeader(http.StatusCreated)
+		return
+	}
+	http.Redirect(w, r, url, http.StatusSeeOther)
+}

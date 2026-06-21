@@ -46,7 +46,7 @@ func (ctrl SettingsCtrl) SaveEnum(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/settings/enums/", http.StatusSeeOther)
+	RedirectAfterSave(w, r, "/settings/enums/")
 }
 
 func (ctrl SettingsCtrl) DeleteEnum(w http.ResponseWriter, r *http.Request) {

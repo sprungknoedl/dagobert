@@ -54,7 +54,7 @@ func (ctrl SettingsCtrl) SaveTemplate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/settings/templates/", http.StatusSeeOther)
+	RedirectAfterSave(w, r, "/settings/templates/")
 }
 
 func (ctrl SettingsCtrl) DeleteTemplate(w http.ResponseWriter, r *http.Request) {

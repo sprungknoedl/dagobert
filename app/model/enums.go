@@ -49,7 +49,7 @@ func (store *Store) ListEnums() (Enums, error) {
 	}
 
 	// group enums
-	enums := Enums{HookTrigger: hookTrigger, UserRoles: userRoles}
+	enums := Enums{HookTrigger: hookTrigger, UserRoles: userRoles, KeyTypes: KeyTypeEnums()}
 	for _, enum := range list {
 		switch enum.Category {
 		case "AssetStatus":
@@ -70,8 +70,6 @@ func (store *Store) ListEnums() (Enums, error) {
 			enums.IndicatorTypes = append(enums.IndicatorTypes, enum)
 		case "IndicatorTLPs":
 			enums.IndicatorTLPs = append(enums.IndicatorTLPs, enum)
-		case "KeyTypes":
-			enums.KeyTypes = append(enums.KeyTypes, enum)
 		case "MalwareStatus":
 			enums.MalwareStatus = append(enums.MalwareStatus, enum)
 		case "TaskTypes":
