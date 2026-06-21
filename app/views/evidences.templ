@@ -52,7 +52,12 @@ templ EvidencesMany(env Env, rows []model.Evidence) {
 								<td class="value-0 truncate">
 									@enum(env.Enums.EvidenceTypes, row.Type)
 								</td>
-								<td class="value-1" data-search={ row.Name }>{ row.Name } </td>
+								<td class="value-1" data-search={ row.Name }>
+									{ row.Name }
+									if row.Password != "" {
+										<i class="hio hio-4 hio-lock-closed text-base-content/40" title="Archive password stored"></i>
+									}
+								</td>
 								<td class="value-2 font-mono text-xs" data-search={ row.Hash }>{ row.Hash } </td>
 								<td class="value-3" data-search={ row.Size }>{ humanizeSize(row.Size) } </td>
 								<td class="value-4" data-search={ fp.If(row.StartsAt.IsZero(), "", row.StartsAt.Format(time.RFC3339)) }>{ fp.If(row.StartsAt.IsZero(), "", row.StartsAt.Format(time.RFC3339)) } </td>
@@ -109,6 +114,8 @@ templ EvidencesOne(env Env, obj model.Evidence, vr valid.ValidationError) {
 			</label>
 			<input disabled?={ obj.Size == 0 } name="Hash" type="text" class="input w-full" value={ obj.Hash }/>
 		</div>
+		@passwordField("Password", obj.Password, withLabel("File password"),
+			withHint("Remembers the file password for analysts. Leave blank to remove."))
 		<div class="form-control mb-2">
 			<label class="label justify-start gap-2">
 				Starts at
@@ -127,6 +134,11 @@ templ EvidencesOne(env Env, obj model.Evidence, vr valid.ValidationError) {
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
 		@requiredFootnote()
 		<script>
+		function togglePassword(btn) {
+			var input = btn.parentElement.querySelector('input');
+			input.type = input.type === 'password' ? 'text' : 'password';
+		}
+
 		function hashfile() {
 			var file = document.querySelector('input[name="File"]').files[0];
 			readbinaryfile(file).then(function(result) {

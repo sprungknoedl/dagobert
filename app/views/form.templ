@@ -120,6 +120,19 @@ templ stringField(name string, value string, opts ...formOption) {
 	</div>
 }
 
+templ passwordField(name string, value string, opts ...formOption) {
+	{{ cfg := applyformOptions(opts) }}
+	<div class="form-control mb-2">
+		@fieldLabel(cfg)
+		<div class="join w-full">
+			<input name={ name } type="password" class="input join-item w-full" value={ value } autocomplete="off" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other"/>
+			<button type="button" class="btn join-item" onclick="togglePassword(this)" tabindex="-1">
+				<i class="hio hio-5 hio-eye"></i>
+			</button>
+		</div>
+	</div>
+}
+
 templ numberField(name string, value int, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
 	<div class="form-control mb-2">

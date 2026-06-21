@@ -8,6 +8,7 @@ type Evidence struct {
 	Size     int64
 	Source   string
 	Notes    string
+	Password string
 	CaseID   string
 	StartsAt Time
 	EndsAt   Time
