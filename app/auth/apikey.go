@@ -19,9 +19,18 @@ func ApiKeyMiddleware(db *model.Store) func(http.Handler) http.Handler {
 				return
 			}
 
-			_, err := db.GetKey(key)
+			k, err := db.GetKey(key)
 			if err != nil {
 				slog.Warn("failed to get api key", "err", err)
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+
+			// resolve the principal bound to this key's type; fail closed on
+			// unknown/empty types rather than silently granting admin access
+			principal, ok := model.PrincipalForKeyType(k.Type)
+			if !ok {
+				slog.Warn("api key has unknown type", "type", k.Type)
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
@@ -31,9 +40,11 @@ func ApiKeyMiddleware(db *model.Store) func(http.Handler) http.Handler {
 			r.Header.Del("Authorization")
 			r.Header.Del("Cookie")
 
-			// embed system user into session
-			r = r.WithContext(context.WithValue(r.Context(), ctxKeyUser, &model.SystemUser))
-			next.ServeHTTP(w, r)
+			// embed the bound principal into the request context and mark this
+			// as a non-interactive API request so handlers can tailor responses
+			ctx := context.WithValue(r.Context(), ctxKeyUser, principal)
+			ctx = context.WithValue(ctx, ctxKeyAPI, true)
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }

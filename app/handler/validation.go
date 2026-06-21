@@ -128,7 +128,7 @@ func ValidateHook(dto *model.Hook, enums model.Enums) valid.ValidationError {
 
 func ValidateEnum(dto *model.Enum, _ model.Enums) valid.ValidationError {
 	states := []string{"", "success", "warning", "error"}
-	enums := []string{"AssetStatus", "AssetTypes", "CaseSeverities", "CaseOutcomes", "EventTypes", "EvidenceTypes", "IndicatorStatus", "IndicatorTypes", "KeyTypes", "MalwareStatus", "TaskTypes"}
+	enums := []string{"AssetStatus", "AssetTypes", "CaseSeverities", "CaseOutcomes", "EventTypes", "EvidenceTypes", "IndicatorStatus", "IndicatorTypes", "MalwareStatus", "TaskTypes"}
 
 	return valid.Check([]valid.Condition{
 		{Name: "ID", Missing: dto.ID == ""},

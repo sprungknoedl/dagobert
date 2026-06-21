@@ -116,7 +116,7 @@ func (ctrl AssetCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/cases/%s/assets/", dto.CaseID), http.StatusSeeOther)
+	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/assets/", dto.CaseID))
 }
 
 func (ctrl AssetCtrl) Delete(w http.ResponseWriter, r *http.Request) {

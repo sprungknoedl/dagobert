@@ -112,7 +112,7 @@ func (ctrl NoteCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/cases/%s/notes/", dto.CaseID), http.StatusSeeOther)
+	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/notes/", dto.CaseID))
 }
 
 func (ctrl NoteCtrl) Delete(w http.ResponseWriter, r *http.Request) {

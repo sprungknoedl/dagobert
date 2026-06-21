@@ -90,7 +90,7 @@ func (ctrl UserCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/settings/users/", http.StatusSeeOther)
+	RedirectAfterSave(w, r, "/settings/users/")
 }
 
 func (ctrl UserCtrl) Delete(w http.ResponseWriter, r *http.Request) {
@@ -160,5 +160,5 @@ func (ctrl UserCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/settings/users/", http.StatusSeeOther)
+	RedirectAfterSave(w, r, "/settings/users/")
 }

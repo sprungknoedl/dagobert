@@ -162,7 +162,7 @@ func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dstSummary := strings.HasSuffix(r.Referer(), "?target=summary")
-	http.Redirect(w, r, fp.If(dstSummary, "/cases/"+dto.ID+"/summary/", "/cases/"), http.StatusSeeOther)
+	RedirectAfterSave(w, r, fp.If(dstSummary, "/cases/"+dto.ID+"/summary/", "/cases/"))
 }
 
 func (ctrl CaseCtrl) Delete(w http.ResponseWriter, r *http.Request) {
@@ -223,7 +223,7 @@ func (ctrl CaseCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/cases/", http.StatusSeeOther)
+	RedirectAfterSave(w, r, "/cases/")
 }
 
 func (ctrl CaseCtrl) Summary(w http.ResponseWriter, r *http.Request) {

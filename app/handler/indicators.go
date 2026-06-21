@@ -296,7 +296,7 @@ func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/cases/%s/indicators/", dto.CaseID), http.StatusSeeOther)
+	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/indicators/", dto.CaseID))
 }
 
 func (ctrl IndicatorCtrl) Delete(w http.ResponseWriter, r *http.Request) {
