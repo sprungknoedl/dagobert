@@ -96,15 +96,17 @@ templ EvidencesOne(env Env, obj model.Evidence, vr valid.ValidationError) {
 		@hiddenField("CaseID", obj.CaseID)
 		@selectField("Type", obj.Type, env.Enums.EvidenceTypes, required(), withLabel("Type"), withError(vr["Type"]))
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
-		<div class="form-control mb-2">
-			<label class="label justify-start gap-2">
-				File
-				if obj.Size == 0 {
-					<span class="text-xs">(no file uploaded yet)</span>
+		if obj.ID == "new" || vr["File"].Invalid {
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">
+					File
+					@validationError(vr["File"])
+				</label>
+				if obj.ID == "new" {
+					<input name="File" type="file" class="file-input w-full"/>
 				}
-			</label>
-			<input name="File" type="file" class="file-input w-full"/>
-		</div>
+			</div>
+		}
 		<div class="form-control mb-2">
 			<label class="label justify-start gap-2">
 				Hash
@@ -171,10 +173,13 @@ templ EvidencesOne(env Env, obj model.Evidence, vr valid.ValidationError) {
 			return hexstring;
 		}
 
-		document.querySelector('input[name="File"]').onchange = (e) => {
-			hashfile();
-			document.querySelector('input[name="Name"]').value = e.target.value.replace(/.*(\/|\\)/, '');
-		};
+		var fileInput = document.querySelector('input[name="File"]');
+		if (fileInput) {
+			fileInput.onchange = (e) => {
+				hashfile();
+				document.querySelector('input[name="Name"]').value = e.target.value.replace(/.*(\/|\\)/, '');
+			};
+		}
         </script>
 	}
 }

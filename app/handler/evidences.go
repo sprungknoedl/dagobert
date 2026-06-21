@@ -179,6 +179,13 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 
 	// process file if present
 	if fh != nil && fh.Size > 0 {
+		if dto.ID != "new" {
+			vr := valid.ValidationError{"File": valid.Condition{Name: "File", Invalid: true,
+				Message: "Replacing the file of an existing entry is not supported — create a new entry instead."}}
+			Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(Env(ctrl, r), dto, vr))
+			return
+		}
+
 		// prepare location for evidence storage
 		dst := filepath.Join("files", "evidences", dto.CaseID, dto.Name)
 		err = os.MkdirAll(filepath.Dir(dst), 0755)
