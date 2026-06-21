@@ -2,12 +2,11 @@ package cli
 
 import (
 	"cmp"
+	"errors"
 	"log/slog"
 	"os"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/sqlite"
-	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/spf13/cobra"
 	"github.com/sprungknoedl/dagobert/app/model"
 )
@@ -16,27 +15,44 @@ func Migrate(cmd *cobra.Command, args []string) error {
 	// --------------------------------------
 	// Database
 	// --------------------------------------
-	dburl := cmp.Or(os.Getenv("DB_URL"), "file:files/dagobert.db?_pragma=foreign_keys(ON)&_pragma=journal_mode(WAL)")
+	dburl := cmp.Or(os.Getenv("DB_URL"), model.DefaultUrl)
 	slog.Info("Connecting to database", "url", dburl)
 	store, err := model.Connect(dburl)
 	if err != nil {
 		return err
 	}
 
-	db, err := sqlite.WithInstance(store.RawConn, &sqlite.Config{})
-	if err != nil {
-		return err
-	}
-
 	slog.Info("Loading database migrations")
-	source, err := iofs.New(model.Migrations, "migrations")
+	m, err := store.NewMigrate()
 	if err != nil {
 		return err
 	}
 
-	m, err := migrate.NewWithInstance("iofs", source, "sqlite", db)
-	if err != nil {
-		return err
+	// --------------------------------------
+	// Dirty recovery (--force)
+	// --------------------------------------
+	if force, _ := cmd.Flags().GetBool("force"); force {
+		version, dirty, verr := m.Version()
+		if verr != nil && !errors.Is(verr, migrate.ErrNilVersion) {
+			return verr
+		}
+
+		switch {
+		case !dirty:
+			slog.Info("Database is not dirty, --force has no effect")
+		default:
+			// Roll the recorded version back past the failed migration so that
+			// Up re-runs it. By passing --force the operator asserts they have
+			// fixed whatever caused migration to fail.
+			reset := int(version) - 1
+			if reset < 1 {
+				reset = -1 // migrate.NilVersion: re-run from the first migration
+			}
+			slog.Warn("Forcing dirty database to re-run failed migration", "dirty_version", version, "reset_to", reset)
+			if err := m.Force(reset); err != nil {
+				return err
+			}
+		}
 	}
 
 	slog.Info("Applying database migrations")
@@ -46,12 +62,12 @@ func Migrate(cmd *cobra.Command, args []string) error {
 	}
 
 	v, dirty, err := m.Version()
-	if err != nil && err != migrate.ErrNoChange {
+	if err != nil && !errors.Is(err, migrate.ErrNilVersion) {
 		return err
 	}
 
 	if dirty {
-		slog.Info("Database model migrated", "version", v)
+		slog.Warn("Database model dirty", "version", v)
 	} else {
 		slog.Info("Database model current", "version", v)
 	}

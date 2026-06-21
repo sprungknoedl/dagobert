@@ -32,6 +32,10 @@ func Run(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	// refuse to serve against a schema that does not match this build; running
+	// out-of-date or partially-migrated would fail confusingly at request time
+	guardSchema(db)
+
 	// --------------------------------------
 	// Authorization
 	// --------------------------------------
