@@ -43,6 +43,9 @@ can work on a case concurrently.
   analysis.
 - **Hooks** — trigger automations when records are created or updated,
   with conditions written as [expr](https://expr-lang.org/) expressions.
+- **MCP server** — expose case data (cases, timeline, assets, indicators,
+  malware, notes, tasks) read-only to MCP clients over an authenticated
+  HTTP endpoint.
 - **Authentication** — local users or any OIDC provider (tested with
   Azure AD), with optional auto-provisioning.
 
@@ -108,6 +111,16 @@ All runtime configuration is done through environment variables — see
 `dagobert.env.example` for an annotated starting point and the
 [Configuration reference](https://github.com/sprungknoedl/dagobert/wiki/Configuration)
 in the wiki for the complete list.
+
+### MCP access
+
+Dagobert serves a read-only [MCP](https://modelcontextprotocol.io/) endpoint at
+`/mcp`. Create an API key of type *MCP* in the UI, then point an MCP client at
+it. For Claude Code:
+
+```sh
+claude mcp add --transport http dagobert https://<dagobert>/mcp --header "X-API-Key: <API KEY>"
+```
 
 ## Development
 

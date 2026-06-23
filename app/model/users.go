@@ -18,6 +18,12 @@ var DonaldUser = User{
 	Role: "Donald",
 }
 
+var McpUser = User{
+	ID:   "<mcp>",
+	Name: "MCP",
+	Role: "MCP",
+}
+
 var ErrUserProtected = errors.New("modification to user prohibited")
 
 type User struct {
@@ -53,14 +59,14 @@ func (store *Store) GetUserByUPN(upn string) (User, error) {
 }
 
 func (store *Store) SaveUser(obj User) error {
-	if obj.ID == SystemUser.ID || obj.ID == DonaldUser.ID {
+	if obj.ID == SystemUser.ID || obj.ID == DonaldUser.ID || obj.ID == McpUser.ID {
 		return ErrUserProtected
 	}
 	return store.DB.Save(obj).Error
 }
 
 func (store *Store) DeleteUser(id string) error {
-	if id == SystemUser.ID || id == DonaldUser.ID {
+	if id == SystemUser.ID || id == DonaldUser.ID || id == McpUser.ID {
 		return ErrUserProtected
 	}
 	return store.DB.Delete(&User{}, "id = ?", id).Error
