@@ -109,8 +109,9 @@ the `TIMESKETCH_*` variables.
 
 All runtime configuration is done through environment variables — see
 `dagobert.env.example` for an annotated starting point and the
-[Configuration reference](https://github.com/sprungknoedl/dagobert/wiki/Configuration)
-in the wiki for the complete list.
+[Configuration reference](docs/Configuration.md) for the complete list.
+For how evidence is processed and how to supply the Hayabusa and Plaso tools,
+see [Evidence Processing](docs/Evidence%20Processing.md).
 
 ### MCP access
 
