@@ -19,6 +19,7 @@ type KeyType struct {
 var KeyTypes = []KeyType{
 	{"API", "hio-beaker", &SystemUser},
 	{"Donald", "hio-camera", &DonaldUser},
+	{"MCP", "hio-cpu-chip", &McpUser},
 }
 
 // KeyTypeEnums projects the registry into []Enum for views and validation.
