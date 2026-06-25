@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/sprungknoedl/dagobert/app/model"
 )
@@ -13,13 +14,30 @@ const HeaderApiKey = "X-API-Key"
 func ApiKeyMiddleware(db *model.Store) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Prefer X-API-Key (unambiguously ours, strict). If absent, treat
+			// Authorization: Bearer as an api-key candidate only when it carries
+			// our dgb_ prefix; any other Bearer value falls through to session
+			// auth so the header isn't hijacked from other uses.
 			key := r.Header.Get(HeaderApiKey)
+			if key == "" {
+				if bearer, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer "); ok &&
+					strings.HasPrefix(bearer, model.KeyPrefix) {
+					key = bearer
+				}
+			}
 			if key == "" {
 				next.ServeHTTP(w, r)
 				return
 			}
 
-			k, err := db.GetKey(key)
+			// reject malformed/typo'd keys offline, before any DB query
+			if !model.ValidKeyFormat(key) {
+				slog.Warn("api key has invalid format")
+				w.WriteHeader(http.StatusUnauthorized)
+				return
+			}
+
+			k, err := db.GetKey(model.HashKey(key))
 			if err != nil {
 				slog.Warn("failed to get api key", "err", err)
 				w.WriteHeader(http.StatusUnauthorized)
