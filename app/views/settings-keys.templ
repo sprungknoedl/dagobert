@@ -30,7 +30,7 @@ templ SettingsKeyMany(env Env, keys []model.Key, modules []worker.ModuleStatus) 
 									@enum(env.Enums.KeyTypes, row.Type)
 								</td>
 								<td class="value-1" data-search={ row.Name }>{ row.Name } </td>
-								<td class="value-2 font-mono text-xs" data-search={ row.Key }>{ row.Key } </td>
+								<td class="value-2 font-mono text-xs" data-search={ row.Hint }>{ row.Hint } </td>
 								<td class="text-right">
 									<div class="join">
 										@defaultActionBtns(env, env.Route+row.Key)
@@ -68,6 +68,26 @@ templ SettingsKeyMany(env Env, keys []model.Key, modules []worker.ModuleStatus) 
 				</tbody>
 			</table>
 		}
+	}
+}
+
+templ SettingsKeyReveal(env Env, plaintext string) {
+	@layout() {
+		<main>
+			<h1 class="font-serif text-2xl mb-4">API key created</h1>
+			<div class="alert alert-info mb-4">
+				<i class="hio hio-5 hio-key"></i>
+				<span>Copy this key now. For security it is stored only as a hash and will not be shown again.</span>
+			</div>
+			<div class="join w-full mb-4">
+				<input id="reveal-key" type="text" class="input join-item w-full font-mono text-xs" value={ plaintext } readonly/>
+				<button type="button" class="btn join-item" onclick="navigator.clipboard.writeText(document.getElementById('reveal-key').value)">
+					<i class="hio hio-5 hio-clipboard-document"></i>
+					Copy
+				</button>
+			</div>
+			<a class="btn" href="/settings/api-keys/">Back to keys </a>
+		</main>
 	}
 }
 

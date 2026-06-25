@@ -8,7 +8,6 @@ import (
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/app/worker"
-	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
@@ -56,8 +55,28 @@ func (ctrl KeyCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto.Key = fp.If(dto.Key == "new", fp.Random(64), dto.Key)
-	if err := ctrl.Store().SaveKey(dto); err != nil {
+	if dto.Key == "new" {
+		plaintext, hash, hint := model.GenerateKey()
+		if err := ctrl.Store().SaveKey(model.Key{Key: hash, Hint: hint, Type: dto.Type, Name: dto.Name}); err != nil {
+			Err(w, r, err)
+			return
+		}
+
+		// reveal the plaintext exactly once; it lives only in this response
+		Render(w, r, http.StatusOK, views.SettingsKeyReveal(Env(ctrl, r), plaintext))
+		return
+	}
+
+	// existing key: load the stored row and update only Type/Name so the
+	// persisted hash/Hint are preserved (don't trust client-supplied values)
+	obj, err := ctrl.Store().GetKey(dto.Key)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+	obj.Type = dto.Type
+	obj.Name = dto.Name
+	if err := ctrl.Store().SaveKey(obj); err != nil {
 		Err(w, r, err)
 		return
 	}
