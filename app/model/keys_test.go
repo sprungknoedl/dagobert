@@ -1,6 +1,7 @@
 package model
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,7 +29,7 @@ func TestKeyCrypto(t *testing.T) {
 		assert.NotEqual(t, plaintext, hash)
 	})
 
-	t.Run("the hint is non-secret and ends with the plaintext's last 4", func(t *testing.T) {
-		assert.Equal(t, KeyPrefix+"…"+plaintext[len(plaintext)-4:], hint)
+	t.Run("the hint is non-secret and shows the plaintext's first 6 and last 6", func(t *testing.T) {
+		assert.Equal(t, plaintext[:6]+strings.Repeat("•", len(plaintext)-12)+plaintext[len(plaintext)-6:], hint)
 	})
 }

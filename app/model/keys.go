@@ -34,7 +34,7 @@ func GenerateKey() (plaintext, hash, hint string) {
 	body := fp.Random(keyBodyLen)
 	plaintext = KeyPrefix + body + keyChecksum(body)
 	hash = HashKey(plaintext)
-	hint = KeyPrefix + "…" + plaintext[len(plaintext)-4:]
+	hint = plaintext[:6] + strings.Repeat("•", len(plaintext)-12) + plaintext[len(plaintext)-6:]
 	return plaintext, hash, hint
 }
 
