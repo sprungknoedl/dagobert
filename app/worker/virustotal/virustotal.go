@@ -99,7 +99,7 @@ func (m *Module) Run(job model.Job) error {
 func (m *Module) CustomAttributes() []model.CustomAttribute {
 	return []model.CustomAttribute{
 		{Entity: "Indicator", Label: "VirusTotal Enrichment", Type: "textfield", Rank: 100},
-		{Entity: "Indicator", Label: "VirusTotal Verdict", Type: "select", Options: model.Strings{"malicious", "suspicious", "clean", "unknown"}, Rank: 101},
+		{Entity: "Indicator", Label: "VirusTotal Verdict", Type: "select", Options: model.Strings(model.EnrichmentVerdicts), Rank: 101},
 		{Entity: "Indicator", Label: "VirusTotal Link", Type: "string", Rank: 102},
 	}
 }

@@ -1,9 +1,13 @@
 package views
 
 import (
+	"fmt"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
+	"sort"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -22,11 +26,9 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 						<th data-sort="value-0" class="sort px-3 py-4 text-left">Status</th>
 						<th data-sort="value-1" class="sort px-3 py-4 text-left">Type</th>
 						<th data-sort="value-2" class="sort px-3 py-4 text-left">Value</th>
-						<th data-sort="value-3" class="sort px-3 py-4 text-left">TLP</th>
-						<th data-sort="value-4" class="sort px-3 py-4 text-left">Source</th>
-						<th data-sort="value-5" class="sort px-3 py-4 text-left">First seen</th>
-						<th data-sort="value-6" class="sort px-3 py-4 text-left">Last seen</th>
-						<th data-sort="value-7" class="sort px-3 py-4 text-left">Events</th>
+						<th data-sort="value-3" class="sort px-3 py-4 text-left">Source</th>
+						<th data-sort="value-4" class="sort px-3 py-4 text-left">Seen</th>
+						<th data-sort="value-5" class="sort px-3 py-4 text-left">Enrichment</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
@@ -35,6 +37,7 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 						@emptyTable(env, "No indicators of compromise — yet.", "Add an IP address, domain, file hash, or other observable that can be used for detection or hunting. Set the TLP to control how widely it can be shared.")
 					} else {
 						for _, row := range rows {
+							{{ worst, worstSeverity, results := summarizeEnrichment(row.Custom) }}
 							<tr class={ fp.If(row.Flagged, "hover bg-flagged", "hover") }>
 								<td class="value-0 truncate" data-search={ row.Status }>
 									@enum(env.Enums.IndicatorStatus, row.Status)
@@ -42,19 +45,41 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 								<td class="value-1 truncate" data-search={ row.Type }>
 									@enum(env.Enums.IndicatorTypes, row.Type)
 								</td>
-								<td class="value-2 font-mono text-xs" data-search={ row.Value }>{ row.Value } </td>
-								<td class="value-3" data-search={ row.TLP }>
-									@enum(env.Enums.IndicatorTLPs, row.TLP)
+								<td class="value-2 font-mono text-xs" data-search={ row.Value }>
+									{ row.Value }
+									<br/>
+									<span class="text-xs opacity-50">{ row.TLP }</span>
 								</td>
-								<td class="value-4" data-search={ row.Source }>{ row.Source } </td>
-								<td class="value-5 truncate" data-search={ row.FirstSeen.Format(time.RFC3339) }>
-									@formatTime(row.FirstSeen)
+								<td class="value-3" data-search={ row.Source }>{ row.Source }</td>
+								<td
+									class="value-4 truncate"
+									data-search={ row.LastSeen.Format(time.RFC3339) }
+									title={ "first seen: " + row.FirstSeen.Format(time.RFC3339) + "\nlast seen: " + row.LastSeen.Format(time.RFC3339) }
+								>
+									if time.Time(row.LastSeen).IsZero() {
+										<span>—</span>
+									} else {
+										@formatTime(row.LastSeen)
+									}
+									<br/>
+									<span class="text-xs opacity-50">{ fmt.Sprintf("%d events", row.Events) }</span>
 								</td>
-								<td class="value-6 truncate" data-search={ row.LastSeen.Format(time.RFC3339) }>
-									@formatTime(row.LastSeen)
+								<td class="value-5" data-search={ strconv.Itoa(worstSeverity) }>
+									if len(results) == 0 {
+										<span class="opacity-50">—</span>
+									} else {
+										<span class={ verdictColor(worst) }>{ worst }</span>
+										<div class="flex gap-2 mt-1">
+											for _, r := range results {
+												<span
+													class={ "w-2 h-2 rounded-full " + verdictDotClass(r.Verdict) }
+													title={ r.Source + ": " + r.Verdict }
+												></span>
+											}
+										</div>
+									}
 								</td>
-								<td class="value-7" data-search={ row.Events }>{ row.Events } </td>
-								<td class="text-right value-8" data-search={ fp.If(row.Flagged, "flagged:true", "") }>
+								<td class="text-right value-6" data-search={ fp.If(row.Flagged, "flagged:true", "") }>
 									<div class="join">
 										if row.Flagged {
 											@actionBtn(env, "GET", env.Route+row.ID) {
@@ -128,4 +153,60 @@ func summarizeIndicators(rows []model.Indicator) map[string]int {
 		summary[row.Status]++
 	}
 	return summary
+}
+
+type enrichmentResult struct {
+	Source   string
+	Verdict  string
+	Severity int
+}
+
+// summarizeEnrichment distils an indicator's custom attributes into the worst
+// verdict and a per-source list sorted alphabetically. worstSeverity is -1
+// when no recognised verdicts are present.
+func summarizeEnrichment(custom model.Custom) (worst string, worstSeverity int, results []enrichmentResult) {
+	worstSeverity = -1
+	for key, val := range custom {
+		rank, ok := model.VerdictSeverity(val)
+		if !ok {
+			continue
+		}
+		source := strings.TrimSuffix(key, " Verdict")
+		verdict := strings.ToLower(val)
+		results = append(results, enrichmentResult{Source: source, Verdict: verdict, Severity: rank})
+		if rank > worstSeverity {
+			worstSeverity = rank
+			worst = verdict
+		}
+	}
+	sort.Slice(results, func(i, j int) bool {
+		return strings.ToLower(results[i].Source) < strings.ToLower(results[j].Source)
+	})
+	return
+}
+
+func verdictColor(v string) string {
+	switch v {
+	case "malicious":
+		return "text-error"
+	case "suspicious":
+		return "text-warning"
+	case "clean":
+		return "text-success"
+	default:
+		return "opacity-50"
+	}
+}
+
+func verdictDotClass(v string) string {
+	switch v {
+	case "malicious":
+		return "bg-error"
+	case "suspicious":
+		return "bg-warning"
+	case "clean":
+		return "bg-success"
+	default:
+		return "border border-current"
+	}
 }
