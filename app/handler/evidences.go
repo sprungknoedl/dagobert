@@ -53,7 +53,7 @@ func (ctrl EvidenceCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Type", "Name", "Hash", "Size", "Notes", "StartsAt", "EndsAt"})
+	cw.Write([]string{"ID", "Type", "Name", "Hash", "Size", "Notes", "StartsAt", "EndsAt", "Custom"})
 	for _, e := range list {
 		startsAt := ""
 		if !e.StartsAt.IsZero() {
@@ -72,6 +72,7 @@ func (ctrl EvidenceCtrl) Export(w http.ResponseWriter, r *http.Request) {
 			e.Notes,
 			startsAt,
 			endsAt,
+			e.Custom.JSON(),
 		})
 	}
 
@@ -114,6 +115,11 @@ func (ctrl EvidenceCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		var custom model.Custom
+		if len(rec) > 8 {
+			custom.Scan(rec[8])
+		}
+
 		obj := model.Evidence{
 			ID:       fp.If(rec[0] == "", fp.Random(10), rec[0]),
 			CaseID:   cid,
@@ -124,6 +130,7 @@ func (ctrl EvidenceCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Notes:    rec[5],
 			StartsAt: startsAt,
 			EndsAt:   endsAt,
+			Custom:   custom,
 		}
 
 		if err := ctrl.Store().SaveEvidence(cid, obj); err != nil {
@@ -244,6 +251,10 @@ func (ctrl EvidenceCtrl) Save(w http.ResponseWriter, r *http.Request) {
 			dto.Hash = fmt.Sprintf("%x", hasher.Sum(nil))
 		}
 	}
+
+	// NOTE: form-only for now — CollectCustom reads r.PostForm, so a JSON API
+	// request yields an empty map and won't carry custom values.
+	dto.Custom = CollectCustom(r)
 
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)

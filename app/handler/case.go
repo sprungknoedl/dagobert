@@ -63,7 +63,7 @@ func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Name", "Severity", "Classification", "Closed", "Outcome", "Summary"})
+	cw.Write([]string{"ID", "Name", "Severity", "Classification", "Closed", "Outcome", "Summary", "Custom"})
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
@@ -73,6 +73,7 @@ func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
 			strconv.FormatBool(e.Closed),
 			e.Outcome,
 			e.Summary,
+			e.Custom.JSON(),
 		})
 	}
 
@@ -81,11 +82,16 @@ func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	uri := "/"
-	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 7, func(rec []string) {
+	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 8, func(rec []string) {
 		closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
 		if err != nil {
 			Warn(w, r, err)
 			return
+		}
+
+		var custom model.Custom
+		if len(rec) > 7 {
+			custom.Scan(rec[7])
 		}
 
 		obj := model.Case{
@@ -96,6 +102,7 @@ func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Closed:         closed,
 			Outcome:        rec[5],
 			Summary:        rec[6],
+			Custom:         custom,
 		}
 
 		if err = ctrl.Store().SaveCase(obj); err != nil {
@@ -144,6 +151,10 @@ func (ctrl CaseCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		Warn(w, r, err)
 		return
 	}
+
+	// NOTE: form-only for now — CollectCustom reads r.PostForm, so a JSON API
+	// request yields an empty map and won't carry custom values.
+	dto.Custom = CollectCustom(r)
 
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)

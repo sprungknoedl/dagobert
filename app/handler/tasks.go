@@ -48,7 +48,7 @@ func (ctrl TaskCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Type", "Task", "Done", "Owner", "Due Date"})
+	cw.Write([]string{"ID", "Type", "Task", "Done", "Owner", "Due Date", "Custom"})
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
@@ -57,6 +57,7 @@ func (ctrl TaskCtrl) Export(w http.ResponseWriter, r *http.Request) {
 			strconv.FormatBool(e.Done),
 			e.Owner,
 			e.DateDue.Format(time.RFC3339),
+			e.Custom.JSON(),
 		})
 	}
 
@@ -66,7 +67,7 @@ func (ctrl TaskCtrl) Export(w http.ResponseWriter, r *http.Request) {
 func (ctrl TaskCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/tasks/", cid)
-	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 6, func(rec []string) {
+	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 7, func(rec []string) {
 		done, err := strconv.ParseBool(cmp.Or(rec[3], "false"))
 		if err != nil {
 			Warn(w, r, err)
@@ -77,6 +78,11 @@ func (ctrl TaskCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Warn(w, r, err)
 		}
 
+		var custom model.Custom
+		if len(rec) > 6 {
+			custom.Scan(rec[6])
+		}
+
 		obj := model.Task{
 			ID:      fp.If(rec[0] == "", fp.Random(10), rec[0]),
 			Type:    rec[1],
@@ -85,6 +91,7 @@ func (ctrl TaskCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Owner:   rec[4],
 			DateDue: model.Time(datedue), // 5
 			CaseID:  cid,
+			Custom:  custom,
 		}
 
 		if err := ctrl.Store().SaveTask(cid, obj); err != nil {
@@ -120,6 +127,10 @@ func (ctrl TaskCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		Warn(w, r, err)
 		return
 	}
+
+	// NOTE: form-only for now — CollectCustom reads r.PostForm, so a JSON API
+	// request yields an empty map and won't carry custom values.
+	dto.Custom = CollectCustom(r)
 
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)

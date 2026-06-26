@@ -139,3 +139,48 @@ func (o *Strings) Scan(src any) error {
 func (o Strings) Value() (driver.Value, error) {
 	return strings.Join(o, ","), nil
 }
+
+// Custom holds the per-model custom-attribute values as a label→value map,
+// JSON-serialized into a single TEXT column.
+type Custom map[string]string
+
+// Scan JSON-unmarshals the column into the map. Any unmarshal error or a
+// non-string source collapses to an empty map (never an error), so the view
+// layer always receives a valid map even for manually corrupted columns.
+func (c *Custom) Scan(src any) error {
+	str, ok := src.(string)
+	if !ok || str == "" {
+		*c = Custom{}
+		return nil
+	}
+	m := map[string]string{}
+	if err := json.Unmarshal([]byte(str), &m); err != nil {
+		*c = Custom{}
+		return nil
+	}
+	*c = m
+	return nil
+}
+
+// Value serializes the map to JSON. An empty or nil map returns "" (not "{}")
+// to keep the column and CSV human-readable.
+func (c Custom) Value() (driver.Value, error) {
+	if len(c) == 0 {
+		return "", nil
+	}
+	b, err := json.Marshal(map[string]string(c))
+	if err != nil {
+		return nil, err
+	}
+	return string(b), nil
+}
+
+// JSON returns the same string representation Value produces, for CSV export.
+func (c Custom) JSON() string {
+	v, err := c.Value()
+	if err != nil {
+		return ""
+	}
+	s, _ := v.(string)
+	return s
+}

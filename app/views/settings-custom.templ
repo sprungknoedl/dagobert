@@ -1,0 +1,107 @@
+package views
+
+import (
+	"strings"
+
+	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+)
+
+var customEntities = []string{"Case", "Asset", "Event", "Evidence", "Indicator", "Malware", "Note", "Task"}
+var customTypes = []string{"string", "textfield", "checkbox", "date", "datetime", "select"}
+
+templ SettingsCustomMany(env Env) {
+	@layout() {
+		@list(env, "Custom Attributes", navSettings(), navHideAdd(), navHideExport(), navHideImport(), navSubtitle("Extra fields captured on case objects")) {
+			for _, entity := range customEntities {
+				@customAttributeList(env, entity)
+			}
+		}
+	}
+}
+
+templ SettingsCustomOne(env Env, obj model.CustomAttribute, vr valid.ValidationError) {
+	{{ uri := "/settings/custom/" + obj.ID }}
+	{{ title := fp.If(obj.ID == "new", "Add custom attribute", "Edit custom attribute") }}
+	@form(env, uri, title) {
+		@hiddenField("ID", obj.ID)
+		@hiddenField("Entity", obj.Entity)
+		@numberField("Rank", obj.Rank, withLabel("Rank"), withError(vr["Rank"]))
+		@stringField("Label", obj.Label, required(), withLabel("Label"), withError(vr["Label"]), withHint("Used verbatim as the field label, the storage key, and the report-template accessor (e.g. {{ .Custom.Label }})."))
+		<div class="form-control mb-2">
+			<label class="label justify-start gap-2">
+				Type
+				@validationError(vr["Type"])
+			</label>
+			<select name="Type" class="select w-full" onchange="toggleCustomOptions(this)">
+				for _, t := range customTypes {
+					<option selected?={ obj.Type == t }>{ t }</option>
+				}
+			</select>
+		</div>
+		<div id="custom-options" class="form-control mb-2" style={ fp.If(obj.Type == "select", "", "display:none") }>
+			<label class="label justify-start gap-2">
+				Options
+				@validationError(vr["Options"])
+			</label>
+			<input name="Options" type="text" class="input w-full" value={ strings.Join(obj.Options, ",") } placeholder="comma,separated,values"/>
+		</div>
+		@requiredFootnote()
+		<script>
+		function toggleCustomOptions(sel) {
+			document.getElementById('custom-options').style.display = sel.value === 'select' ? '' : 'none';
+		}
+		</script>
+	}
+}
+
+templ customAttributeList(env Env, entity string) {
+	{{ rows := fp.Filter(env.CustomAttributes, func(c model.CustomAttribute) bool { return c.Entity == entity }) }}
+	<details open>
+		<summary class="my-4">
+			<span class="text-xl font-serif p-2">{ entity } </span>
+		</summary>
+		<div class="px-0">
+			if url, ok := env.Allowed("POST", "/settings/custom/new"); ok {
+				<a class="btn btn-sm" href={ url + "?entity=" + entity } up-layer="new drawer" up-accept-location={ env.Route }>
+					<i class="hio hio-5 hio-plus inline-block"></i> Add
+				</a>
+			}
+			<table class="table table-default" data-default-sort="value-0">
+				<thead>
+					<tr>
+						<th data-sort="value-0" class="sort px-3 py-4 text-left">Rank</th>
+						<th data-sort="value-1" class="sort px-3 py-4 text-left">Label</th>
+						<th data-sort="value-2" class="sort px-3 py-4 text-left">Type</th>
+						<th data-sort="value-3" class="sort px-3 py-4 text-left">Options</th>
+						<th style="width: 7rem"></th>
+					</tr>
+				</thead>
+				<tbody class="values">
+					if len(rows) == 0 {
+						<tr>
+							<td colspan="100" class="py-4 text-center text-base-content/50">
+								No custom attributes defined for this object type yet.
+							</td>
+						</tr>
+					} else {
+						for _, row := range rows {
+							<tr class="hover">
+								<td class="value-0" data-search={ row.Rank }>{ row.Rank } </td>
+								<td class="value-1" data-search={ row.Label }>{ row.Label } </td>
+								<td class="value-2" data-search={ row.Type }>{ row.Type } </td>
+								<td class="value-3" data-search={ strings.Join(row.Options, ", ") }>{ strings.Join(row.Options, ", ") } </td>
+								<td class="text-right">
+									<div class="join">
+										@defaultActionBtns(env, env.Route+row.ID)
+									</div>
+								</td>
+							</tr>
+						}
+					}
+				</tbody>
+			</table>
+		</div>
+	</details>
+}

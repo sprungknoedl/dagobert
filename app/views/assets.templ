@@ -84,7 +84,7 @@ templ AssetsOne(env Env, obj model.Asset, vr valid.ValidationError) {
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
 		@stringField("Addr", obj.Addr, withLabel("Address / Domain"), withError(vr["Addr"]))
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
-		<!-- x -->
+		@customAttributes(env, "Asset", obj.Custom)
 		@requiredFootnote()
 	}
 }

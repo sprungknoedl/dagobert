@@ -167,6 +167,7 @@ templ EventsOne(env Env, obj model.Event, assets []model.Asset, indicators []mod
 				<option value={ x.Value } selected?={ obj.HasIndicator(x.ID) }>{ x.Value }</option>
 			}
 		}
+		@customAttributes(env, "Event", obj.Custom)
 		@requiredFootnote()
 		<script>
 		function setNow() {

@@ -175,6 +175,12 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("POST /settings/enums/{id}", settingsCtrl.SaveEnum)
 	secured.HandleFunc("DELETE /settings/enums/{id}", settingsCtrl.DeleteEnum)
 
+	// settings (custom attributes)
+	secured.HandleFunc("GET /settings/custom/", settingsCtrl.ListCustomAttributes)
+	secured.HandleFunc("GET /settings/custom/{id}", settingsCtrl.EditCustomAttribute)
+	secured.HandleFunc("POST /settings/custom/{id}", settingsCtrl.SaveCustomAttribute)
+	secured.HandleFunc("DELETE /settings/custom/{id}", settingsCtrl.DeleteCustomAttribute)
+
 	// events
 	eventCtrl := NewEventCtrl(db, acl, mitre, ts)
 	secured.HandleFunc("GET /cases/{cid}/events/", eventCtrl.List)

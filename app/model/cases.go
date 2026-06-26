@@ -15,6 +15,7 @@ type Case struct {
 	Outcome        string
 	Closed         bool
 	IsTemplate     bool
+	Custom         Custom `form:"-"`
 
 	SketchID int
 

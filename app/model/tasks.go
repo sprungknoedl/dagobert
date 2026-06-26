@@ -8,6 +8,7 @@ type Task struct {
 	Owner   string
 	DateDue Time
 	CaseID  string
+	Custom  Custom `form:"-"`
 }
 
 func (store *Store) ListTasks(cid string) ([]Task, error) {
