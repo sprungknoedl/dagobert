@@ -71,6 +71,24 @@ func Start(ctx context.Context, store *model.Store, ts *tsclient.Client) {
 	}
 	status = results
 
+	// Enrichment modules own a small set of custom-attribute definitions used
+	// to store their verdict. Recreate any missing ones for configured modules
+	// only, so unconfigured platforms never add fields to indicator forms. The
+	// helper is off the Module interface — only enrichment modules have it.
+	for _, m := range modules {
+		ca, ok := m.(interface {
+			CustomAttributes() []model.CustomAttribute
+		})
+		if !ok {
+			continue
+		}
+		for _, attr := range ca.CustomAttributes() {
+			if err := store.EnsureCustomAttribute(attr.Entity, attr.Label, attr.Type, attr.Options, attr.Rank); err != nil {
+				slog.Error("failed to ensure custom attribute", "label", attr.Label, "err", err)
+			}
+		}
+	}
+
 	if len(modules) == 0 {
 		slog.Warn("no job modules available — configure MODULE_* env vars")
 		return

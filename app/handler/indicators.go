@@ -14,6 +14,7 @@ import (
 	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
+	"github.com/sprungknoedl/dagobert/app/worker"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/openioc"
 	"github.com/sprungknoedl/dagobert/pkg/stix"
@@ -305,6 +306,11 @@ func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	if err := ctrl.Store().SaveIndicator(dto.CaseID, dto, true); err != nil {
 		Err(w, r, err)
 		return
+	}
+
+	// trigger registered hooks
+	if new {
+		worker.TriggerOnIndicatorAdded(ctrl.Store(), dto)
 	}
 
 	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/indicators/", dto.CaseID))

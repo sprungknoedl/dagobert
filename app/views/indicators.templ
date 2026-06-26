@@ -61,15 +61,6 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 												<i class="hio hio-5 hio-flag btn-flagged"></i>
 											}
 										}
-										if row.Type == "IP" && row.TLP != "TLP:RED" {
-											@externalBtn("https://www.virustotal.com/gui/search/"+row.Value, "VT")
-											@externalBtn("https://www.abuseipdb.com/check/"+row.Value, "AB")
-										} else if row.Type == "Domain" && row.TLP != "TLP:RED" {
-											@externalBtn("https://www.virustotal.com/gui/search/"+row.Value, "VT")
-										} else if row.Type == "Hash" && row.TLP != "TLP:RED" {
-											@externalBtn("https://www.virustotal.com/gui/search/"+row.Value, "VT")
-											@externalBtn("https://www.hybrid-analysis.com/search?query="+row.Value, "HA")
-										}
 										if url, ok := env.Allowed("POST", env.Route+row.ID+"/run"); ok {
 											@actionBtn(env, "GET", url) {
 												<i class="hio hio-5 hio-bolt"></i>

@@ -32,6 +32,7 @@ type Enum struct {
 
 var hookTrigger = []Enum{
 	{Name: "OnEvidenceAdded"},
+	{Name: "OnIndicatorAdded"},
 }
 
 var userRoles = []Enum{
