@@ -29,8 +29,8 @@
     --color-warning-content: oklch(25% 0.05 70);
     --color-error: oklch(54% 0.17 27);
     --color-error-content: oklch(97% 0.01 25);
-    --radius-selector: 0.5rem;
-    --radius-field: 1rem;
+    --radius-selector: 2rem;
+    --radius-field: 0.5rem;
     --radius-box: 0.5rem;
     --size-selector: 0.25rem;
     --size-field: 0.25rem;
@@ -63,7 +63,16 @@
     src: url('/public/assets/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');
 }
 
+@font-face {
+    font-family: 'Hanken Grotesk Variable';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('/public/assets/hanken-grotesk-latin-wght-normal.woff2') format('woff2-variations');
+}
+
 @theme {
+    --font-sans: 'Hanken Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
     --font-serif: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
     --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
@@ -120,6 +129,47 @@ HAIRLINES
     border-style: solid;
     border-color: var(--color-base-300);
 } */
+
+/*
+BUTTONS
+pill-shaped buttons without affecting inputs/selects/tabs, which share --radius-field
+*/
+
+.btn {
+    --radius-field: 2rem;
+}
+
+/*
+SIDEBAR / MENU
+match the pill-shaped buttons on the active and hovered menu items;
+the radius lives on --radius-field, scoped here so only these states pick it up
+*/
+
+.menu :where(li > *):hover,
+.menu :where(li > .menu-active) {
+    --radius-field: 2rem;
+}
+
+/*
+SEARCH BAR
+the visible rounded border sits on the .input wrapper, not the bare .search field;
+scope here so only the search bar rounds, leaving other inputs untouched
+*/
+
+.input:has(.search) {
+    --radius-field: 2rem;
+}
+
+/*
+JOIN BUTTONS
+a button joined to a form field should read as part of that field: match the input's
+border color and corner radius instead of the standalone .btn pill (2rem) above
+*/
+
+.join:has(.input, .select, .textarea) .btn.join-item {
+    --radius-field: 0.5rem;
+    --btn-border: color-mix(in oklab, var(--color-base-content) 20%, transparent);
+}
 
 .bg-flagged {
     background-color: color-mix(in srgb, var(--color-warning) 10%, transparent) !important;
