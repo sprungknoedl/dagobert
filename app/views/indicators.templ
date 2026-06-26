@@ -54,7 +54,7 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 								<td
 									class="value-4 truncate"
 									data-search={ row.LastSeen.Format(time.RFC3339) }
-									title={ "first seen: " + row.FirstSeen.Format(time.RFC3339) + "\nlast seen: " + row.LastSeen.Format(time.RFC3339) }
+									title={ "first seen: " + row.FirstSeen.Format("2006-01-02 15:04:05 Z07:00") + "\nlast seen: " + row.LastSeen.Format("2006-01-02 15:04:05 Z07:00") }
 								>
 									if time.Time(row.LastSeen).IsZero() {
 										<span>—</span>

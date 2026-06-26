@@ -1,6 +1,7 @@
 package views
 
 import (
+	"fmt"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
@@ -32,9 +33,8 @@ templ AssetsMany(env Env, title string, rows []model.Asset) {
 						<th data-sort="value-1" class="sort px-3 py-4 text-left">Type</th>
 						<th data-sort="value-2" class="sort px-3 py-4 text-left">Name</th>
 						<th data-sort="value-3" class="sort px-3 py-4 text-left">Address / Domain</th>
-						<th data-sort="value-4" class="sort px-3 py-4 text-left">First seen</th>
-						<th data-sort="value-5" class="sort px-3 py-4 text-left">Last seen</th>
-						<th data-sort="value-6" class="sort px-3 py-4 text-left">Notes</th>
+						<th data-sort="value-4" class="sort px-3 py-4 text-left">Seen</th>
+						<th data-sort="value-5" class="sort px-3 py-4 text-left">Notes</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
@@ -52,13 +52,20 @@ templ AssetsMany(env Env, title string, rows []model.Asset) {
 								</td>
 								<td class="value-2" data-search={ row.Name }>{ row.Name } </td>
 								<td class="value-3 font-mono text-xs" data-search={ row.Addr }>{ row.Addr } </td>
-								<td class="value-4 truncate" data-search={ row.FirstSeen.Format(time.RFC3339) }>
-									@formatTime(row.FirstSeen)
+								<td
+									class="value-4 truncate"
+									data-search={ row.LastSeen.Format(time.RFC3339) }
+									title={ "first seen: " + row.FirstSeen.Format("2006-01-02 15:04:05 Z07:00") + "\nlast seen: " + row.LastSeen.Format("2006-01-02 15:04:05 Z07:00") }
+								>
+									if time.Time(row.LastSeen).IsZero() {
+										<span>—</span>
+									} else {
+										@formatTime(row.LastSeen)
+									}
+									<br/>
+									<span class="text-xs opacity-50">{ fmt.Sprintf("%d events", row.Events) }</span>
 								</td>
-								<td class="value-5 truncate" data-search={ row.LastSeen.Format(time.RFC3339) }>
-									@formatTime(row.LastSeen)
-								</td>
-								<td class="value-6" data-search={ row.Notes }>{ row.Notes } </td>
+								<td class="value-5" data-search={ row.Notes }>{ row.Notes } </td>
 								<td class="text-right">
 									<div class="join">
 										@defaultActionBtns(env, env.Route+row.ID)
