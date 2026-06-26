@@ -15,6 +15,7 @@ import (
 	"github.com/sprungknoedl/dagobert/app/worker/hayabusa"
 	"github.com/sprungknoedl/dagobert/app/worker/plaso"
 	"github.com/sprungknoedl/dagobert/app/worker/timesketch"
+	"github.com/sprungknoedl/dagobert/app/worker/virustotal"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	tsclient "github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"gorm.io/gorm"
@@ -28,6 +29,7 @@ var envvars = map[string]string{
 	"Hayabusa":            "MODULE_HAYABUSA",
 	"Plaso":               "MODULE_PLASO",
 	"Timesketch Importer": "TIMESKETCH_URL",
+	"VirusTotal":          "VIRUSTOTAL_APIKEY",
 }
 
 // ModuleStatus holds the validation result of a module for the settings UI.
@@ -54,6 +56,7 @@ func Start(ctx context.Context, store *model.Store, ts *tsclient.Client) {
 		hayabusa.NewModule(),
 		plaso.NewModule(),
 		timesketch.NewModule(ts),
+		virustotal.NewModule(),
 	} {
 		Modules[m.Name()] = m
 	}
@@ -121,10 +124,19 @@ func runner(ctx context.Context, store *model.Store, modules map[string]model.Mo
 			job.Ctx = ctx
 			job.Store = store
 
+			// PopJob returns the job's own columns but not the Case
+			// association, so load it here. After this, modules can rely on
+			// job.Case being populated.
 			errmsg := ""
-			if err := modules[job.Name].Run(job); err != nil {
+			if kase, err := store.GetCase(job.CaseID); err != nil {
 				errmsg = err.Error()
-				slog.Warn("failed to process job", "job", job.ID, "module", job.Name, "err", err)
+				slog.Warn("failed to load job case", "job", job.ID, "case", job.CaseID, "err", err)
+			} else {
+				job.Case = kase
+				if err := modules[job.Name].Run(job); err != nil {
+					errmsg = err.Error()
+					slog.Warn("failed to process job", "job", job.ID, "module", job.Name, "err", err)
+				}
 			}
 
 			err = store.AckJob(model.Job{

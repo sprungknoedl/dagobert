@@ -204,6 +204,16 @@ func (store *Store) SaveJob(obj Job) error {
 }
 
 func (store *Store) PushJob(obj Job) error { return store.SaveJob(obj) }
+
+// PopJob atomically claims the oldest scheduled job for one of the given
+// modules, flipping it Scheduled→Running and returning it in a single
+// UPDATE ... RETURNING. The single statement is what prevents two pool workers
+// from claiming the same job (see TestPopJobConcurrent).
+//
+// Because RETURNING yields only the jobs row's own columns, the returned Job
+// has its scalar fields set (including CaseID) but its Case association is NOT
+// preloaded — unlike GetJobs/GetRunningJobs, which Preload it. The runner
+// populates job.Case from job.CaseID after popping, so modules can rely on it.
 func (store *Store) PopJob(modules []string) (Job, error) {
 	// slices are not supported as parameterized arguments in database/sql and sqlite.
 	// we have to use a workaround to pass the list of modules as a single argument.

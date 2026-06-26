@@ -339,7 +339,7 @@ func (ctrl *IndicatorCtrl) ListModules(w http.ResponseWriter, r *http.Request) {
 }
 
 func (ctrl *IndicatorCtrl) ScheduleModule(w http.ResponseWriter, r *http.Request) {
-	ScheduleModule(ctrl, w, r, ctrl.Store().GetEvidence)
+	ScheduleModule(ctrl, w, r, ctrl.Store().GetIndicator)
 }
 
 // Removes any defanging done to indicator values.
