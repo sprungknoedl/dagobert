@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/worker/abuseipdb"
 	"github.com/sprungknoedl/dagobert/app/worker/hayabusa"
+	"github.com/sprungknoedl/dagobert/app/worker/hybridanalysis"
 	"github.com/sprungknoedl/dagobert/app/worker/plaso"
 	"github.com/sprungknoedl/dagobert/app/worker/timesketch"
 	"github.com/sprungknoedl/dagobert/app/worker/virustotal"
@@ -26,7 +28,9 @@ var Modules = map[string]model.Module{}
 // envvars maps module names to the environment variable holding their
 // command (or, for the in-process Timesketch importer, the server URL).
 var envvars = map[string]string{
+	"AbuseIPDB":           "ABUSEIPDB_APIKEY",
 	"Hayabusa":            "MODULE_HAYABUSA",
+	"Hybrid Analysis":     "HYBRIDANALYSIS_APIKEY",
 	"Plaso":               "MODULE_PLASO",
 	"Timesketch Importer": "TIMESKETCH_URL",
 	"VirusTotal":          "VIRUSTOTAL_APIKEY",
@@ -53,7 +57,9 @@ func Status() []ModuleStatus { return status }
 // Timesketch client.
 func Start(ctx context.Context, store *model.Store, ts *tsclient.Client) {
 	for _, m := range []model.Module{
+		abuseipdb.NewModule(),
 		hayabusa.NewModule(),
+		hybridanalysis.NewModule(),
 		plaso.NewModule(),
 		timesketch.NewModule(ts),
 		virustotal.NewModule(),
