@@ -1,6 +1,7 @@
 package model
 
 import (
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -66,4 +67,38 @@ func (store *Store) SaveIndicator(cid string, obj Indicator, override bool) erro
 
 func (store *Store) DeleteIndicator(cid string, id string) error {
 	return store.DB.Delete(&Indicator{}, "id = ?", id).Error
+}
+
+// SetIndicatorCustom merges the given label→value fields into the indicator's
+// custom column in a single statement. Enrichment modules call this to write
+// their attributes back; running one json_set per save keeps parallel modules
+// from clobbering each other's keys (the read-then-write of a load/Save cycle
+// would race even though SQLite serializes writes).
+//
+// Empty values are skipped (custom-attributes' "empty value = no key" rule), so
+// a "not found" result that omits a key never stores "". The JSON paths are
+// bound as parameters — labels contain spaces ("MISP Enrichment"), so they must
+// be quoted members, never string-concatenated into the SQL.
+func (store *Store) SetIndicatorCustom(cid, id string, fields map[string]string) error {
+	// seed handles the NOT NULL DEFAULT '' column: json_set('', …) errors
+	// because '' is not valid JSON, so upgrade an empty column to '{}' first.
+	sql := "json_set(CASE WHEN custom IS NULL OR custom = '' THEN '{}' ELSE custom END"
+	args := []any{}
+	for label, value := range fields {
+		if value == "" {
+			continue
+		}
+		sql += ", ?, ?"
+		args = append(args, `$."`+label+`"`, value)
+	}
+	sql += ")"
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	return store.DB.Model(&Indicator{}).
+		Where("id = ? AND case_id = ?", id, cid).
+		Update("custom", gorm.Expr(sql, args...)).
+		Error
 }

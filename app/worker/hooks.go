@@ -43,28 +43,41 @@ func LoadHooks(store *model.Store) error {
 }
 
 func TriggerOnEvidenceAdded(store *model.Store, obj model.Evidence) {
-	kase, err := store.GetCase(obj.CaseID)
+	triggerHooks(store, obj, obj.CaseID, obj.ID)
+}
+
+func TriggerOnIndicatorAdded(store *model.Store, obj model.Indicator) {
+	triggerHooks(store, obj, obj.CaseID, obj.ID)
+}
+
+// triggerHooks evaluates every enabled hook against obj and schedules a job for
+// each match. Beyond the hook's expr condition it gates on the module's
+// Supports(obj): a job is never scheduled for an object the module can not (or
+// must not, e.g. TLP:RED) process, so the trigger and the UI stay honest.
+func triggerHooks(store *model.Store, obj any, caseID, objID string) {
+	kase, err := store.GetCase(caseID)
 	if err != nil {
 		// TODO: error logging
 		return
 	}
 
 	for _, hook := range hooks {
-		if hook.ConditionFn(obj) {
-			log.Printf("running %s -> %s", hook.Name, hook.ModuleObj.Name())
+		if !hook.ConditionFn(obj) || !hook.ModuleObj.Supports(obj) {
+			continue
+		}
 
-			err := store.PushJob(model.Job{
-				ID:       fp.Random(10),
-				Name:     hook.ModuleObj.Name(),
-				Status:   "Scheduled",
-				Case:     kase,
-				ObjectID: obj.ID,
-				Object:   model.Object{Payload: obj},
-			})
-			if err != nil {
-				log.Printf("error scheduling job for %s -> %s", hook.ModuleObj.Name(), err)
-				return
-			}
+		log.Printf("running %s -> %s", hook.Name, hook.ModuleObj.Name())
+		err := store.PushJob(model.Job{
+			ID:       fp.Random(10),
+			Name:     hook.ModuleObj.Name(),
+			Status:   "Scheduled",
+			Case:     kase,
+			ObjectID: objID,
+			Object:   model.Object{Payload: obj},
+		})
+		if err != nil {
+			log.Printf("error scheduling job for %s -> %s", hook.ModuleObj.Name(), err)
+			return
 		}
 	}
 }
@@ -86,6 +99,8 @@ func CompileHook(hook model.Hook) (model.Hook, error) {
 	switch hook.Trigger {
 	case "OnEvidenceAdded":
 		obj = model.Evidence{}
+	case "OnIndicatorAdded":
+		obj = model.Indicator{}
 	}
 
 	program, err := expr.Compile(hook.Condition,
