@@ -254,16 +254,34 @@ func Env(ctrl Ctrl, r *http.Request) views.Env {
 	kase := GetCase(ctrl.Store(), r)
 	user := GetUser(ctrl.Store(), r)
 	enums, _ := ctrl.Store().ListEnums()
+	custom, _ := ctrl.Store().ListCustomAttributes()
 
 	return views.Env{
-		Route: r.URL.Path,
-		Case:  kase,
-		User:  user,
-		Enums: enums,
+		Route:            r.URL.Path,
+		Case:             kase,
+		User:             user,
+		Enums:            enums,
+		CustomAttributes: custom,
 		Allowed: func(method, url string) (string, bool) {
 			return url, ctrl.ACL().Allowed(user.ID, url, method)
 		},
 	}
+}
+
+// CollectCustom assembles the custom-attribute map from the form's cattr_*
+// inputs after Decode has run. The Custom model field is tagged form:"-", so a
+// broken custom section can never fail the core decode/save. Empty values are
+// dropped (empty = delete the key); serialization is handled by Custom.Value.
+func CollectCustom(r *http.Request) model.Custom {
+	custom := model.Custom{}
+	for key, vals := range r.PostForm {
+		label, ok := strings.CutPrefix(key, "cattr_")
+		if !ok || len(vals) == 0 || vals[0] == "" {
+			continue
+		}
+		custom[label] = vals[0]
+	}
+	return custom
 }
 
 func GetUser(store *model.Store, r *http.Request) model.User {

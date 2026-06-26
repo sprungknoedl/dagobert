@@ -6,6 +6,7 @@ type Note struct {
 	Category    string
 	Description string
 	CaseID      string
+	Custom      Custom `form:"-"`
 }
 
 func (store *Store) ListNotes(cid string) ([]Note, error) {

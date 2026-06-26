@@ -134,6 +134,7 @@ templ EvidencesOne(env Env, obj model.Evidence, vr valid.ValidationError) {
 		</div>
 		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]), withHint("Where this evidence came from — system name, custodian, or acquisition tool used."))
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
+		@customAttributes(env, "Evidence", obj.Custom)
 		@requiredFootnote()
 		<script>
 		function togglePassword(btn) {

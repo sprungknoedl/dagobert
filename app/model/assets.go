@@ -8,6 +8,7 @@ type Asset struct {
 	Addr   string
 	Notes  string
 	CaseID string
+	Custom Custom `form:"-"`
 
 	FirstSeen Time `gorm:"->"`
 	LastSeen  Time `gorm:"->"`

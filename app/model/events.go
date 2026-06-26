@@ -17,6 +17,7 @@ type Event struct {
 	Source        string
 	Flagged       bool
 	CaseID        string
+	Custom        Custom  `form:"-"`
 	Techniques    Strings `gorm:"type:text"`
 	RawAssets     []byte  `gorm:"-"`
 	RawIndicators []byte  `gorm:"-"`

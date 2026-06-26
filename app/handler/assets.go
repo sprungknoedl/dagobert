@@ -46,7 +46,7 @@ func (ctrl AssetCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Status", "Type", "Name", "Addr", "Notes"})
+	cw.Write([]string{"ID", "Status", "Type", "Name", "Addr", "Notes", "Custom"})
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
@@ -55,6 +55,7 @@ func (ctrl AssetCtrl) Export(w http.ResponseWriter, r *http.Request) {
 			e.Name,
 			e.Addr,
 			e.Notes,
+			e.Custom.JSON(),
 		})
 	}
 
@@ -64,7 +65,12 @@ func (ctrl AssetCtrl) Export(w http.ResponseWriter, r *http.Request) {
 func (ctrl AssetCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/assets/", cid)
-	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 6, func(rec []string) {
+	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 7, func(rec []string) {
+		var custom model.Custom
+		if len(rec) > 6 {
+			custom.Scan(rec[6])
+		}
+
 		obj := model.Asset{
 			ID:     fp.If(rec[0] == "", fp.Random(10), rec[0]),
 			CaseID: cid,
@@ -73,6 +79,7 @@ func (ctrl AssetCtrl) Import(w http.ResponseWriter, r *http.Request) {
 			Name:   rec[3],
 			Addr:   rec[4],
 			Notes:  rec[5],
+			Custom: custom,
 		}
 
 		if err := ctrl.Store().SaveAsset(cid, obj); err != nil {
@@ -108,6 +115,10 @@ func (ctrl AssetCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		Warn(w, r, err)
 		return
 	}
+
+	// NOTE: form-only for now — CollectCustom reads r.PostForm, so a JSON API
+	// request yields an empty map and won't carry custom values.
+	dto.Custom = CollectCustom(r)
 
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)

@@ -14,6 +14,7 @@ type Indicator struct {
 	Source  string
 	Notes   string
 	CaseID  string
+	Custom  Custom `form:"-"`
 
 	FirstSeen Time `gorm:"->"`
 	LastSeen  Time `gorm:"->"`

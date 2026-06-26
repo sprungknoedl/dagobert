@@ -46,13 +46,14 @@ func (ctrl NoteCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Title", "Category", "Description"})
+	cw.Write([]string{"ID", "Title", "Category", "Description", "Custom"})
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
 			e.Title,
 			e.Category,
 			e.Description,
+			e.Custom.JSON(),
 		})
 	}
 
@@ -62,13 +63,19 @@ func (ctrl NoteCtrl) Export(w http.ResponseWriter, r *http.Request) {
 func (ctrl NoteCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/notes/", cid)
-	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 4, func(rec []string) {
+	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 5, func(rec []string) {
+		var custom model.Custom
+		if len(rec) > 4 {
+			custom.Scan(rec[4])
+		}
+
 		obj := model.Note{
 			ID:          fp.If(rec[0] == "", fp.Random(10), rec[0]),
 			Title:       rec[1],
 			Category:    rec[2],
 			Description: rec[3],
 			CaseID:      cid,
+			Custom:      custom,
 		}
 
 		if err := ctrl.Store().SaveNote(cid, obj); err != nil {
@@ -104,6 +111,10 @@ func (ctrl NoteCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		Warn(w, r, err)
 		return
 	}
+
+	// NOTE: form-only for now — CollectCustom reads r.PostForm, so a JSON API
+	// request yields an empty map and won't carry custom values.
+	dto.Custom = CollectCustom(r)
 
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)

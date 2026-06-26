@@ -12,6 +12,7 @@ type Evidence struct {
 	CaseID   string
 	StartsAt Time
 	EndsAt   Time
+	Custom   Custom `form:"-"`
 }
 
 func (store *Store) ListEvidences(cid string) ([]Evidence, error) {

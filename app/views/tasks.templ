@@ -78,6 +78,7 @@ templ TasksOne(env Env, obj model.Task, vr valid.ValidationError) {
 			</div>
 		</div>
 		@booleanField("Done", obj.Done, withLabel("Done"))
+		@customAttributes(env, "Task", obj.Custom)
 		@requiredFootnote()
 		<script>
 		function setNow() {

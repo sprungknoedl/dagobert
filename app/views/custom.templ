@@ -1,0 +1,107 @@
+package views
+
+import (
+	"sort"
+
+	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+)
+
+// customDefs returns the custom-attribute definitions for one entity.
+func customDefs(env Env, entity string) []model.CustomAttribute {
+	return fp.Filter(env.CustomAttributes, func(c model.CustomAttribute) bool { return c.Entity == entity })
+}
+
+// customOrphans returns the value-map keys that have no matching definition,
+// sorted for a stable render order.
+func customOrphans(defs []model.CustomAttribute, custom model.Custom) []string {
+	known := map[string]bool{}
+	for _, d := range defs {
+		known[d.Label] = true
+	}
+
+	orphans := []string{}
+	for label := range custom {
+		if !known[label] {
+			orphans = append(orphans, label)
+		}
+	}
+
+	sort.Strings(orphans)
+	return orphans
+}
+
+// customAttributes renders the custom-attribute section of an entity's edit
+// form. The map is always valid (Scan guarantees this). When there are no
+// definitions and the map is empty, nothing is rendered.
+templ customAttributes(env Env, entity string, custom model.Custom) {
+	{{ defs := customDefs(env, entity) }}
+	{{ orphans := customOrphans(defs, custom) }}
+	if len(defs) > 0 || len(custom) > 0 {
+		<h2 class="text-xl font-serif mb-2 mt-4">Custom attributes</h2>
+		for _, def := range defs {
+			@customInput(def, custom[def.Label])
+		}
+		for _, label := range orphans {
+			@customOrphan(label, custom[label])
+		}
+	}
+}
+
+templ customInput(def model.CustomAttribute, value string) {
+	{{ name := "cattr_" + def.Label }}
+	switch def.Type {
+		case "textfield":
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">{ def.Label }</label>
+				<textarea name={ name } rows="3" class="textarea w-full">{ value }</textarea>
+			</div>
+		case "checkbox":
+			<div class="form-control mb-2">
+				<label class="label cursor-pointer justify-start gap-2">
+					<input name={ name } value="true" type="checkbox" class="checkbox" checked?={ value == "true" }/>
+					{ def.Label }
+				</label>
+			</div>
+		case "date":
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">{ def.Label }</label>
+				<input name={ name } type="date" class="input w-full" value={ value }/>
+			</div>
+		case "datetime":
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">{ def.Label }</label>
+				<input name={ name } type="datetime-local" class="input w-full" value={ value }/>
+			</div>
+		case "select":
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">{ def.Label }</label>
+				<select name={ name } class="select w-full">
+					<option value="" selected?={ value == "" }>-</option>
+					for _, opt := range def.Options {
+						if opt != "" {
+							<option selected?={ opt == value }>{ opt }</option>
+						}
+					}
+				</select>
+			</div>
+		default:
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">{ def.Label }</label>
+				<input name={ name } type="text" class="input w-full" value={ value }/>
+			</div>
+	}
+}
+
+// customOrphan renders a value whose definition was removed or renamed. It stays
+// editable so analysts can preserve or clear it, behind a clear warning.
+templ customOrphan(label string, value string) {
+	{{ name := "cattr_" + label }}
+	<div class="form-control mb-2">
+		<label class="label justify-start gap-2">
+			{ label }
+			<span class="ml-2 text-sm text-warning">No matching definition — value preserved. Clear to remove.</span>
+		</label>
+		<input name={ name } type="text" class="input w-full" value={ value }/>
+	</div>
+}

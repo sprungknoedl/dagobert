@@ -8,9 +8,10 @@ import (
 // It carries the current case, user, customizable enums, active route, and the
 // ACL predicate used to gate links and actions.
 type Env struct {
-	Case    model.Case
-	User    model.User
-	Enums   model.Enums
-	Route   string
-	Allowed func(method, url string) (string, bool)
+	Case             model.Case
+	User             model.User
+	Enums            model.Enums
+	CustomAttributes []model.CustomAttribute
+	Route            string
+	Allowed          func(method, url string) (string, bool)
 }

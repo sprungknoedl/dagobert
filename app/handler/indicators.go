@@ -55,7 +55,7 @@ func (ctrl IndicatorCtrl) ExportCSV(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Status", "Type", "Value", "TLP", "Source", "Notes"})
+	cw.Write([]string{"ID", "Status", "Type", "Value", "TLP", "Source", "Notes", "Custom"})
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
@@ -65,6 +65,7 @@ func (ctrl IndicatorCtrl) ExportCSV(w http.ResponseWriter, r *http.Request) {
 			e.TLP,
 			e.Source,
 			e.Notes,
+			e.Custom.JSON(),
 		})
 	}
 
@@ -188,7 +189,12 @@ func buildStixBundle(list []model.Indicator, now time.Time) *stix.Bundle {
 func (ctrl IndicatorCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/indicators/", cid)
-	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 7, func(rec []string) {
+	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 8, func(rec []string) {
+		var custom model.Custom
+		if len(rec) > 7 {
+			custom.Scan(rec[7])
+		}
+
 		obj := model.Indicator{
 			ID:     fp.If(rec[0] == "", fp.Random(10), rec[0]),
 			Status: rec[1],
@@ -198,6 +204,7 @@ func (ctrl IndicatorCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 			Source: rec[5],
 			Notes:  rec[6],
 			CaseID: cid,
+			Custom: custom,
 		}
 
 		if err := ctrl.Store().SaveIndicator(cid, obj, true); err != nil {
@@ -287,6 +294,10 @@ func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		Warn(w, r, err)
 		return
 	}
+
+	// NOTE: form-only for now — CollectCustom reads r.PostForm, so a JSON API
+	// request yields an empty map and won't carry custom values.
+	dto.Custom = CollectCustom(r)
 
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)

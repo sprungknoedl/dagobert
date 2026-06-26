@@ -68,7 +68,7 @@ func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Time", "Type", "Assets", "Indicators", "Event", "Raw", "Source"})
+	cw.Write([]string{"ID", "Time", "Type", "Assets", "Indicators", "Event", "Raw", "Source", "Custom"})
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
@@ -79,6 +79,7 @@ func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
 			e.Event,
 			e.Raw,
 			e.Source,
+			e.Custom.JSON(),
 		})
 	}
 
@@ -90,7 +91,7 @@ func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 	uri := fmt.Sprintf("/cases/%s/events/", cid)
 
 	ctrl.Store().Transaction(func(tx *model.Store) error {
-		return ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 8, func(rec []string) {
+		return ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 9, func(rec []string) {
 			t, err := time.Parse(time.RFC3339, rec[1])
 			if err != nil {
 				Warn(w, r, err)
@@ -111,6 +112,11 @@ func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			var custom model.Custom
+			if len(rec) > 8 {
+				custom.Scan(rec[8])
+			}
+
 			obj := model.Event{
 				ID:         fp.If(rec[0] == "", fp.Random(10), rec[0]),
 				CaseID:     cid,
@@ -121,6 +127,7 @@ func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 				Event:      rec[5],
 				Raw:        rec[6],
 				Source:     rec[7],
+				Custom:     custom,
 			}
 
 			if err = ctrl.Store().SaveEvent(cid, obj, true); err != nil {
@@ -254,6 +261,10 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		Warn(w, r, err)
 		return
 	}
+
+	// NOTE: form-only for now — CollectCustom reads r.PostForm, so a JSON API
+	// request yields an empty map and won't carry custom values.
+	dto.Custom = CollectCustom(r)
 
 	err = ctrl.Store().Transaction(func(tx *model.Store) error {
 		var err error

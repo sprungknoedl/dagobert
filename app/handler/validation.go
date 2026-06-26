@@ -126,6 +126,17 @@ func ValidateHook(dto *model.Hook, enums model.Enums) valid.ValidationError {
 	})
 }
 
+func ValidateCustomAttribute(dto *model.CustomAttribute, _ model.Enums) valid.ValidationError {
+	entities := []string{"Case", "Asset", "Event", "Evidence", "Indicator", "Malware", "Note", "Task"}
+	types := []string{"string", "textfield", "checkbox", "date", "datetime", "select"}
+
+	return valid.Check([]valid.Condition{
+		{Name: "Entity", Invalid: !slices.Contains(entities, dto.Entity), Message: "Invalid entity"},
+		{Name: "Label", Missing: dto.Label == ""},
+		{Name: "Type", Invalid: !slices.Contains(types, dto.Type), Message: "Invalid type"},
+	})
+}
+
 func ValidateEnum(dto *model.Enum, _ model.Enums) valid.ValidationError {
 	states := []string{"", "success", "warning", "error"}
 	enums := []string{"AssetStatus", "AssetTypes", "CaseSeverities", "CaseOutcomes", "EventTypes", "EvidenceTypes", "IndicatorStatus", "IndicatorTypes", "MalwareStatus", "TaskTypes"}

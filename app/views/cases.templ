@@ -110,6 +110,7 @@ templ CasesOne(env Env, obj model.Case, templates []model.Case, selectedTemplate
 			</div>
 		}
 		<!-- x -->
+		@customAttributes(env, "Case", obj.Custom)
 		@requiredFootnote()
 	}
 }
