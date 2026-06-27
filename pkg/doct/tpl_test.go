@@ -184,7 +184,7 @@ func TestOfficeTpl_Ms_Render(t *testing.T) {
 		require.NoError(t, err)
 
 		var out bytes.Buffer
-		require.NoError(t, tpl.Render(&out, map[string]any{"Name": "Acme Inc"}))
+		require.NoError(t, tpl.Render(&out, map[string]any{"Name": "Acme Inc"}, nil))
 
 		assert.Contains(t, readFromZip(t, out.Bytes(), "word/document.xml"), "Acme Inc")
 	})
@@ -196,7 +196,7 @@ func TestOfficeTpl_Ms_Render(t *testing.T) {
 		require.NoError(t, err)
 
 		var out bytes.Buffer
-		require.NoError(t, tpl.Render(&out, map[string]any{"Name": "<Acme & Co>"}))
+		require.NoError(t, tpl.Render(&out, map[string]any{"Name": "<Acme & Co>"}, nil))
 
 		assert.Contains(t, readFromZip(t, out.Bytes(), "word/document.xml"), "&lt;Acme &amp; Co&gt;")
 	})
@@ -223,7 +223,7 @@ func TestOfficeTpl_Ms_Render(t *testing.T) {
 		require.NoError(t, err)
 
 		var out bytes.Buffer
-		require.NoError(t, tpl.Render(&out, map[string]any{"Name": "X"}))
+		require.NoError(t, tpl.Render(&out, map[string]any{"Name": "X"}, nil))
 
 		assert.Equal(t, "<styles>static</styles>", readFromZip(t, out.Bytes(), "word/styles.xml"))
 	})
@@ -234,7 +234,7 @@ func TestOfficeTpl_Ms_Render(t *testing.T) {
 		require.NoError(t, err)
 
 		var out bytes.Buffer
-		assert.Error(t, tpl.Render(&out, map[string]any{}))
+		assert.Error(t, tpl.Render(&out, map[string]any{}, nil))
 	})
 }
 
@@ -287,7 +287,7 @@ func TestOfficeTpl_DedicatedRowLoop(t *testing.T) {
 	var out bytes.Buffer
 	require.NoError(t, tpl.Render(&out, map[string]any{
 		"Assets": []map[string]string{{"Name": "a1"}, {"Name": "a2"}, {"Name": "a3"}},
-	}))
+	}, nil))
 
 	content := readFromZip(t, out.Bytes(), "word/document.xml")
 	assert.NoError(t, validateXML([]byte(content)), "rendered XML must be well-formed")
@@ -337,7 +337,7 @@ func TestOfficeTpl_Libre_Render(t *testing.T) {
 		require.NoError(t, err)
 
 		var out bytes.Buffer
-		require.NoError(t, tpl.Render(&out, map[string]any{"Name": "Acme Inc"}))
+		require.NoError(t, tpl.Render(&out, map[string]any{"Name": "Acme Inc"}, nil))
 
 		assert.Contains(t, readFromZip(t, out.Bytes(), "content.xml"), "Acme Inc")
 	})
@@ -348,7 +348,7 @@ func TestOfficeTpl_Libre_Render(t *testing.T) {
 		require.NoError(t, err)
 
 		var out bytes.Buffer
-		assert.Error(t, tpl.Render(&out, map[string]any{}))
+		assert.Error(t, tpl.Render(&out, map[string]any{}, nil))
 	})
 }
 

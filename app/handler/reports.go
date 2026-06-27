@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"text/template"
 	"time"
 
 	"github.com/sprungknoedl/dagobert/app/auth"
@@ -76,11 +77,22 @@ func (ctrl ReportsCtrl) Generate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	funcs := template.FuncMap{
+		"note": func(title string) (string, error) {
+			for _, n := range kase.Notes {
+				if n.Title == title {
+					return n.Description, nil
+				}
+			}
+			return "", fmt.Errorf("report references a note titled %q, but no such note exists in this case", title)
+		},
+	}
+
 	buf := new(bytes.Buffer)
 	err = tpl.Render(buf, map[string]any{
 		"Case": kase,
 		"Now":  time.Now(),
-	})
+	}, funcs)
 	if err != nil {
 		Warn(w, r, err)
 		return
