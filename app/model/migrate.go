@@ -84,6 +84,12 @@ func (store *Store) CheckSchema() (SchemaStatus, error) {
 	return status, nil
 }
 
+// SchemaVersion reports the highest applied migration this build understands,
+// i.e. the schema version stamped into (and checked against) a case archive.
+func SchemaVersion() (uint, error) {
+	return latestMigration()
+}
+
 // latestMigration returns the highest version among the embedded migration
 // files (their numeric filename prefix).
 func latestMigration() (uint, error) {
