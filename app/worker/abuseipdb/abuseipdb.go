@@ -79,17 +79,14 @@ func (m *Module) Run(job model.Job) error {
 		return err
 	}
 
-	return job.Store.SetIndicatorCustom(job.Case.ID, ind.ID, map[string]string{
-		"AbuseIPDB Enrichment": res.Summary,
-		"AbuseIPDB Verdict":    res.Verdict,
-		"AbuseIPDB Link":       res.URL,
+	return job.Store.SetEnrichment(model.Enrichment{
+		CaseID:     job.Case.ID,
+		ObjectType: "Indicator",
+		ObjectID:   ind.ID,
+		Module:     m.Name(),
+		Verdict:    res.Verdict,
+		Summary:    res.Summary,
+		Link:       res.URL,
+		FetchedAt:  model.Time(time.Now()),
 	})
-}
-
-func (m *Module) CustomAttributes() []model.CustomAttribute {
-	return []model.CustomAttribute{
-		{Entity: "Indicator", Label: "AbuseIPDB Enrichment", Type: "textfield", Rank: 110},
-		{Entity: "Indicator", Label: "AbuseIPDB Verdict", Type: "select", Options: model.Strings(model.EnrichmentVerdicts), Rank: 111},
-		{Entity: "Indicator", Label: "AbuseIPDB Link", Type: "string", Rank: 112},
-	}
 }

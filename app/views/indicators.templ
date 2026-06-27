@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-templ IndicatorsMany(env Env, rows []model.Indicator) {
+templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]model.Enrichment) {
 	{{ summary := summarizeIndicators(rows) }}
 	@layout() {
 		@list(env, "Indicators", navHideImport(), navHideExport(), navPreButtons(indicatorsManyExtra(env)), navSubtitle("Atomic artefacts for detection and threat hunting")) {
@@ -37,7 +37,7 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 						@emptyTable(env, "No indicators of compromise — yet.", "Add an IP address, domain, file hash, or other observable that can be used for detection or hunting. Set the TLP to control how widely it can be shared.")
 					} else {
 						for _, row := range rows {
-							{{ worst, worstSeverity, results := summarizeEnrichment(row.Custom) }}
+							{{ worst, worstSeverity, results := summarizeEnrichment(enrichments[row.ID]) }}
 							<tr class={ fp.If(row.Flagged, "hover bg-flagged", "hover") }>
 								<td class="value-0 truncate" data-search={ row.Status }>
 									@enum(env.Enums.IndicatorStatus, row.Status)
@@ -115,7 +115,7 @@ type IndicatorOverlap struct {
 	Hidden int
 }
 
-templ IndicatorsOne(env Env, obj model.Indicator, overlap IndicatorOverlap, vr valid.ValidationError) {
+templ IndicatorsOne(env Env, obj model.Indicator, overlap IndicatorOverlap, enrichments []model.Enrichment, vr valid.ValidationError) {
 	{{ uri := "/cases/" + obj.CaseID + "/indicators/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add indicator", "Edit indicator") }}
 	@form(env, uri, title) {
@@ -128,37 +128,67 @@ templ IndicatorsOne(env Env, obj model.Indicator, overlap IndicatorOverlap, vr v
 		@booleanField("Flagged", obj.Flagged, withLabel("Flagged"), withHint("Mark this indicator as significant. Flagged indicators are highlighted in the list and appear on the case summary page."))
 		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]), withHint("Where this indicator was found or provided by (e.g. \"VirusTotal\", \"customer firewall logs\", analyst name)."))
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
+		@requiredFootnote()
+		@customAttributes(env, "Indicator", obj.Custom)
+		@threatIntel(env, enrichments)
 		if len(overlap.Cases) > 0 || overlap.Hidden > 0 {
 			@indicatorOverlap(env, overlap)
 		}
-		@customAttributes(env, "Indicator", obj.Custom)
-		@requiredFootnote()
+	}
+}
+
+// threatIntel renders machine-generated enrichment as a compact, read-only
+// panel — one row per module. Renders nothing when there is no enrichment.
+templ threatIntel(env Env, rows []model.Enrichment) {
+	if len(rows) > 0 {
+		<div class="mt-6">
+			<h2 class="font-serif text-lg mb-1">Threat Intelligence</h2>
+			<p class="text-sm opacity-50 mb-2">Automated enrichment from configured modules.</p>
+			<ul class="menu bg-base-200 rounded-box w-full p-2 gap-1">
+				for _, row := range rows {
+					{{ summary := strings.Split(row.Summary, "\n") }}
+					<li>
+						<details>
+							<summary class="flex items-center gap-2">
+								<span class={ "w-2 h-2 rounded-full shrink-0 " + verdictDotClass(row.Verdict) } title={ row.Verdict }></span>
+								<span class="font-medium">{ row.Module }</span>
+								<span class="opacity-50 truncate">{ summary[0] }</span>
+							</summary>
+							<div class="pl-4">
+								<p class="whitespace-pre-wrap opacity-70">{ row.Summary }</p>
+								if row.Link != "" {
+									<a href={ templ.URL(row.Link) } target="_blank" rel="noreferrer" class="link link-hover mt-1">open ↗</a>
+								}
+							</div>
+						</details>
+					</li>
+				}
+			</ul>
+		</div>
 	}
 }
 
 templ indicatorOverlap(env Env, overlap IndicatorOverlap) {
 	<div class="mt-6">
 		<h2 class="font-serif text-lg mb-1">Related cases</h2>
-		<p class="text-xs opacity-50 mb-2">This observable also appears in other cases.</p>
+		<p class="text-sm opacity-50 mb-2">This observable also appears in other cases.</p>
 		<ul class="menu bg-base-200 rounded-box w-full p-2">
 			for _, c := range overlap.Cases {
 				<li>
-					<a href={ "/cases/" + c.ID + "/summary/" } class="flex justify-between items-center">
-						<span>#{ c.ID } - { c.Name }</span>
-						<span class="flex gap-2 items-center">
-							@enum(env.Enums.CaseSeverities, c.Severity)
-							if c.Closed {
-								<span class="badge badge-ghost">Closed</span>
-							} else {
-								<span class="badge badge-outline">Open</span>
-							}
-						</span>
+					<a href={ "/cases/" + c.ID + "/summary/" } class="flex items-center gap-2">
+						if c.Closed {
+							<span class="w-2 h-2 rounded-full shrink-0 bg-success" title="Closed"></span>
+						} else {
+							<span class="w-2 h-2 rounded-full shrink-0 bg-error" title="Open"></span>
+						}
+						<span class="font-medium">{ c.Name }</span>
+						<span class="opacity-50 truncate">#{ c.ID }</span>
 					</a>
 				</li>
 			}
 		</ul>
 		if overlap.Hidden > 0 {
-			<p class="text-xs opacity-50 mt-2">{ fmt.Sprintf("%d more case(s) you don't have access to.", overlap.Hidden) }</p>
+			<p class="text-sm opacity-50 mt-2">{ fmt.Sprintf("%d more case(s) you don't have access to.", overlap.Hidden) }</p>
 		}
 	</div>
 }
@@ -203,19 +233,18 @@ type enrichmentResult struct {
 	Severity int
 }
 
-// summarizeEnrichment distils an indicator's custom attributes into the worst
+// summarizeEnrichment distils an indicator's enrichment rows into the worst
 // verdict and a per-source list sorted alphabetically. worstSeverity is -1
 // when no recognised verdicts are present.
-func summarizeEnrichment(custom model.Custom) (worst string, worstSeverity int, results []enrichmentResult) {
+func summarizeEnrichment(rows []model.Enrichment) (worst string, worstSeverity int, results []enrichmentResult) {
 	worstSeverity = -1
-	for key, val := range custom {
-		rank, ok := model.VerdictSeverity(val)
+	for _, row := range rows {
+		rank, ok := model.VerdictSeverity(row.Verdict)
 		if !ok {
 			continue
 		}
-		source := strings.TrimSuffix(key, " Verdict")
-		verdict := strings.ToLower(val)
-		results = append(results, enrichmentResult{Source: source, Verdict: verdict, Severity: rank})
+		verdict := strings.ToLower(row.Verdict)
+		results = append(results, enrichmentResult{Source: row.Module, Verdict: verdict, Severity: rank})
 		if rank > worstSeverity {
 			worstSeverity = rank
 			worst = verdict

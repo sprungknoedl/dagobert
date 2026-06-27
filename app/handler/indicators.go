@@ -39,7 +39,13 @@ func (ctrl IndicatorCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.IndicatorsMany(Env(ctrl, r), list))
+	enrichments, err := ctrl.Store().ListEnrichmentsForCase(cid, "Indicator")
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	Render(w, r, http.StatusOK, views.IndicatorsMany(Env(ctrl, r), list, enrichments))
 }
 
 func (ctrl IndicatorCtrl) ExportCSV(w http.ResponseWriter, r *http.Request) {
@@ -274,6 +280,7 @@ func (ctrl IndicatorCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	obj := model.Indicator{ID: id, CaseID: cid}
 	overlap := views.IndicatorOverlap{}
+	enrichments := []model.Enrichment{}
 	if id != "new" {
 		var err error
 		obj, err = ctrl.Store().GetIndicator(cid, id)
@@ -295,16 +302,22 @@ func (ctrl IndicatorCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		overlap.Hidden = len(refs) - len(overlap.Cases)
+
+		enrichments, err = ctrl.Store().ListEnrichments("Indicator", id)
+		if err != nil {
+			Err(w, r, err)
+			return
+		}
 	}
 
-	Render(w, r, http.StatusOK, views.IndicatorsOne(Env(ctrl, r), obj, overlap, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.IndicatorsOne(Env(ctrl, r), obj, overlap, enrichments, valid.ValidationError{}))
 }
 
 func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	dto := model.Indicator{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
 	err := Decode(ctrl.Store(), r, &dto, ValidateIndicator)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.IndicatorsOne(Env(ctrl, r), dto, views.IndicatorOverlap{}, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.IndicatorsOne(Env(ctrl, r), dto, views.IndicatorOverlap{}, nil, vr))
 		return
 	} else if err != nil {
 		Warn(w, r, err)
