@@ -16,7 +16,7 @@ type Template interface {
 	Name() string
 	Type() string
 	Ext() string
-	Render(w io.Writer, data interface{}) error
+	Render(w io.Writer, data any, funcs template.FuncMap) error
 }
 
 type Processor func(header *zip.FileHeader, r io.Reader, w io.Writer) error
@@ -171,10 +171,21 @@ func (tpl OfficeTpl) Name() string { return tpl.name }
 func (tpl OfficeTpl) Type() string { return tpl.cfg.mimeType }
 func (tpl OfficeTpl) Ext() string  { return filepath.Ext(tpl.name) }
 
-func (tpl OfficeTpl) Render(dst io.Writer, data interface{}) error {
+func (tpl OfficeTpl) Render(dst io.Writer, data any, funcs template.FuncMap) error {
+	// The parsed template is shared/cached across renders. Per-render funcs must
+	// be applied to a clone so concurrent renders don't mutate the shared one.
+	render := tpl.tpl
+	if funcs != nil {
+		clone, err := tpl.tpl.Clone()
+		if err != nil {
+			return fmt.Errorf("cloning template %q: %w", tpl.name, err)
+		}
+		render = clone.Funcs(funcs)
+	}
+
 	return processZip(bytes.NewReader(tpl.src), int64(len(tpl.src)), dst, func(header *zip.FileHeader, r io.Reader, w io.Writer) error {
 		if header.Name == tpl.cfg.contentFile {
-			if err := tpl.tpl.Execute(w, data); err != nil {
+			if err := render.Execute(w, data); err != nil {
 				return fmt.Errorf("rendering %q: %w", tpl.name, err)
 			}
 			return nil
