@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -148,6 +149,7 @@ func load(path string, cfg formatConfig) (Template, error) {
 	}
 
 	funcMap := template.FuncMap{"xml": xmlEscape}
+	maps.Copy(funcMap, helperFuncs)
 	tpl, err := template.New(cfg.contentFile).
 		Option("missingkey=error").
 		Funcs(funcMap).
