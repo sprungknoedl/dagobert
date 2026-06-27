@@ -88,18 +88,15 @@ func (m *Module) Run(job model.Job) error {
 	}
 
 	// Always write at least the verdict (including "unknown") so the Success
-	// state is meaningful; SetIndicatorCustom skips the empty Link key.
-	return job.Store.SetIndicatorCustom(job.Case.ID, ind.ID, map[string]string{
-		"VirusTotal Enrichment": res.Summary,
-		"VirusTotal Verdict":    res.Verdict,
-		"VirusTotal Link":       res.URL,
+	// state is meaningful.
+	return job.Store.SetEnrichment(model.Enrichment{
+		CaseID:     job.Case.ID,
+		ObjectType: "Indicator",
+		ObjectID:   ind.ID,
+		Module:     m.Name(),
+		Verdict:    res.Verdict,
+		Summary:    res.Summary,
+		Link:       res.URL,
+		FetchedAt:  model.Time(time.Now()),
 	})
-}
-
-func (m *Module) CustomAttributes() []model.CustomAttribute {
-	return []model.CustomAttribute{
-		{Entity: "Indicator", Label: "VirusTotal Enrichment", Type: "textfield", Rank: 100},
-		{Entity: "Indicator", Label: "VirusTotal Verdict", Type: "select", Options: model.Strings(model.EnrichmentVerdicts), Rank: 101},
-		{Entity: "Indicator", Label: "VirusTotal Link", Type: "string", Rank: 102},
-	}
 }

@@ -79,17 +79,14 @@ func (m *Module) Run(job model.Job) error {
 		return err
 	}
 
-	return job.Store.SetIndicatorCustom(job.Case.ID, ind.ID, map[string]string{
-		"Hybrid Analysis Enrichment": res.Summary,
-		"Hybrid Analysis Verdict":    res.Verdict,
-		"Hybrid Analysis Link":       res.URL,
+	return job.Store.SetEnrichment(model.Enrichment{
+		CaseID:     job.Case.ID,
+		ObjectType: "Indicator",
+		ObjectID:   ind.ID,
+		Module:     m.Name(),
+		Verdict:    res.Verdict,
+		Summary:    res.Summary,
+		Link:       res.URL,
+		FetchedAt:  model.Time(time.Now()),
 	})
-}
-
-func (m *Module) CustomAttributes() []model.CustomAttribute {
-	return []model.CustomAttribute{
-		{Entity: "Indicator", Label: "Hybrid Analysis Enrichment", Type: "textfield", Rank: 120},
-		{Entity: "Indicator", Label: "Hybrid Analysis Verdict", Type: "select", Options: model.Strings(model.EnrichmentVerdicts), Rank: 121},
-		{Entity: "Indicator", Label: "Hybrid Analysis Link", Type: "string", Rank: 122},
-	}
 }
