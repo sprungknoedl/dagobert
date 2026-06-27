@@ -62,7 +62,11 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 										@formatTime(row.LastSeen)
 									}
 									<br/>
-									<span class="text-xs opacity-50">{ fmt.Sprintf("%d events", row.Events) }</span>
+									{{ seen := fmt.Sprintf("%d events", row.Events) }}
+									if row.OtherCases > 0 {
+										{{ seen += fmt.Sprintf(", %d other cases", row.OtherCases) }}
+									}
+									<span class="text-xs opacity-50">{ seen }</span>
 								</td>
 								<td class="value-5" data-search={ strconv.Itoa(worstSeverity) }>
 									if len(results) == 0 {
@@ -103,7 +107,15 @@ templ IndicatorsMany(env Env, rows []model.Indicator) {
 	}
 }
 
-templ IndicatorsOne(env Env, obj model.Indicator, vr valid.ValidationError) {
+// IndicatorOverlap bundles the cross-case correlation shown in the indicator
+// edit drawer: the ACL-readable cases sharing this indicator (named in the
+// panel) and a count of cases the current user cannot read.
+type IndicatorOverlap struct {
+	Cases  []model.IndicatorCaseRef
+	Hidden int
+}
+
+templ IndicatorsOne(env Env, obj model.Indicator, overlap IndicatorOverlap, vr valid.ValidationError) {
 	{{ uri := "/cases/" + obj.CaseID + "/indicators/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add indicator", "Edit indicator") }}
 	@form(env, uri, title) {
@@ -116,9 +128,39 @@ templ IndicatorsOne(env Env, obj model.Indicator, vr valid.ValidationError) {
 		@booleanField("Flagged", obj.Flagged, withLabel("Flagged"), withHint("Mark this indicator as significant. Flagged indicators are highlighted in the list and appear on the case summary page."))
 		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]), withHint("Where this indicator was found or provided by (e.g. \"VirusTotal\", \"customer firewall logs\", analyst name)."))
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
+		if len(overlap.Cases) > 0 || overlap.Hidden > 0 {
+			@indicatorOverlap(env, overlap)
+		}
 		@customAttributes(env, "Indicator", obj.Custom)
 		@requiredFootnote()
 	}
+}
+
+templ indicatorOverlap(env Env, overlap IndicatorOverlap) {
+	<div class="mt-6">
+		<h2 class="font-serif text-lg mb-1">Related cases</h2>
+		<p class="text-xs opacity-50 mb-2">This observable also appears in other cases.</p>
+		<ul class="menu bg-base-200 rounded-box w-full p-2">
+			for _, c := range overlap.Cases {
+				<li>
+					<a href={ "/cases/" + c.ID + "/summary/" } class="flex justify-between items-center">
+						<span>#{ c.ID } - { c.Name }</span>
+						<span class="flex gap-2 items-center">
+							@enum(env.Enums.CaseSeverities, c.Severity)
+							if c.Closed {
+								<span class="badge badge-ghost">Closed</span>
+							} else {
+								<span class="badge badge-outline">Open</span>
+							}
+						</span>
+					</a>
+				</li>
+			}
+		</ul>
+		if overlap.Hidden > 0 {
+			<p class="text-xs opacity-50 mt-2">{ fmt.Sprintf("%d more case(s) you don't have access to.", overlap.Hidden) }</p>
+		}
+	</div>
 }
 
 templ indicatorsManyExtra(env Env) {

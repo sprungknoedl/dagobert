@@ -273,6 +273,7 @@ func (ctrl IndicatorCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
 	obj := model.Indicator{ID: id, CaseID: cid}
+	overlap := views.IndicatorOverlap{}
 	if id != "new" {
 		var err error
 		obj, err = ctrl.Store().GetIndicator(cid, id)
@@ -280,16 +281,30 @@ func (ctrl IndicatorCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 			Err(w, r, err)
 			return
 		}
+
+		refs, err := ctrl.Store().ListIndicatorOverlap(cid, obj.Type, obj.Value)
+		if err != nil {
+			Err(w, r, err)
+			return
+		}
+
+		user := GetUser(ctrl.Store(), r)
+		for _, c := range refs {
+			if ctrl.ACL().Allowed(user.ID, fmt.Sprintf("/cases/%s/", c.ID), "GET") {
+				overlap.Cases = append(overlap.Cases, c)
+			}
+		}
+		overlap.Hidden = len(refs) - len(overlap.Cases)
 	}
 
-	Render(w, r, http.StatusOK, views.IndicatorsOne(Env(ctrl, r), obj, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.IndicatorsOne(Env(ctrl, r), obj, overlap, valid.ValidationError{}))
 }
 
 func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	dto := model.Indicator{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
 	err := Decode(ctrl.Store(), r, &dto, ValidateIndicator)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.IndicatorsOne(Env(ctrl, r), dto, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.IndicatorsOne(Env(ctrl, r), dto, views.IndicatorOverlap{}, vr))
 		return
 	} else if err != nil {
 		Warn(w, r, err)

@@ -38,7 +38,7 @@ templ customAttributes(env Env, entity string, custom model.Custom) {
 	{{ defs := customDefs(env, entity) }}
 	{{ orphans := customOrphans(defs, custom) }}
 	if len(defs) > 0 || len(custom) > 0 {
-		<h2 class="text-xl font-serif mb-2 mt-4">Custom attributes</h2>
+		<h2 class="text-lg font-serif mb-2 mt-4">Custom attributes</h2>
 		for _, def := range defs {
 			@customInput(def, custom[def.Label])
 		}
