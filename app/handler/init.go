@@ -293,7 +293,8 @@ func Run(cmd *cobra.Command, args []string) {
 	h = auth.ApiKeyMiddleware(db)(h) // strips browser credentials before session state is loaded
 	h = http.NewCrossOriginProtection().Handler(h)
 	h = Logger(h)
-	h = Recover(h)
+	h = SecurityHeaders(h)
+	h = Recover(h) // outermost: a panic anywhere (incl. the layers below) must not take the server down
 
 	srv := &http.Server{Addr: ":8080", Handler: h}
 	go func() {
