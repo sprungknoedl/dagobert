@@ -279,5 +279,5 @@ func (store *Store) SaveHook(obj Hook) error {
 }
 
 func (store *Store) DeleteHook(id string) error {
-	return store.DB.Delete(Case{}, "id = ?", id).Error
+	return store.DB.Delete(Hook{}, "id = ?", id).Error
 }
