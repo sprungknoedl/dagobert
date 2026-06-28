@@ -8,6 +8,7 @@ import (
 type navbarConfig struct {
 	preTitle    templ.Component
 	preButtons  templ.Component
+	titleIcon   string
 	subtitle    string
 	hideImport  bool
 	hideExport  bool
@@ -36,6 +37,9 @@ func navPreButtons(c templ.Component) navbarOption {
 func navSubtitle(subtitle string) navbarOption {
 	return func(nc *navbarConfig) { nc.subtitle = subtitle }
 }
+func navTitleIcon(icon string) navbarOption {
+	return func(nc *navbarConfig) { nc.titleIcon = icon }
+}
 func navHideImport() navbarOption  { return func(nc *navbarConfig) { nc.hideImport = true } }
 func navHideExport() navbarOption  { return func(nc *navbarConfig) { nc.hideExport = true } }
 func navHideRefresh() navbarOption { return func(nc *navbarConfig) { nc.hideRefresh = true } }
@@ -45,7 +49,10 @@ func navHideSearch() navbarOption  { return func(nc *navbarConfig) { nc.hideSear
 func navSettings() navbarOption { return navPreTitle(navSettingsTitle()) }
 
 templ navSettingsTitle() {
-	<li><i class="hio hio-6 hio-cog-6-tooth mr-2"></i> Settings</li>
+	<li class="inline-flex gap-4 items-center">
+		<i class="hio hio-6 hio-cog-6-tooth inline-block"></i>
+		<a href="/settings">Settings</a>
+	</li>
 }
 
 templ navbar(env Env, title string, opts ...navbarOption) {
@@ -61,12 +68,17 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 						if env.Case.ID != "" {
 							<li class="inline-flex gap-4 items-center">
 								<i class="hio hio-6 hio-briefcase inline-block"></i>
-								<a href={ "/cases/switch?from=" + env.Case.ID + "&to=" + SectionSuffix(env.Route, env.Case.ID) } up-layer="new popup" up-size="grow" up-history="false" title="Switch to another case" class="inline-flex gap-2 items-center cursor-pointer hover:text-primary">
+								<a href={ "/cases/switch?from=" + env.Case.ID + "&to=" + SectionSuffix(env.Route, env.Case.ID) } up-layer="new popup" up-size="grow" up-history="false" title="Switch to another case">
 									{ env.Case.Name }
 								</a>
 							</li>
 						}
-						<li class="text-neutral">{ title }</li>
+						<li class={ "inline-flex items-center", templ.KV("gap-4", cfg.titleIcon != "") }>
+							if cfg.titleIcon != "" {
+								<i class={ "hio hio-6 hio-" + cfg.titleIcon + " inline-block" }></i>
+							}
+							{ title }
+						</li>
 					</ul>
 				</div>
 				if env.Case.IsTemplate {
@@ -158,18 +170,7 @@ templ sidebar(env Env, title string) {
 		<div class="divider"></div>
 		<ul class="menu gap-2">
 			if _, ok := env.Allowed("GET", "/settings/"); ok {
-				<li class="dropdown dropdown-right dropdown-end">
-					<div tabindex="42" role="button"><i class="hio hio-6 hio-cog-6-tooth hue-slate"></i></div>
-					<ul tabindex="42" class="dropdown-content menu bg-base-200 rounded-box z-2 w-52 p-2 shadow">
-						<li><a href="/settings/hooks/"><i class="hio hio-6 hio-bolt"></i> Automation Rules</a></li>
-						<li><a href="/settings/api-keys/"><i class="hio hio-6 hio-beaker"></i> API Keys</a></li>
-						<li><a href="/settings/enums/"><i class="hio hio-6 hio-briefcase"></i> Case Objects</a></li>
-						<li><a href="/settings/custom/"><i class="hio hio-6 hio-square-3-stack-3d"></i> Custom Attributes</a></li>
-						<li><a href="/settings/reports/"><i class="hio hio-6 hio-document-arrow-down"></i> Report Templates</a></li>
-						<li><a href="/settings/templates/"><i class="hio hio-6 hio-document-duplicate"></i> Case Templates</a></li>
-						<li><a href="/settings/users/"><i class="hio hio-6 hio-users"></i> Users</a></li>
-					</ul>
-				</li>
+				@sidebarLink("/settings/", "Settings", "cog-6-tooth", title, "hue-slate")
 			}
 			<li><a href="/auth/changepassword" title="Change password" class="" up-layer="new drawer"><i class="hio hio-6 hio-key hue-amber"></i> </a></li>
 			<li><a href="/auth/logout" title="Logout" class=""><i class="hio hio-6 hio-arrow-right-start-on-rectangle hue-rust"></i> </a></li>

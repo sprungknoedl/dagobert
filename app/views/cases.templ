@@ -10,7 +10,7 @@ import (
 
 templ CasesMany(env Env, rows []model.Case) {
 	@layout() {
-		@list(env, "Cases", navHideImport(), navPreButtons(casesImport(env)), navSubtitle("Manage your incident response investigations")) {
+		@list(env, "Cases", navTitleIcon("briefcase"), navHideImport(), navPreButtons(casesImport(env)), navSubtitle("Manage your incident response investigations")) {
 			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>

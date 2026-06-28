@@ -139,6 +139,7 @@ func Run(cmd *cobra.Command, args []string) {
 
 	// settings (report templates)
 	settingsCtrl := NewSettingsCtrl(db, acl)
+	secured.HandleFunc("GET /settings/", settingsCtrl.Overview)
 	secured.HandleFunc("GET /settings/reports/", settingsCtrl.ListReports)
 	secured.HandleFunc("GET /settings/reports/{id}", settingsCtrl.EditReport)
 	secured.HandleFunc("POST /settings/reports/{id}", settingsCtrl.SaveReport)
