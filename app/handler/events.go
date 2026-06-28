@@ -130,7 +130,7 @@ func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 				Custom:     custom,
 			}
 
-			if err = ctrl.Store().SaveEvent(cid, obj, true); err != nil {
+			if err = tx.SaveEvent(cid, obj, true); err != nil {
 				Err(w, r, err)
 			}
 		})
