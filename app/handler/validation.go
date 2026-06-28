@@ -87,7 +87,6 @@ func ValidateTask(dto *model.Task, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Task", Missing: dto.Task == ""},
 		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !InEnum(enums.TaskTypes, dto.Type)},
-		{Name: "DateDue", Message: "Invalid format, expected e.g. '2006-01-02'."},
 	})
 }
 
