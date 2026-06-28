@@ -46,8 +46,12 @@ func AddFromFS(store *model.Store, obj model.Evidence) error {
 		return err
 	}
 
-	OnEvidenceAdded(store, obj)
-	return nil
+	if OnEvidenceAdded != nil {
+		OnEvidenceAdded(store, obj)
+		return nil
+	} else {
+		return fmt.Errorf("OnEvidenceAdded not wired in; failure in package setup")
+	}
 }
 
 func unpack(obj model.Evidence) (string, error) {
