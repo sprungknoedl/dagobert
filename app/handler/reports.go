@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"text/template"
 	"time"
 
@@ -23,10 +22,8 @@ const BucketReportTemplates = "templates"
 func LoadTemplate(name string) (doct.Template, error) {
 	// name is an untrusted form value joined into a filesystem path; require a
 	// single flat element so it cannot traverse out of files/templates/ into
-	// another case's evidence/malware dirs. The backslash check is belt-and-
-	// suspenders for Windows, where it is a path separator that filepath.Base
-	// does not collapse on Linux/macOS — a template name never needs one.
-	if name != filepath.Base(name) || name == "." || name == ".." || strings.ContainsRune(name, '\\') {
+	// another case's evidence/malware dirs.
+	if !isFlatName(name) {
 		return nil, errors.New("invalid template")
 	}
 

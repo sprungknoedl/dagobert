@@ -6,6 +6,29 @@ import (
 	"github.com/sprungknoedl/dagobert/app/model"
 )
 
+func TestValidateReportName(t *testing.T) {
+	tests := []struct {
+		name    string
+		invalid bool
+	}{
+		{"report.odt", false},
+		{"my report.docx", false},
+		{"../../evidences/case02/secret.odt", true},
+		{"sub/report.odt", true},
+		{`..\report.odt`, true}, // backslash: a path separator on Windows
+		{"report.exe", true},    // unsupported extension
+		{"", true},              // empty is Missing, still not accepted
+	}
+	for _, tt := range tests {
+		dto := &model.Report{Name: tt.name}
+		vr := ValidateReport(dto, model.Enums{})
+		c, flagged := vr["Name"]
+		if flagged != tt.invalid {
+			t.Errorf("name %q: got flagged=%v, want %v (%+v)", tt.name, flagged, tt.invalid, c)
+		}
+	}
+}
+
 func TestValidateMalwareHash(t *testing.T) {
 	tests := []struct {
 		hash    string

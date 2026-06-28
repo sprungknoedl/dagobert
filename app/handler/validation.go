@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/sprungknoedl/dagobert/app/model"
@@ -17,6 +18,14 @@ import (
 // alphanumeric string cannot contain "/", "\" or "." and so cannot traverse out
 // of its target directory.
 var reAlnum = regexp.MustCompile(`^[a-zA-Z0-9]+$`)
+
+// isFlatName reports whether name is a single path element that stays inside its
+// target directory — i.e. safe to join into a filesystem path. It rejects "."
+// and ".." as well as any backslash, a path separator on Windows that
+// filepath.Base does not collapse on Linux/macOS.
+func isFlatName(name string) bool {
+	return name == filepath.Base(name) && name != "." && name != ".." && !strings.ContainsRune(name, '\\')
+}
 
 func InEnum(enum []model.Enum, item string) bool {
 	return slices.Contains(
@@ -101,8 +110,12 @@ func ValidateReport(dto *model.Report, enums model.Enums) valid.ValidationError 
 	return valid.Check([]valid.Condition{
 		{
 			Name: "Name", Missing: dto.Name == "",
-			Invalid: !slices.Contains([]string{".odt", ".ods", ".odp", ".docx"}, filepath.Ext(dto.Name)),
-			Message: "Unsupported file type.",
+			// dto.Name is written to files/templates/<Name> (O_TRUNC) and later
+			// joined again for download/delete, so a traversing name must be
+			// rejected before it ever reaches the disk, not just an extension check.
+			Invalid: !isFlatName(dto.Name) ||
+				!slices.Contains([]string{".odt", ".ods", ".odp", ".docx"}, filepath.Ext(dto.Name)),
+			Message: "Invalid file name or unsupported file type.",
 		},
 	})
 }
