@@ -74,7 +74,7 @@ func (ctrl TaskCtrl) Import(w http.ResponseWriter, r *http.Request) {
 				Warn(w, r, err)
 			}
 
-			datedue, err := time.Parse(time.RFC3339, cmp.Or(rec[5], ZeroTime.Format(time.RFC3339)))
+			datedue, err := time.Parse(time.RFC3339, cmp.Or(rec[5], time.Time{}.Format(time.RFC3339)))
 			if err != nil {
 				Warn(w, r, err)
 			}

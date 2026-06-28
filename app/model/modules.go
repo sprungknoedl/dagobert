@@ -191,11 +191,9 @@ func (store *Store) GetRunningJobs() ([]Job, error) {
 	return list, tx.Error
 }
 
-func (store *Store) SaveJob(obj Job) error {
+func (store *Store) PushJob(obj Job) error {
 	return store.DB.Save(&obj).Error
 }
-
-func (store *Store) PushJob(obj Job) error { return store.SaveJob(obj) }
 
 // PopJob atomically claims the oldest scheduled job for one of the given
 // modules, flipping it Scheduled→Running and returning it in a single

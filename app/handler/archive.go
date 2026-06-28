@@ -61,7 +61,7 @@ func (ctrl CaseCtrl) ExportArchive(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user := GetUser(ctrl.Store(), r)
+	user := GetUser(r)
 	exportedBy := fp.If(user.Email != "", user.Email, fp.If(user.UPN != "", user.UPN, user.Name))
 
 	scheme := "http"
@@ -317,7 +317,7 @@ func (ctrl CaseCtrl) commitImport(w http.ResponseWriter, r *http.Request, token 
 
 	// grant the importing user access to what they just imported (administrators
 	// keep wildcard access regardless)
-	user := GetUser(ctrl.Store(), r)
+	user := GetUser(r)
 	if err := ctrl.ACL().SaveCasePermissions(arch.Case.ID, []string{user.ID}); err != nil {
 		Err(w, r, err)
 		return
