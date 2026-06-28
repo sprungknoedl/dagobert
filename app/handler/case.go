@@ -82,33 +82,35 @@ func (ctrl CaseCtrl) Export(w http.ResponseWriter, r *http.Request) {
 
 func (ctrl CaseCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	uri := "/"
-	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 8, func(rec []string) {
-		closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
-		if err != nil {
-			Warn(w, r, err)
-			return
-		}
+	ctrl.Store().Transaction(func(tx *model.Store) error {
+		return ImportCSV(tx, ctrl.ACL(), w, r, uri, 8, func(rec []string) {
+			closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
+			if err != nil {
+				Warn(w, r, err)
+				return
+			}
 
-		var custom model.Custom
-		if len(rec) > 7 {
-			custom.Scan(rec[7])
-		}
+			var custom model.Custom
+			if len(rec) > 7 {
+				custom.Scan(rec[7])
+			}
 
-		obj := model.Case{
-			ID:             fp.If(rec[0] == "", fp.Random(10), rec[0]),
-			Name:           rec[1],
-			Severity:       rec[2],
-			Classification: rec[3],
-			Closed:         closed,
-			Outcome:        rec[5],
-			Summary:        rec[6],
-			Custom:         custom,
-		}
+			obj := model.Case{
+				ID:             fp.If(rec[0] == "", fp.Random(10), rec[0]),
+				Name:           rec[1],
+				Severity:       rec[2],
+				Classification: rec[3],
+				Closed:         closed,
+				Outcome:        rec[5],
+				Summary:        rec[6],
+				Custom:         custom,
+			}
 
-		if err = ctrl.Store().SaveCase(obj); err != nil {
-			Err(w, r, err)
-			return
-		}
+			if err = tx.SaveCase(obj); err != nil {
+				Err(w, r, err)
+				return
+			}
+		})
 	})
 }
 

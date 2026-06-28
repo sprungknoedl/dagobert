@@ -63,25 +63,27 @@ func (ctrl NoteCtrl) Export(w http.ResponseWriter, r *http.Request) {
 func (ctrl NoteCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/notes/", cid)
-	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 5, func(rec []string) {
-		var custom model.Custom
-		if len(rec) > 4 {
-			custom.Scan(rec[4])
-		}
+	ctrl.Store().Transaction(func(tx *model.Store) error {
+		return ImportCSV(tx, ctrl.ACL(), w, r, uri, 5, func(rec []string) {
+			var custom model.Custom
+			if len(rec) > 4 {
+				custom.Scan(rec[4])
+			}
 
-		obj := model.Note{
-			ID:          fp.If(rec[0] == "", fp.Random(10), rec[0]),
-			Title:       rec[1],
-			Category:    rec[2],
-			Description: rec[3],
-			CaseID:      cid,
-			Custom:      custom,
-		}
+			obj := model.Note{
+				ID:          fp.If(rec[0] == "", fp.Random(10), rec[0]),
+				Title:       rec[1],
+				Category:    rec[2],
+				Description: rec[3],
+				CaseID:      cid,
+				Custom:      custom,
+			}
 
-		if err := ctrl.Store().SaveNote(cid, obj); err != nil {
-			Err(w, r, err)
-			return
-		}
+			if err := tx.SaveNote(cid, obj); err != nil {
+				Err(w, r, err)
+				return
+			}
+		})
 	})
 }
 

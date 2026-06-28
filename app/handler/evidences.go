@@ -82,61 +82,63 @@ func (ctrl EvidenceCtrl) Export(w http.ResponseWriter, r *http.Request) {
 func (ctrl EvidenceCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/evidences/", cid)
-	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 0, func(rec []string) {
-		size, err := strconv.ParseInt(rec[4], 10, 64)
-		if err != nil {
-			Warn(w, r, err)
-			return
-		}
-
-		loc := filepath.Base(filepath.Clean(rec[2]))
-		if _, err := os.Stat(filepath.Join("files", "evidences", cid, loc)); errors.Is(err, os.ErrNotExist) {
-			Warn(w, r, err)
-			return
-		}
-
-		var startsAt model.Time
-		if len(rec) > 6 && rec[6] != "" {
-			t, err := time.Parse(time.RFC3339, rec[6])
+	ctrl.Store().Transaction(func(tx *model.Store) error {
+		return ImportCSV(tx, ctrl.ACL(), w, r, uri, 0, func(rec []string) {
+			size, err := strconv.ParseInt(rec[4], 10, 64)
 			if err != nil {
 				Warn(w, r, err)
-			} else {
-				startsAt = model.Time(t)
+				return
 			}
-		}
 
-		var endsAt model.Time
-		if len(rec) > 7 && rec[7] != "" {
-			t, err := time.Parse(time.RFC3339, rec[7])
-			if err != nil {
+			loc := filepath.Base(filepath.Clean(rec[2]))
+			if _, err := os.Stat(filepath.Join("files", "evidences", cid, loc)); errors.Is(err, os.ErrNotExist) {
 				Warn(w, r, err)
-			} else {
-				endsAt = model.Time(t)
+				return
 			}
-		}
 
-		var custom model.Custom
-		if len(rec) > 8 {
-			custom.Scan(rec[8])
-		}
+			var startsAt model.Time
+			if len(rec) > 6 && rec[6] != "" {
+				t, err := time.Parse(time.RFC3339, rec[6])
+				if err != nil {
+					Warn(w, r, err)
+				} else {
+					startsAt = model.Time(t)
+				}
+			}
 
-		obj := model.Evidence{
-			ID:       fp.If(rec[0] == "", fp.Random(10), rec[0]),
-			CaseID:   cid,
-			Type:     rec[1],
-			Name:     loc,
-			Hash:     rec[3],
-			Size:     size, // rec[4]
-			Notes:    rec[5],
-			StartsAt: startsAt,
-			EndsAt:   endsAt,
-			Custom:   custom,
-		}
+			var endsAt model.Time
+			if len(rec) > 7 && rec[7] != "" {
+				t, err := time.Parse(time.RFC3339, rec[7])
+				if err != nil {
+					Warn(w, r, err)
+				} else {
+					endsAt = model.Time(t)
+				}
+			}
 
-		if err := ctrl.Store().SaveEvidence(cid, obj); err != nil {
-			Err(w, r, err)
-			return
-		}
+			var custom model.Custom
+			if len(rec) > 8 {
+				custom.Scan(rec[8])
+			}
+
+			obj := model.Evidence{
+				ID:       fp.If(rec[0] == "", fp.Random(10), rec[0]),
+				CaseID:   cid,
+				Type:     rec[1],
+				Name:     loc,
+				Hash:     rec[3],
+				Size:     size, // rec[4]
+				Notes:    rec[5],
+				StartsAt: startsAt,
+				EndsAt:   endsAt,
+				Custom:   custom,
+			}
+
+			if err := tx.SaveEvidence(cid, obj); err != nil {
+				Err(w, r, err)
+				return
+			}
+		})
 	})
 }
 
