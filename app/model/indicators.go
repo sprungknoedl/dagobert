@@ -59,7 +59,7 @@ func (store *Store) GetIndicator(cid string, id string) (Indicator, error) {
 		Select("count(DISTINCT i2.case_id)")
 	tx := store.DB.
 		Select("*, (?) as first_seen, (?) as last_seen, (?) as events, (?) as other_cases", fsq, lsq, evq, ocq).
-		First(&obj, "id = ?", id)
+		First(&obj, "id = ? AND case_id = ?", id, cid)
 	return obj, tx.Error
 }
 
@@ -91,6 +91,10 @@ func (store *Store) ListIndicatorOverlap(excludeCid, typ, value string) ([]Indic
 }
 
 func (store *Store) SaveIndicator(cid string, obj Indicator, override bool) error {
+	obj.CaseID = cid
+	if err := store.assertCaseOwnership(&Indicator{}, obj.ID, cid); err != nil {
+		return err
+	}
 	return store.DB.
 		Clauses(clause.OnConflict{DoNothing: !override}).
 		Save(obj).
@@ -99,9 +103,10 @@ func (store *Store) SaveIndicator(cid string, obj Indicator, override bool) erro
 
 func (store *Store) DeleteIndicator(cid string, id string) error {
 	return store.Transaction(func(tx *Store) error {
-		if err := tx.DeleteEnrichments("Indicator", id); err != nil {
-			return err
+		res := tx.DB.Delete(&Indicator{}, "id = ? AND case_id = ?", id, cid)
+		if res.Error != nil || res.RowsAffected == 0 {
+			return res.Error
 		}
-		return tx.DB.Delete(&Indicator{}, "id = ?", id).Error
+		return tx.DeleteEnrichments("Indicator", id)
 	})
 }
