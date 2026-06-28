@@ -173,29 +173,34 @@ func (ctrl EventCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, ev := range events {
-		buf := &bytes.Buffer{}
-		enc := json.NewEncoder(buf)
-		enc.SetIndent("", "  ")
-		if err := enc.Encode(ev.Source); err != nil {
-			Err(w, r, err)
-			return
-		}
+	err = ctrl.Store().Transaction(func(tx *model.Store) error {
+		for _, ev := range events {
+			buf := &bytes.Buffer{}
+			enc := json.NewEncoder(buf)
+			enc.SetIndent("", "  ")
+			if err := enc.Encode(ev.Source); err != nil {
+				return err
+			}
 
-		obj := model.Event{
-			ID:     "_ts_" + ev.ID,
-			CaseID: cid,
-			Type:   "Other",
-			Time:   model.Time(ev.Datetime),
-			Event:  ev.Message,
-			Raw:    buf.String(),
-			Source: "Timesketch",
-		}
+			obj := model.Event{
+				ID:     "_ts_" + ev.ID,
+				CaseID: cid,
+				Type:   "Other",
+				Time:   model.Time(ev.Datetime),
+				Event:  ev.Message,
+				Raw:    buf.String(),
+				Source: "Timesketch",
+			}
 
-		if err = ctrl.Store().SaveEvent(cid, obj, false); err != nil {
-			Err(w, r, err)
-			return
+			if err = tx.SaveEvent(cid, obj, false); err != nil {
+				return err
+			}
 		}
+		return nil
+	})
+	if err != nil {
+		Err(w, r, err)
+		return
 	}
 
 	uri := fmt.Sprintf("/cases/%s/events/", cid)
