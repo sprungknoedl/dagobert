@@ -11,6 +11,12 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 )
 
+type Hook struct {
+	model.Hook
+	ConditionFn func(any) bool `gorm:"-"`
+	ModuleObj   model.Module   `gorm:"-"`
+}
+
 var hooks = atomic.Value{}
 
 // workerutils can not import this package (the module packages sit in
@@ -26,7 +32,7 @@ func LoadHooks(store *model.Store) error {
 		return err
 	}
 
-	tmp := []model.Hook{}
+	tmp := []Hook{}
 	for _, def := range list {
 		if !def.Enabled {
 			continue
@@ -64,7 +70,7 @@ func triggerHooks(store *model.Store, obj any, caseID, objID string) {
 		return
 	}
 
-	list := hooks.Load().([]model.Hook)
+	list := hooks.Load().([]Hook)
 	for _, hook := range list {
 		if !hook.ConditionFn(obj) || !hook.ModuleObj.Supports(obj) {
 			continue
@@ -86,37 +92,38 @@ func triggerHooks(store *model.Store, obj any, caseID, objID string) {
 	}
 }
 
-func CompileHook(hook model.Hook) (model.Hook, error) {
+func CompileHook(hook model.Hook) (Hook, error) {
+	compiled := Hook{Hook: hook}
 	// search mod
 	for _, mod := range Modules {
 		if mod.Name() == hook.Module {
-			hook.ModuleObj = mod
+			compiled.ModuleObj = mod
 			break
 		}
 	}
-	if hook.ModuleObj == nil {
-		return model.Hook{}, errors.New("unkown mod")
+	if compiled.ModuleObj == nil {
+		return Hook{}, errors.New("unkown mod")
 	}
 
 	// compile condition
 	var obj any
-	switch hook.Trigger {
+	switch compiled.Trigger {
 	case "OnEvidenceAdded":
 		obj = model.Evidence{}
 	case "OnIndicatorAdded":
 		obj = model.Indicator{}
 	}
 
-	program, err := expr.Compile(hook.Condition,
+	program, err := expr.Compile(compiled.Condition,
 		expr.AsBool(),
 		expr.Env(map[string]any{
 			"obj": obj,
 		}))
 	if err != nil {
-		return model.Hook{}, err
+		return Hook{}, err
 	}
 
-	hook.ConditionFn = func(obj any) bool {
+	compiled.ConditionFn = func(obj any) bool {
 		out, err := expr.Run(program, map[string]any{"obj": obj})
 		if err != nil {
 			log.Printf("error evaluating hook expression: %v", err)
@@ -126,6 +133,6 @@ func CompileHook(hook model.Hook) (model.Hook, error) {
 		return out.(bool)
 	}
 
-	// return finished hook
-	return hook, nil
+	// return finished compiled hook
+	return compiled, nil
 }

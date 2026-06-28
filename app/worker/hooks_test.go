@@ -1,6 +1,7 @@
 package worker
 
 import (
+	"context"
 	"testing"
 
 	"github.com/a-h/templ"
@@ -28,12 +29,12 @@ func setupWorkerDB(t *testing.T) *model.Store {
 // Supports() gate every TI module implements.
 type fakeModule struct{}
 
-func (fakeModule) Name() string                    { return "FakeTI" }
-func (fakeModule) Description() string             { return "" }
-func (fakeModule) Validate() (model.Module, error) { return fakeModule{}, nil }
-func (fakeModule) Run(model.Job) error             { return nil }
-func (fakeModule) RenderResults() templ.Component  { return templ.NopComponent }
-func (fakeModule) RenderSettings() templ.Component { return templ.NopComponent }
+func (fakeModule) Name() string                                       { return "FakeTI" }
+func (fakeModule) Description() string                                { return "" }
+func (fakeModule) Validate() (model.Module, error)                    { return fakeModule{}, nil }
+func (fakeModule) Run(context.Context, *model.Store, model.Job) error { return nil }
+func (fakeModule) RenderResults() templ.Component                     { return templ.NopComponent }
+func (fakeModule) RenderSettings() templ.Component                    { return templ.NopComponent }
 func (fakeModule) Supports(obj any) bool {
 	ind, ok := obj.(model.Indicator)
 	return ok && ind.TLP != "TLP:RED"
@@ -59,7 +60,7 @@ func TestTriggerGating(t *testing.T) {
 		Enabled:   true,
 	})
 	assert.Nil(t, err) // condition compiles against model.Indicator
-	hooks.Store([]model.Hook{hook})
+	hooks.Store([]Hook{hook})
 
 	t.Run("schedules a job for a supported indicator", func(t *testing.T) {
 		ind := model.Indicator{ID: fp.Random(10), CaseID: kase.ID, Type: "IP", Value: "1.2.3.4", TLP: "TLP:GREEN"}

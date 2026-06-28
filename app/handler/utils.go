@@ -84,16 +84,14 @@ func ListModules[T any](ctrl Ctrl, w http.ResponseWriter, r *http.Request, fn fu
 	}
 
 	jobs := fp.ToMap(list, func(j model.Job) string { return j.Name })
-	runs := fp.Apply(modules, func(m model.Module) model.Job {
-		return model.Job{
+	runs := fp.Apply(modules, func(m model.Module) views.Job {
+		return views.Job{
 			Module: m,
-			Name:   m.Name(),
-			Status: jobs[m.Name()].Status,
-			Error:  jobs[m.Name()].Error,
+			Job:    jobs[m.Name()],
 		}
 	})
 
-	slices.SortFunc(runs, func(a, b model.Job) int { return cmp.Compare(a.Name, b.Name) })
+	slices.SortFunc(runs, func(a, b views.Job) int { return cmp.Compare(a.Name, b.Name) })
 	Render(w, r, http.StatusOK, views.ModuleList(Env(ctrl, r), runs))
 }
 

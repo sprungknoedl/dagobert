@@ -69,7 +69,7 @@ func (m *Module) Validate() (model.Module, error) {
 	return m, nil
 }
 
-func (m *Module) Run(job model.Job) error {
+func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) error {
 	evidence, ok := job.Object.Payload.(model.Evidence)
 	if !ok {
 		return fmt.Errorf("hayabusa: unsupported type '%T'", job.Object.Payload)
@@ -78,7 +78,7 @@ func (m *Module) Run(job model.Job) error {
 	src := workerutils.Filepath(evidence)
 	dst := src + ".jsonl"
 
-	cmd := exec.CommandContext(job.Ctx, m.args[0], append(m.args[1:],
+	cmd := exec.CommandContext(ctx, m.args[0], append(m.args[1:],
 		"json-timeline",
 		"--JSONL-output",
 		"--RFC-3339",
@@ -100,7 +100,7 @@ func (m *Module) Run(job model.Job) error {
 		return err
 	}
 
-	if err := workerutils.AddFromFS(job.Store, model.Evidence{
+	if err := workerutils.AddFromFS(store, model.Evidence{
 		CaseID: evidence.CaseID,
 		Type:   "Logs",
 		Name:   filepath.Base(dst),

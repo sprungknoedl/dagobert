@@ -74,7 +74,7 @@ func (m *Module) Validate() (model.Module, error) {
 	return m, nil
 }
 
-func (m *Module) Run(job model.Job) error {
+func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) error {
 	evidence, ok := job.Object.Payload.(model.Evidence)
 	if !ok {
 		return fmt.Errorf("plaso: unsupported type '%T'", job.Object.Payload)
@@ -88,7 +88,7 @@ func (m *Module) Run(job model.Job) error {
 		parser = DefaultProfile
 	}
 
-	cmd := exec.CommandContext(job.Ctx, m.args[0], append(m.args[1:],
+	cmd := exec.CommandContext(ctx, m.args[0], append(m.args[1:],
 		"--unattended",
 		"--parsers", parser,
 		"--output-format", "dynamic",
@@ -108,25 +108,26 @@ func (m *Module) Run(job model.Job) error {
 		return err
 	}
 
-	if err := workerutils.AddFromFS(job.Store, model.Evidence{
-		CaseID: evidence.CaseID,
-		Type:   "Other",
-		Name:   filepath.Base(dst),
-		Source: evidence.Source,
-		Notes:  "module-plaso",
-	}); err != nil {
-		return err
-	}
+	return store.Transaction(func(tx *model.Store) error {
+		if err := workerutils.AddFromFS(tx, model.Evidence{
+			CaseID: evidence.CaseID,
+			Type:   "Other",
+			Name:   filepath.Base(dst),
+			Source: evidence.Source,
+			Notes:  "module-plaso",
+		}); err != nil {
+			return err
+		}
 
-	if err := workerutils.AddFromFS(job.Store, model.Evidence{
-		CaseID: evidence.CaseID,
-		Type:   "Other",
-		Name:   filepath.Base(dst) + ".csv",
-		Source: evidence.Source,
-		Notes:  "module-plaso",
-	}); err != nil {
-		return err
-	}
-
-	return nil
+		if err := workerutils.AddFromFS(tx, model.Evidence{
+			CaseID: evidence.CaseID,
+			Type:   "Other",
+			Name:   filepath.Base(dst) + ".csv",
+			Source: evidence.Source,
+			Notes:  "module-plaso",
+		}); err != nil {
+			return err
+		}
+		return nil
+	})
 }

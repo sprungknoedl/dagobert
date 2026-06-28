@@ -55,7 +55,7 @@ func (m *Module) Validate() (model.Module, error) {
 	return m, nil
 }
 
-func (m *Module) Run(job model.Job) error {
+func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) error {
 	evidence, ok := job.Object.Payload.(model.Evidence)
 	if !ok {
 		return fmt.Errorf("timesketch: unsupported type '%T'", job.Object.Payload)
@@ -65,5 +65,5 @@ func (m *Module) Run(job model.Job) error {
 	}
 
 	src := workerutils.Filepath(evidence)
-	return m.client.Upload(job.Ctx, job.Case.SketchID, src)
+	return m.client.Upload(ctx, job.Case.SketchID, src)
 }

@@ -58,7 +58,7 @@ func (m *Module) Validate() (model.Module, error) {
 	return m, nil
 }
 
-func (m *Module) Run(job model.Job) error {
+func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) error {
 	ind, ok := job.Object.Payload.(model.Indicator)
 	if !ok {
 		return fmt.Errorf("hybridanalysis: unsupported type '%T'", job.Object.Payload)
@@ -71,7 +71,7 @@ func (m *Module) Run(job model.Job) error {
 		return errors.New("unsupported indicator type")
 	}
 
-	ctx, cancel := context.WithTimeout(job.Ctx, lookupTimeout)
+	ctx, cancel := context.WithTimeout(ctx, lookupTimeout)
 	defer cancel()
 
 	res, err := m.client.Lookup(ctx, ind.Value)
@@ -79,7 +79,7 @@ func (m *Module) Run(job model.Job) error {
 		return err
 	}
 
-	return job.Store.SetEnrichment(model.Enrichment{
+	return store.SetEnrichment(model.Enrichment{
 		CaseID:     job.Case.ID,
 		ObjectType: "Indicator",
 		ObjectID:   ind.ID,

@@ -28,7 +28,7 @@ type Module interface {
 	Description() string
 	Validate() (Module, error)
 	Supports(any) bool
-	Run(Job) error
+	Run(context.Context, *Store, Job) error
 	RenderResults() templ.Component
 	RenderSettings() templ.Component
 }
@@ -45,10 +45,6 @@ type Job struct {
 	Case     Case
 	ObjectID string
 	Object   Object `gorm:"type:bytes"`
-
-	Module Module          `gorm:"-"` // used in handler/utils.go to pass module information (like name and description) to ui
-	Ctx    context.Context `gorm:"-"` // used in worker/runner.go to pass the shutdown context to job runners
-	Store  *Store          `gorm:"-"` // used in worker/runner.go to give modules a store handle for result write-back
 }
 
 type Hook struct {
@@ -58,9 +54,6 @@ type Hook struct {
 	Module    string
 	Condition string
 	Enabled   bool
-
-	ConditionFn func(any) bool `gorm:"-"`
-	ModuleObj   Module         `gorm:"-"`
 }
 
 type envelope struct {
