@@ -45,7 +45,21 @@ func maxArchiveSize() int64 {
 			return n
 		}
 	}
-	return 1 << 30 // 1 GiB
+	return 10 << 30 // 10 GiB
+}
+
+// maxArchiveContentSize caps the total *decompressed* size of the binaries
+// written during an import. maxArchiveSize bounds only the compressed upload, so
+// without this a zip bomb (100x+ expansion) could exhaust the disk. A real case
+// with dozens of evidence files and malware samples is legitimately large, so
+// the default is generous. Override with MAX_ARCHIVE_CONTENT_SIZE (bytes).
+func maxArchiveContentSize() int64 {
+	if v := os.Getenv("MAX_ARCHIVE_CONTENT_SIZE"); v != "" {
+		if n, err := strconv.ParseInt(v, 10, 64); err == nil && n > 0 {
+			return n
+		}
+	}
+	return 10 << 30 // 10 GiB
 }
 
 // ExportArchive streams a single case to a ZIP archive. With binaries=true the
@@ -422,11 +436,15 @@ func archiveBinaryName(prefix, name string) (string, bool, error) {
 func restoreBinaries(zr *zip.Reader, caseID string, evidences []model.Evidence) error {
 	evHash := fp.ToMap(evidences, func(e model.Evidence) string { return e.Name })
 
+	// shared decompressed-size budget across every binary in the archive, so a
+	// bomb split over many entries can't slip past a per-file check
+	budget := maxArchiveContentSize()
+
 	for _, f := range zr.File {
 		if rel, ok, err := archiveBinaryName("evidences/", f.Name); err != nil {
 			return err
 		} else if ok {
-			sum, err := writeZipFile(f, filepath.Join("files", "evidences", caseID, rel))
+			sum, err := writeZipFile(f, filepath.Join("files", "evidences", caseID, rel), &budget)
 			if err != nil {
 				return err
 			}
@@ -439,7 +457,7 @@ func restoreBinaries(zr *zip.Reader, caseID string, evidences []model.Evidence) 
 		if rel, ok, err := archiveBinaryName("malware/", f.Name); err != nil {
 			return err
 		} else if ok {
-			if _, err := writeZipFile(f, filepath.Join("files", "malware", caseID, rel)); err != nil {
+			if _, err := writeZipFile(f, filepath.Join("files", "malware", caseID, rel), &budget); err != nil {
 				return err
 			}
 		}
@@ -448,8 +466,10 @@ func restoreBinaries(zr *zip.Reader, caseID string, evidences []model.Evidence) 
 }
 
 // writeZipFile copies a single zip entry to dst, returning the SHA-1 of the
-// written bytes.
-func writeZipFile(f *zip.File, dst string) (string, error) {
+// written bytes. *budget is the number of decompressed bytes still allowed
+// across the import; it is decremented by the amount written, and exceeding it
+// is a hard error so a zip bomb can't exhaust the disk.
+func writeZipFile(f *zip.File, dst string, budget *int64) (string, error) {
 	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
 		return "", err
 	}
@@ -466,9 +486,18 @@ func writeZipFile(f *zip.File, dst string) (string, error) {
 	}
 	defer fw.Close()
 
+	// read one byte past the budget so a copy that stops exactly at *budget is
+	// distinguishable from one that would have overrun; the latter is rejected
+	// before the truncated file is mistaken for a complete one.
 	hasher := sha1.New()
-	if _, err := io.Copy(io.MultiWriter(fw, hasher), fr); err != nil {
+	n, err := io.Copy(io.MultiWriter(fw, hasher), io.LimitReader(fr, *budget+1))
+	if err != nil {
 		return "", err
 	}
+	if n > *budget {
+		return "", fmt.Errorf("archive exceeds maximum decompressed size of %d bytes", maxArchiveContentSize())
+	}
+	*budget -= n
+
 	return fmt.Sprintf("%x", hasher.Sum(nil)), nil
 }

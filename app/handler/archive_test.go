@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -214,6 +215,53 @@ func TestArchiveRoundTripBinaries(t *testing.T) {
 	if fmt.Sprintf("%x", sha1.Sum(got)) != sum {
 		t.Errorf("restored hash mismatch")
 	}
+}
+
+func TestRestoreBinariesEnforcesContentBudget(t *testing.T) {
+	orig, _ := os.Getwd()
+	t.Cleanup(func() { os.Chdir(orig) })
+	if err := os.Chdir(t.TempDir()); err != nil {
+		t.Fatal(err)
+	}
+
+	// a zip entry whose decompressed size dwarfs its compressed size — the shape
+	// of a zip bomb. 64 KiB of zeros compresses to a few hundred bytes.
+	payload := make([]byte, 64<<10)
+	buf := &bytes.Buffer{}
+	zw := zip.NewWriter(buf)
+	w, err := zw.Create("evidences/big.bin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.Write(payload); err != nil {
+		t.Fatal(err)
+	}
+	if err := zw.Close(); err != nil {
+		t.Fatal(err)
+	}
+	zr := openZip(t, buf)
+
+	t.Run("over budget rejected", func(t *testing.T) {
+		t.Setenv("MAX_ARCHIVE_CONTENT_SIZE", "1024") // 1 KiB < 64 KiB payload
+		err := restoreBinaries(zr, "case01", nil)
+		if err == nil || !strings.Contains(err.Error(), "exceeds maximum decompressed size") {
+			t.Fatalf("got %v, want decompressed-size error", err)
+		}
+	})
+
+	t.Run("within budget allowed", func(t *testing.T) {
+		t.Setenv("MAX_ARCHIVE_CONTENT_SIZE", "1048576") // 1 MiB > 64 KiB payload
+		if err := restoreBinaries(zr, "case01", nil); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		got, err := os.ReadFile(filepath.Join("files", "evidences", "case01", "big.bin"))
+		if err != nil {
+			t.Fatalf("evidence not restored: %v", err)
+		}
+		if len(got) != len(payload) {
+			t.Errorf("restored %d bytes, want %d", len(got), len(payload))
+		}
+	})
 }
 
 func TestArchiveDuplicateIDRejected(t *testing.T) {
