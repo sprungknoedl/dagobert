@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"strings"
 	"time"
 
+	"github.com/a-h/templ"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/worker/workerutils"
 	ts "github.com/sprungknoedl/dagobert/pkg/timesketch"
@@ -17,7 +19,7 @@ type Module struct {
 	client *ts.Client
 }
 
-func NewModule(client *ts.Client) model.Module {
+func NewModule(client *ts.Client) *Module {
 	return &Module{client: client}
 }
 
@@ -56,14 +58,19 @@ func (m *Module) Validate() (model.Module, error) {
 }
 
 func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) error {
-	evidence, ok := job.Object.Payload.(model.Evidence)
-	if !ok {
-		return fmt.Errorf("timesketch: unsupported type '%T'", job.Object.Payload)
+	evidence, err := workerutils.GuardEvidenceRun(m, job)
+	if err != nil {
+		return err
 	}
+
 	if job.Case.SketchID == 0 {
 		return errors.New("timesketch: case is not linked to a sketch")
 	}
 
 	src := workerutils.Filepath(evidence)
 	return m.client.Upload(ctx, job.Case.SketchID, src)
+}
+
+func (m *Module) RenderSettings() templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error { return nil })
 }

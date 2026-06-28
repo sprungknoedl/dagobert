@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
 	"log/slog"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/a-h/templ"
 	"github.com/mattn/go-shellwords"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/worker/workerutils"
@@ -21,7 +23,7 @@ type Module struct {
 	args []string
 }
 
-func NewModule() model.Module {
+func NewModule() *Module {
 	return &Module{}
 }
 
@@ -70,9 +72,9 @@ func (m *Module) Validate() (model.Module, error) {
 }
 
 func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) error {
-	evidence, ok := job.Object.Payload.(model.Evidence)
-	if !ok {
-		return fmt.Errorf("hayabusa: unsupported type '%T'", job.Object.Payload)
+	evidence, err := workerutils.GuardEvidenceRun(m, job)
+	if err != nil {
+		return err
 	}
 
 	src := workerutils.Filepath(evidence)
@@ -111,4 +113,8 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 	}
 
 	return nil
+}
+
+func (m *Module) RenderSettings() templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error { return nil })
 }

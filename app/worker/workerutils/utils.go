@@ -3,15 +3,21 @@ package workerutils
 import (
 	"archive/zip"
 	"crypto/sha1"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 )
+
+// LookupTimeout bounds a single lookup, derived from the job context so
+// server shutdown cancels in-flight requests.
+const LookupTimeout = 20 * time.Second
 
 // OnEvidenceAdded is wired to the hooks engine by the worker package; this
 // package can not import worker directly, because the module packages that
@@ -108,4 +114,33 @@ func unpack(obj model.Evidence) (string, error) {
 	}
 
 	return dir + string(filepath.Separator), nil
+}
+
+func GuardEvidenceRun(m model.Module, job model.Job) (model.Evidence, error) {
+	obj, ok := job.Object.Payload.(model.Evidence)
+	if !ok {
+		return model.Evidence{}, fmt.Errorf("%s: unsupported type '%T'", m.Name(), job.Object.Payload)
+	}
+
+	if !m.Supports(obj) {
+		return model.Evidence{}, errors.New("unsupported indicator type")
+	}
+
+	return obj, nil
+}
+
+func GuardIndicatorRun(m model.Module, job model.Job) (model.Indicator, error) {
+	obj, ok := job.Object.Payload.(model.Indicator)
+	if !ok {
+		return model.Indicator{}, fmt.Errorf("%s: unsupported type '%T'", m.Name(), job.Object.Payload)
+	}
+
+	if !m.Supports(obj) {
+		if obj.TLP == "TLP:RED" {
+			return model.Indicator{}, errors.New("indicator is TLP:RED — external enrichment disabled")
+		}
+		return model.Indicator{}, errors.New("unsupported indicator type")
+	}
+
+	return obj, nil
 }
