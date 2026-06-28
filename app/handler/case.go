@@ -239,6 +239,38 @@ func (ctrl CaseCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
 	RedirectAfterSave(w, r, "/cases/")
 }
 
+// Switch renders the quick case-switcher popup: the cases the user can access,
+// excluding the current case and template cases, optionally narrowed by search.
+// The incoming `to` section suffix is re-validated so it can't inject a path.
+func (ctrl CaseCtrl) Switch(w http.ResponseWriter, r *http.Request) {
+	from := r.URL.Query().Get("from")
+	to := views.ValidSection(r.URL.Query().Get("to"))
+	search := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("search")))
+
+	list, err := ctrl.Store().ListCases()
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	env := Env(ctrl, r)
+	cases := fp.Filter(list, func(c model.Case) bool {
+		if c.ID == from || c.IsTemplate {
+			return false
+		}
+		if _, ok := env.Allowed("GET", "/cases/"+c.ID+"/summary/"); !ok {
+			return false
+		}
+		if search != "" {
+			return strings.Contains(strings.ToLower(c.Name), search) ||
+				strings.Contains(strings.ToLower(c.ID), search)
+		}
+		return true
+	})
+
+	Render(w, r, http.StatusOK, views.CaseSwitcher(env, cases, from, to))
+}
+
 func (ctrl CaseCtrl) Summary(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	obj, err := ctrl.Store().GetCase(cid)

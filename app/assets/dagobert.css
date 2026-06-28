@@ -139,6 +139,10 @@ pill-shaped buttons without affecting inputs/selects/tabs, which share --radius-
     --radius-field: 2rem;
 }
 
+.menu :where(li:not(.menu-title) > :not(ul, details, .menu-title, .btn)) {
+    --radius-field: 2rem;
+}
+
 /*
 SIDEBAR / MENU
 match the pill-shaped buttons on the active and hovered menu items;
@@ -197,6 +201,11 @@ up-drawer-box {
 
 up-drawer[size=large] up-drawer-box {
     width: 66% !important;
+}
+
+up-popup {
+    border-radius: var(--radius-box);
+    margin-top: 0.5rem;
 }
 
 /*

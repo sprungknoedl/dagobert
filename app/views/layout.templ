@@ -61,7 +61,9 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 						if env.Case.ID != "" {
 							<li class="inline-flex gap-4 items-center">
 								<i class="hio hio-6 hio-briefcase inline-block"></i>
-								{ env.Case.Name }
+								<a href={ "/cases/switch?from=" + env.Case.ID + "&to=" + SectionSuffix(env.Route, env.Case.ID) } up-layer="new popup" up-size="grow" up-history="false" title="Switch to another case" class="inline-flex gap-2 items-center cursor-pointer hover:text-primary">
+									{ env.Case.Name }
+								</a>
 							</li>
 						}
 						<li class="text-neutral">{ title }</li>
