@@ -3,6 +3,7 @@ package worker
 import (
 	"errors"
 	"log"
+	"sync/atomic"
 
 	"github.com/expr-lang/expr"
 	"github.com/sprungknoedl/dagobert/app/model"
@@ -10,7 +11,7 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 )
 
-var hooks = []model.Hook{}
+var hooks = atomic.Value{}
 
 // workerutils can not import this package (the module packages sit in
 // between), so the hook trigger is wired up via a function variable.
@@ -25,9 +26,7 @@ func LoadHooks(store *model.Store) error {
 		return err
 	}
 
-	// LoadHooks is re-invoked on every SaveHook/DeleteHook. Reset hook
-	// list to avoid accumulation of duplicates.
-	hooks = []model.Hook{}
+	tmp := []model.Hook{}
 	for _, def := range list {
 		if !def.Enabled {
 			continue
@@ -39,9 +38,10 @@ func LoadHooks(store *model.Store) error {
 			continue
 		}
 
-		hooks = append(hooks, hook)
+		tmp = append(tmp, hook)
 	}
 
+	hooks.Store(tmp)
 	return nil
 }
 
@@ -64,7 +64,8 @@ func triggerHooks(store *model.Store, obj any, caseID, objID string) {
 		return
 	}
 
-	for _, hook := range hooks {
+	list := hooks.Load().([]model.Hook)
+	for _, hook := range list {
 		if !hook.ConditionFn(obj) || !hook.ModuleObj.Supports(obj) {
 			continue
 		}
