@@ -25,6 +25,9 @@ func LoadHooks(store *model.Store) error {
 		return err
 	}
 
+	// LoadHooks is re-invoked on every SaveHook/DeleteHook. Reset hook
+	// list to avoid accumulation of duplicates.
+	hooks = []model.Hook{}
 	for _, def := range list {
 		if !def.Enabled {
 			continue
