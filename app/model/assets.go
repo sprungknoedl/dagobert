@@ -56,5 +56,10 @@ func (store *Store) SaveAsset(cid string, obj Asset) error {
 }
 
 func (store *Store) DeleteAsset(cid string, id string) error {
-	return store.DB.Delete(&Asset{}, "id = ?", id).Error
+	return store.Transaction(func(tx *Store) error {
+		if err := tx.DeleteEnrichments("Asset", id); err != nil {
+			return err
+		}
+		return tx.DB.Delete(&Asset{}, "id = ?", id).Error
+	})
 }
