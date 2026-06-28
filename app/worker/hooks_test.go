@@ -59,7 +59,7 @@ func TestTriggerGating(t *testing.T) {
 		Enabled:   true,
 	})
 	assert.Nil(t, err) // condition compiles against model.Indicator
-	hooks = []model.Hook{hook}
+	hooks.Store([]model.Hook{hook})
 
 	t.Run("schedules a job for a supported indicator", func(t *testing.T) {
 		ind := model.Indicator{ID: fp.Random(10), CaseID: kase.ID, Type: "IP", Value: "1.2.3.4", TLP: "TLP:GREEN"}
