@@ -82,24 +82,9 @@ func Run(cmd *cobra.Command, args []string) {
 	// --------------------------------------
 	// Automations & jobs
 	// --------------------------------------
-	slog.Debug("Loading hooks")
-	err = worker.LoadHooks(db)
-	if err != nil {
-		slog.Error("Failed to load hooks", "err", err)
-		return
-	}
-
-	slog.Debug("Rescheduling stale jobs")
-	err = db.RescheduleStaleJobs()
-	if err != nil {
-		slog.Error("Failed to reschedule state jobs", "err", err)
-	}
-
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
-	slog.Debug("Starting job runners")
 	go worker.Start(ctx, db, ts)
+	defer stop()
 
 	// --------------------------------------
 	// Router

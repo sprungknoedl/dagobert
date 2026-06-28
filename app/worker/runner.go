@@ -67,6 +67,7 @@ func Start(ctx context.Context, store *model.Store, ts *tsclient.Client) {
 		Modules[m.Name()] = m
 	}
 
+	slog.Debug("Loading modules")
 	modules := map[string]model.Module{}
 	results := []ModuleStatus{}
 	for _, name := range slices.Sorted(maps.Keys(Modules)) {
@@ -86,9 +87,22 @@ func Start(ctx context.Context, store *model.Store, ts *tsclient.Client) {
 	}
 
 	num, _ := strconv.Atoi(cmp.Or(os.Getenv("DAGOBERT_WORKERS"), "3"))
-	slog.Info("starting job runners", "num", num, "modules", fp.Keys(modules))
+	slog.Info("Starting job runners", "num", num, "modules", fp.Keys(modules))
 	for range num {
 		go runner(ctx, store, modules)
+	}
+
+	slog.Debug("Loading hooks")
+	err := LoadHooks(store)
+	if err != nil {
+		slog.Error("Failed to load hooks", "err", err)
+		return
+	}
+
+	slog.Debug("Rescheduling stale jobs")
+	err = store.RescheduleStaleJobs()
+	if err != nil {
+		slog.Error("Failed to reschedule state jobs", "err", err)
 	}
 }
 
