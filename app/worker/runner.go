@@ -123,9 +123,6 @@ func runner(ctx context.Context, store *model.Store, modules map[string]model.Mo
 			}
 
 			slog.Info("running job", "job", job.ID, "module", job.Name)
-			job.Ctx = ctx
-			job.Store = store
-
 			// PopJob returns the job's own columns but not the Case
 			// association, so load it here. After this, modules can rely on
 			// job.Case being populated.
@@ -135,7 +132,7 @@ func runner(ctx context.Context, store *model.Store, modules map[string]model.Mo
 				slog.Warn("failed to load job case", "job", job.ID, "case", job.CaseID, "err", err)
 			} else {
 				job.Case = kase
-				if err := modules[job.Name].Run(job); err != nil {
+				if err := modules[job.Name].Run(ctx, store, job); err != nil {
 					errmsg = err.Error()
 					slog.Warn("failed to process job", "job", job.ID, "module", job.Name, "err", err)
 				}

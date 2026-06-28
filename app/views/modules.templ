@@ -2,7 +2,12 @@ package views
 
 import "github.com/sprungknoedl/dagobert/app/model"
 
-templ ModuleList(env Env, jobs []model.Job) {
+type Job struct {
+	model.Job
+	Module model.Module
+}
+
+templ ModuleList(env Env, jobs []Job) {
 	@layout() {
 		<main>
 			<!-- Modal header -->
