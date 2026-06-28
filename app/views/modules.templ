@@ -39,7 +39,6 @@ templ ModuleList(env Env, jobs []Job) {
 										<i class="hio hio-5 hio-check-circle inline-block"></i>
 										Job ran successfully.
 									</p>
-									@run.Module.RenderResults()
 									<p>
 										<form action={ env.Route } method="post" up-submit>
 											<input type="hidden" name="Name" value={ run.Name }/>

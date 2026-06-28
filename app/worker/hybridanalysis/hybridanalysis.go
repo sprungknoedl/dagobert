@@ -4,21 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"time"
 
+	"github.com/a-h/templ"
 	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/app/worker/workerutils"
 	ha "github.com/sprungknoedl/dagobert/pkg/hybridanalysis"
 )
-
-const lookupTimeout = 20 * time.Second
 
 type Module struct {
 	client *ha.Client
 }
 
-func NewModule() model.Module {
+func NewModule() *Module {
 	return &Module{client: ha.NewClient(ha.Config{APIKey: os.Getenv("HYBRIDANALYSIS_APIKEY")})}
 }
 
@@ -47,7 +48,7 @@ func (m *Module) Validate() (model.Module, error) {
 	}
 
 	slog.Info("validating module prerequisites", "module", "hybridanalysis")
-	ctx, cancel := context.WithTimeout(context.Background(), lookupTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), workerutils.LookupTimeout)
 	defer cancel()
 	if err := m.client.Verify(ctx); err != nil {
 		err = fmt.Errorf("connectivity check failed: %w", err)
@@ -59,19 +60,12 @@ func (m *Module) Validate() (model.Module, error) {
 }
 
 func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) error {
-	ind, ok := job.Object.Payload.(model.Indicator)
-	if !ok {
-		return fmt.Errorf("hybridanalysis: unsupported type '%T'", job.Object.Payload)
+	ind, err := workerutils.GuardIndicatorRun(m, job)
+	if err != nil {
+		return err
 	}
 
-	if !m.Supports(ind) {
-		if ind.TLP == "TLP:RED" {
-			return errors.New("indicator is TLP:RED — external enrichment disabled")
-		}
-		return errors.New("unsupported indicator type")
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, lookupTimeout)
+	ctx, cancel := context.WithTimeout(ctx, workerutils.LookupTimeout)
 	defer cancel()
 
 	res, err := m.client.Lookup(ctx, ind.Value)
@@ -89,4 +83,8 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 		Link:       res.URL,
 		FetchedAt:  model.Time(time.Now()),
 	})
+}
+
+func (m *Module) RenderSettings() templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error { return nil })
 }

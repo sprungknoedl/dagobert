@@ -29,7 +29,6 @@ type Module interface {
 	Validate() (Module, error)
 	Supports(any) bool
 	Run(context.Context, *Store, Job) error
-	RenderResults() templ.Component
 	RenderSettings() templ.Component
 }
 
