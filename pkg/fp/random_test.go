@@ -46,21 +46,11 @@ func TestRandom(t *testing.T) {
 	})
 }
 
-func TestRandomFallback(t *testing.T) {
+func TestRandomPanicsOnFailure(t *testing.T) {
 	randReader = failingReader{}
 	defer func() { randReader = cryptorand.Reader }()
 
-	t.Run("Length", func(t *testing.T) {
-		for _, n := range []int{1, 10, 64} {
-			assert.Len(t, Random(n), n)
-		}
-	})
-
-	t.Run("Zero Length", func(t *testing.T) {
-		assert.Equal(t, "", Random(0))
-	})
-
-	t.Run("Alphanumeric Charset", func(t *testing.T) {
-		assertAlphanumeric(t, Random(256))
-	})
+	// a dead randomness source is catastrophic: Random must panic, never fall
+	// back to a predictable source for security tokens
+	assert.Panics(t, func() { Random(10) })
 }
