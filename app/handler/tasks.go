@@ -67,37 +67,39 @@ func (ctrl TaskCtrl) Export(w http.ResponseWriter, r *http.Request) {
 func (ctrl TaskCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/tasks/", cid)
-	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 7, func(rec []string) {
-		done, err := strconv.ParseBool(cmp.Or(rec[3], "false"))
-		if err != nil {
-			Warn(w, r, err)
-		}
+	ctrl.Store().Transaction(func(tx *model.Store) error {
+		return ImportCSV(tx, ctrl.ACL(), w, r, uri, 7, func(rec []string) {
+			done, err := strconv.ParseBool(cmp.Or(rec[3], "false"))
+			if err != nil {
+				Warn(w, r, err)
+			}
 
-		datedue, err := time.Parse(time.RFC3339, cmp.Or(rec[5], ZeroTime.Format(time.RFC3339)))
-		if err != nil {
-			Warn(w, r, err)
-		}
+			datedue, err := time.Parse(time.RFC3339, cmp.Or(rec[5], ZeroTime.Format(time.RFC3339)))
+			if err != nil {
+				Warn(w, r, err)
+			}
 
-		var custom model.Custom
-		if len(rec) > 6 {
-			custom.Scan(rec[6])
-		}
+			var custom model.Custom
+			if len(rec) > 6 {
+				custom.Scan(rec[6])
+			}
 
-		obj := model.Task{
-			ID:      fp.If(rec[0] == "", fp.Random(10), rec[0]),
-			Type:    rec[1],
-			Task:    rec[2],
-			Done:    done, // 3
-			Owner:   rec[4],
-			DateDue: model.Time(datedue), // 5
-			CaseID:  cid,
-			Custom:  custom,
-		}
+			obj := model.Task{
+				ID:      fp.If(rec[0] == "", fp.Random(10), rec[0]),
+				Type:    rec[1],
+				Task:    rec[2],
+				Done:    done, // 3
+				Owner:   rec[4],
+				DateDue: model.Time(datedue), // 5
+				CaseID:  cid,
+				Custom:  custom,
+			}
 
-		if err := ctrl.Store().SaveTask(cid, obj); err != nil {
-			Err(w, r, err)
-			return
-		}
+			if err := tx.SaveTask(cid, obj); err != nil {
+				Err(w, r, err)
+				return
+			}
+		})
 	})
 }
 

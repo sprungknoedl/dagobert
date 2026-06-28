@@ -196,28 +196,30 @@ func buildStixBundle(list []model.Indicator, now time.Time) *stix.Bundle {
 func (ctrl IndicatorCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/indicators/", cid)
-	ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 8, func(rec []string) {
-		var custom model.Custom
-		if len(rec) > 7 {
-			custom.Scan(rec[7])
-		}
+	ctrl.Store().Transaction(func(tx *model.Store) error {
+		return ImportCSV(tx, ctrl.ACL(), w, r, uri, 8, func(rec []string) {
+			var custom model.Custom
+			if len(rec) > 7 {
+				custom.Scan(rec[7])
+			}
 
-		obj := model.Indicator{
-			ID:     fp.If(rec[0] == "", fp.Random(10), rec[0]),
-			Status: rec[1],
-			Type:   rec[2],
-			Value:  refang(rec[3]),
-			TLP:    rec[4],
-			Source: rec[5],
-			Notes:  rec[6],
-			CaseID: cid,
-			Custom: custom,
-		}
+			obj := model.Indicator{
+				ID:     fp.If(rec[0] == "", fp.Random(10), rec[0]),
+				Status: rec[1],
+				Type:   rec[2],
+				Value:  refang(rec[3]),
+				TLP:    rec[4],
+				Source: rec[5],
+				Notes:  rec[6],
+				CaseID: cid,
+				Custom: custom,
+			}
 
-		if err := ctrl.Store().SaveIndicator(cid, obj, true); err != nil {
-			Err(w, r, err)
-			return
-		}
+			if err := tx.SaveIndicator(cid, obj, true); err != nil {
+				Err(w, r, err)
+				return
+			}
+		})
 	})
 }
 
