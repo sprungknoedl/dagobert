@@ -2,16 +2,15 @@ package cli
 
 import (
 	"cmp"
+	"fmt"
 	"log/slog"
 	"os"
 
 	"github.com/spf13/cobra"
 	"github.com/sprungknoedl/dagobert/app/model"
-	"github.com/sprungknoedl/dagobert/pkg/fp"
 )
 
 func CreateKey(cmd *cobra.Command, args []string) error {
-	key := fp.Random(64)
 	name := args[0]
 
 	dburl := cmp.Or(os.Getenv("DB_URL"), model.DefaultUrl)
@@ -21,16 +20,24 @@ func CreateKey(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	slog.Info("Adding key", "name", name, "key", key)
+	// Mint the key exactly like the UI does: persist only the hash + hint,
+	// reveal the plaintext once. See handler/settings-keys.go Save.
+	plaintext, hash, hint := model.GenerateKey()
+	slog.Info("Adding key", "name", name)
 	obj := model.Key{
-		Key:  key,
+		Key:  hash,
+		Hint: hint,
 		Name: name,
 		Type: "API",
 	}
-	err = db.SaveKey(obj)
-	if err != nil {
+	if err := db.SaveKey(obj); err != nil {
 		slog.Error("failed to create key", "err", err)
+		return err
 	}
 
+	// Print the plaintext to stdout (not the logger): the operator captures it
+	// from their terminal here and now. It is never stored and cannot be
+	// recovered later.
+	fmt.Println(plaintext)
 	return nil
 }
