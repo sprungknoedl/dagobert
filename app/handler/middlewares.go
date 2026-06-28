@@ -27,6 +27,23 @@ func Recover(next http.Handler) http.Handler {
 	})
 }
 
+// SecurityHeaders sets baseline hardening headers on every response: deny
+// framing (clickjacking), stop content-type sniffing (matters for the served
+// evidence and malware files), and keep the Referer from leaking to other
+// origins. Headers are set before the handler runs so they apply to error
+// responses too. CSP and HSTS are intentionally omitted: CSP needs an app-
+// specific policy to avoid breaking the UI, and HSTS is only meaningful over
+// TLS while plain-HTTP dev is supported.
+func SecurityHeaders(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h := w.Header()
+		h.Set("X-Frame-Options", "DENY")
+		h.Set("X-Content-Type-Options", "nosniff")
+		h.Set("Referrer-Policy", "same-origin")
+		next.ServeHTTP(w, r)
+	})
+}
+
 func Logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		lw := &LoggingResponseWriter{w: w, Status: http.StatusOK}
