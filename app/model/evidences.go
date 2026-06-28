@@ -35,5 +35,10 @@ func (store *Store) SaveEvidence(cid string, obj Evidence) error {
 }
 
 func (store *Store) DeleteEvidence(cid string, id string) error {
-	return store.DB.Delete(Evidence{}, "id = ?", id).Error
+	return store.Transaction(func(tx *Store) error {
+		if err := tx.DeleteEnrichments("Evidence", id); err != nil {
+			return err
+		}
+		return tx.DB.Delete(Evidence{}, "id = ?", id).Error
+	})
 }
