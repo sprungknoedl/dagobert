@@ -24,7 +24,7 @@ func Run(cmd *cobra.Command, args []string) {
 	// --------------------------------------
 	// Database
 	// --------------------------------------
-	dburl := cmp.Or(os.Getenv("DB_URL"), "file:files/dagobert.db?_pragma=foreign_keys(ON)&_pragma=journal_mode(WAL)")
+	dburl := cmp.Or(os.Getenv("DB_URL"), model.DefaultUrl)
 	slog.Debug("Connecting to database", "url", dburl)
 	db, err := model.Connect(dburl)
 	if err != nil {
