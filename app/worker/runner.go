@@ -86,14 +86,19 @@ func Start(ctx context.Context, store *model.Store, ts *tsclient.Client) {
 		return
 	}
 
-	num, _ := strconv.Atoi(cmp.Or(os.Getenv("DAGOBERT_WORKERS"), "3"))
+	num, err := strconv.Atoi(cmp.Or(os.Getenv("DAGOBERT_WORKERS"), "3"))
+	if err != nil || num < 0 || num > 1000 {
+		slog.Warn("Invalid number of workers, falling back to default of 3", "num", num, "err", err)
+		num = 3
+	}
+
 	slog.Info("Starting job runners", "num", num, "modules", fp.Keys(modules))
 	for range num {
 		go runner(ctx, store, modules)
 	}
 
 	slog.Debug("Loading hooks")
-	err := LoadHooks(store)
+	err = LoadHooks(store)
 	if err != nil {
 		slog.Error("Failed to load hooks", "err", err)
 		return
