@@ -91,7 +91,7 @@ func (ctrl IndicatorCtrl) ExportOpenIOC(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.WriteHeader(http.StatusOK)
 
-	export := buildOpenIOC(list, GetUser(ctrl.Store(), r).Name, time.Now())
+	export := buildOpenIOC(list, GetUser(r).Name, time.Now())
 
 	xw := xml.NewEncoder(w)
 	xw.Encode(export)
@@ -103,8 +103,6 @@ func (ctrl IndicatorCtrl) ExportOpenIOC(w http.ResponseWriter, r *http.Request) 
 // indicator-type to OpenIOC context mapping.
 func buildOpenIOC(list []model.Indicator, author string, now time.Time) *openioc.Document {
 	doc := openioc.New(author, now)
-
-	//var IndicatorTypes = FromEnv("VALUES_INDICATOR_TYPES", []string{"IP", "Domain", "URL", "Path", "Hash", "Service", "Other"})
 	for _, ioc := range list {
 		switch ioc.Type {
 		case "IP":
@@ -159,8 +157,6 @@ func (ctrl IndicatorCtrl) ExportStix(w http.ResponseWriter, r *http.Request) {
 // indicator-type to STIX pattern mapping.
 func buildStixBundle(list []model.Indicator, now time.Time) *stix.Bundle {
 	b := stix.NewBundle()
-
-	//var IndicatorTypes = FromEnv("VALUES_INDICATOR_TYPES", []string{"IP", "Domain", "URL", "Path", "Hash", "Service", "Other"})
 	for _, ioc := range list {
 		v := stix.QuoteLiteral(ioc.Value)
 		switch ioc.Type {
@@ -297,7 +293,7 @@ func (ctrl IndicatorCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		user := GetUser(ctrl.Store(), r)
+		user := GetUser(r)
 		for _, c := range refs {
 			if ctrl.ACL().Allowed(user.ID, fmt.Sprintf("/cases/%s/", c.ID), "GET") {
 				overlap.Cases = append(overlap.Cases, c)

@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/a-h/templ"
 	"github.com/go-playground/form/v4"
@@ -23,9 +22,6 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
-
-var ZeroID string = "0"
-var ZeroTime time.Time
 
 func ImportCSV(store *model.Store, acl *auth.ACL, w http.ResponseWriter, r *http.Request, uri string, numFields int, cb func(rec []string)) error {
 	if r.Method == http.MethodGet {
@@ -250,7 +246,7 @@ func (ctrl BaseCtrl) ACL() *auth.ACL      { return ctrl.acl }
 
 func Env(ctrl Ctrl, r *http.Request) views.Env {
 	kase := GetCase(ctrl.Store(), r)
-	user := GetUser(ctrl.Store(), r)
+	user := GetUser(r)
 	enums, _ := ctrl.Store().ListEnums()
 	custom, _ := ctrl.Store().ListCustomAttributes()
 
@@ -282,7 +278,7 @@ func CollectCustom(r *http.Request) model.Custom {
 	return custom
 }
 
-func GetUser(store *model.Store, r *http.Request) model.User {
+func GetUser(r *http.Request) model.User {
 	user, err := auth.CurrentUser(r)
 	if err != nil {
 		slog.Error("failed to get current user", "err", err)
@@ -309,12 +305,6 @@ func GetObject[T any](id string, obj T, getfn func(string) (T, error)) (T, error
 func ServeDir(prefix string, root fs.FS) http.Handler {
 	fs := http.FileServer(http.FS(root))
 	return http.StripPrefix(prefix, fs)
-}
-
-func ServeFile(name string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, name)
-	})
 }
 
 func Render(w http.ResponseWriter, r *http.Request, status int, c templ.Component) {

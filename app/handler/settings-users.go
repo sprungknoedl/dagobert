@@ -111,7 +111,7 @@ func (ctrl UserCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if GetUser(ctrl.Store(), r).ID == id {
+	if GetUser(r).ID == id {
 		http.Redirect(w, r, "/auth/logout", http.StatusSeeOther)
 	} else {
 		http.Redirect(w, r, "/settings/users/", http.StatusSeeOther)
