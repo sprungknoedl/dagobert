@@ -1,6 +1,7 @@
 package hayabusa
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"time"
 
 	"github.com/mattn/go-shellwords"
 	"github.com/sprungknoedl/dagobert/app/model"
@@ -52,8 +54,11 @@ func (m *Module) Validate() (model.Module, error) {
 		return nil, err
 	}
 
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	slog.Info("validating module prerequisites", "module", "hayabusa")
-	cmd := exec.Command(m.args[0], append(m.args[1:], "help")...)
+	cmd := exec.CommandContext(ctx, m.args[0], append(m.args[1:], "help")...)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		err = fmt.Errorf("command %q is not runnable: %w", m.args[0], err)
 		slog.Warn("validating module prerequisites failed", "module", "hayabusa", "err", err)
