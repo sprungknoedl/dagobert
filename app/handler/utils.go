@@ -308,7 +308,7 @@ func GetObject[T any](id string, obj T, getfn func(string) (T, error)) (T, error
 
 func ServeDir(prefix string, root fs.FS) http.Handler {
 	fs := http.FileServer(http.FS(root))
-	return http.StripPrefix("/public/", fs)
+	return http.StripPrefix(prefix, fs)
 }
 
 func ServeFile(name string) http.Handler {
