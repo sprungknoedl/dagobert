@@ -10,17 +10,28 @@ import (
 
 templ SettingsEnumsMany(env Env) {
 	@layout() {
-		@list(env, "Case Objects", navSettings(), navHideAdd(), navHideExport(), navHideImport(), navSubtitle("Customisable value lists used across the app")) {
-			@enumList(env, "Asset Status", env.Enums.AssetStatus)
-			@enumList(env, "Asset Types", env.Enums.AssetTypes)
-			@enumList(env, "Case Severities", env.Enums.CaseSeverities)
-			@enumList(env, "Case Outcomes", env.Enums.CaseOutcomes)
-			@enumList(env, "Event Types", env.Enums.EventTypes)
-			@enumList(env, "Evidence Types", env.Enums.EvidenceTypes)
-			@enumList(env, "Indicator Status", env.Enums.IndicatorStatus)
-			@enumList(env, "Indicator Types", env.Enums.IndicatorTypes)
-			@enumList(env, "Malware Status", env.Enums.MalwareStatus)
-			@enumList(env, "Task Types", env.Enums.TaskTypes)
+		@list(env, "Case Objects", navSettings(), navHideAdd(), navHideExport(), navHideImport(), navHideSearch(), navSubtitle("Customisable value lists used across the app")) {
+			<table class="table table-default">
+				<thead>
+					<tr>
+						<th class="px-3 py-4 text-left">Rank</th>
+						<th class="px-3 py-4 text-left">Name</th>
+						<th class="px-3 py-4 text-left">Icon</th>
+						<th class="px-3 py-4 text-left">State</th>
+						<th style="width: 7rem"></th>
+					</tr>
+				</thead>
+				@enumList(env, "Asset Status", env.Enums.AssetStatus)
+				@enumList(env, "Asset Types", env.Enums.AssetTypes)
+				@enumList(env, "Case Severities", env.Enums.CaseSeverities)
+				@enumList(env, "Case Outcomes", env.Enums.CaseOutcomes)
+				@enumList(env, "Event Types", env.Enums.EventTypes)
+				@enumList(env, "Evidence Types", env.Enums.EvidenceTypes)
+				@enumList(env, "Indicator Status", env.Enums.IndicatorStatus)
+				@enumList(env, "Indicator Types", env.Enums.IndicatorTypes)
+				@enumList(env, "Malware Status", env.Enums.MalwareStatus)
+				@enumList(env, "Task Types", env.Enums.TaskTypes)
+			</table>
 		}
 	}
 }
@@ -54,52 +65,52 @@ templ SettingsEnumsOne(env Env, obj model.Enum, vr valid.ValidationError) {
 }
 
 templ enumList(env Env, title string, rows []model.Enum) {
-	<details open>
-		<summary class="my-4">
-			<span class="text-xl font-serif p-2">{ title } </span>
-		</summary>
-		<div class="px-0">
-			if url, ok := env.Allowed("POST", "/settings/enums/new"); ok {
-				<a class="btn btn-sm" href={ url + "?category=" + strings.ReplaceAll(title, " ", "") } up-layer="new drawer" up-accept-location={ env.Route }>
-					<i class="hio hio-5 hio-plus inline-block"></i> Add
-				</a>
-			}
-			<table class="table table-default" data-default-sort="value-0">
-				<thead>
-					<tr>
-						<th data-sort="value-0" class="sort px-3 py-4 text-left">Rank</th>
-						<th data-sort="value-1" class="sort px-3 py-4 text-left">Name</th>
-						<th data-sort="value-2" class="sort px-3 py-4 text-left">Icon</th>
-						<th data-sort="value-3" class="sort px-3 py-4 text-left">State</th>
-						<th style="width: 7rem"></th>
-					</tr>
-				</thead>
-				<tbody class="values">
-					if len(rows) == 0 {
-						@emptyTable(env, "No values defined.", "Each category lists the values available in a drop-down elsewhere in the app. Add, remove, or reorder entries to match your organisation's taxonomy.")
-					} else {
-						for _, row := range rows {
-							<tr class="hover">
-								<td class="value-0" data-search={ row.Rank }>{ row.Rank } </td>
-								<td class="value-1" data-search={ row.Name }>
-									if row.Name != "" {
-										{ row.Name }
-									} else {
-										<em>&lt;Empty&gt;</em>
-									}
-								</td>
-								<td class="value-2" data-search={ row.Icon }><i class={ "hio hio-5 " + row.Icon }></i> { row.Icon } </td>
-								<td class="value-3" data-search={ row.State }><span class={ "text-" + row.State }>{ row.State } </span> </td>
-								<td class="text-right">
-									<div class="join">
-										@defaultActionBtns(env, env.Route+row.ID)
-									</div>
-								</td>
-							</tr>
+	@settingsCategoryBand(env, title, "/settings/enums/new", "?category="+strings.ReplaceAll(title, " ", ""))
+	<tbody class="values">
+		if len(rows) == 0 {
+			@emptyTable(env, "No values defined.", "Each category lists the values available in a drop-down elsewhere in the app. Add, remove, or reorder entries to match your organisation's taxonomy.")
+		} else {
+			for _, row := range rows {
+				<tr class="hover">
+					<td>{ row.Rank } </td>
+					<td>
+						if row.Name != "" {
+							{ row.Name }
+						} else {
+							<em>&lt;Empty&gt;</em>
 						}
+					</td>
+					<td><i class={ "hio hio-5 " + row.Icon }></i> { row.Icon } </td>
+					<td><span class={ "text-" + row.State }>{ row.State } </span> </td>
+					<td class="text-right">
+						<div class="join">
+							@defaultActionBtns(env, env.Route+row.ID)
+						</div>
+					</td>
+				</tr>
+			}
+		}
+	</tbody>
+}
+
+// settingsCategoryBand is a fleuron divider that doubles as a collapsible
+// category heading: chevron + title + Add button, with a trailing fleuron rule.
+// Clicking the band toggles the following <tbody> (see toggleCategory in dagobert.js).
+templ settingsCategoryBand(env Env, title string, addRoute string, addQuery string) {
+	<tbody>
+		<tr class="cursor-pointer select-none [&>td]:border-b-0" onclick="toggleCategory(this)">
+			<td colspan="100" class="pt-8 pb-2">
+				<div class="flex items-center gap-3 text-base-content/30">
+					<i class="hio hio-5 hio-chevron-right chevron rotate-90 transition-transform text-base-content/60 inline-block"></i>
+					<span class="text-lg font-serif text-base-content whitespace-nowrap">{ title }</span>
+					@fleuron("flex-1")
+					if url, ok := env.Allowed("POST", addRoute); ok {
+						<a class="btn btn-sm btn-neutral" href={ url + addQuery } up-layer="new drawer" up-accept-location={ env.Route } onclick="event.stopPropagation()">
+							<i class="hio hio-5 hio-plus inline-block"></i> Add
+						</a>
 					}
-				</tbody>
-			</table>
-		</div>
-	</details>
+				</div>
+			</td>
+		</tr>
+	</tbody>
 }

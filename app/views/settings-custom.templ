@@ -11,12 +11,35 @@ import (
 var customEntities = []string{"Case", "Asset", "Event", "Evidence", "Indicator", "Malware", "Note", "Task"}
 var customTypes = []string{"string", "textfield", "checkbox", "date", "datetime", "select"}
 
+// customTypeInfo maps each hardcoded input type to its heroicon and the
+// human-readable label shown to users in both the list and the edit form.
+// The stored/submitted value stays the raw key.
+var customTypeInfo = map[string]struct{ Icon, Label string }{
+	"string":    {"bars-3-bottom-left", "Text"},
+	"textfield": {"document-text", "Text Area"},
+	"checkbox":  {"check-circle", "Checkbox"},
+	"date":      {"calendar", "Date"},
+	"datetime":  {"clock", "Date & Time"},
+	"select":    {"chevron-up-down", "Dropdown"},
+}
+
 templ SettingsCustomMany(env Env) {
 	@layout() {
-		@list(env, "Custom Attributes", navSettings(), navHideAdd(), navHideExport(), navHideImport(), navSubtitle("Extra fields captured on case objects")) {
-			for _, entity := range customEntities {
-				@customAttributeList(env, entity)
-			}
+		@list(env, "Custom Attributes", navSettings(), navHideAdd(), navHideExport(), navHideImport(), navHideSearch(), navSubtitle("Extra fields captured on case objects")) {
+			<table class="table table-default">
+				<thead>
+					<tr>
+						<th class="px-3 py-4 text-left">Rank</th>
+						<th class="px-3 py-4 text-left">Label</th>
+						<th class="px-3 py-4 text-left">Type</th>
+						<th class="px-3 py-4 text-left">Options</th>
+						<th style="width: 7rem"></th>
+					</tr>
+				</thead>
+				for _, entity := range customEntities {
+					@customAttributeList(env, entity)
+				}
+			</table>
 		}
 	}
 }
@@ -36,7 +59,7 @@ templ SettingsCustomOne(env Env, obj model.CustomAttribute, vr valid.ValidationE
 			</label>
 			<select name="Type" class="select w-full" onchange="toggleCustomOptions(this)">
 				for _, t := range customTypes {
-					<option selected?={ obj.Type == t }>{ t }</option>
+					<option value={ t } selected?={ obj.Type == t }>{ customTypeInfo[t].Label }</option>
 				}
 			</select>
 		</div>
@@ -56,52 +79,40 @@ templ SettingsCustomOne(env Env, obj model.CustomAttribute, vr valid.ValidationE
 	}
 }
 
+// customType renders a hardcoded input type as a heroicon + human-readable
+// label (see customTypeInfo). Unknown types fall back to the raw value.
+templ customType(t string) {
+	if m, ok := customTypeInfo[t]; ok {
+		<span class="inline-flex items-center gap-2"><i class={ "hio hio-5 hio-" + m.Icon }></i> { m.Label }</span>
+	} else {
+		{ t }
+	}
+}
+
 templ customAttributeList(env Env, entity string) {
 	{{ rows := fp.Filter(env.CustomAttributes, func(c model.CustomAttribute) bool { return c.Entity == entity }) }}
-	<details open>
-		<summary class="my-4">
-			<span class="text-xl font-serif p-2">{ entity } </span>
-		</summary>
-		<div class="px-0">
-			if url, ok := env.Allowed("POST", "/settings/custom/new"); ok {
-				<a class="btn btn-sm" href={ url + "?entity=" + entity } up-layer="new drawer" up-accept-location={ env.Route }>
-					<i class="hio hio-5 hio-plus inline-block"></i> Add
-				</a>
+	@settingsCategoryBand(env, entity, "/settings/custom/new", "?entity="+entity)
+	<tbody class="values">
+		if len(rows) == 0 {
+			<tr>
+				<td colspan="100" class="py-4 text-center text-base-content/50">
+					No custom attributes defined for this object type yet.
+				</td>
+			</tr>
+		} else {
+			for _, row := range rows {
+				<tr class="hover">
+					<td>{ row.Rank } </td>
+					<td>{ row.Label } </td>
+					<td>@customType(row.Type)</td>
+					<td>{ strings.Join(row.Options, ", ") } </td>
+					<td class="text-right">
+						<div class="join">
+							@defaultActionBtns(env, env.Route+row.ID)
+						</div>
+					</td>
+				</tr>
 			}
-			<table class="table table-default" data-default-sort="value-0">
-				<thead>
-					<tr>
-						<th data-sort="value-0" class="sort px-3 py-4 text-left">Rank</th>
-						<th data-sort="value-1" class="sort px-3 py-4 text-left">Label</th>
-						<th data-sort="value-2" class="sort px-3 py-4 text-left">Type</th>
-						<th data-sort="value-3" class="sort px-3 py-4 text-left">Options</th>
-						<th style="width: 7rem"></th>
-					</tr>
-				</thead>
-				<tbody class="values">
-					if len(rows) == 0 {
-						<tr>
-							<td colspan="100" class="py-4 text-center text-base-content/50">
-								No custom attributes defined for this object type yet.
-							</td>
-						</tr>
-					} else {
-						for _, row := range rows {
-							<tr class="hover">
-								<td class="value-0" data-search={ row.Rank }>{ row.Rank } </td>
-								<td class="value-1" data-search={ row.Label }>{ row.Label } </td>
-								<td class="value-2" data-search={ row.Type }>{ row.Type } </td>
-								<td class="value-3" data-search={ strings.Join(row.Options, ", ") }>{ strings.Join(row.Options, ", ") } </td>
-								<td class="text-right">
-									<div class="join">
-										@defaultActionBtns(env, env.Route+row.ID)
-									</div>
-								</td>
-							</tr>
-						}
-					}
-				</tbody>
-			</table>
-		</div>
-	</details>
+		}
+	</tbody>
 }
