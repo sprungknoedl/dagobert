@@ -159,3 +159,13 @@ function showToast(message) {
 
     setTimeout(() => alert.remove(), 4000);
 }
+
+// toggleCategory collapses/expands a settings category. Bound via inline onclick
+// on the category band row; the next <tbody> holds that category's data rows.
+function toggleCategory(el) {
+    const band = el.closest('tbody');
+    const data = band?.nextElementSibling;
+    if (!data) { return; }
+    data.toggleAttribute('hidden');
+    band.querySelector('.chevron')?.classList.toggle('rotate-90');
+}
