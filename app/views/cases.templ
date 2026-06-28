@@ -237,6 +237,42 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 	}
 }
 
+// CaseSwitcher renders the quick case-switch popup body: an autofocused search
+// box whose typing autosubmits and swaps the results fragment, plus the result
+// list. Each result links to the equivalent section (to) of that case. The
+// arrow-key highlight + Enter handling lives in dagobert.js (up.compiler).
+templ CaseSwitcher(env Env, cases []model.Case, from string, to string) {
+	@layout() {
+		<main class="w-[32rem] max-w-full" id="switcher">
+			<form method="get" action="/cases/switch" up-autosubmit up-target="#switch-results" up-history="false">
+				<input type="hidden" name="from" value={ from }/>
+				<input type="hidden" name="to" value={ to }/>
+				<label class="w-full input flex items-center gap-2 mb-3">
+					<input type="text" name="search" class="search grow" placeholder="Switch to case ..." autofocus autocomplete="off"/>
+					<svg class="w-6 h-6 opacity-70" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+						<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"></path>
+					</svg>
+				</label>
+			</form>
+			<ul id="switch-results" class="menu w-full gap-1 flex-nowrap max-h-96 overflow-y-auto">
+				if len(cases) == 0 {
+					<li class="p-2 text-center font-serif italic text-base-content/50">No matching cases.</li>
+				} else {
+					for _, c := range cases {
+						<li>
+							<a href={ "/cases/" + c.ID + "/" + to } class="switch-result flex items-center gap-2">
+								<i class="hio hio-5 hio-briefcase opacity-60"></i>
+								<span class="grow truncate">{ c.Name }</span>
+								@caseStatusPill(c.Closed)
+							</a>
+						</li>
+					}
+				}
+			</ul>
+		</main>
+	}
+}
+
 templ caseStatusPill(closed bool) {
 	if closed {
 		<span class="badge badge-lg badge-outline badge-success">Closed</span>

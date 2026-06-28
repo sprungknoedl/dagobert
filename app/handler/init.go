@@ -110,6 +110,7 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("GET /cases/export/csv", caseCtrl.Export)
 	secured.HandleFunc("GET /cases/import/csv", caseCtrl.Import)
 	secured.HandleFunc("POST /cases/import/csv", caseCtrl.Import)
+	secured.HandleFunc("GET /cases/switch", caseCtrl.Switch)
 	secured.HandleFunc("GET /cases/import/archive", caseCtrl.ImportArchiveForm)
 	secured.HandleFunc("POST /cases/import/archive", caseCtrl.ImportArchive)
 	secured.HandleFunc("GET /cases/{cid}/export/archive", caseCtrl.ExportArchive)

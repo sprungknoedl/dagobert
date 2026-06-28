@@ -69,6 +69,40 @@ onload = (event) => {
         });
     });
 
+    // Quick case switcher: arrow-key highlight + Enter through the results.
+    // Compiled on the results <ul>, so it re-binds (and re-defaults the
+    // highlight to the first row) after every autosubmit swap. Keydown is bound
+    // on the search input, which survives the swap, so the destructor removes it.
+    up.compiler('#switch-results', (elem) => {
+        const input = elem.closest('#switcher')?.querySelector("input[name='search']");
+        const items = () => Array.from(elem.querySelectorAll('a.switch-result'));
+        const setActive = (idx) => {
+            items().forEach((a, i) => a.classList.toggle('menu-focus', i === idx));
+        };
+
+        setActive(0);
+        if (!input) { return; }
+
+        const onKey = (event) => {
+            const list = items();
+            if (list.length === 0) { return; }
+            const idx = list.findIndex(a => a.classList.contains('menu-focus'));
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                setActive(Math.min(idx + 1, list.length - 1));
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                setActive(Math.max(idx - 1, 0));
+            } else if (event.key === 'Enter') {
+                event.preventDefault();
+                (list[idx] || list[0]).click();
+            }
+        };
+
+        input.addEventListener('keydown', onKey);
+        return () => input.removeEventListener('keydown', onKey);
+    });
+
     up.compiler('select.choices:is([multiple])', (elem, data) => {
         new Choices(elem, {
             addItems: true,
