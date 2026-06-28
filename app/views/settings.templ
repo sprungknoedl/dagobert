@@ -11,26 +11,36 @@ templ SettingsOverview(env Env) {
 					</tr>
 				</thead>
 				<tbody>
-					@settingsOverviewRow("/settings/enums/", "briefcase", "Case Objects", "Customisable value lists used across the app")
-					@settingsOverviewRow("/settings/custom/", "square-3-stack-3d", "Custom Attributes", "Extra fields captured on case objects")
-					@settingsOverviewRow("/settings/templates/", "document-duplicate", "Case Templates", "Reusable checklists of tasks and notes for new cases")
-					@settingsOverviewRow("/settings/reports/", "document-arrow-down", "Report Templates", "Templates for generating investigation reports")
-					@settingsOverviewRow("/settings/hooks/", "bolt", "Automation Rules", "Automation rules triggered by case object changes")
-					@settingsOverviewRow("/settings/users/", "users", "Users", "Manage user accounts and role assignments")
-					@settingsOverviewRow("/settings/api-keys/", "beaker", "API Keys", "Long-lived keys for external integrations")
+					@settingsOverviewRow("/settings/enums/", "briefcase", "Case Objects", "Customisable value lists used across the app", false)
+					@settingsOverviewRow("/settings/custom/", "square-3-stack-3d", "Custom Attributes", "Extra fields captured on case objects", true)
+					@settingsOverviewDivider()
+					@settingsOverviewRow("/settings/templates/", "document-duplicate", "Case Templates", "Reusable checklists of tasks and notes for new cases", false)
+					@settingsOverviewRow("/settings/reports/", "document-arrow-down", "Report Templates", "Templates for generating investigation reports", true)
+					@settingsOverviewDivider()
+					@settingsOverviewRow("/settings/hooks/", "bolt", "Automation Rules", "Automation rules triggered by case object changes", false)
+					@settingsOverviewRow("/settings/users/", "users", "Users", "Manage user accounts and role assignments", false)
+					@settingsOverviewRow("/settings/api-keys/", "beaker", "API Keys", "Long-lived keys for external integrations", false)
 				</tbody>
 			</table>
 		}
 	}
 }
 
-templ settingsOverviewRow(route string, icon string, title string, description string) {
-	<tr class="cursor-pointer hover:bg-base-200" onclick={ templ.JSFuncCall("location.assign", route) }>
+templ settingsOverviewRow(route string, icon string, title string, description string, groupEnd bool) {
+	<tr class={ "cursor-pointer hover:bg-base-200", templ.KV("[&>td]:border-b-0", groupEnd) } onclick={ templ.JSFuncCall("location.assign", route) }>
 		<td>
 			<a href={ templ.SafeURL(route) } class="flex items-center gap-3 font-semibold">
 				<i class={ "hio hio-6 hio-" + icon }></i> { title }
 			</a>
 		</td>
 		<td>{ description }</td>
+	</tr>
+}
+
+templ settingsOverviewDivider() {
+	<tr class="[&>td]:border-b-0">
+		<td colspan="2" class="py-2">
+			@fleuron("")
+		</td>
 	</tr>
 }
