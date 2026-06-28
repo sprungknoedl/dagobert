@@ -57,6 +57,28 @@ func (store *Store) Transaction(fn func(tx *Store) error) error {
 	})
 }
 
+// ErrForeignCase is returned by the Save* helpers when a record with the given
+// primary key already exists under a different case. It is model-layer
+// defense-in-depth: a GORM Save is a primary-key upsert, so without this check a
+// forged id in a permitted case's URL could overwrite and hijack another case's
+// record.
+var ErrForeignCase = errors.New("record belongs to another case")
+
+// assertCaseOwnership rejects a Save when a row of model with the given id is
+// already owned by a case other than cid. A brand-new id (no existing row)
+// passes, so creates and same-case updates are unaffected. model must be a
+// pointer to a model value with id and case_id columns.
+func (store *Store) assertCaseOwnership(model any, id, cid string) error {
+	var n int64
+	if err := store.DB.Model(model).Where("id = ? AND case_id <> ?", id, cid).Count(&n).Error; err != nil {
+		return err
+	}
+	if n > 0 {
+		return ErrForeignCase
+	}
+	return nil
+}
+
 func FromEnv(name string, defaults []string) []string {
 	list := strings.Split(os.Getenv(name), ";")
 	if len(list) > 1 {

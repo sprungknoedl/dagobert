@@ -54,11 +54,15 @@ func (store *Store) GetEvent(cid string, id string) (Event, error) {
 	tx := store.DB.
 		Preload("Assets").
 		Preload("Indicators").
-		First(&obj, "id = ?", id)
+		First(&obj, "id = ? AND case_id = ?", id, cid)
 	return obj, tx.Error
 }
 
 func (store *Store) SaveEvent(cid string, obj Event, override bool) error {
+	obj.CaseID = cid
+	if err := store.assertCaseOwnership(&Event{}, obj.ID, cid); err != nil {
+		return err
+	}
 	return store.DB.Transaction(func(tx *gorm.DB) error {
 		return errors.Join(
 			tx.
@@ -74,5 +78,5 @@ func (store *Store) SaveEvent(cid string, obj Event, override bool) error {
 }
 
 func (store *Store) DeleteEvent(cid string, id string) error {
-	return store.DB.Delete(&Event{}, "id = ?", id).Error
+	return store.DB.Delete(&Event{}, "id = ? AND case_id = ?", id, cid).Error
 }

@@ -35,7 +35,7 @@ func (store *Store) GetAsset(cid string, id string) (Asset, error) {
 	evq := store.DB.Table("events").Joins("LEFT JOIN event_assets ON events.id = event_assets.event_id").Where("event_assets.asset_id = assets.id").Select("count()")
 	tx := store.DB.
 		Select("*, (?) as first_seen, (?) as last_seen, (?) as events", fsq, lsq, evq).
-		First(&obj, "id = ?", id)
+		First(&obj, "id = ? AND case_id = ?", id, cid)
 	return obj, tx.Error
 }
 
@@ -52,14 +52,19 @@ func (store *Store) GetAssetByName(cid string, name string) (Asset, error) {
 }
 
 func (store *Store) SaveAsset(cid string, obj Asset) error {
+	obj.CaseID = cid
+	if err := store.assertCaseOwnership(&Asset{}, obj.ID, cid); err != nil {
+		return err
+	}
 	return store.DB.Save(obj).Error
 }
 
 func (store *Store) DeleteAsset(cid string, id string) error {
 	return store.Transaction(func(tx *Store) error {
-		if err := tx.DeleteEnrichments("Asset", id); err != nil {
-			return err
+		res := tx.DB.Delete(&Asset{}, "id = ? AND case_id = ?", id, cid)
+		if res.Error != nil || res.RowsAffected == 0 {
+			return res.Error
 		}
-		return tx.DB.Delete(&Asset{}, "id = ?", id).Error
+		return tx.DeleteEnrichments("Asset", id)
 	})
 }
