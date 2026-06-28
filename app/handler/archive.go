@@ -357,6 +357,13 @@ func readCaseArchive(zr *zip.Reader) (model.CaseArchive, error) {
 	if err := json.NewDecoder(f).Decode(&arch); err != nil {
 		return model.CaseArchive{}, fmt.Errorf("invalid case.json: %w", err)
 	}
+
+	// the case id is user-controlled and used verbatim as a path component in
+	// restoreBinaries; an alphanumeric id (the only form fp.Random ever mints)
+	// cannot contain a separator and so cannot escape the files/ tree
+	if !reAlnum.MatchString(arch.Case.ID) {
+		return model.CaseArchive{}, fmt.Errorf("illegal case id in archive: %q", arch.Case.ID)
+	}
 	return arch, nil
 }
 

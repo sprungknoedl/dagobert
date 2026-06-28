@@ -2,6 +2,7 @@ package handler
 
 import (
 	"path/filepath"
+	"regexp"
 	"slices"
 	"time"
 
@@ -10,6 +11,12 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
+
+// reAlnum matches a non-empty run of ASCII letters and digits only. Values used
+// as a path component (a malware hash, an imported case id) must satisfy it: an
+// alphanumeric string cannot contain "/", "\" or "." and so cannot traverse out
+// of its target directory.
+var reAlnum = regexp.MustCompile(`^[a-zA-Z0-9]+$`)
 
 func InEnum(enum []model.Enum, item string) bool {
 	return slices.Contains(
@@ -70,7 +77,7 @@ func ValidateKey(dto *model.Key, enums model.Enums) valid.ValidationError {
 func ValidateMalware(dto *model.Malware, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Path", Missing: dto.Path == ""},
-		{Name: "Hash", Missing: dto.Hash == ""},
+		{Name: "Hash", Message: "Invalid hash. Only letters and digits are allowed.", Missing: dto.Hash == "", Invalid: !reAlnum.MatchString(dto.Hash)},
 		{Name: "Source", Missing: dto.Asset.ID == ""},
 		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !InEnum(enums.MalwareStatus, dto.Status)},
 	})

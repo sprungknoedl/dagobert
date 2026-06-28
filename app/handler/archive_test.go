@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"crypto/sha1"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -257,5 +258,20 @@ func TestArchiveZipSlipRejected(t *testing.T) {
 
 	if err := validateArchivePaths(openZip(t, buf)); err == nil {
 		t.Fatal("expected zip-slip rejection, got nil")
+	}
+}
+
+func TestArchiveTraversalCaseIDRejected(t *testing.T) {
+	for _, id := range []string{"../../tmp", "a/b", "a.b", "", `..\..\tmp`} {
+		buf := &bytes.Buffer{}
+		zw := zip.NewWriter(buf)
+		fw, _ := zw.Create("case.json")
+		body, _ := json.Marshal(model.CaseArchive{Case: model.Case{ID: id, Name: "x"}})
+		fw.Write(body)
+		zw.Close()
+
+		if _, err := readCaseArchive(openZip(t, buf)); err == nil {
+			t.Errorf("expected rejection for case id %q, got nil", id)
+		}
 	}
 }
