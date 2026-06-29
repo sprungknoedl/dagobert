@@ -14,11 +14,14 @@ RUN cd /opt/hayabusa && ./hayabusa update-rules
 
 COPY --from=app /home/sprungknoedl/dagobert /home/plaso/dagobert
 COPY --from=app /home/sprungknoedl/mitre /home/plaso/mitre
+COPY --from=app /home/sprungknoedl/docker-entrypoint.sh /home/plaso/docker-entrypoint.sh
+RUN chmod +x /home/plaso/docker-entrypoint.sh
 
 ENV MODULE_PLASO="/usr/bin/psteal.py --unattended"
 ENV MODULE_HAYABUSA="/opt/hayabusa/hayabusa"
 ENV PATH="$PATH:/home/plaso"
 
 WORKDIR /home/plaso
-ENTRYPOINT ["/home/plaso/dagobert"]
+# entrypoint bootstraps a fresh data volume (migrate db) before exec-ing dagobert
+ENTRYPOINT ["/home/plaso/docker-entrypoint.sh"]
 CMD ["server"]

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -26,6 +27,21 @@ type Store struct {
 }
 
 func Connect(dburl string) (*Store, error) {
+	// a file: URL points at files/dagobert.db by default; SQLite cannot create
+	// the database in a directory that does not exist yet, so on a fresh
+	// checkout/volume the parent must be created first. Without this, every
+	// command (server, update, create-user) fails on first run.
+	if path, ok := strings.CutPrefix(dburl, "file:"); ok {
+		if i := strings.IndexByte(path, '?'); i >= 0 {
+			path = path[:i]
+		}
+		if dir := filepath.Dir(path); dir != "" && dir != "." {
+			if err := os.MkdirAll(dir, 0755); err != nil {
+				return nil, err
+			}
+		}
+	}
+
 	// the job runners poll the database concurrently; without a busy timeout
 	// a second writer fails immediately with SQLITE_BUSY instead of waiting
 	// for the write lock

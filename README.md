@@ -77,19 +77,27 @@ can work on a case concurrently.
    docker compose up -d
    ```
 
-4. Run the database migrations:
+   On first run the (empty) data volume is bootstrapped automatically: the
+   database is created and migrated, and the MITRE ATT&CK data is already
+   bundled in the image. No separate migration step is needed.
 
-   ```sh
-   docker compose exec app dagobert db
-   ```
-
-5. Create the first user:
+4. Create the first user:
 
    ```sh
    docker compose exec app dagobert create-user <USERNAME>
    ```
 
+   You will be prompted for a password. This can be run at any time, including
+   against a running server.
+
 Dagobert is now available at <http://localhost:8080>.
+
+> [!NOTE]
+> The automatic bootstrap only happens on a fresh, empty volume. After pulling a
+> newer image, apply any pending database migrations explicitly with
+> `docker compose run --rm app update` (the server refuses to start against an
+> out-of-date schema rather than migrating your case data silently). The same
+> command also refreshes the MITRE data when a release bumps it.
 
 Two Docker images are published: `sprungknoedl/dagobert` (slim, the app only)
 and `sprungknoedl/dagobert-full` (app plus Plaso and Hayabusa). The compose
@@ -134,10 +142,24 @@ make run     # dev server with hot reload (air)
 make check   # templ generate + build + vet + test + gofmt — run before committing
 ```
 
+To run the binary directly against a fresh checkout:
+
+```sh
+make                          # build the binary
+./dagobert update             # create + migrate the database, download MITRE data
+./dagobert create-user <NAME> # create the first (Administrator) user
+./dagobert server             # start the web server on :8080
+```
+
+`dagobert update` is the canonical "bring this instance current" command: it
+creates the database if missing, applies pending migrations, and downloads or
+refreshes the MITRE ATT&CK data. It is idempotent — re-run it after pulling a
+new build to apply any new migrations and data.
+
 HTML templates are [templ](https://templ.guide/) files in `app/views/`; run
 `go tool templ generate` (included in `make build-go` and `make check`) after
 editing them. Database migrations are plain SQL files in
-`app/model/migrations/`, applied with `dagobert db`.
+`app/model/migrations/`, applied with `dagobert update`.
 
 ## Contributing
 

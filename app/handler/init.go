@@ -56,7 +56,9 @@ func Run(cmd *cobra.Command, args []string) {
 	// MITRE ATT&CK
 	// --------------------------------------
 	// system data lives outside files/, which holds user data only (and is
-	// shadowed by the volume mount in Docker)
+	// shadowed by the volume mount in Docker). Fail fast with a clear pointer
+	// to `dagobert update` when it is missing entirely.
+	guardMitre("mitre/enterprise-attack.json", "mitre/ics-attack.json", "mitre/mobile-attack.json")
 	mitre, err := attck.LoadKB(
 		"mitre/enterprise-attack.json",
 		"mitre/ics-attack.json",
