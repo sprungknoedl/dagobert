@@ -199,7 +199,7 @@ up.compiler('input[type=file][data-fill], input[type=file][data-hash]', (input) 
 // the server in [up-data]; vis-network is loaded on demand so it only ships on
 // this page.
 up.compiler('#mynetwork', (elem, data) => {
-    loadScript('/public/assets/vis-network-9.1.9.min.js', () => window.vis && window.vis.Network).then(() => {
+    loadScript('/public/assets/vis-network-10.1.0.min.js', () => window.vis && window.vis.Network).then(() => {
         const options = {
             edges: {
                 color: { color: "oklch(72% 0.13 80)", highlight: "oklch(70% 0.15 70)" },
