@@ -56,9 +56,9 @@ func main() {
 	cmd.CompletionOptions = cobra.CompletionOptions{DisableDefaultCmd: true}
 	cmd.AddCommand(&cobra.Command{Use: "server", Short: "Start web server and API.", Run: handler.Run})
 
-	dbCmd := &cobra.Command{Use: "db", Short: "Perform database migrations.", RunE: cli.Migrate}
-	dbCmd.Flags().Bool("force", false, "Recover a dirty database by re-running the failed migration (use only after fixing the cause).")
-	cmd.AddCommand(dbCmd)
+	updateCmd := &cobra.Command{Use: "update", Short: "Create/upgrade the database and download MITRE ATT&CK data.", RunE: cli.Update}
+	updateCmd.Flags().Bool("force", false, "Recover a dirty database (re-run the failed migration) and re-download the MITRE data.")
+	cmd.AddCommand(updateCmd)
 
 	cmd.AddCommand(&cobra.Command{Use: "create-user USERNAME", Short: "Create a user.", RunE: cli.CreateUser, Args: cobra.ExactArgs(1)})
 	cmd.AddCommand(&cobra.Command{Use: "create-key NAME", Short: "Create a API key.", RunE: cli.CreateKey, Args: cobra.ExactArgs(1)})

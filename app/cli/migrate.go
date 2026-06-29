@@ -11,10 +11,27 @@ import (
 	"github.com/sprungknoedl/dagobert/app/model"
 )
 
-func Migrate(cmd *cobra.Command, args []string) error {
-	// --------------------------------------
-	// Database
-	// --------------------------------------
+// Update is the canonical "bring this instance current" command. It creates the
+// database if missing, applies any pending migrations, and downloads/refreshes
+// the MITRE ATT&CK data. It is idempotent: re-running it on an up-to-date
+// instance is a no-op.
+//
+// --force ignores the skip-guards: it recovers a dirty database (re-running the
+// failed migration) and re-downloads the MITRE data regardless of the sentinel.
+func Update(cmd *cobra.Command, args []string) error {
+	force, _ := cmd.Flags().GetBool("force")
+
+	if err := migrateDB(force); err != nil {
+		return err
+	}
+	return updateMitre(force)
+}
+
+// migrateDB connects to the database (creating the file + parent dir if needed,
+// see model.Connect) and applies pending migrations. With force, a dirty
+// database is recovered by rolling back past the failed migration so Up re-runs
+// it — the operator asserts they have fixed whatever caused the failure.
+func migrateDB(force bool) error {
 	dburl := cmp.Or(os.Getenv("DB_URL"), model.DefaultUrl)
 	slog.Info("Connecting to database", "url", dburl)
 	store, err := model.Connect(dburl)
@@ -31,7 +48,7 @@ func Migrate(cmd *cobra.Command, args []string) error {
 	// --------------------------------------
 	// Dirty recovery (--force)
 	// --------------------------------------
-	if force, _ := cmd.Flags().GetBool("force"); force {
+	if force {
 		version, dirty, verr := m.Version()
 		if verr != nil && !errors.Is(verr, migrate.ErrNilVersion) {
 			return verr
@@ -39,7 +56,7 @@ func Migrate(cmd *cobra.Command, args []string) error {
 
 		switch {
 		case !dirty:
-			slog.Info("Database is not dirty, --force has no effect")
+			slog.Info("Database is not dirty, --force has no effect on migrations")
 		default:
 			// Roll the recorded version back past the failed migration so that
 			// Up re-runs it. By passing --force the operator asserts they have
