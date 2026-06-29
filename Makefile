@@ -2,20 +2,20 @@
 .EXPORT_ALL_VARIABLES:
 -include dagobert.env
 
-TAILWIND_VERSION = 4.1.18
-DAISYUI_VERSION  = 5.5.14
+TAILWIND_VERSION = 4.3.2
+DAISYUI_VERSION  = 5.6.6
 
 # Supply-chain pinning: these binaries/plugins are downloaded from GitHub
 # releases during build-web and end up embedded + served, so each is pinned to a
 # specific version *and* sha256. The tailwind binary is platform-specific, so its
 # checksum is selected per OS/arch below. Refresh these when bumping a version:
 # download the release asset and run `sha256sum` (macOS: `shasum -a 256`).
-TAILWIND_SHA_macos_arm64 = 7f27711dceac1a580b6ad58ddac46e59202c85a6c16f2f08f6fdcdee261008e1
-TAILWIND_SHA_macos_x64   = 1e8a77fd796a3a4aa3d8727887de926ef9d38477aba113fd7c32c0d31a32a3ab
-TAILWIND_SHA_linux_arm64 = 7a7702db6c93718a9b6655d455304edda18600f5a4f195242342ed3b5b70ebe8
-TAILWIND_SHA_linux_x64   = 737becf8d4ad1115ea98df69fa94026d402ca8feb91306a035b5b004167da8dd
-DAISYUI_SHA              = a125069ec726eafc96893ed5384a9b00412856f4df9eeec2323246364a60da29
-DAISYUI_THEME_SHA        = 968c584d25b216485a954d1b6e3b1a2b28d69032d2a2ed8a0ca16003965f201a
+TAILWIND_SHA_macos_arm64 = b800b0659dc64b9f03ede5660244d9415d777d5739ae2889280877ca37be742a
+TAILWIND_SHA_macos_x64   = cef8f110471e889c3c4409055cf8aff33076f58a081867b0dfc6534b290bfbb0
+TAILWIND_SHA_linux_arm64 = 394ddccc2402cfa3abd97dfba56f3587781a3d6e6ce66e65ceada14beb7664b8
+TAILWIND_SHA_linux_x64   = 5036c4fb4328e0bcdbb6065c70d8ac9452e0d4c947113a788a8f94fd390425c1
+DAISYUI_SHA              = aa887cc8cc9f487e5869726e6f128721ba7d8194a7dfbc125435711f4f47cefb
+DAISYUI_THEME_SHA        = 9af858352be136881269f7ccf4c2495eb817cc35d09eef5feb1795d01223c1e8
 
 # Export validation: external validators for the OpenIOC / STIX indicator
 # exports. The OpenIOC 1.1 XSD is vendored under pkg/openioc/testdata; the STIX
