@@ -74,17 +74,11 @@ templ TasksOne(env Env, obj model.Task, vr valid.ValidationError) {
 			</label>
 			<div class="join w-full">
 				<input name="DateDue" type="text" class="join-item input w-full" value={ obj.DateDue.Format(time.RFC3339) }/>
-				<a class="join-item btn" onclick="setNow()">Now</a>
+				<a class="join-item btn" onclick="setNow(this)">Now</a>
 			</div>
 		</div>
 		@booleanField("Done", obj.Done, withLabel("Done"))
 		@customAttributes(env, "Task", obj.Custom)
 		@requiredFootnote()
-		<script>
-		function setNow() {
-			let now = new Date(Date.now()).toISOString();
-			document.querySelector('input[name="DateDue"]').value = now;
-		}
-		</script>
 	}
 }

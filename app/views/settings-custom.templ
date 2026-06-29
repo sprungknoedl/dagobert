@@ -71,11 +71,6 @@ templ SettingsCustomOne(env Env, obj model.CustomAttribute, vr valid.ValidationE
 			<input name="Options" type="text" class="input w-full" value={ strings.Join(obj.Options, ",") } placeholder="comma,separated,values"/>
 		</div>
 		@requiredFootnote()
-		<script>
-		function toggleCustomOptions(sel) {
-			document.getElementById('custom-options').style.display = sel.value === 'select' ? '' : 'none';
-		}
-		</script>
 	}
 }
 
