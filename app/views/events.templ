@@ -1,6 +1,7 @@
 package views
 
 import (
+	"encoding/json"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/pkg/attck"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
@@ -27,7 +28,7 @@ func techniques(mitre attck.KB, e model.Event) iter.Seq[attck.Technique] {
 templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators []model.Indicator, mitre attck.KB) {
 	@layout() {
 		@list(env, "Timeline", navHideImport(), navPreButtons(eventsManyExtra(env)), navSubtitle("Chronological log of attacker activity and analyst findings")) {
-			<div id="histogram" class="card bg-base-200 text-xs m-4 p-4"></div>
+			<div id="histogram" class="card bg-base-200 text-xs m-4 p-4" up-data={ histogramJSON(rows) }></div>
 			<!-- -->
 			<table class="table table-default" data-default-sort="value-0">
 				<thead>
@@ -105,27 +106,6 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 					}
 				</tbody>
 			</table>
-			// histogram
-			<script src="/public/assets/vis-timeline-8.5.1.min.js"></script>
-			<script>
-			function initializeChart(items) {
-				var options = {
-					style: "bar",
-					barChart: { align: "center" },
-					dataAxis: { visible: false },
-					drawPoints: false,
-					height: "150px",
-					orientation: "bottom",
-					// showMinorLabels: false,
-					moment: (date) => vis.moment(date).utc(),
-
-				};
-
-				var container = document.getElementById("histogram");
-				var timeline = new vis.Graph2d(container, new vis.DataSet(items), options);
-			}
-			</script>
-			@templ.JSFuncCall("initializeChart", histogram(rows, 50))
 		}
 	}
 }
@@ -144,7 +124,7 @@ templ EventsOne(env Env, obj model.Event, assets []model.Asset, indicators []mod
 			</label>
 			<div class="join w-full">
 				<input name="Time" type="text" class="join-item input w-full" value={ obj.Time.Format("2006-01-02T15:04:05Z07:00") }/>
-				<a class="join-item btn" onclick="setNow()">Now</a>
+				<a class="join-item btn" onclick="setNow(this)">Now</a>
 			</div>
 		</div>
 		@selectField("Type", obj.Type, env.Enums.EventTypes, required(), withLabel("Type"), withError(vr["Type"]))
@@ -169,12 +149,6 @@ templ EventsOne(env Env, obj model.Event, assets []model.Asset, indicators []mod
 		}
 		@customAttributes(env, "Event", obj.Custom)
 		@requiredFootnote()
-		<script>
-		function setNow() {
-			let now = new Date(Date.now()).toISOString();
-			document.querySelector('input[name="Time"]').value = now;
-		}
-		</script>
 	}
 }
 
@@ -224,6 +198,13 @@ type HistogramItem struct {
 	X   string `json:"x"`
 	End string `json:"end"`
 	Y   int    `json:"y"`
+}
+
+// histogramJSON serializes the event histogram for the #histogram compiler's
+// [up-data] attribute (see dagobert.js).
+func histogramJSON(rows []model.Event) string {
+	b, _ := json.Marshal(histogram(rows, 50))
+	return string(b)
 }
 
 // histogram creates a histogram with a fixed number of buckets.

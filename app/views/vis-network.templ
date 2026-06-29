@@ -2,6 +2,7 @@ package views
 
 import (
 	_ "embed"
+	"encoding/json"
 	"github.com/sprungknoedl/dagobert/app/assets"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"regexp"
@@ -39,57 +40,20 @@ templ VisNetwork(env Env, nodes []Node, edges []Edge) {
 		@sidebar(env, "Lateral Movement")
 		<main class="pl-20 p-4 grow max-w-full flex flex-col h-screen">
 			@navbar(env, "Lateral Movement", navHideSearch(), navHideRefresh(), navHideAdd(), navHideImport(), navHideExport(), navSubtitle("Network relationships between assets"))
-			<div id="mynetwork" class="h-full"></div>
+			<div id="mynetwork" class="h-full" up-data={ networkJSON(env, nodes, edges) }></div>
 		</main>
-		<script src="/public/assets/vis-network-9.1.9.min.js"></script>
-		<script>
-        function initializeChart(nodes, edges, groups) {
-            const options = {
-                edges: {
-                    color: {
-                        color: "oklch(72% 0.13 80)",
-                        highlight: "oklch(70% 0.15 70)",
-                    },
-                    smooth: {
-                        forceDirection: "vertical"
-                    }
-                },
-                nodes: {
-                    shape: "icon",
-                    margin: 10,
-                    font: {
-                        color: "oklch(25% 0.02 60)",
-                        background: "oklch(97.5% 0.01 90)",
-                    },
-                    icon: {
-                        face: "'heroicons-outline'",
-                    },
-                },
-                groups: groups,
-                "physics": {
-                    "repulsion": {
-                        "centralGravity": 0.25,
-                        "springLength": 150,
-                        "nodeDistance": 175,
-                        "damping": 0.15
-                    },
-                    "minVelocity": 0.75,
-                    "solver": "repulsion"
-                }
-            };
-
-            // create a network
-            var container = document.getElementById("mynetwork");
-            var data = {
-                nodes: new vis.DataSet(nodes),
-                edges: new vis.DataSet(edges),
-            };
-
-            var network = new vis.Network(container, data, options);
-        }
-        </script>
-		@templ.JSFuncCall("initializeChart", nodes, edges, networkGroups(env.Enums.AssetTypes, env.Enums.IndicatorTypes))
 	}
+}
+
+// networkJSON serializes the graph for the #mynetwork compiler's [up-data]
+// attribute (see dagobert.js).
+func networkJSON(env Env, nodes []Node, edges []Edge) string {
+	b, _ := json.Marshal(map[string]any{
+		"nodes":  nodes,
+		"edges":  edges,
+		"groups": networkGroups(env.Enums.AssetTypes, env.Enums.IndicatorTypes),
+	})
+	return string(b)
 }
 
 func networkGroups(assets []model.Enum, indicators []model.Enum) map[string]group {

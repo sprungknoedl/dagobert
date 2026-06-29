@@ -169,3 +169,137 @@ function toggleCategory(el) {
     data.toggleAttribute('hidden');
     band.querySelector('.chevron')?.classList.toggle('rotate-90');
 }
+
+// --- Fragment compilers ---------------------------------------------------
+// Registered at module scope (not inside the onload handler) so they run before
+// Unpoly boots and therefore apply to the initial page as well as later
+// fragment swaps. Unpoly 3.11+ no longer executes <script> elements inside
+// swapped fragments, so the inline scripts these replace would otherwise never
+// run. See https://unpoly.com/legacy-scripts.
+
+// File inputs marked [data-fill] copy the picked file's basename into the named
+// form field; those marked [data-hash] compute the file's SHA-1 into the form's
+// Hash field (evidence + malware upload forms, report uploads).
+up.compiler('input[type=file][data-fill], input[type=file][data-hash]', (input) => {
+    const onChange = () => {
+        const form = input.form;
+        if (input.dataset.fill) {
+            const target = form.querySelector('input[name="' + input.dataset.fill + '"]');
+            if (target) { target.value = input.value.replace(/.*(\/|\\)/, ''); }
+        }
+        if (input.dataset.hash !== undefined && input.files[0]) {
+            hashfile(input.files[0], form);
+        }
+    };
+    input.addEventListener('change', onChange);
+    return () => input.removeEventListener('change', onChange);
+});
+
+// Lateral-movement network graph (VisNetwork). Nodes/edges/groups arrive from
+// the server in [up-data]; vis-network is loaded on demand so it only ships on
+// this page.
+up.compiler('#mynetwork', (elem, data) => {
+    loadScript('/public/assets/vis-network-9.1.9.min.js', () => window.vis && window.vis.Network).then(() => {
+        const options = {
+            edges: {
+                color: { color: "oklch(72% 0.13 80)", highlight: "oklch(70% 0.15 70)" },
+                smooth: { forceDirection: "vertical" },
+            },
+            nodes: {
+                shape: "icon",
+                margin: 10,
+                font: { color: "oklch(25% 0.02 60)", background: "oklch(97.5% 0.01 90)" },
+                icon: { face: "'heroicons-outline'" },
+            },
+            groups: data.groups,
+            physics: {
+                repulsion: { centralGravity: 0.25, springLength: 150, nodeDistance: 175, damping: 0.15 },
+                minVelocity: 0.75,
+                solver: "repulsion",
+            },
+        };
+        new vis.Network(elem, { nodes: new vis.DataSet(data.nodes), edges: new vis.DataSet(data.edges) }, options);
+    });
+});
+
+// Event timeline histogram (EventsMany). Bucketed counts arrive in [up-data];
+// vis-timeline is loaded on demand.
+up.compiler('#histogram', (elem, data) => {
+    loadScript('/public/assets/vis-timeline-8.5.1.min.js', () => window.vis && window.vis.Graph2d).then(() => {
+        const options = {
+            style: "bar",
+            barChart: { align: "center" },
+            dataAxis: { visible: false },
+            drawPoints: false,
+            height: "150px",
+            orientation: "bottom",
+            moment: (date) => vis.moment(date).utc(),
+        };
+        new vis.Graph2d(elem, new vis.DataSet(data), options);
+    });
+});
+
+// --- Helpers invoked from inline on* handlers / the compilers above -------
+
+// togglePassword flips a password field between masked and plain text. Wired via
+// inline onclick on the reveal button (see passwordField in form.templ).
+function togglePassword(btn) {
+    const input = btn.parentElement.querySelector('input');
+    input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+// setNow fills the text input in the same .join group with the current time in
+// ISO-8601. Wired via inline onclick on the "Now" button (event/task forms).
+function setNow(btn) {
+    const input = btn.parentElement.querySelector('input');
+    if (input) { input.value = new Date().toISOString(); }
+}
+
+// toggleCustomOptions shows the "Options" field only for the "select" custom
+// attribute type. Wired via inline onchange on the type <select>.
+function toggleCustomOptions(sel) {
+    document.getElementById('custom-options').style.display = sel.value === 'select' ? '' : 'none';
+}
+
+// hashfile computes the SHA-1 of the picked file and writes it (hex) into the
+// form's Hash field.
+function hashfile(file, form) {
+    readbinaryfile(file)
+        .then((buf) => crypto.subtle.digest('SHA-1', new Uint8Array(buf)))
+        .then((digest) => {
+            const hash = form.querySelector('input[name="Hash"]');
+            if (hash) { hash.value = Uint8ArrayToHexString(new Uint8Array(digest)); }
+        });
+}
+
+function readbinaryfile(file) {
+    return new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result);
+        fr.onerror = reject;
+        fr.readAsArrayBuffer(file);
+    });
+}
+
+function Uint8ArrayToHexString(arr) {
+    let hex = '';
+    for (let i = 0; i < arr.length; i++) {
+        hex += arr[i].toString(16).padStart(2, '0');
+    }
+    return hex;
+}
+
+// loadScript appends a <script> for src unless isReady() reports the needed
+// global is already present. Re-appending re-runs the (cached) bundle, so moving
+// between the vis-network and vis-timeline pages re-establishes the right
+// window.vis API.
+function loadScript(src, isReady) {
+    if (isReady && isReady()) { return Promise.resolve(); }
+    return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+    });
+}

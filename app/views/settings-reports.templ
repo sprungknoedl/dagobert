@@ -53,15 +53,10 @@ templ SettingsReportsOne(env Env, obj model.Report, vr valid.ValidationError) {
 				File
 				@requiredLabel()
 			</label>
-			<input name="File" type="file" class="file-input w-full"/>
+			<input name="File" type="file" class="file-input w-full" data-fill="Name"/>
 		</div>
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
 		@requiredFootnote()
-		<script>
-        document.querySelector('input[name="File"]').onchange = (e) => {
-            document.querySelector('input[name="Name"]').value = e.target.value.replace(/.*(\/|\\)/, '');
-        };
-        </script>
 	}
 }
