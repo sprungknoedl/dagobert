@@ -44,13 +44,13 @@ templ SettingsEnumsOne(env Env, obj model.Enum, vr valid.ValidationError) {
 		@hiddenField("Category", obj.Category)
 		@numberField("Rank", obj.Rank, withLabel("Rank"), withError(vr["Rank"]))
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
-		@stringField("Icon", obj.Icon, withLabel("Icon"), withError(vr["Icon"]), withHint("Heroicon name without the \"hio-\" prefix (e.g. \"check-circle\", \"x-mark\"). Browse icons at heroicons.com."))
+		@stringField("Icon", obj.Icon, withLabel("Icon"), withError(vr["Icon"]), withHint("Phosphor icon class with the \"ph-\" prefix (e.g. \"ph-check-circle\", \"ph-x\"). Browse icons at phosphoricons.com."))
 		<div class="form-control mb-2">
 			<label class="label justify-start gap-2">
 				State
 				@validationError(vr["State"])
 				<span class="tooltip tooltip-right" data-tip="Colour token used to render this value (e.g. &quot;success&quot;, &quot;warning&quot;, &quot;error&quot;, &quot;info&quot;). Leave empty for default text colour.">
-					<i class="hio hio-4 hio-question-mark-circle text-base-content/40 cursor-help"></i>
+					<i class="ph ph-4 ph-question text-base-content/40 cursor-help"></i>
 				</span>
 			</label>
 			<select name="State" class="select w-full">
@@ -80,7 +80,7 @@ templ enumList(env Env, title string, rows []model.Enum) {
 							<em>&lt;Empty&gt;</em>
 						}
 					</td>
-					<td><i class={ "hio hio-5 " + row.Icon }></i> { row.Icon } </td>
+					<td><i class={ "ph ph-5 " + row.Icon }></i> { row.Icon } </td>
 					<td><span class={ "text-" + row.State }>{ row.State } </span> </td>
 					<td class="text-right">
 						<div class="join">
@@ -101,12 +101,12 @@ templ settingsCategoryBand(env Env, title string, addRoute string, addQuery stri
 		<tr class="cursor-pointer select-none [&>td]:border-b-0" onclick="toggleCategory(this)">
 			<td colspan="100" class="pt-8 pb-2">
 				<div class="flex items-center gap-3 text-base-content/30">
-					<i class="hio hio-5 hio-chevron-right chevron rotate-90 transition-transform text-base-content/60 inline-block"></i>
+					<i class="ph ph-5 ph-caret-right chevron rotate-90 transition-transform text-base-content/60 inline-block"></i>
 					<span class="text-lg font-serif text-base-content whitespace-nowrap">{ title }</span>
 					@fleuron("flex-1")
 					if url, ok := env.Allowed("POST", addRoute); ok {
 						<a class="btn btn-sm btn-neutral" href={ url + addQuery } up-layer="new drawer" up-accept-location={ env.Route } onclick="event.stopPropagation()">
-							<i class="hio hio-5 hio-plus inline-block"></i> Add
+							<i class="ph ph-5 ph-plus inline-block"></i> Add
 						</a>
 					}
 				</div>

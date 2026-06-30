@@ -4,5 +4,5 @@ import (
 	_ "embed"
 )
 
-//go:embed heroicons-outline-405db23.css
-var HeroiconsCSS string
+//go:embed phosphor-2.1.2.css
+var PhosphorCSS string

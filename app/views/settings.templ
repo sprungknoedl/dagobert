@@ -2,7 +2,7 @@ package views
 
 templ SettingsOverview(env Env) {
 	@layout() {
-		@list(env, "Settings", navTitleIcon("cog-6-tooth"), navHideSearch(), navHideRefresh(), navHideAdd(), navHideExport(), navHideImport(), navSubtitle("Configure automation, integrations, and account access")) {
+		@list(env, "Settings", navTitleIcon("gear-six"), navHideSearch(), navHideRefresh(), navHideAdd(), navHideExport(), navHideImport(), navSubtitle("Configure automation, integrations, and account access")) {
 			<table class="table table-default">
 				<thead>
 					<tr>
@@ -12,14 +12,14 @@ templ SettingsOverview(env Env) {
 				</thead>
 				<tbody>
 					@settingsOverviewRow("/settings/enums/", "briefcase", "Case Objects", "Customisable value lists used across the app", false)
-					@settingsOverviewRow("/settings/custom/", "square-3-stack-3d", "Custom Attributes", "Extra fields captured on case objects", true)
+					@settingsOverviewRow("/settings/custom/", "stack", "Custom Attributes", "Extra fields captured on case objects", true)
 					@settingsOverviewDivider()
-					@settingsOverviewRow("/settings/templates/", "document-duplicate", "Case Templates", "Reusable checklists of tasks and notes for new cases", false)
-					@settingsOverviewRow("/settings/reports/", "document-arrow-down", "Report Templates", "Templates for generating investigation reports", true)
+					@settingsOverviewRow("/settings/templates/", "copy", "Case Templates", "Reusable checklists of tasks and notes for new cases", false)
+					@settingsOverviewRow("/settings/reports/", "file-arrow-down", "Report Templates", "Templates for generating investigation reports", true)
 					@settingsOverviewDivider()
-					@settingsOverviewRow("/settings/hooks/", "bolt", "Automation Rules", "Automation rules triggered by case object changes", false)
+					@settingsOverviewRow("/settings/hooks/", "engine", "Automation Rules", "Automation rules triggered by case object changes", false)
 					@settingsOverviewRow("/settings/users/", "users", "Users", "Manage user accounts and role assignments", false)
-					@settingsOverviewRow("/settings/api-keys/", "beaker", "API Keys", "Long-lived keys for external integrations", false)
+					@settingsOverviewRow("/settings/api-keys/", "key", "API Keys", "Long-lived keys for external integrations", false)
 				</tbody>
 			</table>
 		}
@@ -30,7 +30,7 @@ templ settingsOverviewRow(route string, icon string, title string, description s
 	<tr class={ "cursor-pointer hover:bg-base-200", templ.KV("[&>td]:border-b-0", groupEnd) } onclick={ templ.JSFuncCall("location.assign", route) }>
 		<td>
 			<a href={ templ.SafeURL(route) } class="flex items-center gap-3 font-semibold">
-				<i class={ "hio hio-6 hio-" + icon }></i> { title }
+				<i class={ "ph ph-6 ph-" + icon }></i> { title }
 			</a>
 		</td>
 		<td>{ description }</td>

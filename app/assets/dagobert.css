@@ -1,4 +1,4 @@
-@import './heroicons-outline-405db23.css';
+@import './phosphor-2.1.2.css';
 @import './unpoly-3.14.3.css';
 @import './vis-timeline-8.5.1.css';
 
@@ -209,15 +209,16 @@ up-popup {
 }
 
 /*
-HERO ICONS
+PHOSPHOR ICONS
+size utilities layered on the .ph base class
 */
 
-.hio-5 {
+.ph-5 {
     font-size: 15px;
     line-height: 15px;
 }
 
-.hio-6 {
+.ph-6 {
     font-size: 18px;
     line-height: 18px;
 }

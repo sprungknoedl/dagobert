@@ -28,9 +28,9 @@ templ SettingsHooksMany(env Env, rows []model.Hook) {
 							<tr class="hover">
 								<td class="value-0" data-search={ fp.If(row.Enabled, "Enabled", "Disabled") }>
 									if row.Enabled {
-										<div class="text-success"><i class="hio hio-5 hio-check inline-block"></i> Enabled</div>
+										<div class="text-success"><i class="ph ph-5 ph-check inline-block"></i> Enabled</div>
 									} else {
-										<div class="text-error"><i class="hio hio-5 hio-x-mark inline-block"></i> Disabled</div>
+										<div class="text-error"><i class="ph ph-5 ph-x inline-block"></i> Disabled</div>
 									}
 								</td>
 								<td class="value-1" data-search={ row.Trigger }>{ row.Trigger } </td>

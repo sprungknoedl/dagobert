@@ -32,7 +32,7 @@ type group struct {
 	Icon icon `json:"icon"`
 }
 
-var iconMap = parseHeroiconsCSS(assets.HeroiconsCSS)
+var iconMap = parsePhosphorCSS(assets.PhosphorCSS)
 
 templ VisNetwork(env Env, nodes []Node, edges []Edge) {
 	@layout() {
@@ -81,11 +81,12 @@ func networkGroups(assets []model.Enum, indicators []model.Enum) map[string]grou
 	return groups
 }
 
-// ParseHeroiconsCSS parses the CSS content and returns a map of icon class to unicode symbol.
+// parsePhosphorCSS parses the CSS content and returns a map of icon class to unicode symbol.
 // It works on the whole file and supports multi-line icon definitions.
-func parseHeroiconsCSS(css string) map[string]rune {
+func parsePhosphorCSS(css string) map[string]rune {
 	iconMap := make(map[string]rune)
-	// Regex matches .hio-xxx:before { ... content: "\e900"; ... }
+	// Regex matches .ph.ph-xxx:before { ... content: "\e002"; ... }
+	// (the trailing .ph-xxx class is captured, e.g. "ph-flag").
 	re := regexp.MustCompile(`\.([a-zA-Z0-9\-]+):before\s*\{[^}]*content:\s*"(\\e[0-9a-fA-F]{3,4})";`)
 	matches := re.FindAllStringSubmatch(css, -1)
 	for _, m := range matches {

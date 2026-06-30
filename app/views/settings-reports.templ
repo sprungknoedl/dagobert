@@ -29,7 +29,7 @@ templ SettingsReportsMany(env Env, rows []model.Report) {
 								<div class="join">
 									if url, ok := env.Allowed("GET", env.Route+row.ID+"/download"); ok {
 										@externalBtn(url, "") {
-											<i class="hio hio-5 hio-arrow-down-tray"></i>
+											<i class="ph ph-5 ph-download-simple"></i>
 										}
 									}
 									@defaultActionBtns(env, env.Route+row.ID)
