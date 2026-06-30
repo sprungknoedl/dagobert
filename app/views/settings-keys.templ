@@ -2,12 +2,11 @@ package views
 
 import (
 	"github.com/sprungknoedl/dagobert/app/model"
-	"github.com/sprungknoedl/dagobert/app/worker"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-templ SettingsKeyMany(env Env, keys []model.Key, modules []worker.ModuleStatus) {
+templ SettingsKeyMany(env Env, keys []model.Key) {
 	@layout() {
 		@list(env, "API Keys", navSettings(), navHideExport(), navHideImport(), navSubtitle("Long-lived keys for external integrations")) {
 			<h2 class="text-xl font-serif p-2">Keys</h2>
@@ -38,32 +37,6 @@ templ SettingsKeyMany(env Env, keys []model.Key, modules []worker.ModuleStatus) 
 								</td>
 							</tr>
 						}
-					}
-				</tbody>
-			</table>
-			<!-- ======= -->
-			<h2 class="text-xl font-serif p-2 mt-6">Modules</h2>
-			<table class="table table-default dataTable" data-order='[[ 0, "asc" ]]'>
-				<thead>
-					<tr>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Module</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Command</th>
-						<th class="px-3 py-4 text-left dt-orderable-asc dt-orderable-desc">Status</th>
-					</tr>
-				</thead>
-				<tbody>
-					for _, module := range modules {
-						<tr class="hover">
-							<td>{ module.Name } </td>
-							<td>{ module.Command } </td>
-							<td>
-								if module.Error == "" {
-									<span class="text-success">✓ validated</span>
-								} else {
-									<span class="text-error">{ module.Error }</span>
-								}
-							</td>
-						</tr>
 					}
 				</tbody>
 			</table>

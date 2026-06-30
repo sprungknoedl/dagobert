@@ -7,7 +7,6 @@ import (
 	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
-	"github.com/sprungknoedl/dagobert/app/worker"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
@@ -26,7 +25,7 @@ func (ctrl KeyCtrl) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsKeyMany(Env(ctrl, r), list, worker.Status()))
+	Render(w, r, http.StatusOK, views.SettingsKeyMany(Env(ctrl, r), list))
 }
 
 func (ctrl KeyCtrl) Edit(w http.ResponseWriter, r *http.Request) {
