@@ -25,32 +25,9 @@ import (
 
 var Modules = map[string]model.Module{}
 
-// envvars maps module names to the environment variable holding their
-// command (or, for the in-process Timesketch importer, the server URL).
-var envvars = map[string]string{
-	"AbuseIPDB":           "ABUSEIPDB_APIKEY",
-	"Hayabusa":            "MODULE_HAYABUSA",
-	"Hybrid Analysis":     "HYBRIDANALYSIS_APIKEY",
-	"Plaso":               "MODULE_PLASO",
-	"Timesketch Importer": "TIMESKETCH_URL",
-	"VirusTotal":          "VIRUSTOTAL_APIKEY",
-}
-
-// ModuleStatus holds the validation result of a module for the settings UI.
-type ModuleStatus struct {
-	Name    string
-	Command string
-	Error   string
-}
-
-var status []ModuleStatus
-
 func Supported(obj any) []model.Module {
 	return fp.ToList(fp.FilterM(Modules, func(p model.Module) bool { return p.Supports(obj) }))
 }
-
-// Status returns the validation results recorded by Start.
-func Status() []ModuleStatus { return status }
 
 // Start validates modules and launches the runner pool. Called from
 // handler.Run; ctx is the server's shutdown context, ts the shared
@@ -69,17 +46,11 @@ func Start(ctx context.Context, store *model.Store, ts *tsclient.Client) {
 
 	slog.Debug("Loading modules")
 	modules := map[string]model.Module{}
-	results := []ModuleStatus{}
 	for _, name := range slices.Sorted(maps.Keys(Modules)) {
-		st := ModuleStatus{Name: name, Command: os.Getenv(envvars[name])}
-		if _, err := Modules[name].Validate(); err != nil {
-			st.Error = err.Error()
-		} else {
+		if _, err := Modules[name].Validate(); err == nil {
 			modules[name] = Modules[name]
 		}
-		results = append(results, st)
 	}
-	status = results
 
 	if len(modules) == 0 {
 		slog.Warn("no job modules available — configure MODULE_* env vars")
