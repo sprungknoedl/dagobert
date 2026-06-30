@@ -151,7 +151,7 @@ function showToast(message) {
     alert.className = 'alert alert-success w-[42rem] m-4';
     alert.setAttribute('role', 'alert');
     alert.onclick = () => alert.remove();
-    alert.innerHTML = '<i class="hio hio-check-circle text-3xl"></i><div>'
+    alert.innerHTML = '<i class="ph ph-check-circle text-3xl"></i><div>'
         + '<h3 class="font-bold">Success</h3>'
         + '<div class="text-xs"></div></div>';
     alert.querySelector('.text-xs').textContent = message;
@@ -209,7 +209,7 @@ up.compiler('#mynetwork', (elem, data) => {
                 shape: "icon",
                 margin: 10,
                 font: { color: "oklch(25% 0.02 60)", background: "oklch(97.5% 0.01 90)" },
-                icon: { face: "'heroicons-outline'" },
+                icon: { face: "'Phosphor'" },
             },
             groups: data.groups,
             physics: {

@@ -93,7 +93,7 @@ templ fieldLabel(cfg formConfig) {
 		@cfg.validation
 		if cfg.hint != "" {
 			<span class="tooltip tooltip-right" data-tip={ cfg.hint }>
-				<i class="hio hio-4 hio-question-mark-circle text-base-content/40 cursor-help"></i>
+				<i class="ph ph-4 ph-question text-base-content/40 cursor-help"></i>
 			</span>
 		}
 	</label>
@@ -127,7 +127,7 @@ templ passwordField(name string, value string, opts ...formOption) {
 		<div class="join w-full">
 			<input name={ name } type="password" class="input join-item w-full" value={ value } autocomplete="off" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other"/>
 			<button type="button" class="btn join-item" onclick="togglePassword(this)" tabindex="-1">
-				<i class="hio hio-5 hio-eye"></i>
+				<i class="ph ph-5 ph-eye"></i>
 			</button>
 		</div>
 	</div>
@@ -171,7 +171,7 @@ templ booleanField(name string, value bool, opts ...formOption) {
 			@cfg.label
 			if cfg.hint != "" {
 				<span class="tooltip tooltip-right" data-tip={ cfg.hint }>
-					<i class="hio hio-4 hio-question-mark-circle text-base-content/40 cursor-help"></i>
+					<i class="ph ph-4 ph-question text-base-content/40 cursor-help"></i>
 				</span>
 			}
 		</label>

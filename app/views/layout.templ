@@ -50,7 +50,7 @@ func navSettings() navbarOption { return navPreTitle(navSettingsTitle()) }
 
 templ navSettingsTitle() {
 	<li class="inline-flex gap-4 items-center">
-		<i class="hio hio-6 hio-cog-6-tooth inline-block"></i>
+		<i class="ph ph-6 ph-gear-six inline-block"></i>
 		<a href="/settings">Settings</a>
 	</li>
 }
@@ -67,7 +67,7 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 						}
 						if env.Case.ID != "" {
 							<li class="inline-flex gap-4 items-center">
-								<i class="hio hio-6 hio-briefcase inline-block"></i>
+								<i class="ph ph-6 ph-briefcase inline-block"></i>
 								<a href={ "/cases/switch?from=" + env.Case.ID + "&to=" + SectionSuffix(env.Route, env.Case.ID) } up-layer="new popup" up-size="grow" up-history="false" title="Switch to another case">
 									{ env.Case.Name }
 								</a>
@@ -75,7 +75,7 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 						}
 						<li class={ "inline-flex items-center", templ.KV("gap-4", cfg.titleIcon != "") }>
 							if cfg.titleIcon != "" {
-								<i class={ "hio hio-6 hio-" + cfg.titleIcon + " inline-block" }></i>
+								<i class={ "ph ph-6 ph-" + cfg.titleIcon + " inline-block" }></i>
 							}
 							{ title }
 						</li>
@@ -107,22 +107,22 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 				}
 				if uri, ok := env.Allowed("POST", env.Route+"import/csv"); ok && !cfg.hideImport {
 					<a class="join-item btn" href={ uri } up-layer="new drawer" up-accept-location={ env.Route }>
-						<i class="hio hio-6 hio-bars-arrow-up inline-block mr-1"></i> Import
+						<i class="ph ph-6 ph-sort-ascending inline-block mr-1"></i> Import
 					</a>
 				}
 				if uri, ok := env.Allowed("GET", env.Route+"export/csv"); ok && !cfg.hideExport {
 					<a class="join-item btn" href={ uri }>
-						<i class="hio hio-6 hio-bars-arrow-down inline-block mr-1"></i> Export
+						<i class="ph ph-6 ph-sort-descending inline-block mr-1"></i> Export
 					</a>
 				}
 				if uri, ok := env.Allowed("GET", env.Route); ok && !cfg.hideRefresh {
 					<a class="join-item btn" href={ uri } up-target="#list">
-						<i class="hio hio-6 hio-arrow-path inline-block mr-1"></i> Refresh
+						<i class="ph ph-6 ph-arrows-clockwise inline-block mr-1"></i> Refresh
 					</a>
 				}
 				if uri, ok := env.Allowed("POST", env.Route+"new"); ok && !cfg.hideAdd {
 					<a class="join-item btn btn-neutral" href={ uri } up-layer="new drawer" up-accept-location={ env.Route }>
-						<i class="hio hio-6 hio-plus inline-block mr-1"></i> Add
+						<i class="ph ph-6 ph-plus inline-block mr-1"></i> Add
 					</a>
 				}
 			</div>
@@ -131,7 +131,7 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 }
 
 templ sidebarLink(url string, title string, icon string, page string, tint string) {
-	<li><a href={ url } title={ title } class={ fp.If(title == page, "menu-active", "") }><i class={ "hio hio-6 hio-" + icon + " " + tint }></i> </a></li>
+	<li><a href={ url } title={ title } class={ fp.If(title == page, "menu-active", "") }><i class={ "ph ph-6 ph-" + icon + " " + tint }></i> </a></li>
 }
 
 templ sidebar(env Env, title string) {
@@ -146,23 +146,23 @@ templ sidebar(env Env, title string) {
 		if env.Case.ID != "" {
 			<div class="divider"></div>
 			<ul class="menu gap-2">
-				@sidebarLink("/cases/"+env.Case.ID+"/summary/", "Summary", "home-modern", title, "hue-slate")
+				@sidebarLink("/cases/"+env.Case.ID+"/summary/", "Summary", "house", title, "hue-slate")
 				if !env.Case.IsTemplate {
 					@sidebarLink("/cases/"+env.Case.ID+"/events/", "Timeline", "clock", title, "hue-teal")
-					@sidebarLink("/cases/"+env.Case.ID+"/assets/", "Assets", "computer-desktop", title, "hue-moss")
-					@sidebarLink("/cases/"+env.Case.ID+"/malware/", "Malware/Tools", "bug-ant", title, "hue-rust")
-					@sidebarLink("/cases/"+env.Case.ID+"/indicators/", "Indicators", "finger-print", title, "hue-plum")
+					@sidebarLink("/cases/"+env.Case.ID+"/assets/", "Assets", "desktop", title, "hue-moss")
+					@sidebarLink("/cases/"+env.Case.ID+"/malware/", "Malware/Tools", "bug-beetle", title, "hue-rust")
+					@sidebarLink("/cases/"+env.Case.ID+"/indicators/", "Indicators", "fingerprint", title, "hue-plum")
 					@sidebarLink("/cases/"+env.Case.ID+"/evidences/", "Evidences", "cube", title, "hue-amber")
 				}
-				@sidebarLink("/cases/"+env.Case.ID+"/tasks/", "Tasks", "clipboard-document-check", title, "hue-green")
-				@sidebarLink("/cases/"+env.Case.ID+"/notes/", "Notes", "chat-bubble-left", title, "hue-peri")
+				@sidebarLink("/cases/"+env.Case.ID+"/tasks/", "Tasks", "clipboard-text", title, "hue-green")
+				@sidebarLink("/cases/"+env.Case.ID+"/notes/", "Notes", "chat-circle", title, "hue-peri")
 			</ul>
 			if !env.Case.IsTemplate {
 				<div class="divider"></div>
 				<ul class="menu gap-2">
-					@sidebarLink("/cases/"+env.Case.ID+"/vis/network", "Lateral Movement", "share", title, "hue-cyan")
-					@sidebarLink("/cases/"+env.Case.ID+"/vis/mitre", "ATT&CK Navigator", "table-cells", title, "hue-brick")
-					<li><a href={ "/cases/" + env.Case.ID + "/reports" } title="Report" class="" up-layer="new drawer"><i class="hio hio-6 hio-document-arrow-down hue-olive"></i> </a></li>
+					@sidebarLink("/cases/"+env.Case.ID+"/vis/network", "Lateral Movement", "share-network", title, "hue-cyan")
+					@sidebarLink("/cases/"+env.Case.ID+"/vis/mitre", "ATT&CK Navigator", "compass", title, "hue-brick")
+					<li><a href={ "/cases/" + env.Case.ID + "/reports" } title="Report" class="" up-layer="new drawer"><i class="ph ph-6 ph-file-arrow-down hue-olive"></i> </a></li>
 				</ul>
 			}
 		}
@@ -170,10 +170,10 @@ templ sidebar(env Env, title string) {
 		<div class="divider"></div>
 		<ul class="menu gap-2">
 			if _, ok := env.Allowed("GET", "/settings/"); ok {
-				@sidebarLink("/settings/", "Settings", "cog-6-tooth", title, "hue-slate")
+				@sidebarLink("/settings/", "Settings", "gear-six", title, "hue-slate")
 			}
-			<li><a href="/auth/changepassword" title="Change password" class="" up-layer="new drawer"><i class="hio hio-6 hio-key hue-amber"></i> </a></li>
-			<li><a href="/auth/logout" title="Logout" class=""><i class="hio hio-6 hio-arrow-right-start-on-rectangle hue-rust"></i> </a></li>
+			<li><a href="/auth/changepassword" title="Change password" class="" up-layer="new drawer"><i class="ph ph-6 ph-key hue-amber"></i> </a></li>
+			<li><a href="/auth/logout" title="Logout" class=""><i class="ph ph-6 ph-sign-out hue-rust"></i> </a></li>
 		</ul>
 	</aside>
 }
@@ -203,10 +203,10 @@ templ externalBtn(url string, label string) {
 
 templ defaultActionBtns(env Env, url string) {
 	@actionBtn(env, "GET", url) {
-		<i class="hio hio-5 hio-pencil"></i>
+		<i class="ph ph-5 ph-pencil-simple"></i>
 	}
 	@actionBtn(env, "DELETE", url) {
-		<i class="hio hio-5 hio-trash"></i>
+		<i class="ph ph-5 ph-trash"></i>
 	}
 }
 
@@ -215,7 +215,7 @@ templ enum(list []model.Enum, value string) {
 		if x.Name == value {
 			<span class={ "flex gap-2" + fp.If(x.State != "", " text-"+x.State, "") }>
 				if x.Icon != "" {
-					<i class={ "hio hio-5 " + x.Icon } title={ x.Name }></i>
+					<i class={ "ph ph-5 " + x.Icon } title={ x.Name }></i>
 				}
 				{ x.Name }
 			</span>
@@ -228,7 +228,7 @@ templ enumIcon(list []model.Enum, value string) {
 		if x.Name == value {
 			<span class={ "flex gap-2" + fp.If(x.State != "", " text-"+x.State, "") }>
 				if x.Icon != "" {
-					<i class={ "hio hio-5 " + x.Icon } title={ x.Name }></i>
+					<i class={ "ph ph-5 " + x.Icon } title={ x.Name }></i>
 				}
 				{ children... }
 			</span>
@@ -269,15 +269,15 @@ templ list(env Env, title string, opts ...navbarOption) {
 		if env.Case.ID != "" && !env.Case.IsTemplate {
 			<div class="fab fab-flower">
 				<!-- a focusable div with tabindex is necessary to work on all browsers. role="button" is necessary for accessibility -->
-				<div tabindex="0" role="button" class="btn btn-lg btn-circle btn-primary"><i class="hio hio-6 hio-plus"></i></div>
+				<div tabindex="0" role="button" class="btn btn-lg btn-circle btn-primary"><i class="ph ph-6 ph-plus"></i></div>
 				<div class="fab-close">
-					<span class="btn btn-circle btn-lg"><i class="hio hio-6 hio-x-mark"></i></span>
+					<span class="btn btn-circle btn-lg"><i class="ph ph-6 ph-x"></i></span>
 				</div>
 				<!-- buttons that show up when FAB is open -->
-				@fabButton("tooltip-left", "/cases/"+env.Case.ID+"/events", "hio-clock", "Add event")
-				@fabButton("tooltip-left", "/cases/"+env.Case.ID+"/assets", "hio-computer-desktop", "Add asset")
-				@fabButton("tooltip-top", "/cases/"+env.Case.ID+"/indicators", "hio-finger-print", "Add indicator")
-				@fabButton("tooltip-top", "/cases/"+env.Case.ID+"/evidences", "hio-cube", "Add evidence")
+				@fabButton("tooltip-left", "/cases/"+env.Case.ID+"/events", "ph-clock", "Add event")
+				@fabButton("tooltip-left", "/cases/"+env.Case.ID+"/assets", "ph-desktop", "Add asset")
+				@fabButton("tooltip-top", "/cases/"+env.Case.ID+"/indicators", "ph-fingerprint", "Add indicator")
+				@fabButton("tooltip-top", "/cases/"+env.Case.ID+"/evidences", "ph-cube", "Add evidence")
 			</div>
 		}
 	</div>
@@ -293,11 +293,11 @@ templ emptyTable(env Env, voice string, desc string) {
 			if desc != "" {
 				<p class="mb-2">{ desc }</p>
 				if _, ok := env.Allowed("POST", env.Route+"new"); ok {
-					<p class="text-sm text-base-content/40">Use <strong><i class="hio hio-4 hio-plus inline-block"></i> Add</strong> to get started.</p>
+					<p class="text-sm text-base-content/40">Use <strong><i class="ph ph-4 ph-plus inline-block"></i> Add</strong> to get started.</p>
 				}
 			} else {
 				if _, ok := env.Allowed("POST", env.Route+"new"); ok {
-					Nothing here yet — use <strong><i class="hio hio-4 hio-plus inline-block"></i> Add</strong> to create the first one.
+					Nothing here yet — use <strong><i class="ph ph-4 ph-plus inline-block"></i> Add</strong> to create the first one.
 				} else {
 					Nothing here yet.
 				}
@@ -309,7 +309,7 @@ templ emptyTable(env Env, voice string, desc string) {
 templ fabButton(tooltipPos string, baseUrl string, icon string, title string) {
 	<div class={ "tooltip " + tooltipPos } data-tip={ title }>
 		<a class="btn btn-lg btn-circle" href={ baseUrl + "/new" } up-layer="new drawer" up-accept-location={ baseUrl } up-on-accepted="up.reload('#list')">
-			<i class={ "hio hio-6 " + icon }></i>
+			<i class={ "ph ph-6 " + icon }></i>
 		</a>
 	</div>
 }

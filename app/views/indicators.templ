@@ -87,12 +87,12 @@ templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]m
 									<div class="join">
 										if row.Flagged {
 											@actionBtn(env, "GET", env.Route+row.ID) {
-												<i class="hio hio-5 hio-flag btn-flagged"></i>
+												<i class="ph ph-5 ph-flag btn-flagged"></i>
 											}
 										}
 										if url, ok := env.Allowed("POST", env.Route+row.ID+"/run"); ok {
 											@actionBtn(env, "GET", url) {
-												<i class="hio hio-5 hio-bolt"></i>
+												<i class="ph ph-5 ph-lightning"></i>
 											}
 										}
 										@defaultActionBtns(env, env.Route+row.ID)
@@ -197,7 +197,7 @@ templ indicatorsManyExtra(env Env) {
 	if url, ok := env.Allowed("POST", env.Route + "import"); ok {
 		<details class="dropdown">
 			<summary class="btn join-item">
-				<i class="hio hio-6 hio-bars-arrow-up inline-block mr-1"></i> Import
+				<i class="ph ph-6 ph-sort-ascending inline-block mr-1"></i> Import
 			</summary>
 			<ul style="position: absolute" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow">
 				<li><a href={ url + "/csv" } up-layer="new drawer" up-accept-location={ env.Route }>from CSV</a></li>
@@ -208,7 +208,7 @@ templ indicatorsManyExtra(env Env) {
 	if url, ok := env.Allowed("GET", env.Route + "export"); ok {
 		<details class="dropdown">
 			<summary class="btn join-item">
-				<i class="hio hio-6 hio-bars-arrow-down inline-block mr-1"></i> Export
+				<i class="ph ph-6 ph-sort-descending inline-block mr-1"></i> Export
 			</summary>
 			<ul style="position: absolute" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow">
 				<li><a href={ url + "/csv" }>as CSV</a></li>

@@ -18,14 +18,14 @@ templ Login(errmsg string) {
 			<div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
 				<form action="/auth/login" method="POST" class="space-y-6">
 					if errmsg != "" {
-						<p class="text-error gap-2"><i class="hio hio-exclamation-circle"></i> { errmsg }</p>
+						<p class="text-error gap-2"><i class="ph ph-warning-circle"></i> { errmsg }</p>
 					}
 					<div class="form-control mb-4">
-						<label class="label justify-start gap-2"><i class="hio hio-user"></i> E-Mail</label>
+						<label class="label justify-start gap-2"><i class="ph ph-user"></i> E-Mail</label>
 						<input name="email" required type="email" autocomplete="email" class="input w-full"/>
 					</div>
 					<div class="form-control mb-4">
-						<label class="label justify-start gap-2"><i class="hio hio-lock-closed"></i> Password</label>
+						<label class="label justify-start gap-2"><i class="ph ph-lock"></i> Password</label>
 						<input name="password" required type="password" autocomplete="current-password" class="input w-full"/>
 					</div>
 					<div class="flex gap-2 items-center">
@@ -34,7 +34,7 @@ templ Login(errmsg string) {
 					if os.Getenv("OIDC_ENABLED") == "true" {
 						@fleuron("mt-6 mb-6")
 						<div class="flex gap-2 items-center">
-							<a href="/auth/oidc" class="btn btn-neutral w-full"><i class="hio hio-key"></i> Sign in with SSO</a>
+							<a href="/auth/oidc" class="btn btn-neutral w-full"><i class="ph ph-key"></i> Sign in with SSO</a>
 						</div>
 					}
 				</form>
@@ -82,7 +82,7 @@ templ ChangePassword(user *model.User, vr valid.ValidationError) {
 				</div>
 				<!-- Modal footer -->
 				<div class="flex gap-2 items-center">
-					<button type="submit" class="btn btn-neutral"><i class="hio hio-key"></i> Change</button>
+					<button type="submit" class="btn btn-neutral"><i class="ph ph-key"></i> Change</button>
 					<a class="btn" up-dismiss>Cancel </a>
 				</div>
 			</form>

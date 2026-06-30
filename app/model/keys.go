@@ -88,9 +88,9 @@ type KeyType struct {
 // user-editable "KeyTypes" enum: the key form, list display, validation, and
 // the api-key middleware all derive from this single source of truth.
 var KeyTypes = []KeyType{
-	{"API", "hio-beaker", &SystemUser},
-	{"Donald", "hio-camera", &DonaldUser},
-	{"MCP", "hio-cpu-chip", &McpUser},
+	{"API", "ph-flask", &SystemUser},
+	{"Donald", "ph-bird", &DonaldUser},
+	{"MCP", "ph-cpu", &McpUser},
 }
 
 // KeyTypeEnums projects the registry into []Enum for views and validation.

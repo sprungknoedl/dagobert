@@ -47,7 +47,7 @@ templ SettingsTemplatesMany(env Env, rows []model.Case) {
 templ settingsTemplatesPromoteBtn(env Env) {
 	if url, ok := env.Allowed("GET", "/settings/templates/promote"); ok {
 		<a class="join-item btn" href={ url } up-layer="new drawer" up-accept-location="/settings/templates/">
-			<i class="hio hio-6 hio-document-duplicate inline-block mr-1"></i> Promote case…
+			<i class="ph ph-6 ph-copy inline-block mr-1"></i> Promote case…
 		</a>
 	}
 }
@@ -55,7 +55,7 @@ templ settingsTemplatesPromoteBtn(env Env) {
 templ SettingsTemplatesPromote(env Env, cases []model.Case) {
 	@form(env, "/settings/templates/promote", "Promote case to template") {
 		<p class="flex items-center gap-2 mb-4">
-			<i class="hio hio-5 hio-information-circle inline-block"></i>
+			<i class="ph ph-5 ph-info inline-block"></i>
 			Copies the case's tasks and notes into a new template. The source case is left unchanged.
 		</p>
 		<div class="form-control mb-2">

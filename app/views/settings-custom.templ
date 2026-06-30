@@ -11,16 +11,16 @@ import (
 var customEntities = []string{"Case", "Asset", "Event", "Evidence", "Indicator", "Malware", "Note", "Task"}
 var customTypes = []string{"string", "textfield", "checkbox", "date", "datetime", "select"}
 
-// customTypeInfo maps each hardcoded input type to its heroicon and the
+// customTypeInfo maps each hardcoded input type to its Phosphor icon and the
 // human-readable label shown to users in both the list and the edit form.
 // The stored/submitted value stays the raw key.
 var customTypeInfo = map[string]struct{ Icon, Label string }{
-	"string":    {"bars-3-bottom-left", "Text"},
-	"textfield": {"document-text", "Text Area"},
+	"string":    {"text-align-left", "Text"},
+	"textfield": {"file-text", "Text Area"},
 	"checkbox":  {"check-circle", "Checkbox"},
 	"date":      {"calendar", "Date"},
 	"datetime":  {"clock", "Date & Time"},
-	"select":    {"chevron-up-down", "Dropdown"},
+	"select":    {"caret-up-down", "Dropdown"},
 }
 
 templ SettingsCustomMany(env Env) {
@@ -74,11 +74,11 @@ templ SettingsCustomOne(env Env, obj model.CustomAttribute, vr valid.ValidationE
 	}
 }
 
-// customType renders a hardcoded input type as a heroicon + human-readable
+// customType renders a hardcoded input type as a Phosphor icon + human-readable
 // label (see customTypeInfo). Unknown types fall back to the raw value.
 templ customType(t string) {
 	if m, ok := customTypeInfo[t]; ok {
-		<span class="inline-flex items-center gap-2"><i class={ "hio hio-5 hio-" + m.Icon }></i> { m.Label }</span>
+		<span class="inline-flex items-center gap-2"><i class={ "ph ph-5 ph-" + m.Icon }></i> { m.Label }</span>
 	} else {
 		{ t }
 	}
