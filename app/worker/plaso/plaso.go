@@ -54,9 +54,8 @@ func (m *Module) Validate() (model.Module, error) {
 		return nil, err
 	}
 	if len(m.args) < 1 {
-		err = errors.New("MODULE_PLASO is not set, module disabled")
-		slog.Warn("validating module prerequisites failed", "module", "plaso", "err", err)
-		return nil, err
+		slog.Info("module disabled, not configured", "module", "plaso")
+		return nil, errors.New("MODULE_PLASO is not set, module disabled")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
