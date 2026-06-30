@@ -46,9 +46,8 @@ func (m *Module) Supports(obj any) bool {
 
 func (m *Module) Validate() (model.Module, error) {
 	if !m.client.Configured() {
-		err := errors.New("VIRUSTOTAL_APIKEY is not set, module disabled")
-		slog.Warn("validating module prerequisites failed", "module", "virustotal", "err", err)
-		return nil, err
+		slog.Info("module disabled, not configured", "module", "virustotal")
+		return nil, errors.New("VIRUSTOTAL_APIKEY is not set, module disabled")
 	}
 
 	slog.Info("validating module prerequisites", "module", "virustotal")

@@ -51,9 +51,8 @@ func (m *Module) Validate() (model.Module, error) {
 		return nil, err
 	}
 	if len(m.args) < 1 {
-		err = errors.New("MODULE_HAYABUSA is not set, module disabled")
-		slog.Warn("validating module prerequisites failed", "module", "hayabusa", "err", err)
-		return nil, err
+		slog.Info("module disabled, not configured", "module", "hayabusa")
+		return nil, errors.New("MODULE_HAYABUSA is not set, module disabled")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
