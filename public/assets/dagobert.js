@@ -140,6 +140,51 @@ function applyCaseTemplate(select) {
     form.elements['Summary'].value = opt.dataset.summary || '';
 }
 
+// --- Delegated dispatch (CSP: no inline onclick=/onchange= attributes) -----
+// Document-level listeners need no up.compiler() registration/teardown —
+// they're live for the initial page and all later Unpoly fragment swaps
+// without rebinding.
+const actions = {
+    togglePassword,
+    setNow,
+    toggleCustomOptions,
+    applyCaseTemplate,
+    toggleCategory,
+    removeSelf: (el) => el.remove(),
+    copyRevealKey: () => navigator.clipboard.writeText(document.getElementById('reveal-key').value),
+    applyTemplateName: (el) => {
+        document.querySelector('input[name=Name]').value =
+            el.options[el.selectedIndex].text + ' (Template)';
+    },
+    stopPropagation: (el, event) => event.stopPropagation(),
+};
+
+document.addEventListener('click', (event) => {
+    const el = event.target.closest('[data-onclick]');
+    if (el) { actions[el.dataset.onclick]?.(el, event); }
+
+    const link = event.target.closest('[data-href]');
+    if (link && !event.target.closest('a, button')) { location.assign(link.dataset.href); }
+});
+
+document.addEventListener('change', (event) => {
+    const el = event.target.closest('[data-onchange]');
+    if (el) { actions[el.dataset.onchange]?.(el, event); }
+});
+
+// Faithful non-eval replacement for up-on-accepted="..." (Unpoly's internal
+// new Function() eval, blocked by CSP with no 'unsafe-eval'). Unpoly fires
+// up:layer:accepted on the link that opened the layer, same as what
+// up-on-accepted evaluates internally.
+const onAccepted = {
+    'reload-list': () => up.reload('#list'),
+    'reload-main-root': () => up.reload('main', { layer: 'root' }),
+};
+up.compiler('[data-up-accepted]', (link) => {
+    const fn = onAccepted[link.dataset.upAccepted];
+    if (fn) { link.addEventListener('up:layer:accepted', fn); }
+});
+
 // showToast renders a transient success toast into the root #errors section,
 // matching the daisyUI markup of the server-rendered error/warning toasts.
 function showToast(message) {

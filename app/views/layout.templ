@@ -308,7 +308,7 @@ templ emptyTable(env Env, voice string, desc string) {
 
 templ fabButton(tooltipPos string, baseUrl string, icon string, title string) {
 	<div class={ "tooltip " + tooltipPos } data-tip={ title }>
-		<a class="btn btn-lg btn-circle" href={ baseUrl + "/new" } up-layer="new drawer" up-accept-location={ baseUrl } up-on-accepted="up.reload('#list')">
+		<a class="btn btn-lg btn-circle" href={ baseUrl + "/new" } up-layer="new drawer" up-accept-location={ baseUrl } data-up-accepted="reload-list">
 			<i class={ "ph ph-6 " + icon }></i>
 		</a>
 	</div>

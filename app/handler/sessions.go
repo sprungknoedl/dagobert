@@ -21,5 +21,5 @@ func InitSession(db *sql.DB) {
 	Session.Cookie.HttpOnly = true
 	Session.Cookie.SameSite = http.SameSiteLaxMode
 	// HTTPS-only by default; relax for local development over plain HTTP.
-	Session.Cookie.Secure = os.Getenv("WEB_SECURE_COOKIE") != "false"
+	Session.Cookie.Secure = os.Getenv("WEB_SECURE") != "false"
 }

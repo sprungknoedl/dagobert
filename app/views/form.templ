@@ -126,7 +126,7 @@ templ passwordField(name string, value string, opts ...formOption) {
 		@fieldLabel(cfg)
 		<div class="join w-full">
 			<input name={ name } type="password" class="input join-item w-full" value={ value } autocomplete="off" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other"/>
-			<button type="button" class="btn join-item" onclick="togglePassword(this)" tabindex="-1">
+			<button type="button" class="btn join-item" data-onclick="togglePassword" tabindex="-1">
 				<i class="ph ph-5 ph-eye"></i>
 			</button>
 		</div>

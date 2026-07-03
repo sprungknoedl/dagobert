@@ -143,7 +143,7 @@ templ ImportArchiveConfirm(m model.Manifest, token string) {
 templ ToastError(err error) {
 	@layout() {
 		<section id="errors" class="toast toast-top toast-center z-20">
-			<div class="alert alert-error w-[42rem] m-4" role="alert" onclick="this.remove()">
+			<div class="alert alert-error w-[42rem] m-4" role="alert" data-onclick="removeSelf">
 				<i class="ph ph-x-circle text-3xl"></i>
 				<div>
 					<h3 class="font-bold">Unrecoverable error encountered!</h3>
@@ -157,7 +157,7 @@ templ ToastError(err error) {
 templ ToastWarning(err error) {
 	@layout() {
 		<section id="errors" class="toast toast-top toast-center z-20">
-			<div class="alert alert-warning w-[42rem] m-4" role="alert" onclick="this.remove()">
+			<div class="alert alert-warning w-[42rem] m-4" role="alert" data-onclick="removeSelf">
 				<i class="ph ph-warning-circle text-3xl"></i>
 				<div>
 					<h3 class="font-bold">Bad request.</h3>

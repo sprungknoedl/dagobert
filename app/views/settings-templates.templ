@@ -63,7 +63,7 @@ templ SettingsTemplatesPromote(env Env, cases []model.Case) {
 				Source case
 				@requiredLabel()
 			</label>
-			<select name="SourceID" class="select w-full" onchange="document.querySelector('input[name=Name]').value = this.options[this.selectedIndex].text + ' (Template)';">
+			<select name="SourceID" class="select w-full" data-onchange="applyTemplateName">
 				for _, c := range cases {
 					<option value={ c.ID }>{ c.Name }</option>
 				}

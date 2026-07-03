@@ -3,10 +3,27 @@ package handler
 import (
 	"log/slog"
 	"net/http"
+	"os"
 	"runtime/debug"
 	"strconv"
 	"time"
 )
+
+// contentSecurityPolicy is a strict policy for an app that renders attacker-
+// influenced strings (case notes, indicator values, evidence metadata) back
+// into the page: no 'unsafe-inline'/'unsafe-eval' for scripts. Inline styles
+// are allowed since they're presentational-only and not a script-injection
+// vector.
+const contentSecurityPolicy = "default-src 'self'; " +
+	"script-src 'self'; " +
+	"style-src 'self' 'unsafe-inline'; " +
+	"img-src 'self'; " +
+	"font-src 'self'; " +
+	"connect-src 'self'; " +
+	"object-src 'none'; " +
+	"base-uri 'self'; " +
+	"form-action 'self'; " +
+	"frame-ancestors 'none'"
 
 func Recover(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -29,17 +46,21 @@ func Recover(next http.Handler) http.Handler {
 
 // SecurityHeaders sets baseline hardening headers on every response: deny
 // framing (clickjacking), stop content-type sniffing (matters for the served
-// evidence and malware files), and keep the Referer from leaking to other
-// origins. Headers are set before the handler runs so they apply to error
-// responses too. CSP and HSTS are intentionally omitted: CSP needs an app-
-// specific policy to avoid breaking the UI, and HSTS is only meaningful over
-// TLS while plain-HTTP dev is supported.
+// evidence and malware files), keep the Referer from leaking to other
+// origins, and apply a strict CSP. HSTS is only sent when WEB_SECURE has not
+// disabled TLS-only mode (mirrors Session.Cookie.Secure), since it's only
+// meaningful over TLS while plain-HTTP dev is supported. Headers are set
+// before the handler runs so they apply to error responses too.
 func SecurityHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		h := w.Header()
 		h.Set("X-Frame-Options", "DENY")
 		h.Set("X-Content-Type-Options", "nosniff")
 		h.Set("Referrer-Policy", "same-origin")
+		h.Set("Content-Security-Policy", contentSecurityPolicy)
+		if os.Getenv("WEB_SECURE") != "false" {
+			h.Set("Strict-Transport-Security", "max-age=31536000")
+		}
 		next.ServeHTTP(w, r)
 	})
 }

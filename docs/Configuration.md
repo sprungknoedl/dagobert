@@ -29,7 +29,7 @@ built-in local login form.
 
 | Variable | Required | Description | Default |
 | --- | --- | --- | --- |
-| `WEB_SECURE_COOKIE` | No | Send session cookies only over HTTPS. Set to `false` for local development over plain `http://`. | `true` |
+| `WEB_SECURE` | No | Send session cookies only over HTTPS and send the `Strict-Transport-Security` header. Set to `false` for local development over plain `http://`. | `true` |
 
 Sessions are stored server-side in the database, so there is no cookie-encryption
 secret to configure.
