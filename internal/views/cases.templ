@@ -60,14 +60,65 @@ templ CasesMany(env Env, rows []model.Case) {
 	}
 }
 
-templ CasesOne(env Env, obj model.Case, templates []model.Case, selectedTemplate string, showSketches bool, sketches []timesketch.Sketch, sketchWarning string, vr valid.ValidationError) {
+// SketchInfo bundles the Timesketch integration fields shown on the case
+// form: whether to show the section at all (Timesketch is configured), the
+// sketches to list, and a warning when the configured instance couldn't be
+// reached.
+type SketchInfo struct {
+	Show     bool
+	Sketches []timesketch.Sketch
+	Warning  string
+}
+
+type casesOneConfig struct {
+	templates        []model.Case
+	selectedTemplate string
+	sketches         SketchInfo
+	outstanding      []string
+}
+
+type CasesOneOption func(*casesOneConfig)
+
+func applyCasesOneOptions(opts []CasesOneOption) casesOneConfig {
+	cfg := casesOneConfig{}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+	return cfg
+}
+
+// WithTemplates offers the "create from template" dropdown, seeded with the
+// reachable templates and (after a failed-validation re-render) whichever one
+// was previously selected. Only meaningful on the new-case form.
+func WithTemplates(templates []model.Case, selected string) CasesOneOption {
+	return func(cc *casesOneConfig) {
+		cc.templates = templates
+		cc.selectedTemplate = selected
+	}
+}
+
+// WithSketches renders the Timesketch integration section.
+func WithSketches(info SketchInfo) CasesOneOption {
+	return func(cc *casesOneConfig) { cc.sketches = info }
+}
+
+// WithOutstanding switches the form into "confirm close" mode: it lists the
+// outstanding items and swaps the Save/Cancel footer for a "Close anyway"
+// confirmation.
+func WithOutstanding(outstanding []string) CasesOneOption {
+	return func(cc *casesOneConfig) { cc.outstanding = outstanding }
+}
+
+templ CasesOne(env Env, obj model.Case, vr valid.ValidationError, opts ...CasesOneOption) {
+	{{ cfg := applyCasesOneOptions(opts) }}
 	{{ uri := env.Route }}
 	{{ noun := fp.If(obj.IsTemplate, "case template", "case") }}
 	{{ title := fp.If(obj.ID == "new", "Add "+noun, "Edit "+noun) }}
-	@form(env, uri, title) {
+	{{ formOpts := fp.If(len(cfg.outstanding) > 0, []formOption{replaceFooter(closeConfirmFooterOrNil(cfg.outstanding))}, nil) }}
+	@form(env, uri, title, formOpts...) {
 		@hiddenField("ID", obj.ID)
 		@hiddenField("IsTemplate", strconv.FormatBool(obj.IsTemplate))
-		if obj.ID == "new" && !obj.IsTemplate && len(templates) > 0 {
+		if obj.ID == "new" && !obj.IsTemplate && len(cfg.templates) > 0 {
 			<div class="form-control mb-2">
 				<label class="label justify-start gap-2">Create from template</label>
 				// The template defaults are carried inline on each option so picking
@@ -75,9 +126,9 @@ templ CasesOne(env Env, obj model.Case, templates []model.Case, selectedTemplate
 				// dagobert.js), with no server roundtrip. selectedTemplate keeps the
 				// choice after a failed-validation re-render.
 				<select name="Template" class="select w-full" data-onchange="applyCaseTemplate">
-					<option value="" selected?={ selectedTemplate == "" }>— Blank case —</option>
-					for _, t := range templates {
-						<option value={ t.ID } selected?={ t.ID == selectedTemplate } data-classification={ t.Classification } data-severity={ t.Severity } data-summary={ t.Summary }>{ t.Name }</option>
+					<option value="" selected?={ cfg.selectedTemplate == "" }>— Blank case —</option>
+					for _, t := range cfg.templates {
+						<option value={ t.ID } selected?={ t.ID == cfg.selectedTemplate } data-classification={ t.Classification } data-severity={ t.Severity } data-summary={ t.Summary }>{ t.Name }</option>
 					}
 				</select>
 			</div>
@@ -91,18 +142,18 @@ templ CasesOne(env Env, obj model.Case, templates []model.Case, selectedTemplate
 		<h2 class="text-xl font-serif mb-2 mt-4">Summary</h2>
 		@textareaField("Summary", obj.Summary, withLabel("Executive summary"), withHint("Markdown supported. Describe what happened, scope of impact, root cause, and resolution."))
 		<!-- x -->
-		if showSketches {
+		if cfg.sketches.Show {
 			<h2 class="text-xl font-serif mb-2 mt-4">Integrations</h2>
 			<div class="form-control mb-2">
 				<label class="label justify-start gap-2">
 					Timesketch Sketch
 					@validationError(vr["SketchID"])
 				</label>
-				if sketchWarning != "" {
-					<div class="alert alert-warning alert-soft" role="alert">{ sketchWarning }</div>
+				if cfg.sketches.Warning != "" {
+					<div class="alert alert-warning alert-soft" role="alert">{ cfg.sketches.Warning }</div>
 				} else {
 					<select name="SketchID" class="select w-full">
-						for _, e := range sketches {
+						for _, e := range cfg.sketches.Sketches {
 							<option value={ e.ID } selected?={ e.ID == obj.SketchID }>{ strconv.Itoa(e.ID) } - { e.Name }</option>
 						}
 					</select>
@@ -113,6 +164,34 @@ templ CasesOne(env Env, obj model.Case, templates []model.Case, selectedTemplate
 		@customAttributes(env, "Case", obj.Custom)
 		@requiredFootnote()
 	}
+}
+
+// closeConfirmFooterOrNil returns nil (falling back to the form's default
+// Save/Cancel footer) when there is nothing outstanding, so withFooter only
+// takes over the footer in confirm mode.
+func closeConfirmFooterOrNil(outstanding []string) templ.Component {
+	if len(outstanding) == 0 {
+		return nil
+	}
+	return closeConfirmFooter(outstanding)
+}
+
+// closeConfirmFooter takes over the form's Save/Cancel spot with a "close
+// anyway?" prompt, so the confirmation appears exactly where the user just
+// clicked Save rather than somewhere else on the form.
+templ closeConfirmFooter(outstanding []string) {
+	<div class="text-warning mb-4">
+		<h3 class="font-bold">This case still has outstanding items</h3>
+		<ul class="list-disc list-inside text-sm">
+			for _, msg := range outstanding {
+				<li>{ msg }</li>
+			}
+		</ul>
+	</div>
+	<div class="flex gap-2">
+		<button type="submit" name="Confirm" value="yes" class="btn btn-warning">Close anyway</button>
+		<a class="btn" up-dismiss>Cancel </a>
+	</div>
 }
 
 templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model.Asset, indicators []model.Indicator) {
@@ -292,15 +371,15 @@ templ stat(status, icon, title string, value int) {
 
 templ caseSummaryExtra(env Env) {
 	if url, ok := env.Allowed("GET", "/cases/" + env.Case.ID + "/export/archive"); ok {
-		<div class="dropdown dropdown-bottom join-item">
-			<div tabindex="0" role="button" class="join-item btn">
+		<details class="dropdown">
+			<summary class="btn join-item">
 				<i class="ph ph-6 ph-archive inline-block mr-1"></i> Export
-			</div>
-			<ul tabindex="0" class="dropdown-content menu bg-base-200 rounded-box z-2 w-56 p-2 shadow">
+			</summary>
+			<ul style="position: absolute" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-60 p-2 shadow">
 				<li><a href={ url + "?binaries=false" }>Metadata only</a></li>
 				<li><a href={ url + "?binaries=true" }>Include evidence &amp; malware</a></li>
 			</ul>
-		</div>
+		</details>
 	}
 	if url, ok := env.Allowed("GET", "/cases/" + env.Case.ID + "?target=summary"); ok {
 		// The hungry #list swap only refreshes the body; reload the whole <main>

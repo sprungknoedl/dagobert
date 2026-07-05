@@ -19,14 +19,18 @@ templ form(env Env, uri string, title string, opts ...formOption) {
 					{ children... }
 				</div>
 				<!-- Modal footer -->
-				<div class="flex gap-2 items-center">
-					if _, ok := env.Allowed("POST", uri); ok {
-						<button type="submit" class="btn btn-neutral">Save </button>
-						<a class="btn" up-dismiss>Cancel </a>
-					} else {
-						<a class="btn" up-dismiss>Close </a>
-					}
-				</div>
+				if cfg.footer != nil {
+					@cfg.footer
+				} else {
+					<div class="flex gap-2 items-center">
+						if _, ok := env.Allowed("POST", uri); ok {
+							<button type="submit" class="btn btn-neutral">Save </button>
+							<a class="btn" up-dismiss>Cancel </a>
+						} else {
+							<a class="btn" up-dismiss>Close </a>
+						}
+					</div>
+				}
 			</form>
 		</main>
 	}
@@ -38,6 +42,7 @@ type formConfig struct {
 	validation templ.Component
 	hint       string
 	enctype    string
+	footer     templ.Component
 }
 
 type formOption func(*formConfig)
@@ -74,6 +79,10 @@ func withHint(hint string) formOption {
 
 func enctype(enc string) formOption {
 	return func(fc *formConfig) { fc.enctype = enc }
+}
+
+func replaceFooter(footer templ.Component) formOption {
+	return func(fc *formConfig) { fc.footer = footer }
 }
 
 templ requiredLabel() {

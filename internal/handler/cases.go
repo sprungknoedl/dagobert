@@ -12,23 +12,22 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/internal/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
-	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
 // fetchSketches loads the sketches for the case form. It reports whether the
 // sketch dropdown should be shown at all (Timesketch is configured) and a
 // warning when the configured instance can not be queried.
-func (h *Handler) fetchSketches(r *http.Request) (show bool, sketches []timesketch.Sketch, warning string) {
+func (h *Handler) fetchSketches(r *http.Request) views.SketchInfo {
 	if !h.Timesketch.Configured() {
-		return false, nil, ""
+		return views.SketchInfo{}
 	}
 
 	sketches, err := h.Timesketch.ListSketches(r.Context())
 	if err != nil {
-		return true, nil, "Failed to fetch sketches from Timesketch: " + err.Error()
+		return views.SketchInfo{Show: true, Warning: "Failed to fetch sketches from Timesketch: " + err.Error()}
 	}
-	return true, sketches, ""
+	return views.SketchInfo{Show: true, Sketches: sketches}
 }
 
 func (h *Handler) CaseList(w http.ResponseWriter, r *http.Request) {
@@ -127,17 +126,70 @@ func (h *Handler) CaseEdit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	show, sketches, warning := h.fetchSketches(r)
-	Render(w, r, http.StatusOK, views.CasesOne(h.Env(r), obj, templates, "", show, sketches, warning, valid.ValidationError{}))
+	sketches := h.fetchSketches(r)
+	Render(w, r, http.StatusOK, views.CasesOne(h.Env(r), obj, valid.ValidationError{},
+		views.WithTemplates(templates, ""),
+		views.WithSketches(sketches)))
+}
+
+// outstandingOnClose returns human-readable, count-only messages for case
+// items that are still outstanding when closing a case: open tasks,
+// un-triaged assets, missing classification, and missing outcome.
+//
+// TODO: the "still outstanding" definitions below are hardcoded against fixed
+// strings/booleans; revisit once the state/rank enum metadata can drive this
+// per category instead.
+func outstandingOnClose(store *model.Store, dto model.Case) ([]string, error) {
+	var messages []string
+
+	tasks, err := store.ListTasks(dto.ID)
+	if err != nil {
+		return nil, err
+	}
+	open := 0
+	for _, t := range tasks {
+		if !t.Done {
+			open++
+		}
+	}
+	if open > 0 {
+		messages = append(messages, fmt.Sprintf("%d task%s still open", open, fp.If(open == 1, "", "s")))
+	}
+
+	assets, err := store.ListAssets(dto.ID)
+	if err != nil {
+		return nil, err
+	}
+	untriaged := 0
+	for _, a := range assets {
+		if a.Status == "" || a.Status == "Under investigation" {
+			untriaged++
+		}
+	}
+	if untriaged > 0 {
+		messages = append(messages, fmt.Sprintf("%d asset%s still under investigation", untriaged, fp.If(untriaged == 1, "", "s")))
+	}
+
+	if dto.Classification == "" {
+		messages = append(messages, "Classification not set")
+	}
+
+	if dto.Outcome == "" {
+		messages = append(messages, "Outcome not set")
+	}
+
+	return messages, nil
 }
 
 func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Case{ID: r.PathValue("cid")}
 	err := Decode(h.Store, r, &dto, ValidateCase)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		show, sketches, warning := h.fetchSketches(r)
+		sketches := h.fetchSketches(r)
 		templates, _ := h.Store.ListTemplates()
-		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(h.Env(r), dto, templates, r.FormValue("Template"), show, sketches, warning, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(h.Env(r), dto, vr,
+			views.WithTemplates(templates, r.FormValue("Template")),
+			views.WithSketches(sketches)))
 		return
 	} else if err != nil {
 		Warn(w, r, err)
@@ -149,6 +201,39 @@ func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
 	dto.Custom = CollectCustom(r)
 
 	new := dto.ID == "new"
+
+	// Soft-confirm on an open->closed transition when outstanding items remain.
+	// The user can always override via "Close anyway" (Confirm=yes); this never
+	// hard-blocks the save.
+	if dto.Closed && !dto.IsTemplate && r.FormValue("Confirm") != "yes" {
+		wasClosed := false
+		if !new {
+			prior, err := h.Store.GetCase(dto.ID)
+			if err != nil {
+				Err(w, r, err)
+				return
+			}
+			wasClosed = prior.Closed
+		}
+
+		if !wasClosed {
+			outstanding, err := outstandingOnClose(h.Store, dto)
+			if err != nil {
+				Err(w, r, err)
+				return
+			}
+			if len(outstanding) > 0 {
+				sketches := h.fetchSketches(r)
+				templates, _ := h.Store.ListTemplates()
+				Render(w, r, http.StatusOK, views.CasesOne(h.Env(r), dto, valid.ValidationError{},
+					views.WithTemplates(templates, r.FormValue("Template")),
+					views.WithSketches(sketches),
+					views.WithOutstanding(outstanding)))
+				return
+			}
+		}
+	}
+
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)
 	if err := h.Store.SaveCase(dto); err != nil {
 		Err(w, r, err)
