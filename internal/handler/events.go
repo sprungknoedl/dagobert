@@ -161,7 +161,21 @@ func (h *Handler) EventImportTimesketch(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err = h.Store.Transaction(func(tx *model.Store) error {
+	if err := saveTimesketchEvents(h.Store, cid, events); err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	uri := fmt.Sprintf("/cases/%s/events/", cid)
+	http.Redirect(w, r, uri, http.StatusSeeOther)
+}
+
+// saveTimesketchEvents maps starred Timesketch events onto the case timeline
+// and saves them in one transaction. The stable "_ts_" ID plus save-without-
+// override dedups re-imports: an already imported (and possibly analyst-edited)
+// event is kept, not duplicated or clobbered.
+func saveTimesketchEvents(store *model.Store, cid string, events []timesketch.Event) error {
+	return store.Transaction(func(tx *model.Store) error {
 		for _, ev := range events {
 			buf := &bytes.Buffer{}
 			enc := json.NewEncoder(buf)
@@ -180,19 +194,12 @@ func (h *Handler) EventImportTimesketch(w http.ResponseWriter, r *http.Request) 
 				Source: "Timesketch",
 			}
 
-			if err = tx.SaveEvent(cid, obj, false); err != nil {
+			if err := tx.SaveEvent(cid, obj, false); err != nil {
 				return err
 			}
 		}
 		return nil
 	})
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	uri := fmt.Sprintf("/cases/%s/events/", cid)
-	http.Redirect(w, r, uri, http.StatusSeeOther)
 }
 
 func (h *Handler) EventEdit(w http.ResponseWriter, r *http.Request) {
