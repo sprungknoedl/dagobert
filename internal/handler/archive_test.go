@@ -150,8 +150,8 @@ func TestArchiveRoundTrip(t *testing.T) {
 	if len(events[0].Indicators) != 1 || events[0].Indicators[0].ID != "ind01" {
 		t.Errorf("event->indicator link lost: %+v", events[0].Indicators)
 	}
-	if malware[0].AssetID != "asset01" {
-		t.Errorf("malware.AssetID = %q, want asset01", malware[0].AssetID)
+	if malware[0].AssetID == nil || *malware[0].AssetID != "asset01" {
+		t.Errorf("malware.AssetID = %v, want asset01", malware[0].AssetID)
 	}
 }
 

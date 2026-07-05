@@ -87,7 +87,6 @@ func ValidateMalware(dto *model.Malware, enums model.Enums) valid.ValidationErro
 	return valid.Check([]valid.Condition{
 		{Name: "Path", Missing: dto.Path == ""},
 		{Name: "Hash", Message: "Invalid hash. Only letters and digits are allowed.", Missing: dto.Hash == "", Invalid: !reAlnum.MatchString(dto.Hash)},
-		{Name: "Source", Missing: dto.Asset.ID == ""},
 		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !InEnum(enums.MalwareStatus, dto.Status)},
 	})
 }
