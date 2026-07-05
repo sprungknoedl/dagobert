@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -173,76 +174,19 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// default values
-	dto.Size = int64(0)
-	dto.Name = filepath.Base(dto.Name) // sanitize name
+	// replacing the stored file is not supported; the check stays here because
+	// its outcome is a rendered validation error, an HTTP concern
+	if fh != nil && fh.Size > 0 && dto.ID != "new" {
+		vr := valid.ValidationError{"File": valid.Condition{Name: "File", Invalid: true,
+			Message: "Replacing the file of an existing entry is not supported — create a new entry instead."}}
+		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(h.Env(r), dto, vr))
+		return
+	}
 
-	// process file if present
-	if fh != nil && fh.Size > 0 {
-		if dto.ID != "new" {
-			vr := valid.ValidationError{"File": valid.Condition{Name: "File", Invalid: true,
-				Message: "Replacing the file of an existing entry is not supported — create a new entry instead."}}
-			Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(h.Env(r), dto, vr))
-			return
-		}
-
-		// prepare location for evidence storage
-		dst := filepath.Join("files", "evidences", dto.CaseID, dto.Name)
-		err = os.MkdirAll(filepath.Dir(dst), 0755)
-		if err != nil {
-			Err(w, r, err)
-			return
-		}
-
-		// create file, fail if file exists
-		fw, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
-		if err != nil {
-			Err(w, r, err)
-			return
-		}
-
-		// write and file and simultanously calculate sha1 hash
-		hasher := sha1.New()
-		mw := io.MultiWriter(fw, hasher)
-		_, err = io.Copy(mw, fr)
-		if err != nil {
-			Err(w, r, err)
-			return
-		}
-
-		dto.Size = fh.Size
-		dto.Hash = fmt.Sprintf("%x", hasher.Sum(nil))
-	} else if dto.ID != "new" && dto.Size > 0 {
-		// keep metadata for existing evidences that did not change
-		obj, err := h.Store.GetEvidence(dto.CaseID, dto.ID)
-		if err != nil {
-			Err(w, r, err)
-			return
-		}
-
-		dto.Size = obj.Size
-		dto.Hash = obj.Hash
-	} else {
-		// look if file is present in fs and add it to the database
-		src := filepath.Join("files", "evidences", dto.CaseID, dto.Name)
-		fr, err := os.Open(src)
-		if err == nil {
-			stat, err := fr.Stat()
-			if err != nil {
-				Err(w, r, err)
-				return
-			}
-
-			hasher := sha1.New()
-			_, err = io.Copy(hasher, fr)
-			if err != nil {
-				Err(w, r, err)
-				return
-			}
-
-			dto.Size = stat.Size()
-			dto.Hash = fmt.Sprintf("%x", hasher.Sum(nil))
-		}
+	dto, err = resolveEvidenceFile(h.Store, dto, fr, fh)
+	if err != nil {
+		Err(w, r, err)
+		return
 	}
 
 	// NOTE: form-only for now — CollectCustom reads r.PostForm, so a JSON API
@@ -262,6 +206,66 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 	}
 
 	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/evidences/", dto.CaseID))
+}
+
+// resolveEvidenceFile fills dto.Size and dto.Hash from the uploaded file, the
+// existing DB record, or a file already present on disk (in that order). It is
+// HTTP-free; the caller has already rejected uploads for existing entries.
+func resolveEvidenceFile(store *model.Store, dto model.Evidence, upload multipart.File, fh *multipart.FileHeader) (model.Evidence, error) {
+	dto.Name = filepath.Base(dto.Name) // sanitize name
+	path := filepath.Join("files", "evidences", dto.CaseID, dto.Name)
+
+	switch {
+	case fh != nil && fh.Size > 0:
+		// new upload: write to disk (fail if the file exists) and hash while writing
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			return dto, err
+		}
+		fw, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
+		if err != nil {
+			return dto, err
+		}
+		defer fw.Close()
+		if dto.Hash, err = hashCopy(fw, upload); err != nil {
+			return dto, err
+		}
+		dto.Size = fh.Size
+
+	case dto.ID != "new" && dto.Size > 0:
+		// existing entry without new file: keep stored metadata
+		obj, err := store.GetEvidence(dto.CaseID, dto.ID)
+		if err != nil {
+			return dto, err
+		}
+		dto.Size, dto.Hash = obj.Size, obj.Hash
+
+	default:
+		// adopt a file already present on disk; no file, no metadata — not an error
+		dto.Size, dto.Hash = 0, ""
+		fr, err := os.Open(path)
+		if err != nil {
+			return dto, nil
+		}
+		defer fr.Close()
+		stat, err := fr.Stat()
+		if err != nil {
+			return dto, err
+		}
+		if dto.Hash, err = hashCopy(io.Discard, fr); err != nil {
+			return dto, err
+		}
+		dto.Size = stat.Size()
+	}
+	return dto, nil
+}
+
+// hashCopy copies src to dst and returns the sha1 of the copied bytes.
+func hashCopy(dst io.Writer, src io.Reader) (string, error) {
+	hasher := sha1.New()
+	if _, err := io.Copy(io.MultiWriter(dst, hasher), src); err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", hasher.Sum(nil)), nil
 }
 
 func (h *Handler) EvidenceDownload(w http.ResponseWriter, r *http.Request) {
