@@ -12,15 +12,14 @@ import (
 	"github.com/a-h/templ"
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/internal/modules/utils"
-	ab "github.com/sprungknoedl/dagobert/pkg/abuseipdb"
 )
 
 type Module struct {
-	client *ab.Client
+	client *Client
 }
 
 func NewModule() *Module {
-	return &Module{client: ab.NewClient(ab.Config{APIKey: os.Getenv("ABUSEIPDB_APIKEY")})}
+	return &Module{client: NewClient(Config{APIKey: os.Getenv("ABUSEIPDB_APIKEY")})}
 }
 
 func (m *Module) Name() string { return "AbuseIPDB" }

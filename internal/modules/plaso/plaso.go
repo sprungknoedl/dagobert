@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -16,7 +15,6 @@ import (
 	"github.com/mattn/go-shellwords"
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/internal/modules/utils"
-	"github.com/sprungknoedl/dagobert/pkg/tty"
 )
 
 var DefaultProfile = "win7"
@@ -99,7 +97,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	log.Printf("|%s| running command: %s", tty.Cyan(" DEB "), cmd.Args)
+	slog.Debug("running command", "module", "plaso", "args", cmd.Args)
 	if err := cmd.Run(); err != nil {
 		// try to clean up
 		os.Remove(dst)
