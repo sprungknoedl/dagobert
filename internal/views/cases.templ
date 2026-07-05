@@ -8,6 +8,24 @@ import (
 	"strconv"
 )
 
+// dateInputValue formats a nullable date for an <input type="date"> value
+// attribute, blank when unset.
+func dateInputValue(d model.Date) string {
+	if d.IsZero() {
+		return ""
+	}
+	return d.Format("2006-01-02")
+}
+
+// dateOrDash formats a nullable date for display, using a dash placeholder
+// when unset.
+func dateOrDash(d model.Date) string {
+	if d.IsZero() {
+		return "-"
+	}
+	return d.Format("2006-01-02")
+}
+
 templ CasesMany(env Env, rows []model.Case) {
 	@layout() {
 		@list(env, "Cases", navTitleIcon("briefcase"), navHideImport(), navPreButtons(casesImport(env)), navSubtitle("Manage your incident response investigations")) {
@@ -20,6 +38,7 @@ templ CasesMany(env Env, rows []model.Case) {
 						<th data-sort="value-3" class="sort px-3 py-4 text-left">Severity</th>
 						<th data-sort="value-4" class="sort px-3 py-4 text-left">Outcome</th>
 						<th data-sort="value-5" class="sort px-3 py-4 text-left">Status</th>
+						<th data-sort="value-6" class="sort px-3 py-4 text-left">Opened</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
@@ -42,6 +61,7 @@ templ CasesMany(env Env, rows []model.Case) {
 									<td class="value-5" data-search={ fp.If(row.Closed, "closed", "open") }>
 										@caseStatusPill(row.Closed)
 									</td>
+									<td class="value-6" data-search={ dateOrDash(row.OpenedAt) }>{ dateOrDash(row.OpenedAt) }</td>
 									<td class="text-right">
 										<div class="join">
 											@actionBtn(env, "GET", env.Route+row.ID+"/acl") {
@@ -138,6 +158,10 @@ templ CasesOne(env Env, obj model.Case, vr valid.ValidationError, opts ...CasesO
 		@selectField("Severity", obj.Severity, env.Enums.CaseSeverities, withLabel("Severity"), withError(vr["Severity"]))
 		@selectField("Outcome", obj.Outcome, env.Enums.CaseOutcomes, withLabel("Outcome"), withError(vr["Outcome"]))
 		@booleanField("Closed", obj.Closed, withLabel("Closed"))
+		if !obj.IsTemplate {
+			@dateField("OpenedAt", dateInputValue(obj.OpenedAt), withLabel("Opened"))
+			@dateField("ClosedAt", dateInputValue(obj.ClosedAt), withLabel("Closed at"))
+		}
 		<!-- x -->
 		<h2 class="text-xl font-serif mb-2 mt-4">Summary</h2>
 		@textareaField("Summary", obj.Summary, withLabel("Executive summary"), withHint("Markdown supported. Describe what happened, scope of impact, root cause, and resolution."))
@@ -229,6 +253,15 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 					</div>
 				</div>
 			</div>
+			<!-- Opened/closed dates -->
+			<dl class="grid grid-cols-[8rem_1fr] gap-x-4 gap-y-1 mt-4">
+				<dt class="text-base-content/60">Opened</dt>
+				<dd>{ dateOrDash(obj.OpenedAt) }</dd>
+				if !obj.ClosedAt.IsZero() {
+					<dt class="text-base-content/60">Closed</dt>
+					<dd>{ dateOrDash(obj.ClosedAt) }</dd>
+				}
+			</dl>
 			<!-- Executive summary -->
 			<h2 class="text-xl font-serif mt-6 mb-4">Executive Summary</h2>
 			<div>

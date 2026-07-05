@@ -129,6 +129,14 @@ templ stringField(name string, value string, opts ...formOption) {
 	</div>
 }
 
+templ dateField(name string, value string, opts ...formOption) {
+	{{ cfg := applyformOptions(opts) }}
+	<div class="form-control mb-2">
+		@fieldLabel(cfg)
+		<input name={ name } type="date" class="input w-full" value={ value }/>
+	</div>
+}
+
 templ passwordField(name string, value string, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
 	<div class="form-control mb-2">

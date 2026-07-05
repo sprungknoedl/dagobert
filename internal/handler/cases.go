@@ -52,8 +52,10 @@ func (h *Handler) CaseExport(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Name", "Severity", "Classification", "Closed", "Outcome", "Summary", "Custom"})
+	cw.Write([]string{"ID", "Name", "Severity", "Classification", "Closed", "Outcome", "Summary", "Opened", "Closed at", "Custom"})
 	for _, e := range list {
+		openedAt := fp.If(!e.OpenedAt.IsZero(), e.OpenedAt.Format("2006-01-02"), "")
+		closedAt := fp.If(!e.ClosedAt.IsZero(), e.ClosedAt.Format("2006-01-02"), "")
 		cw.Write([]string{
 			e.ID,
 			e.Name,
@@ -62,6 +64,8 @@ func (h *Handler) CaseExport(w http.ResponseWriter, r *http.Request) {
 			strconv.FormatBool(e.Closed),
 			e.Outcome,
 			e.Summary,
+			openedAt,
+			closedAt,
 			e.Custom.JSON(),
 		})
 	}
@@ -72,7 +76,7 @@ func (h *Handler) CaseExport(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CaseImport(w http.ResponseWriter, r *http.Request) {
 	uri := "/"
 	h.Store.Transaction(func(tx *model.Store) error {
-		return ImportCSV(tx, h.ACL, w, r, uri, 8, func(rec []string) {
+		return ImportCSV(tx, h.ACL, w, r, uri, 10, func(rec []string) {
 			closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
 			if err != nil {
 				Warn(w, r, err)
@@ -80,8 +84,33 @@ func (h *Handler) CaseImport(w http.ResponseWriter, r *http.Request) {
 			}
 
 			var custom model.Custom
-			if len(rec) > 7 {
-				custom.Scan(rec[7])
+			custom.Scan(rec[9])
+
+			var openedAt, closedAt model.Date
+			if rec[7] != "" {
+				t, err := time.Parse("2006-01-02", rec[7])
+				if err != nil {
+					Warn(w, r, err)
+					return
+				}
+				openedAt = model.Date(t)
+			}
+			if rec[8] != "" {
+				t, err := time.Parse("2006-01-02", rec[8])
+				if err != nil {
+					Warn(w, r, err)
+					return
+				}
+				closedAt = model.Date(t)
+			}
+
+			if openedAt.IsZero() {
+				openedAt = model.Date(time.Now())
+			}
+			if closed && closedAt.IsZero() {
+				closedAt = model.Date(time.Now())
+			} else if !closed {
+				closedAt = model.Date{}
 			}
 
 			obj := model.Case{
@@ -93,6 +122,8 @@ func (h *Handler) CaseImport(w http.ResponseWriter, r *http.Request) {
 				Outcome:        rec[5],
 				Summary:        rec[6],
 				Custom:         custom,
+				OpenedAt:       openedAt,
+				ClosedAt:       closedAt,
 			}
 
 			if err = tx.SaveCase(obj); err != nil {
@@ -201,6 +232,21 @@ func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
 	dto.Custom = CollectCustom(r)
 
 	new := dto.ID == "new"
+
+	// Auto-fill only fills blanks — never overwrites a value the user entered.
+	// Dates are irrelevant for templates, so they're left untouched there.
+	if !dto.IsTemplate {
+		if new && dto.OpenedAt.IsZero() {
+			dto.OpenedAt = model.Date(time.Now())
+		}
+		if dto.Closed {
+			if dto.ClosedAt.IsZero() {
+				dto.ClosedAt = model.Date(time.Now())
+			}
+		} else {
+			dto.ClosedAt = model.Date{}
+		}
+	}
 
 	// Soft-confirm on an open->closed transition when outstanding items remain.
 	// The user can always override via "Close anyway" (Confirm=yes); this never

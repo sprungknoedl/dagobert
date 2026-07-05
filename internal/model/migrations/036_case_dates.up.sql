@@ -1,0 +1,2 @@
+ALTER TABLE cases ADD COLUMN opened_at DATETIME;
+ALTER TABLE cases ADD COLUMN closed_at DATETIME;
