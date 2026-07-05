@@ -1,7 +1,7 @@
 .claude
 .DS_Store
 *_templ.go
-app/assets/daisyui*.js
+internal/assets/daisyui*.js
 bin
 CLAUDE.md
 dagobert
