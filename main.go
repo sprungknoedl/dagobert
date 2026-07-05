@@ -7,8 +7,8 @@ import (
 
 	"github.com/lmittmann/tint"
 	"github.com/spf13/cobra"
-	"github.com/sprungknoedl/dagobert/app/cli"
-	"github.com/sprungknoedl/dagobert/app/handler"
+	"github.com/sprungknoedl/dagobert/internal/cli"
+	"github.com/sprungknoedl/dagobert/internal/handler"
 )
 
 type Configuration struct {

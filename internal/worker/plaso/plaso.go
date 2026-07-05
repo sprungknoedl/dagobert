@@ -1,0 +1,132 @@
+package plaso
+
+import (
+	"cmp"
+	"context"
+	"errors"
+	"fmt"
+	"log"
+	"log/slog"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"slices"
+	"time"
+
+	"github.com/mattn/go-shellwords"
+	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/worker/workerutils"
+	"github.com/sprungknoedl/dagobert/pkg/tty"
+)
+
+var DefaultProfile = "win7"
+var AllowedProfiles = []string{"win7", "linux", "macos", "mft"}
+
+type Module struct {
+	args []string
+}
+
+func NewModule() *Module {
+	return &Module{}
+}
+
+func (m *Module) Name() string {
+	return "Plaso"
+}
+
+func (m *Module) Description() string {
+	return "Plaso (Plaso Langar Að Safna Öllu), or super timeline all the things, is a Python-based engine used by several tools for automatic creation of timelines."
+}
+
+func (m *Module) Supports(obj any) bool {
+	if e, ok := obj.(model.Evidence); ok {
+		return filepath.Ext(e.Name) == ".zip"
+	}
+	return false
+}
+
+func (m *Module) Validate() (model.Module, error) {
+	var err error
+	_, m.args, err = shellwords.ParseWithEnvs(os.Getenv("MODULE_PLASO"))
+	if err != nil {
+		err = fmt.Errorf("invalid command in MODULE_PLASO: %w", err)
+		slog.Warn("validating module prerequisites failed", "module", "plaso", "err", err)
+		return nil, err
+	}
+	if len(m.args) < 1 {
+		slog.Info("module disabled, not configured", "module", "plaso")
+		return nil, errors.New("MODULE_PLASO is not set, module disabled")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	slog.Info("validating module prerequisites", "module", "plaso")
+	cmd := exec.CommandContext(ctx, m.args[0], append(m.args[1:], "-V")...)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		err = fmt.Errorf("command %q is not runnable: %w", m.args[0], err)
+		slog.Warn("validating module prerequisites failed", "module", "plaso", "err", err)
+		os.Stderr.Write(out)
+		return nil, err
+	}
+
+	return m, nil
+}
+
+func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) error {
+	evidence, err := workerutils.GuardEvidenceRun(m, job)
+	if err != nil {
+		return err
+	}
+
+	src := workerutils.Filepath(evidence)
+	dst := src + ".plaso"
+
+	parser := cmp.Or(job.Settings["profile"], DefaultProfile)
+	if !slices.Contains(AllowedProfiles, parser) {
+		parser = DefaultProfile
+	}
+
+	cmd := exec.CommandContext(ctx, m.args[0], append(m.args[1:],
+		"--unattended",
+		"--parsers", parser,
+		"--output-format", "dynamic",
+		"--source", src,
+		"--storage-file", dst,
+		"--write", dst+".csv",
+	)...)
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	log.Printf("|%s| running command: %s", tty.Cyan(" DEB "), cmd.Args)
+	if err := cmd.Run(); err != nil {
+		// try to clean up
+		os.Remove(dst)
+		os.Remove(dst + ".csv")
+		return err
+	}
+
+	return store.Transaction(func(tx *model.Store) error {
+		if err := workerutils.AddFromFS(tx, model.Evidence{
+			CaseID: evidence.CaseID,
+			Type:   "Other",
+			Name:   filepath.Base(dst),
+			Source: evidence.Source,
+			Notes:  "module-plaso",
+		}); err != nil {
+			return err
+		}
+
+		if err := workerutils.AddFromFS(tx, model.Evidence{
+			CaseID: evidence.CaseID,
+			Type:   "Other",
+			Name:   filepath.Base(dst) + ".csv",
+			Source: evidence.Source,
+			Notes:  "module-plaso",
+		}); err != nil {
+			return err
+		}
+		return nil
+	})
+}

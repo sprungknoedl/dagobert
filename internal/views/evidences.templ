@@ -1,0 +1,140 @@
+package views
+
+import (
+	"fmt"
+	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+	"math"
+	"time"
+)
+
+func humanizeSize(s int64) string {
+	sizes := []string{"B", "kB", "MB", "GB", "TB", "PB", "EB"}
+
+	if s < 10 {
+		return fmt.Sprintf("%d B", s)
+	}
+	e := math.Floor(math.Log(float64(s)) / math.Log(1000))
+	suffix := sizes[int(e)]
+	val := math.Floor(float64(s)/math.Pow(1000, e)*10+0.5) / 10
+	f := "%.0f %s"
+	if val < 10 {
+		f = "%.1f %s"
+	}
+
+	return fmt.Sprintf(f, val, suffix)
+}
+
+templ EvidencesMany(env Env, rows []model.Evidence) {
+	@layout() {
+		@list(env, "Evidences", navSubtitle("Files and artefacts collected for forensic analysis")) {
+			<table class="table table-default" data-default-sort="value-1">
+				<thead>
+					<tr>
+						<th data-sort="value-0" class="sort px-3 py-4 text-left">Type</th>
+						<th data-sort="value-1" class="sort px-3 py-4 text-left">Name</th>
+						<th data-sort="value-2" class="sort px-3 py-4 text-left">Hash</th>
+						<th data-sort="value-3" class="sort px-3 py-4 text-left">Size</th>
+						<th data-sort="value-4" class="sort px-3 py-4 text-left">Starts at</th>
+						<th data-sort="value-5" class="sort px-3 py-4 text-left">Ends at</th>
+						<th data-sort="value-6" class="sort px-3 py-4 text-left">Source</th>
+						<th data-sort="value-7" class="sort px-3 py-4 text-left">Notes</th>
+						<th style="width: 7rem"></th>
+					</tr>
+				</thead>
+				<tbody class="values">
+					if len(rows) == 0 {
+						@emptyTable(env, "Nothing collected yet.", "Upload the first piece of collected evidence — a memory image, disk dump, log archive, or PCAP. Dagobert will calculate the hash automatically on upload.")
+					} else {
+						for _, row := range rows {
+							<tr class="hover">
+								<td class="value-0 truncate">
+									@enum(env.Enums.EvidenceTypes, row.Type)
+								</td>
+								<td class="value-1" data-search={ row.Name }>
+									{ row.Name }
+									if row.Password != "" {
+										<i class="ph ph-4 ph-lock text-base-content/40" title="Archive password stored"></i>
+									}
+								</td>
+								<td class="value-2 font-mono text-xs" data-search={ row.Hash }>{ row.Hash } </td>
+								<td class="value-3" data-search={ row.Size }>{ humanizeSize(row.Size) } </td>
+								<td class="value-4" data-search={ fp.If(row.StartsAt.IsZero(), "", row.StartsAt.Format(time.RFC3339)) }>{ fp.If(row.StartsAt.IsZero(), "", row.StartsAt.Format(time.RFC3339)) } </td>
+								<td class="value-5" data-search={ fp.If(row.EndsAt.IsZero(), "", row.EndsAt.Format(time.RFC3339)) }>{ fp.If(row.EndsAt.IsZero(), "", row.EndsAt.Format(time.RFC3339)) } </td>
+								<td class="value-6" data-search={ row.Source }>{ row.Source } </td>
+								<td class="value-7" data-search={ row.Notes }>{ row.Notes } </td>
+								<td class="text-right">
+									<div class="join">
+										if url, ok := env.Allowed("GET", env.Route+row.ID+"/download"); ok {
+											@externalBtn(url, "") {
+												<i class="ph ph-5 ph-download-simple"></i>
+											}
+										}
+										if url, ok := env.Allowed("POST", env.Route+row.ID+"/run"); ok {
+											@actionBtn(env, "GET", url) {
+												<i class="ph ph-5 ph-lightning"></i>
+											}
+										}
+										@defaultActionBtns(env, env.Route+row.ID)
+									</div>
+								</td>
+							</tr>
+						}
+					}
+				</tbody>
+			</table>
+		}
+	}
+}
+
+templ EvidencesOne(env Env, obj model.Evidence, vr valid.ValidationError) {
+	{{ uri := "/cases/" + obj.CaseID + "/evidences/" + obj.ID }}
+	{{ title := fp.If(obj.ID == "new", "Add evidence", "Edit evidence") }}
+	@form(env, uri, title, enctype("multipart/form-data")) {
+		@hiddenField("ID", obj.ID)
+		@hiddenField("CaseID", obj.CaseID)
+		@selectField("Type", obj.Type, env.Enums.EvidenceTypes, required(), withLabel("Type"), withError(vr["Type"]))
+		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
+		if obj.ID == "new" || vr["File"].Invalid {
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">
+					File
+					@validationError(vr["File"])
+				</label>
+				if obj.ID == "new" {
+					<input name="File" type="file" class="file-input w-full" data-fill="Name" data-hash="true"/>
+				}
+			</div>
+		}
+		<div class="form-control mb-2">
+			<label class="label justify-start gap-2">
+				Hash
+				if obj.Size == 0 {
+					<span class="text-xs">(will be calculated for uploaded files)</span>
+				}
+			</label>
+			<input disabled?={ obj.Size == 0 } name="Hash" type="text" class="input w-full" value={ obj.Hash }/>
+		</div>
+		@passwordField("Password", obj.Password, withLabel("File password"),
+			withHint("Remembers the file password for analysts. Leave blank to remove."))
+		<div class="form-control mb-2">
+			<label class="label justify-start gap-2">
+				Starts at
+				@validationError(vr["StartsAt"])
+			</label>
+			<input name="StartsAt" type="datetime-local" class="input w-full" value={ fp.If(obj.StartsAt.IsZero(), "", obj.StartsAt.Format("2006-01-02T15:04")) }/>
+		</div>
+		<div class="form-control mb-2">
+			<label class="label justify-start gap-2">
+				Ends at
+				@validationError(vr["EndsAt"])
+			</label>
+			<input name="EndsAt" type="datetime-local" class="input w-full" value={ fp.If(obj.EndsAt.IsZero(), "", obj.EndsAt.Format("2006-01-02T15:04")) }/>
+		</div>
+		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]), withHint("Where this evidence came from — system name, custodian, or acquisition tool used."))
+		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
+		@customAttributes(env, "Evidence", obj.Custom)
+		@requiredFootnote()
+	}
+}

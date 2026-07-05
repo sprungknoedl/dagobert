@@ -1,0 +1,113 @@
+package views
+
+import (
+	"strings"
+
+	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+)
+
+var customEntities = []string{"Case", "Asset", "Event", "Evidence", "Indicator", "Malware", "Note", "Task"}
+var customTypes = []string{"string", "textfield", "checkbox", "date", "datetime", "select"}
+
+// customTypeInfo maps each hardcoded input type to its Phosphor icon and the
+// human-readable label shown to users in both the list and the edit form.
+// The stored/submitted value stays the raw key.
+var customTypeInfo = map[string]struct{ Icon, Label string }{
+	"string":    {"text-align-left", "Text"},
+	"textfield": {"file-text", "Text Area"},
+	"checkbox":  {"check-circle", "Checkbox"},
+	"date":      {"calendar", "Date"},
+	"datetime":  {"clock", "Date & Time"},
+	"select":    {"caret-up-down", "Dropdown"},
+}
+
+templ SettingsCustomMany(env Env) {
+	@layout() {
+		@list(env, "Custom Attributes", navSettings(), navHideAdd(), navHideExport(), navHideImport(), navHideSearch(), navSubtitle("Extra fields captured on case objects")) {
+			<table class="table table-default">
+				<thead>
+					<tr>
+						<th class="px-3 py-4 text-left">Rank</th>
+						<th class="px-3 py-4 text-left">Label</th>
+						<th class="px-3 py-4 text-left">Type</th>
+						<th class="px-3 py-4 text-left">Options</th>
+						<th style="width: 7rem"></th>
+					</tr>
+				</thead>
+				for _, entity := range customEntities {
+					@customAttributeList(env, entity)
+				}
+			</table>
+		}
+	}
+}
+
+templ SettingsCustomOne(env Env, obj model.CustomAttribute, vr valid.ValidationError) {
+	{{ uri := "/settings/custom/" + obj.ID }}
+	{{ title := fp.If(obj.ID == "new", "Add custom attribute", "Edit custom attribute") }}
+	@form(env, uri, title) {
+		@hiddenField("ID", obj.ID)
+		@hiddenField("Entity", obj.Entity)
+		@numberField("Rank", obj.Rank, withLabel("Rank"), withError(vr["Rank"]))
+		@stringField("Label", obj.Label, required(), withLabel("Label"), withError(vr["Label"]), withHint("Used verbatim as the field label, the storage key, and the report-template accessor (e.g. {{ .Custom.Label }})."))
+		<div class="form-control mb-2">
+			<label class="label justify-start gap-2">
+				Type
+				@validationError(vr["Type"])
+			</label>
+			<select name="Type" class="select w-full" data-onchange="toggleCustomOptions">
+				for _, t := range customTypes {
+					<option value={ t } selected?={ obj.Type == t }>{ customTypeInfo[t].Label }</option>
+				}
+			</select>
+		</div>
+		<div id="custom-options" class="form-control mb-2" style={ fp.If(obj.Type == "select", "", "display:none") }>
+			<label class="label justify-start gap-2">
+				Options
+				@validationError(vr["Options"])
+			</label>
+			<input name="Options" type="text" class="input w-full" value={ strings.Join(obj.Options, ",") } placeholder="comma,separated,values"/>
+		</div>
+		@requiredFootnote()
+	}
+}
+
+// customType renders a hardcoded input type as a Phosphor icon + human-readable
+// label (see customTypeInfo). Unknown types fall back to the raw value.
+templ customType(t string) {
+	if m, ok := customTypeInfo[t]; ok {
+		<span class="inline-flex items-center gap-2"><i class={ "ph ph-5 ph-" + m.Icon }></i> { m.Label }</span>
+	} else {
+		{ t }
+	}
+}
+
+templ customAttributeList(env Env, entity string) {
+	{{ rows := fp.Filter(env.CustomAttributes, func(c model.CustomAttribute) bool { return c.Entity == entity }) }}
+	@settingsCategoryBand(env, entity, "/settings/custom/new", "?entity="+entity)
+	<tbody class="values">
+		if len(rows) == 0 {
+			<tr>
+				<td colspan="100" class="py-4 text-center text-base-content/50">
+					No custom attributes defined for this object type yet.
+				</td>
+			</tr>
+		} else {
+			for _, row := range rows {
+				<tr class="hover">
+					<td>{ row.Rank } </td>
+					<td>{ row.Label } </td>
+					<td>@customType(row.Type)</td>
+					<td>{ strings.Join(row.Options, ", ") } </td>
+					<td class="text-right">
+						<div class="join">
+							@defaultActionBtns(env, env.Route+row.ID)
+						</div>
+					</td>
+				</tr>
+			}
+		}
+	</tbody>
+}

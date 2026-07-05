@@ -1,0 +1,91 @@
+package views
+
+import (
+	"os"
+
+	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+)
+
+templ Login(errmsg string) {
+	@layout() {
+		<div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+			<div class="sm:mx-auto sm:w-full sm:max-w-sm text-neutral text-center">
+				@plateGentleman("w-full max-w-xs mx-auto mb-5")
+				<div class="m-4 mx-auto text-5xl font-serif font-semibold">[dagobert]</div>
+				<p class="font-serif italic text-base-content/60">incident response, documented.</p>
+			</div>
+			<div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+				<form action="/auth/login" method="POST" class="space-y-6">
+					if errmsg != "" {
+						<p class="text-error gap-2"><i class="ph ph-warning-circle"></i> { errmsg }</p>
+					}
+					<div class="form-control mb-4">
+						<label class="label justify-start gap-2"><i class="ph ph-user"></i> E-Mail</label>
+						<input name="email" required type="email" autocomplete="email" class="input w-full"/>
+					</div>
+					<div class="form-control mb-4">
+						<label class="label justify-start gap-2"><i class="ph ph-lock"></i> Password</label>
+						<input name="password" required type="password" autocomplete="current-password" class="input w-full"/>
+					</div>
+					<div class="flex gap-2 items-center">
+						<button type="submit" class="btn btn-neutral w-full">Sign in</button>
+					</div>
+					if os.Getenv("OIDC_ENABLED") == "true" {
+						@fleuron("mt-6 mb-6")
+						<div class="flex gap-2 items-center">
+							<a href="/auth/oidc" class="btn btn-neutral w-full"><i class="ph ph-key"></i> Sign in with SSO</a>
+						</div>
+					}
+				</form>
+			</div>
+		</div>
+	}
+}
+
+templ ChangePassword(user *model.User, vr valid.ValidationError) {
+	@layout() {
+		<main>
+			<form method="post" action="/auth/changepassword" up-submit>
+				<!-- Modal header -->
+				<h3 class="font-bold text-lg mb-4">
+					Change password
+				</h3>
+				<!-- Modal body -->
+				<div class="mb-4">
+					<input name="ID" type="hidden" value={ user.ID }/>
+					<div class="form-control mb-4">
+						<label class="label justify-start gap-2">User</label>
+						<input disabled type="text" class="input w-full" value={ user.String() }/>
+					</div>
+					<div class="form-control mb-4">
+						<label class="label justify-start gap-2">
+							Current password
+							@validationError(vr["currentPassword"])
+						</label>
+						<input name="currentPassword" required type="password" autocomplete="current-password" class="input w-full"/>
+					</div>
+					<div class="form-control mb-4">
+						<label class="label justify-start gap-2">
+							New password
+							@validationError(vr["newPassword"])
+						</label>
+						<input name="newPassword" required type="password" autocomplete="new-password" class="input w-full"/>
+					</div>
+					<div class="form-control mb-4">
+						<label class="label justify-start gap-2">
+							Confirm password
+							@validationError(vr["confirmPassword"])
+						</label>
+						<input name="confirmPassword" required type="password" autocomplete="new-password" class="input w-full"/>
+					</div>
+				</div>
+				<!-- Modal footer -->
+				<div class="flex gap-2 items-center">
+					<button type="submit" class="btn btn-neutral"><i class="ph ph-key"></i> Change</button>
+					<a class="btn" up-dismiss>Cancel </a>
+				</div>
+			</form>
+		</main>
+	}
+}

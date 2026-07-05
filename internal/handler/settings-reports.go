@@ -1,0 +1,184 @@
+package handler
+
+import (
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+
+	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/views"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+)
+
+func (h *Handler) ListReports(w http.ResponseWriter, r *http.Request) {
+	reports, err := h.Store.ListReports()
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	Render(w, r, http.StatusOK, views.SettingsReportsMany(h.Env(r), reports))
+}
+
+func (h *Handler) EditReport(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	obj := model.Report{ID: id}
+	if id != "new" {
+		var err error
+		obj, err = h.Store.GetReport(id)
+		if err != nil {
+			Err(w, r, err)
+			return
+		}
+	}
+
+	Render(w, r, http.StatusOK, views.SettingsReportsOne(h.Env(r), obj, valid.ValidationError{}))
+}
+
+func (h *Handler) SaveReport(w http.ResponseWriter, r *http.Request) {
+	// decode form
+	dto := model.Report{ID: r.PathValue("id")}
+	err := Decode(h.Store, r, &dto, ValidateReport)
+	if vr, ok := err.(valid.ValidationError); err != nil && ok {
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsReportsOne(h.Env(r), dto, vr))
+		return
+	} else if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	// get handle to form file
+	fr, fh, err := r.FormFile("File")
+	if err != nil && err != http.ErrMissingFile {
+		Warn(w, r, err)
+		return
+	}
+
+	// process file if present
+	new := dto.ID == "new"
+	fileUpload := fh != nil && fh.Size > 0
+	if fileUpload {
+		// prepare location for Report storage
+		dst := filepath.Join("files", BucketReportTemplates, dto.Name)
+		err = os.MkdirAll(filepath.Dir(dst), 0755)
+		if err != nil {
+			Err(w, r, err)
+			return
+		}
+
+		// create or replace file; without O_TRUNC a smaller upload would
+		// leave the tail of the previous template behind, corrupting the zip
+		existed := false
+		if _, err := os.Stat(dst); err == nil {
+			existed = true
+		}
+		fw, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+		if err != nil {
+			Err(w, r, err)
+			return
+		}
+
+		// write file
+		_, err = io.Copy(fw, fr)
+		fw.Close()
+		if err != nil {
+			Err(w, r, err)
+			return
+		}
+
+		// validate the uploaded template so marker reconstruction, hoisting
+		// and template syntax errors surface now instead of at report time
+		if _, err := LoadTemplate(dto.Name); err != nil {
+			if !existed {
+				os.Remove(dst)
+			}
+			Warn(w, r, err)
+			return
+		}
+	}
+
+	// cleanup old file (if new report was uploaded)
+	if fileUpload && !new {
+		obj, err := h.Store.GetReport(dto.ID)
+		if err != nil {
+			Err(w, r, err)
+			return
+		}
+
+		if obj.Name != dto.Name {
+			path := filepath.Join("files", BucketReportTemplates, obj.Name)
+			err = os.Remove(path)
+			if err != nil {
+				Err(w, r, err)
+				return
+			}
+		}
+	}
+
+	// rename file
+	if !fileUpload && !new {
+		obj, err := h.Store.GetReport(dto.ID)
+		if err != nil {
+			Err(w, r, err)
+			return
+		}
+
+		if obj.Name != dto.Name {
+			src := filepath.Join("files", BucketReportTemplates, obj.Name)
+			dst := filepath.Join("files", BucketReportTemplates, dto.Name)
+			err = os.Rename(src, dst)
+			if err != nil {
+				Err(w, r, err)
+				return
+			}
+		}
+	}
+
+	// finally save database object
+	dto.ID = fp.If(new, fp.Random(10), dto.ID)
+	if err := h.Store.SaveReport(dto); err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	RedirectAfterSave(w, r, "/settings/reports/")
+}
+
+func (h *Handler) DownloadReport(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	obj, err := h.Store.GetReport(id)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", obj.Name))
+	w.WriteHeader(http.StatusOK)
+	http.ServeFile(w, r, filepath.Join("files", "templates", obj.Name))
+}
+
+func (h *Handler) DeleteReport(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if r.URL.Query().Get("confirm") != "yes" {
+		uri := fmt.Sprintf("/settings/reports/%s?confirm=yes", id)
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
+		return
+	}
+
+	// try to delete file from disk
+	obj, err := h.Store.GetReport(id)
+	if err == nil {
+		os.Remove(filepath.Join("files", "templates", obj.Name))
+	}
+
+	err = h.Store.DeleteReport(id)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	http.Redirect(w, r, "/settings/reports/", http.StatusSeeOther)
+}
