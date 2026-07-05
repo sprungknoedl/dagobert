@@ -12,15 +12,14 @@ import (
 	"github.com/a-h/templ"
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/internal/modules/utils"
-	vt "github.com/sprungknoedl/dagobert/pkg/virustotal"
 )
 
 type Module struct {
-	client *vt.Client
+	client *Client
 }
 
 func NewModule() *Module {
-	return &Module{client: vt.NewClient(vt.Config{APIKey: os.Getenv("VIRUSTOTAL_APIKEY")})}
+	return &Module{client: NewClient(Config{APIKey: os.Getenv("VIRUSTOTAL_APIKEY")})}
 }
 
 func (m *Module) Name() string {

@@ -12,15 +12,14 @@ import (
 	"github.com/a-h/templ"
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/internal/modules/utils"
-	ha "github.com/sprungknoedl/dagobert/pkg/hybridanalysis"
 )
 
 type Module struct {
-	client *ha.Client
+	client *Client
 }
 
 func NewModule() *Module {
-	return &Module{client: ha.NewClient(ha.Config{APIKey: os.Getenv("HYBRIDANALYSIS_APIKEY")})}
+	return &Module{client: NewClient(Config{APIKey: os.Getenv("HYBRIDANALYSIS_APIKEY")})}
 }
 
 func (m *Module) Name() string { return "Hybrid Analysis" }
