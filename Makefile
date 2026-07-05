@@ -19,10 +19,10 @@ DAISYUI_THEME_SHA        = 9af858352be136881269f7ccf4c2495eb817cc35d09eef5feb179
 
 # Export validation: external validators for the OpenIOC / STIX indicator
 # exports. The OpenIOC 1.1 XSD is vendored under pkg/openioc/testdata; the STIX
-# validator and its (submodule-pinned) JSON schemas are bootstrapped into bin/.
+# validator and its (submodule-pinned) JSON schemas are bootstrapped into tmp/.
 STIX_VALIDATOR_VERSION = 3.3.1
 STIX_SCHEMAS_SHA       = c4f8d589acf2bdb3783655c89e0ffb6e150006ae
-STIX_VENV              = bin/stix-validator-venv
+STIX_VENV              = tmp/stix-validator-venv
 STIX_READY             = $(STIX_VENV)/.ready-$(STIX_VALIDATOR_VERSION)-$(STIX_SCHEMAS_SHA)
 
 UNAME_S := $(shell uname -s)
@@ -44,7 +44,7 @@ else
   SHA256 = sha256sum
 endif
 
-TAILWIND_BIN = bin/tailwindcss-$(TAILWIND_VERSION)
+TAILWIND_BIN = tmp/tailwindcss-$(TAILWIND_VERSION)
 TAILWIND_SHA = $(TAILWIND_SHA_$(TW_OS)_$(TW_ARCH))
 
 # verify,<file>,<expected-sha256>: fail closed on a supply-chain mismatch. The
@@ -58,33 +58,33 @@ endef
 build: build-web build-go
 
 $(TAILWIND_BIN):
-	mkdir -p bin
+	mkdir -p tmp
 	wget -O $@ https://github.com/tailwindlabs/tailwindcss/releases/download/v$(TAILWIND_VERSION)/tailwindcss-$(TW_OS)-$(TW_ARCH)
 	$(call verify,$@,$(TAILWIND_SHA))
 	chmod +x $@
 
-bin/daisyui-$(DAISYUI_VERSION).js:
-	mkdir -p bin
+tmp/daisyui-$(DAISYUI_VERSION).js:
+	mkdir -p tmp
 	wget -O $@ https://github.com/saadeghi/daisyui/releases/download/v$(DAISYUI_VERSION)/daisyui.js
 	$(call verify,$@,$(DAISYUI_SHA))
 
-bin/daisyui-theme-$(DAISYUI_VERSION).js:
-	mkdir -p bin
+tmp/daisyui-theme-$(DAISYUI_VERSION).js:
+	mkdir -p tmp
 	wget -O $@ https://github.com/saadeghi/daisyui/releases/download/v$(DAISYUI_VERSION)/daisyui-theme.js
 	$(call verify,$@,$(DAISYUI_THEME_SHA))
 
 # Unversioned copies so the @plugin paths in dagobert.css stay version-free.
-internal/assets/daisyui.js: bin/daisyui-$(DAISYUI_VERSION).js
+internal/assets/daisyui.js: tmp/daisyui-$(DAISYUI_VERSION).js
 	cp $< $@
 
-internal/assets/daisyui-theme.js: bin/daisyui-theme-$(DAISYUI_VERSION).js
+internal/assets/daisyui-theme.js: tmp/daisyui-theme-$(DAISYUI_VERSION).js
 	cp $< $@
 
 build-web: $(TAILWIND_BIN) internal/assets/daisyui.js internal/assets/daisyui-theme.js
 	$(TAILWIND_BIN) -m -i internal/assets/dagobert.css -o public/assets/dagobert.css
 
 clean:
-	rm -f bin/tailwindcss-* bin/daisyui-*.js
+	rm -f tmp/tailwindcss-* tmp/daisyui-*.js
 	rm -f internal/assets/daisyui.js internal/assets/daisyui-theme.js
 	rm -rf $(STIX_VENV)
 
@@ -134,8 +134,8 @@ $(STIX_READY):
 	touch $@
 
 docker:
-	docker build . -f cfg/Dockerfile -t sprungknoedl/dagobert
-	docker build . -f cfg/Dockerfile-full -t sprungknoedl/dagobert-full
+	docker build . -f dagobert-min.dockerfile -t sprungknoedl/dagobert
+	docker build . -f dagobert-full.dockerfile -t sprungknoedl/dagobert-full
 
 run:
-	air -c cfg/air.toml
+	air

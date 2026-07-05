@@ -22,7 +22,7 @@ RUN apt update && apt install -y docker.io
 COPY --from=app /src/dagobert /home/sprungknoedl/dagobert
 COPY --from=app /src/mitre /home/sprungknoedl/mitre
 COPY --from=app /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY cfg/docker-entrypoint.sh /home/sprungknoedl/docker-entrypoint.sh
+COPY docker-entrypoint.sh /home/sprungknoedl/docker-entrypoint.sh
 
 RUN useradd -l -u 1000 -g users sprungknoedl
 RUN chmod +x /home/sprungknoedl/docker-entrypoint.sh

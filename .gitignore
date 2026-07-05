@@ -2,7 +2,6 @@
 .DS_Store
 *_templ.go
 internal/assets/daisyui*.js
-bin
 CLAUDE.md
 dagobert
 dagobert.env
