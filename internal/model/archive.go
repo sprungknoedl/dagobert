@@ -148,7 +148,9 @@ func (store *Store) ImportCaseArchive(arch CaseArchive) error {
 		for _, m := range arch.Malware {
 			// SaveMalware derives AssetID from Asset.ID, so carry the id through
 			// the stub relation to preserve the malware->asset reference
-			m.Asset = Asset{ID: m.AssetID}
+			if m.AssetID != nil {
+				m.Asset = Asset{ID: *m.AssetID}
+			}
 			if err := tx.SaveMalware(arch.Case.ID, m); err != nil {
 				return err
 			}
