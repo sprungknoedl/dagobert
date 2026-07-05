@@ -17,6 +17,7 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/openioc"
 	"github.com/sprungknoedl/dagobert/pkg/stix"
+	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
@@ -231,35 +232,48 @@ func (h *Handler) IndicatorImportTimesketch(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	for _, value := range sketch.Attributes["intelligence"].Values.Data {
-		lookup := map[string]string{
-			"fs_path":     "Path",
-			"hostname":    "Domain",
-			"ipv4":        "IP",
-			"hash_sha256": "Hash",
-			"hash_sha1":   "Hash",
-			"hash_md5":    "Hash",
-			"other":       "Other",
-		}
-
-		obj := model.Indicator{
-			ID:     fp.Random(10),
-			CaseID: cid,
-			Type:   lookup[value.Type],
-			Value:  value.IOC,
-			Source: "timesketch",
-			Status: "Under investigation",
-			TLP:    "TLP:RED",
-		}
-
-		if err = h.Store.SaveIndicator(cid, obj, false); err != nil {
-			Err(w, r, err)
-			return
-		}
+	if err := saveTimesketchIndicators(h.Store, cid, sketch.Attributes["intelligence"].Values.Data); err != nil {
+		Err(w, r, err)
+		return
 	}
 
 	uri := fmt.Sprintf("/cases/%s/indicators/", cid)
 	http.Redirect(w, r, uri, http.StatusSeeOther)
+}
+
+// tsIndicatorTypes maps Timesketch intelligence types to dagobert indicator types.
+var tsIndicatorTypes = map[string]string{
+	"fs_path":     "Path",
+	"hostname":    "Domain",
+	"ipv4":        "IP",
+	"hash_sha256": "Hash",
+	"hash_sha1":   "Hash",
+	"hash_md5":    "Hash",
+	"other":       "Other",
+}
+
+// saveTimesketchIndicators maps a sketch's intelligence attributes to case
+// indicators and saves them in one transaction, so a failed import does not
+// leave a partial batch behind.
+func saveTimesketchIndicators(store *model.Store, cid string, values []timesketch.Intelligence) error {
+	return store.Transaction(func(tx *model.Store) error {
+		for _, value := range values {
+			obj := model.Indicator{
+				ID:     fp.Random(10),
+				CaseID: cid,
+				Type:   tsIndicatorTypes[value.Type],
+				Value:  value.IOC,
+				Source: "timesketch",
+				Status: "Under investigation",
+				TLP:    "TLP:RED",
+			}
+
+			if err := tx.SaveIndicator(cid, obj, false); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
 }
 
 func (h *Handler) IndicatorEdit(w http.ResponseWriter, r *http.Request) {
