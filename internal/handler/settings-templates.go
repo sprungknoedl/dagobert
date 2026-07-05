@@ -31,7 +31,7 @@ func (h *Handler) EditTemplate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.CasesOne(h.Env(r), obj, nil, "", false, nil, "", valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.CasesOne(h.Env(r), obj, valid.ValidationError{}))
 }
 
 func (h *Handler) SaveTemplate(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +39,7 @@ func (h *Handler) SaveTemplate(w http.ResponseWriter, r *http.Request) {
 	err := Decode(h.Store, r, &dto, ValidateCase)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
 		dto.IsTemplate = true
-		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(h.Env(r), dto, nil, "", false, nil, "", vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(h.Env(r), dto, vr))
 		return
 	} else if err != nil {
 		Warn(w, r, err)
