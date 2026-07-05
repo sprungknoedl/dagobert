@@ -10,28 +10,28 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-func (ctrl SettingsCtrl) ListEnums(w http.ResponseWriter, r *http.Request) {
-	Render(w, r, http.StatusOK, views.SettingsEnumsMany(Env(ctrl, r)))
+func (h *Handler) ListEnums(w http.ResponseWriter, r *http.Request) {
+	Render(w, r, http.StatusOK, views.SettingsEnumsMany(h.Env(r)))
 }
 
-func (ctrl SettingsCtrl) EditEnum(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) EditEnum(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cat := r.URL.Query().Get("category")
-	obj, err := GetObject(id, model.Enum{ID: id, Category: cat}, ctrl.Store().GetEnum)
+	obj, err := GetObject(id, model.Enum{ID: id, Category: cat}, h.Store.GetEnum)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsEnumsOne(Env(ctrl, r), obj, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.SettingsEnumsOne(h.Env(r), obj, valid.ValidationError{}))
 }
 
-func (ctrl SettingsCtrl) SaveEnum(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) SaveEnum(w http.ResponseWriter, r *http.Request) {
 	// deocde form
 	dto := model.Enum{ID: r.PathValue("id")}
-	err := Decode(ctrl.Store(), r, &dto, ValidateEnum)
+	err := Decode(h.Store, r, &dto, ValidateEnum)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.SettingsEnumsOne(Env(ctrl, r), dto, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsEnumsOne(h.Env(r), dto, vr))
 		return
 	} else if err != nil {
 		Err(w, r, err)
@@ -41,7 +41,7 @@ func (ctrl SettingsCtrl) SaveEnum(w http.ResponseWriter, r *http.Request) {
 	// save database object
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)
-	if err := ctrl.Store().SaveEnum(dto); err != nil {
+	if err := h.Store.SaveEnum(dto); err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -49,7 +49,7 @@ func (ctrl SettingsCtrl) SaveEnum(w http.ResponseWriter, r *http.Request) {
 	RedirectAfterSave(w, r, "/settings/enums/")
 }
 
-func (ctrl SettingsCtrl) DeleteEnum(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteEnum(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/enums/%s?confirm=yes", id)
@@ -57,7 +57,7 @@ func (ctrl SettingsCtrl) DeleteEnum(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := ctrl.Store().DeleteEnum(id)
+	err := h.Store.DeleteEnum(id)
 	if err != nil {
 		Err(w, r, err)
 		return

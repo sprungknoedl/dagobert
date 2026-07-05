@@ -6,25 +6,14 @@ import (
 	"net/http"
 	"slices"
 
-	"github.com/sprungknoedl/dagobert/app/auth"
-	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/attck"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 )
 
-type VisualsCtrl struct {
-	Ctrl
-	Mitre *attck.KB
-}
-
-func NewVisualsCtrl(store *model.Store, acl *auth.ACL, mitre *attck.KB) *VisualsCtrl {
-	return &VisualsCtrl{BaseCtrl{store, acl}, mitre}
-}
-
-func (ctrl VisualsCtrl) Network(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Network(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	events, err := ctrl.Store().ListEvents(cid)
+	events, err := h.Store.ListEvents(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -67,12 +56,12 @@ func (ctrl VisualsCtrl) Network(w http.ResponseWriter, r *http.Request) {
 	edges = slices.Compact(edges)
 
 	slog.Debug("rendering network", "nodes", nodes, "edges", edges)
-	Render(w, r, http.StatusOK, views.VisNetwork(Env(ctrl, r), fp.ToList(nodes), edges))
+	Render(w, r, http.StatusOK, views.VisNetwork(h.Env(r), fp.ToList(nodes), edges))
 }
 
-func (ctrl VisualsCtrl) MitreAttack(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) MitreAttack(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	events, err := ctrl.Store().ListEvents(cid)
+	events, err := h.Store.ListEvents(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -83,13 +72,13 @@ func (ctrl VisualsCtrl) MitreAttack(w http.ResponseWriter, r *http.Request) {
 	var matrix *attck.Matrix
 	switch r.URL.Query().Get("matrix") {
 	case "mobile":
-		matrix = ctrl.Mitre.Mobile
+		matrix = h.Mitre.Mobile
 	case "ics":
-		matrix = ctrl.Mitre.ICS
+		matrix = h.Mitre.ICS
 	case "enterprise":
 		fallthrough
 	default:
-		matrix = ctrl.Mitre.Enterprise
+		matrix = h.Mitre.Enterprise
 	}
 
 	counts := map[string]int{}
@@ -103,5 +92,5 @@ func (ctrl VisualsCtrl) MitreAttack(w http.ResponseWriter, r *http.Request) {
 		matrix = matrix.Filter(func(t attck.Technique) bool { return counts[t.ID] > 0 })
 	}
 
-	Render(w, r, http.StatusOK, views.VisMitreAttack(Env(ctrl, r), counts, matrix, hide))
+	Render(w, r, http.StatusOK, views.VisMitreAttack(h.Env(r), counts, matrix, hide))
 }

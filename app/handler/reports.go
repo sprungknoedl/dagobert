@@ -11,8 +11,6 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/sprungknoedl/dagobert/app/auth"
-	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/doct"
 )
@@ -44,31 +42,23 @@ func LoadTemplate(name string) (doct.Template, error) {
 	}
 }
 
-type ReportsCtrl struct {
-	Ctrl
-}
-
-func NewReportsCtrl(store *model.Store, acl *auth.ACL) *ReportsCtrl {
-	return &ReportsCtrl{BaseCtrl{store, acl}}
-}
-
-func (ctrl ReportsCtrl) Dialog(w http.ResponseWriter, r *http.Request) {
-	list, err := ctrl.Store().ListReports()
+func (h *Handler) ReportDialog(w http.ResponseWriter, r *http.Request) {
+	list, err := h.Store.ListReports()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.ReportsDialog(Env(ctrl, r), list))
+	Render(w, r, http.StatusOK, views.ReportsDialog(h.Env(r), list))
 }
 
-func (ctrl ReportsCtrl) Generate(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ReportGenerate(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 
 	// ---
 	// fetch data
 	// ---
-	kase, err := ctrl.Store().GetCaseFull(cid)
+	kase, err := h.Store.GetCaseFull(cid)
 	if err != nil {
 		Err(w, r, err)
 		return

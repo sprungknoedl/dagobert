@@ -6,41 +6,32 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-type AssetCtrl struct {
-	Ctrl
-}
-
-func NewAssetCtrl(store *model.Store, acl *auth.ACL) *AssetCtrl {
-	return &AssetCtrl{Ctrl: BaseCtrl{store, acl}}
-}
-
-func (ctrl AssetCtrl) List(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) AssetList(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.Store().ListAssets(cid)
+	list, err := h.Store.ListAssets(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.AssetsMany(Env(ctrl, r), "Assets", list))
+	Render(w, r, http.StatusOK, views.AssetsMany(h.Env(r), "Assets", list))
 }
 
-func (ctrl AssetCtrl) Export(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) AssetExport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.Store().ListAssets(cid)
+	list, err := h.Store.ListAssets(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	kase := GetCase(ctrl.Store(), r)
+	kase := GetCase(h.Store, r)
 	filename := fmt.Sprintf("%s - %s - Assets.csv", time.Now().Format("20060102"), kase.Name)
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.WriteHeader(http.StatusOK)
@@ -62,11 +53,11 @@ func (ctrl AssetCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	cw.Flush()
 }
 
-func (ctrl AssetCtrl) Import(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) AssetImport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/assets/", cid)
-	ctrl.Store().Transaction(func(tx *model.Store) error {
-		return ImportCSV(tx, ctrl.ACL(), w, r, uri, 7, func(rec []string) {
+	h.Store.Transaction(func(tx *model.Store) error {
+		return ImportCSV(tx, h.ACL, w, r, uri, 7, func(rec []string) {
 			var custom model.Custom
 			if len(rec) > 6 {
 				custom.Scan(rec[6])
@@ -91,27 +82,27 @@ func (ctrl AssetCtrl) Import(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (ctrl AssetCtrl) Edit(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) AssetEdit(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
 	obj := model.Asset{ID: id, CaseID: cid}
 	if id != "new" {
 		var err error
-		obj, err = ctrl.Store().GetAsset(cid, id)
+		obj, err = h.Store.GetAsset(cid, id)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.AssetsOne(Env(ctrl, r), obj, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.AssetsOne(h.Env(r), obj, valid.ValidationError{}))
 }
 
-func (ctrl AssetCtrl) Save(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) AssetSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Asset{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
-	err := Decode(ctrl.Store(), r, &dto, ValidateAsset)
+	err := Decode(h.Store, r, &dto, ValidateAsset)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.AssetsOne(Env(ctrl, r), dto, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.AssetsOne(h.Env(r), dto, vr))
 		return
 	} else if err != nil {
 		Warn(w, r, err)
@@ -124,7 +115,7 @@ func (ctrl AssetCtrl) Save(w http.ResponseWriter, r *http.Request) {
 
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)
-	if err := ctrl.Store().SaveAsset(dto.CaseID, dto); err != nil {
+	if err := h.Store.SaveAsset(dto.CaseID, dto); err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -132,7 +123,7 @@ func (ctrl AssetCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/assets/", dto.CaseID))
 }
 
-func (ctrl AssetCtrl) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) AssetDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
@@ -141,7 +132,7 @@ func (ctrl AssetCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := ctrl.Store().DeleteAsset(cid, id)
+	err := h.Store.DeleteAsset(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return

@@ -13,37 +13,37 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-func (ctrl SettingsCtrl) ListReports(w http.ResponseWriter, r *http.Request) {
-	reports, err := ctrl.Store().ListReports()
+func (h *Handler) ListReports(w http.ResponseWriter, r *http.Request) {
+	reports, err := h.Store.ListReports()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsReportsMany(Env(ctrl, r), reports))
+	Render(w, r, http.StatusOK, views.SettingsReportsMany(h.Env(r), reports))
 }
 
-func (ctrl SettingsCtrl) EditReport(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) EditReport(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	obj := model.Report{ID: id}
 	if id != "new" {
 		var err error
-		obj, err = ctrl.Store().GetReport(id)
+		obj, err = h.Store.GetReport(id)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsReportsOne(Env(ctrl, r), obj, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.SettingsReportsOne(h.Env(r), obj, valid.ValidationError{}))
 }
 
-func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) SaveReport(w http.ResponseWriter, r *http.Request) {
 	// decode form
 	dto := model.Report{ID: r.PathValue("id")}
-	err := Decode(ctrl.Store(), r, &dto, ValidateReport)
+	err := Decode(h.Store, r, &dto, ValidateReport)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.SettingsReportsOne(Env(ctrl, r), dto, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsReportsOne(h.Env(r), dto, vr))
 		return
 	} else if err != nil {
 		Err(w, r, err)
@@ -102,7 +102,7 @@ func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 
 	// cleanup old file (if new report was uploaded)
 	if fileUpload && !new {
-		obj, err := ctrl.Store().GetReport(dto.ID)
+		obj, err := h.Store.GetReport(dto.ID)
 		if err != nil {
 			Err(w, r, err)
 			return
@@ -120,7 +120,7 @@ func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 
 	// rename file
 	if !fileUpload && !new {
-		obj, err := ctrl.Store().GetReport(dto.ID)
+		obj, err := h.Store.GetReport(dto.ID)
 		if err != nil {
 			Err(w, r, err)
 			return
@@ -139,7 +139,7 @@ func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 
 	// finally save database object
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)
-	if err := ctrl.Store().SaveReport(dto); err != nil {
+	if err := h.Store.SaveReport(dto); err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -147,9 +147,9 @@ func (ctrl SettingsCtrl) SaveReport(w http.ResponseWriter, r *http.Request) {
 	RedirectAfterSave(w, r, "/settings/reports/")
 }
 
-func (ctrl SettingsCtrl) DownloadReport(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DownloadReport(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	obj, err := ctrl.Store().GetReport(id)
+	obj, err := h.Store.GetReport(id)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -160,7 +160,7 @@ func (ctrl SettingsCtrl) DownloadReport(w http.ResponseWriter, r *http.Request) 
 	http.ServeFile(w, r, filepath.Join("files", "templates", obj.Name))
 }
 
-func (ctrl SettingsCtrl) DeleteReport(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteReport(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/reports/%s?confirm=yes", id)
@@ -169,12 +169,12 @@ func (ctrl SettingsCtrl) DeleteReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// try to delete file from disk
-	obj, err := ctrl.Store().GetReport(id)
+	obj, err := h.Store.GetReport(id)
 	if err == nil {
 		os.Remove(filepath.Join("files", "templates", obj.Name))
 	}
 
-	err = ctrl.Store().DeleteReport(id)
+	err = h.Store.DeleteReport(id)
 	if err != nil {
 		Err(w, r, err)
 		return
