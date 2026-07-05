@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -57,84 +59,15 @@ func (h *Handler) SaveReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// process file if present
 	new := dto.ID == "new"
-	fileUpload := fh != nil && fh.Size > 0
-	if fileUpload {
-		// prepare location for Report storage
-		dst := filepath.Join("files", BucketReportTemplates, dto.Name)
-		err = os.MkdirAll(filepath.Dir(dst), 0755)
-		if err != nil {
+	if err := resolveReportFile(h.Store, dto, new, fr, fh); err != nil {
+		var terr templateError
+		if errors.As(err, &terr) {
+			Warn(w, r, err) // invalid template: user error, not a server fault
+		} else {
 			Err(w, r, err)
-			return
 		}
-
-		// create or replace file; without O_TRUNC a smaller upload would
-		// leave the tail of the previous template behind, corrupting the zip
-		existed := false
-		if _, err := os.Stat(dst); err == nil {
-			existed = true
-		}
-		fw, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
-		if err != nil {
-			Err(w, r, err)
-			return
-		}
-
-		// write file
-		_, err = io.Copy(fw, fr)
-		fw.Close()
-		if err != nil {
-			Err(w, r, err)
-			return
-		}
-
-		// validate the uploaded template so marker reconstruction, hoisting
-		// and template syntax errors surface now instead of at report time
-		if _, err := LoadTemplate(dto.Name); err != nil {
-			if !existed {
-				os.Remove(dst)
-			}
-			Warn(w, r, err)
-			return
-		}
-	}
-
-	// cleanup old file (if new report was uploaded)
-	if fileUpload && !new {
-		obj, err := h.Store.GetReport(dto.ID)
-		if err != nil {
-			Err(w, r, err)
-			return
-		}
-
-		if obj.Name != dto.Name {
-			path := filepath.Join("files", BucketReportTemplates, obj.Name)
-			err = os.Remove(path)
-			if err != nil {
-				Err(w, r, err)
-				return
-			}
-		}
-	}
-
-	// rename file
-	if !fileUpload && !new {
-		obj, err := h.Store.GetReport(dto.ID)
-		if err != nil {
-			Err(w, r, err)
-			return
-		}
-
-		if obj.Name != dto.Name {
-			src := filepath.Join("files", BucketReportTemplates, obj.Name)
-			dst := filepath.Join("files", BucketReportTemplates, dto.Name)
-			err = os.Rename(src, dst)
-			if err != nil {
-				Err(w, r, err)
-				return
-			}
-		}
+		return
 	}
 
 	// finally save database object
@@ -145,6 +78,72 @@ func (h *Handler) SaveReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	RedirectAfterSave(w, r, "/settings/reports/")
+}
+
+// templateError marks a rejected report template (syntax or marker errors) so
+// the handler can answer with a 400 instead of a 500.
+type templateError struct{ error }
+
+// resolveReportFile stores an uploaded report template (validating it and
+// rolling a brand-new file back on rejection), or renames the stored template
+// when an existing report changed its name. It is HTTP-free.
+func resolveReportFile(store *model.Store, dto model.Report, isNew bool, upload multipart.File, fh *multipart.FileHeader) error {
+	if fh != nil && fh.Size > 0 {
+		// prepare location for report storage
+		dst := filepath.Join("files", BucketReportTemplates, dto.Name)
+		if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
+			return err
+		}
+
+		// create or replace file; without O_TRUNC a smaller upload would
+		// leave the tail of the previous template behind, corrupting the zip
+		_, statErr := os.Stat(dst)
+		existed := statErr == nil
+		fw, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+		if err != nil {
+			return err
+		}
+		_, err = io.Copy(fw, upload)
+		fw.Close()
+		if err != nil {
+			return err
+		}
+
+		// validate the uploaded template so marker reconstruction, hoisting
+		// and template syntax errors surface now instead of at report time
+		if _, err := LoadTemplate(dto.Name); err != nil {
+			if !existed {
+				os.Remove(dst)
+			}
+			return templateError{err}
+		}
+
+		// remove the previous template when the upload replaced it under a new name
+		if !isNew {
+			obj, err := store.GetReport(dto.ID)
+			if err != nil {
+				return err
+			}
+			if obj.Name != dto.Name {
+				return os.Remove(filepath.Join("files", BucketReportTemplates, obj.Name))
+			}
+		}
+		return nil
+	}
+
+	// no upload: a rename of an existing report moves the stored template along
+	if !isNew {
+		obj, err := store.GetReport(dto.ID)
+		if err != nil {
+			return err
+		}
+		if obj.Name != dto.Name {
+			src := filepath.Join("files", BucketReportTemplates, obj.Name)
+			dst := filepath.Join("files", BucketReportTemplates, dto.Name)
+			return os.Rename(src, dst)
+		}
+	}
+	return nil
 }
 
 func (h *Handler) DownloadReport(w http.ResponseWriter, r *http.Request) {
