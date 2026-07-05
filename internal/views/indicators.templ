@@ -1,0 +1,283 @@
+package views
+
+import (
+	"fmt"
+	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
+)
+
+templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]model.Enrichment) {
+	{{ summary := summarizeIndicators(rows) }}
+	@layout() {
+		@list(env, "Indicators", navHideImport(), navHideExport(), navPreButtons(indicatorsManyExtra(env)), navSubtitle("Atomic artefacts for detection and threat hunting")) {
+			<div class="stats w-full mb-4">
+				for _, status := range env.Enums.IndicatorStatus {
+					@stat(status.State, status.Icon, status.Name, summary[status.Name])
+				}
+			</div>
+			<table class="table table-default" data-default-sort="value-1">
+				<thead>
+					<tr>
+						<th data-sort="value-0" class="sort px-3 py-4 text-left">Status</th>
+						<th data-sort="value-1" class="sort px-3 py-4 text-left">Type</th>
+						<th data-sort="value-2" class="sort px-3 py-4 text-left">Value</th>
+						<th data-sort="value-3" class="sort px-3 py-4 text-left">Source</th>
+						<th data-sort="value-4" class="sort px-3 py-4 text-left">Seen</th>
+						<th data-sort="value-5" class="sort px-3 py-4 text-left">Enrichment</th>
+						<th style="width: 7rem"></th>
+					</tr>
+				</thead>
+				<tbody class="values">
+					if len(rows) == 0 {
+						@emptyTable(env, "No indicators of compromise — yet.", "Add an IP address, domain, file hash, or other observable that can be used for detection or hunting. Set the TLP to control how widely it can be shared.")
+					} else {
+						for _, row := range rows {
+							{{ worst, worstSeverity, results := summarizeEnrichment(enrichments[row.ID]) }}
+							<tr class={ fp.If(row.Flagged, "hover bg-flagged", "hover") }>
+								<td class="value-0 truncate" data-search={ row.Status }>
+									@enum(env.Enums.IndicatorStatus, row.Status)
+								</td>
+								<td class="value-1 truncate" data-search={ row.Type }>
+									@enum(env.Enums.IndicatorTypes, row.Type)
+								</td>
+								<td class="value-2 font-mono text-xs" data-search={ row.Value }>
+									{ row.Value }
+									<br/>
+									<span class="text-xs opacity-50">{ row.TLP }</span>
+								</td>
+								<td class="value-3" data-search={ row.Source }>{ row.Source }</td>
+								<td
+									class="value-4 truncate"
+									data-search={ row.LastSeen.Format(time.RFC3339) }
+									title={ "first seen: " + row.FirstSeen.Format("2006-01-02 15:04:05 Z07:00") + "\nlast seen: " + row.LastSeen.Format("2006-01-02 15:04:05 Z07:00") }
+								>
+									if time.Time(row.LastSeen).IsZero() {
+										<span>—</span>
+									} else {
+										@formatTime(row.LastSeen)
+									}
+									<br/>
+									{{ seen := fmt.Sprintf("%d events", row.Events) }}
+									if row.OtherCases > 0 {
+										{{ seen += fmt.Sprintf(", %d other cases", row.OtherCases) }}
+									}
+									<span class="text-xs opacity-50">{ seen }</span>
+								</td>
+								<td class="value-5" data-search={ strconv.Itoa(worstSeverity) }>
+									if len(results) == 0 {
+										<span class="opacity-50">—</span>
+									} else {
+										<span class={ verdictColor(worst) }>{ worst }</span>
+										<div class="flex gap-2 mt-1">
+											for _, r := range results {
+												<span
+													class={ "w-2 h-2 rounded-full " + verdictDotClass(r.Verdict) }
+													title={ r.Source + ": " + r.Verdict }
+												></span>
+											}
+										</div>
+									}
+								</td>
+								<td class="text-right value-6" data-search={ fp.If(row.Flagged, "flagged:true", "") }>
+									<div class="join">
+										if row.Flagged {
+											@actionBtn(env, "GET", env.Route+row.ID) {
+												<i class="ph ph-5 ph-flag btn-flagged"></i>
+											}
+										}
+										if url, ok := env.Allowed("POST", env.Route+row.ID+"/run"); ok {
+											@actionBtn(env, "GET", url) {
+												<i class="ph ph-5 ph-lightning"></i>
+											}
+										}
+										@defaultActionBtns(env, env.Route+row.ID)
+									</div>
+								</td>
+							</tr>
+						}
+					}
+				</tbody>
+			</table>
+		}
+	}
+}
+
+// IndicatorOverlap bundles the cross-case correlation shown in the indicator
+// edit drawer: the ACL-readable cases sharing this indicator (named in the
+// panel) and a count of cases the current user cannot read.
+type IndicatorOverlap struct {
+	Cases  []model.IndicatorCaseRef
+	Hidden int
+}
+
+templ IndicatorsOne(env Env, obj model.Indicator, overlap IndicatorOverlap, enrichments []model.Enrichment, vr valid.ValidationError) {
+	{{ uri := "/cases/" + obj.CaseID + "/indicators/" + obj.ID }}
+	{{ title := fp.If(obj.ID == "new", "Add indicator", "Edit indicator") }}
+	@form(env, uri, title) {
+		@hiddenField("ID", obj.ID)
+		@hiddenField("CaseID", obj.CaseID)
+		@selectField("Status", obj.Status, env.Enums.IndicatorStatus, required(), withLabel("Status"), withError(vr["Status"]))
+		@selectField("Type", obj.Type, env.Enums.IndicatorTypes, required(), withLabel("Type"), withError(vr["Type"]))
+		@stringField("Value", obj.Value, required(), withLabel("Value"), withError(vr["Value"]))
+		@selectField("TLP", obj.TLP, env.Enums.IndicatorTLPs, required(), withLabel("TLP"), withError(vr["TLP"]), withHint("Traffic Light Protocol: controls how widely this indicator can be shared. TLP:RED = named recipients only; TLP:GREEN = community; TLP:WHITE = public."))
+		@booleanField("Flagged", obj.Flagged, withLabel("Flagged"), withHint("Mark this indicator as significant. Flagged indicators are highlighted in the list and appear on the case summary page."))
+		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]), withHint("Where this indicator was found or provided by (e.g. \"VirusTotal\", \"customer firewall logs\", analyst name)."))
+		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
+		@requiredFootnote()
+		@customAttributes(env, "Indicator", obj.Custom)
+		@threatIntel(env, enrichments)
+		if len(overlap.Cases) > 0 || overlap.Hidden > 0 {
+			@indicatorOverlap(env, overlap)
+		}
+	}
+}
+
+// threatIntel renders machine-generated enrichment as a compact, read-only
+// panel — one row per module. Renders nothing when there is no enrichment.
+templ threatIntel(env Env, rows []model.Enrichment) {
+	if len(rows) > 0 {
+		<div class="mt-6">
+			<h2 class="font-serif text-lg mb-1">Threat Intelligence</h2>
+			<p class="text-sm opacity-50 mb-2">Automated enrichment from configured modules.</p>
+			<ul class="menu bg-base-200 rounded-box w-full p-2 gap-1">
+				for _, row := range rows {
+					{{ summary := strings.Split(row.Summary, "\n") }}
+					<li>
+						<details>
+							<summary class="flex items-center gap-2">
+								<span class={ "w-2 h-2 rounded-full shrink-0 " + verdictDotClass(row.Verdict) } title={ row.Verdict }></span>
+								<span class="font-medium">{ row.Module }</span>
+								<span class="opacity-50 truncate">{ summary[0] }</span>
+							</summary>
+							<div class="pl-4">
+								<p class="whitespace-pre-wrap opacity-70">{ row.Summary }</p>
+								if row.Link != "" {
+									<a href={ templ.URL(row.Link) } target="_blank" rel="noreferrer" class="link link-hover mt-1">open ↗</a>
+								}
+							</div>
+						</details>
+					</li>
+				}
+			</ul>
+		</div>
+	}
+}
+
+templ indicatorOverlap(env Env, overlap IndicatorOverlap) {
+	<div class="mt-6">
+		<h2 class="font-serif text-lg mb-1">Related cases</h2>
+		<p class="text-sm opacity-50 mb-2">This observable also appears in other cases.</p>
+		<ul class="menu bg-base-200 rounded-box w-full p-2">
+			for _, c := range overlap.Cases {
+				<li>
+					<a href={ "/cases/" + c.ID + "/summary/" } class="flex items-center gap-2">
+						if c.Closed {
+							<span class="w-2 h-2 rounded-full shrink-0 bg-success" title="Closed"></span>
+						} else {
+							<span class="w-2 h-2 rounded-full shrink-0 bg-error" title="Open"></span>
+						}
+						<span class="font-medium">{ c.Name }</span>
+						<span class="opacity-50 truncate">#{ c.ID }</span>
+					</a>
+				</li>
+			}
+		</ul>
+		if overlap.Hidden > 0 {
+			<p class="text-sm opacity-50 mt-2">{ fmt.Sprintf("%d more case(s) you don't have access to.", overlap.Hidden) }</p>
+		}
+	</div>
+}
+
+templ indicatorsManyExtra(env Env) {
+	if url, ok := env.Allowed("POST", env.Route + "import"); ok {
+		<details class="dropdown">
+			<summary class="btn join-item">
+				<i class="ph ph-6 ph-sort-ascending inline-block mr-1"></i> Import
+			</summary>
+			<ul style="position: absolute" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow">
+				<li><a href={ url + "/csv" } up-layer="new drawer" up-accept-location={ env.Route }>from CSV</a></li>
+				<li><a href={ url + "/timesketch" } up-follow up-method="post">from Timesketch</a></li>
+			</ul>
+		</details>
+	}
+	if url, ok := env.Allowed("GET", env.Route + "export"); ok {
+		<details class="dropdown">
+			<summary class="btn join-item">
+				<i class="ph ph-6 ph-sort-descending inline-block mr-1"></i> Export
+			</summary>
+			<ul style="position: absolute" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow">
+				<li><a href={ url + "/csv" }>as CSV</a></li>
+				<li><a href={ url + "/ioc" }>as OpenIOC</a></li>
+				<li><a href={ url + "/stix" }>as STIX</a></li>
+			</ul>
+		</details>
+	}
+}
+
+func summarizeIndicators(rows []model.Indicator) map[string]int {
+	summary := map[string]int{}
+	for _, row := range rows {
+		summary[row.Status]++
+	}
+	return summary
+}
+
+type enrichmentResult struct {
+	Source   string
+	Verdict  string
+	Severity int
+}
+
+// summarizeEnrichment distils an indicator's enrichment rows into the worst
+// verdict and a per-source list sorted alphabetically. worstSeverity is -1
+// when no recognised verdicts are present.
+func summarizeEnrichment(rows []model.Enrichment) (worst string, worstSeverity int, results []enrichmentResult) {
+	worstSeverity = -1
+	for _, row := range rows {
+		rank, ok := model.VerdictSeverity(row.Verdict)
+		if !ok {
+			continue
+		}
+		verdict := strings.ToLower(row.Verdict)
+		results = append(results, enrichmentResult{Source: row.Module, Verdict: verdict, Severity: rank})
+		if rank > worstSeverity {
+			worstSeverity = rank
+			worst = verdict
+		}
+	}
+	sort.Slice(results, func(i, j int) bool {
+		return strings.ToLower(results[i].Source) < strings.ToLower(results[j].Source)
+	})
+	return
+}
+
+func verdictColor(v string) string {
+	switch v {
+	case "malicious":
+		return "text-error"
+	case "suspicious":
+		return "text-warning"
+	case "clean":
+		return "text-success"
+	default:
+		return "opacity-50"
+	}
+}
+
+func verdictDotClass(v string) string {
+	switch v {
+	case "malicious":
+		return "bg-error"
+	case "suspicious":
+		return "bg-warning"
+	case "clean":
+		return "bg-success"
+	default:
+		return "border border-current"
+	}
+}

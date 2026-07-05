@@ -74,18 +74,18 @@ bin/daisyui-theme-$(DAISYUI_VERSION).js:
 	$(call verify,$@,$(DAISYUI_THEME_SHA))
 
 # Unversioned copies so the @plugin paths in dagobert.css stay version-free.
-app/assets/daisyui.js: bin/daisyui-$(DAISYUI_VERSION).js
+internal/assets/daisyui.js: bin/daisyui-$(DAISYUI_VERSION).js
 	cp $< $@
 
-app/assets/daisyui-theme.js: bin/daisyui-theme-$(DAISYUI_VERSION).js
+internal/assets/daisyui-theme.js: bin/daisyui-theme-$(DAISYUI_VERSION).js
 	cp $< $@
 
-build-web: $(TAILWIND_BIN) app/assets/daisyui.js app/assets/daisyui-theme.js
-	$(TAILWIND_BIN) -m -i app/assets/dagobert.css -o public/assets/dagobert.css
+build-web: $(TAILWIND_BIN) internal/assets/daisyui.js internal/assets/daisyui-theme.js
+	$(TAILWIND_BIN) -m -i internal/assets/dagobert.css -o public/assets/dagobert.css
 
 clean:
 	rm -f bin/tailwindcss-* bin/daisyui-*.js
-	rm -f app/assets/daisyui.js app/assets/daisyui-theme.js
+	rm -f internal/assets/daisyui.js internal/assets/daisyui-theme.js
 	rm -rf $(STIX_VENV)
 
 build-go:
@@ -113,7 +113,7 @@ test:
 # Validate the generated OpenIOC / STIX indicator exports against external
 # validators (xmllint + the OpenIOC 1.1 XSD, stix2-validator + STIX 2.1 schemas).
 # Not part of `check`: it needs network on first run and tools outside the Go
-# toolchain. Run it after changing the export mapping in app/handler/indicators.go.
+# toolchain. Run it after changing the export mapping in internal/handler/indicators.go.
 validate-exports: $(STIX_READY)
 	@command -v xmllint >/dev/null 2>&1 || { echo "xmllint not found — install libxml2 (macOS: brew install libxml2)"; exit 1; }
 	STIX2_VALIDATOR="$(CURDIR)/$(STIX_VENV)/bin/stix2_validator" \

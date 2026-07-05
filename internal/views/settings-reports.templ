@@ -1,0 +1,62 @@
+package views
+
+import (
+	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+)
+
+templ SettingsReportsMany(env Env, rows []model.Report) {
+	@layout() {
+		@list(env, "Reports", navSettings(), navHideExport(), navHideImport(), navSubtitle("Templates for generating investigation reports")) {
+			<table class="table table-default" data-default-sort="value-0">
+				<thead>
+					<tr>
+						<th data-sort="value-0" class="sort px-3 py-4 text-left">Name</th>
+						<th data-sort="value-1" class="sort px-3 py-4 text-left">Notes</th>
+						<th style="width: 7rem"></th>
+					</tr>
+				</thead>
+				<tbody class="values">
+					if len(rows) == 0 {
+						@emptyTable(env, "No templates installed.", "Upload a .docx, .odt, or .ods file with template placeholders to generate formatted investigation reports. Download the default templates from the project repository to get started.")
+					}
+					for _, row := range rows {
+						<tr class="hover">
+							<td class="value-0" data-search={ row.Name }>{ row.Name } </td>
+							<td class="value-1" data-search={ row.Notes }>{ row.Notes } </td>
+							<td class="text-right">
+								<div class="join">
+									if url, ok := env.Allowed("GET", env.Route+row.ID+"/download"); ok {
+										@externalBtn(url, "") {
+											<i class="ph ph-5 ph-download-simple"></i>
+										}
+									}
+									@defaultActionBtns(env, env.Route+row.ID)
+								</div>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+	}
+}
+
+templ SettingsReportsOne(env Env, obj model.Report, vr valid.ValidationError) {
+	{{ uri := "/settings/reports/" + obj.ID }}
+	{{ title := fp.If(obj.ID == "new", "Add report template", "Edit report template") }}
+	@form(env, uri, title, enctype("multipart/form-data")) {
+		@hiddenField("ID", obj.ID)
+		<div class="form-control mb-2">
+			<label class="label justify-start gap-2">
+				File
+				@requiredLabel()
+			</label>
+			<input name="File" type="file" class="file-input w-full" data-fill="Name"/>
+		</div>
+		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
+		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
+		@requiredFootnote()
+	}
+}

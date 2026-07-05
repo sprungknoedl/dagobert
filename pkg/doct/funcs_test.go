@@ -3,7 +3,7 @@ package doct
 import (
 	"testing"
 
-	"github.com/sprungknoedl/dagobert/app/model"
+	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/stretchr/testify/assert"
 )
 
