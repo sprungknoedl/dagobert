@@ -163,6 +163,71 @@ func (t *Time) UnmarshalJSON(text []byte) (err error) {
 	return err
 }
 
+// Date is a date-only counterpart to Time. A zero Date stores as SQL NULL
+// (rather than the "0001-01-01" Time would produce), so blank stays blank
+// across saves instead of calcifying into a real value.
+type Date time.Time
+
+func (d Date) Format(layout string) string { return time.Time(d).Format(layout) }
+func (d Date) IsZero() bool                { return time.Time(d).IsZero() }
+
+func (d Date) Value() (driver.Value, error) {
+	if time.Time(d).IsZero() {
+		return nil, nil
+	}
+	return time.Time(d).Format("2006-01-02"), nil
+}
+
+func (d Date) MarshalJSON() ([]byte, error) {
+	return json.Marshal(time.Time(d).Format("2006-01-02"))
+}
+
+func (d *Date) Scan(src interface{}) (err error) {
+	switch src := src.(type) {
+	case string:
+		if src == "" {
+			return nil
+		}
+		t, err := time.Parse("2006-01-02", src)
+		if err != nil {
+			t, err = time.Parse(time.RFC3339Nano, src)
+		}
+		*d = Date(t)
+		return err
+	case time.Time:
+		*d = Date(src)
+		return nil
+	case nil:
+		*d = Date(time.Time{})
+		return nil
+	default:
+		return fmt.Errorf("incompatible type '%T' for Date", src)
+	}
+}
+
+func (d *Date) UnmarshalText(text []byte) (err error) {
+	s := string(text)
+	if s == "" {
+		*d = Date(time.Time{})
+		return nil
+	}
+
+	t, err := time.Parse("2006-01-02", s)
+	*d = Date(t)
+	return err
+}
+
+func (d *Date) UnmarshalJSON(text []byte) (err error) {
+	str := ""
+	if err = json.Unmarshal(text, &str); err != nil {
+		return err
+	}
+
+	t, err := time.Parse("2006-01-02", str)
+	*d = Date(t)
+	return err
+}
+
 type Strings []string
 
 func (o *Strings) Scan(src any) error {
