@@ -11,52 +11,41 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/app/worker"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/openioc"
 	"github.com/sprungknoedl/dagobert/pkg/stix"
-	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-type IndicatorCtrl struct {
-	Ctrl
-	ts *timesketch.Client
-}
-
-func NewIndicatorCtrl(store *model.Store, acl *auth.ACL, ts *timesketch.Client) *IndicatorCtrl {
-	return &IndicatorCtrl{Ctrl: BaseCtrl{store, acl}, ts: ts}
-}
-
-func (ctrl IndicatorCtrl) List(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) IndicatorList(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.Store().ListIndicators(cid)
+	list, err := h.Store.ListIndicators(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	enrichments, err := ctrl.Store().ListEnrichmentsForCase(cid, "Indicator")
+	enrichments, err := h.Store.ListEnrichmentsForCase(cid, "Indicator")
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.IndicatorsMany(Env(ctrl, r), list, enrichments))
+	Render(w, r, http.StatusOK, views.IndicatorsMany(h.Env(r), list, enrichments))
 }
 
-func (ctrl IndicatorCtrl) ExportCSV(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) IndicatorExportCSV(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.Store().ListIndicators(cid)
+	list, err := h.Store.ListIndicators(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	kase := GetCase(ctrl.Store(), r)
+	kase := GetCase(h.Store, r)
 	filename := fmt.Sprintf("%s - %s - Indicators.csv", time.Now().Format("20060102"), kase.Name)
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.WriteHeader(http.StatusOK)
@@ -79,15 +68,15 @@ func (ctrl IndicatorCtrl) ExportCSV(w http.ResponseWriter, r *http.Request) {
 	cw.Flush()
 }
 
-func (ctrl IndicatorCtrl) ExportOpenIOC(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) IndicatorExportOpenIOC(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.Store().ListIndicators(cid)
+	list, err := h.Store.ListIndicators(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	filename := fmt.Sprintf("%s - %s - Indicators.ioc", time.Now().Format("20060102"), GetCase(ctrl.Store(), r).Name)
+	filename := fmt.Sprintf("%s - %s - Indicators.ioc", time.Now().Format("20060102"), GetCase(h.Store, r).Name)
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.WriteHeader(http.StatusOK)
 
@@ -134,15 +123,15 @@ func buildOpenIOC(list []model.Indicator, author string, now time.Time) *openioc
 	return doc
 }
 
-func (ctrl IndicatorCtrl) ExportStix(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) IndicatorExportStix(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.Store().ListIndicators(cid)
+	list, err := h.Store.ListIndicators(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	filename := fmt.Sprintf("%s - %s - Indicators.stix", time.Now().Format("20060102"), GetCase(ctrl.Store(), r).Name)
+	filename := fmt.Sprintf("%s - %s - Indicators.stix", time.Now().Format("20060102"), GetCase(h.Store, r).Name)
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.WriteHeader(http.StatusOK)
 
@@ -189,11 +178,11 @@ func buildStixBundle(list []model.Indicator, now time.Time) *stix.Bundle {
 	return b
 }
 
-func (ctrl IndicatorCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) IndicatorImportCSV(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/indicators/", cid)
-	ctrl.Store().Transaction(func(tx *model.Store) error {
-		return ImportCSV(tx, ctrl.ACL(), w, r, uri, 8, func(rec []string) {
+	h.Store.Transaction(func(tx *model.Store) error {
+		return ImportCSV(tx, h.ACL, w, r, uri, 8, func(rec []string) {
 			var custom model.Custom
 			if len(rec) > 7 {
 				custom.Scan(rec[7])
@@ -219,15 +208,15 @@ func (ctrl IndicatorCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (ctrl IndicatorCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) IndicatorImportTimesketch(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	kase, err := ctrl.Store().GetCase(cid)
+	kase, err := h.Store.GetCase(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	if !ctrl.ts.Configured() {
+	if !h.Timesketch.Configured() {
 		Warn(w, r, errors.New("Timesketch integration is not configured"))
 		return
 	}
@@ -236,7 +225,7 @@ func (ctrl IndicatorCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	sketch, err := ctrl.ts.GetSketch(r.Context(), kase.SketchID)
+	sketch, err := h.Timesketch.GetSketch(r.Context(), kase.SketchID)
 	if err != nil {
 		Warn(w, r, err)
 		return
@@ -263,7 +252,7 @@ func (ctrl IndicatorCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Reques
 			TLP:    "TLP:RED",
 		}
 
-		if err = ctrl.Store().SaveIndicator(cid, obj, false); err != nil {
+		if err = h.Store.SaveIndicator(cid, obj, false); err != nil {
 			Err(w, r, err)
 			return
 		}
@@ -273,7 +262,7 @@ func (ctrl IndicatorCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Reques
 	http.Redirect(w, r, uri, http.StatusSeeOther)
 }
 
-func (ctrl IndicatorCtrl) Edit(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) IndicatorEdit(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
 	obj := model.Indicator{ID: id, CaseID: cid}
@@ -281,13 +270,13 @@ func (ctrl IndicatorCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 	enrichments := []model.Enrichment{}
 	if id != "new" {
 		var err error
-		obj, err = ctrl.Store().GetIndicator(cid, id)
+		obj, err = h.Store.GetIndicator(cid, id)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 
-		refs, err := ctrl.Store().ListIndicatorOverlap(cid, obj.Type, obj.Value)
+		refs, err := h.Store.ListIndicatorOverlap(cid, obj.Type, obj.Value)
 		if err != nil {
 			Err(w, r, err)
 			return
@@ -295,27 +284,27 @@ func (ctrl IndicatorCtrl) Edit(w http.ResponseWriter, r *http.Request) {
 
 		user := GetUser(r)
 		for _, c := range refs {
-			if ctrl.ACL().Allowed(user.ID, fmt.Sprintf("/cases/%s/", c.ID), "GET") {
+			if h.ACL.Allowed(user.ID, fmt.Sprintf("/cases/%s/", c.ID), "GET") {
 				overlap.Cases = append(overlap.Cases, c)
 			}
 		}
 		overlap.Hidden = len(refs) - len(overlap.Cases)
 
-		enrichments, err = ctrl.Store().ListEnrichments("Indicator", id)
+		enrichments, err = h.Store.ListEnrichments("Indicator", id)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.IndicatorsOne(Env(ctrl, r), obj, overlap, enrichments, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.IndicatorsOne(h.Env(r), obj, overlap, enrichments, valid.ValidationError{}))
 }
 
-func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) IndicatorSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Indicator{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
-	err := Decode(ctrl.Store(), r, &dto, ValidateIndicator)
+	err := Decode(h.Store, r, &dto, ValidateIndicator)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.IndicatorsOne(Env(ctrl, r), dto, views.IndicatorOverlap{}, nil, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.IndicatorsOne(h.Env(r), dto, views.IndicatorOverlap{}, nil, vr))
 		return
 	} else if err != nil {
 		Warn(w, r, err)
@@ -329,20 +318,20 @@ func (ctrl IndicatorCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)
 	dto.Value = refang(dto.Value)
-	if err := ctrl.Store().SaveIndicator(dto.CaseID, dto, true); err != nil {
+	if err := h.Store.SaveIndicator(dto.CaseID, dto, true); err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	// trigger registered hooks
 	if new {
-		worker.TriggerOnIndicatorAdded(ctrl.Store(), dto)
+		worker.TriggerOnIndicatorAdded(h.Store, dto)
 	}
 
 	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/indicators/", dto.CaseID))
 }
 
-func (ctrl IndicatorCtrl) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) IndicatorDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
@@ -351,7 +340,7 @@ func (ctrl IndicatorCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := ctrl.Store().DeleteIndicator(cid, id)
+	err := h.Store.DeleteIndicator(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -360,12 +349,12 @@ func (ctrl IndicatorCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/indicators/", cid), http.StatusSeeOther)
 }
 
-func (ctrl *IndicatorCtrl) ListModules(w http.ResponseWriter, r *http.Request) {
-	ListModules(ctrl, w, r, ctrl.Store().GetIndicator)
+func (h *Handler) IndicatorListModules(w http.ResponseWriter, r *http.Request) {
+	ListModules(h, w, r, h.Store.GetIndicator)
 }
 
-func (ctrl *IndicatorCtrl) ScheduleModule(w http.ResponseWriter, r *http.Request) {
-	ScheduleModule(ctrl, w, r, ctrl.Store().GetIndicator)
+func (h *Handler) IndicatorScheduleModule(w http.ResponseWriter, r *http.Request) {
+	ScheduleModule(h, w, r, h.Store.GetIndicator)
 }
 
 // Removes any defanging done to indicator values.

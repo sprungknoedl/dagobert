@@ -10,59 +10,47 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
-	"github.com/sprungknoedl/dagobert/pkg/attck"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 	"gorm.io/gorm"
 )
 
-type EventCtrl struct {
-	Ctrl
-	mitre *attck.KB
-	ts    *timesketch.Client
-}
-
-func NewEventCtrl(store *model.Store, acl *auth.ACL, mitre *attck.KB, ts *timesketch.Client) *EventCtrl {
-	return &EventCtrl{Ctrl: BaseCtrl{store, acl}, mitre: mitre, ts: ts}
-}
-
-func (ctrl EventCtrl) List(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) EventList(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.Store().ListEvents(cid)
+	list, err := h.Store.ListEvents(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	assets, err := ctrl.Store().ListAssets(cid)
+	assets, err := h.Store.ListAssets(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	indicators, err := ctrl.Store().ListIndicators(cid)
+	indicators, err := h.Store.ListIndicators(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	env := Env(ctrl, r)
-	views.EventsMany(env, list, assets, indicators, *ctrl.mitre).Render(r.Context(), w)
+	env := h.Env(r)
+	views.EventsMany(env, list, assets, indicators, *h.Mitre).Render(r.Context(), w)
 }
 
-func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) EventExport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	list, err := ctrl.Store().ListEvents(cid)
+	list, err := h.Store.ListEvents(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	kase := GetCase(ctrl.Store(), r)
+	kase := GetCase(h.Store, r)
 	filename := fmt.Sprintf("%s - %s - Timeline.csv", time.Now().Format("20060102"), kase.Name)
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	w.WriteHeader(http.StatusOK)
@@ -86,12 +74,12 @@ func (ctrl EventCtrl) Export(w http.ResponseWriter, r *http.Request) {
 	cw.Flush()
 }
 
-func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) EventImportCSV(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/events/", cid)
 
-	ctrl.Store().Transaction(func(tx *model.Store) error {
-		return ImportCSV(ctrl.Store(), ctrl.ACL(), w, r, uri, 9, func(rec []string) {
+	h.Store.Transaction(func(tx *model.Store) error {
+		return ImportCSV(h.Store, h.ACL, w, r, uri, 9, func(rec []string) {
 			t, err := time.Parse(time.RFC3339, rec[1])
 			if err != nil {
 				Warn(w, r, err)
@@ -138,15 +126,15 @@ func (ctrl EventCtrl) ImportCSV(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (ctrl EventCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) EventImportTimesketch(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	kase, err := ctrl.Store().GetCase(cid)
+	kase, err := h.Store.GetCase(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	if !ctrl.ts.Configured() {
+	if !h.Timesketch.Configured() {
 		Warn(w, r, errors.New("Timesketch integration is not configured"))
 		return
 	}
@@ -155,13 +143,13 @@ func (ctrl EventCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sketch, err := ctrl.ts.GetSketch(r.Context(), kase.SketchID)
+	sketch, err := h.Timesketch.GetSketch(r.Context(), kase.SketchID)
 	if err != nil {
 		Warn(w, r, err)
 		return
 	}
 
-	events, err := ctrl.ts.ExploreAll(r.Context(), kase.SketchID, "*", timesketch.Filter{
+	events, err := h.Timesketch.ExploreAll(r.Context(), kase.SketchID, "*", timesketch.Filter{
 		Size:    1024,
 		Order:   "asc",
 		Indices: fp.Apply(sketch.Timelines, func(t timesketch.Timeline) int { return t.ID }),
@@ -173,7 +161,7 @@ func (ctrl EventCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = ctrl.Store().Transaction(func(tx *model.Store) error {
+	err = h.Store.Transaction(func(tx *model.Store) error {
 		for _, ev := range events {
 			buf := &bytes.Buffer{}
 			enc := json.NewEncoder(buf)
@@ -207,51 +195,51 @@ func (ctrl EventCtrl) ImportTimesketch(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, uri, http.StatusSeeOther)
 }
 
-func (ctrl EventCtrl) Edit(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) EventEdit(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
 	obj := model.Event{ID: id, CaseID: cid}
 	if id != "new" {
 		var err error
-		obj, err = ctrl.Store().GetEvent(cid, id)
+		obj, err = h.Store.GetEvent(cid, id)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 	}
 
-	assets, err := ctrl.Store().ListAssets(cid)
+	assets, err := h.Store.ListAssets(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	indicators, err := ctrl.Store().ListIndicators(cid)
+	indicators, err := h.Store.ListIndicators(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.EventsOne(Env(ctrl, r), obj, assets, indicators, ctrl.mitre, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.EventsOne(h.Env(r), obj, assets, indicators, h.Mitre, valid.ValidationError{}))
 }
 
-func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) EventSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Event{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
 	tmp := struct {
 		Assets     []string
 		Indicators []string
 	}{} // special case: select-multiple :/
 	err := JoinV(
-		Decode(ctrl.Store(), r, &dto, ValidateEvent),
-		Decode(ctrl.Store(), r, &tmp, nil))
+		Decode(h.Store, r, &dto, ValidateEvent),
+		Decode(h.Store, r, &tmp, nil))
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
 		var ev model.Event
 		var err1 error
 		if dto.ID != "new" {
-			ev, err1 = ctrl.Store().GetEvent(dto.CaseID, dto.ID)
+			ev, err1 = h.Store.GetEvent(dto.CaseID, dto.ID)
 		}
-		assets, err2 := ctrl.Store().ListAssets(dto.CaseID)
-		indicators, err3 := ctrl.Store().ListIndicators(dto.CaseID)
+		assets, err2 := h.Store.ListAssets(dto.CaseID)
+		indicators, err3 := h.Store.ListIndicators(dto.CaseID)
 		if err := errors.Join(err1, err2, err3); err != nil {
 			Err(w, r, err)
 			return
@@ -260,7 +248,7 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 		// changes in the form to the selects will be lost, but this is easier than the other way around ...
 		dto.Assets = ev.Assets
 		dto.Indicators = ev.Indicators
-		Render(w, r, http.StatusUnprocessableEntity, views.EventsOne(Env(ctrl, r), dto, assets, indicators, ctrl.mitre, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.EventsOne(h.Env(r), dto, assets, indicators, h.Mitre, vr))
 		return
 	} else if err != nil {
 		Warn(w, r, err)
@@ -271,7 +259,7 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	// request yields an empty map and won't carry custom values.
 	dto.Custom = CollectCustom(r)
 
-	err = ctrl.Store().Transaction(func(tx *model.Store) error {
+	err = h.Store.Transaction(func(tx *model.Store) error {
 		var err error
 		dto.Assets, err = getOrCreateAssets(tx, dto.CaseID, tmp.Assets)
 		if err != nil {
@@ -299,7 +287,7 @@ func (ctrl EventCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/events/", dto.CaseID))
 }
 
-func (ctrl EventCtrl) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) EventDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
@@ -308,7 +296,7 @@ func (ctrl EventCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := ctrl.Store().DeleteEvent(cid, id)
+	err := h.Store.DeleteEvent(cid, id)
 	if err != nil {
 		Err(w, r, err)
 		return

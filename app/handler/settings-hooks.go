@@ -11,22 +11,22 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-func (ctrl SettingsCtrl) ListHooks(w http.ResponseWriter, r *http.Request) {
-	hooks, err := ctrl.Store().ListHooks()
+func (h *Handler) ListHooks(w http.ResponseWriter, r *http.Request) {
+	hooks, err := h.Store.ListHooks()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsHooksMany(Env(ctrl, r), hooks))
+	Render(w, r, http.StatusOK, views.SettingsHooksMany(h.Env(r), hooks))
 }
 
-func (ctrl SettingsCtrl) EditHook(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) EditHook(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	obj := model.Hook{ID: id}
 	if id != "new" {
 		var err error
-		obj, err = ctrl.Store().GetHook(id)
+		obj, err = h.Store.GetHook(id)
 		if err != nil {
 			Err(w, r, err)
 			return
@@ -34,16 +34,16 @@ func (ctrl SettingsCtrl) EditHook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	enum := fp.ToList(fp.ApplyM(worker.Modules, func(m model.Module) model.Enum { return model.Enum{Name: m.Name()} }))
-	Render(w, r, http.StatusOK, views.SettingsHooksOne(Env(ctrl, r), obj, enum, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.SettingsHooksOne(h.Env(r), obj, enum, valid.ValidationError{}))
 }
 
-func (ctrl SettingsCtrl) SaveHook(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) SaveHook(w http.ResponseWriter, r *http.Request) {
 	// deocde form
 	dto := model.Hook{ID: r.PathValue("id")}
-	err := Decode(ctrl.Store(), r, &dto, ValidateHook)
+	err := Decode(h.Store, r, &dto, ValidateHook)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
 		enum := fp.ToList(fp.ApplyM(worker.Modules, func(m model.Module) model.Enum { return model.Enum{Name: m.Name()} }))
-		Render(w, r, http.StatusUnprocessableEntity, views.SettingsHooksOne(Env(ctrl, r), dto, enum, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsHooksOne(h.Env(r), dto, enum, vr))
 		return
 	} else if err != nil {
 		Err(w, r, err)
@@ -53,18 +53,18 @@ func (ctrl SettingsCtrl) SaveHook(w http.ResponseWriter, r *http.Request) {
 	// save database object
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)
-	if err := ctrl.Store().SaveHook(dto); err != nil {
+	if err := h.Store.SaveHook(dto); err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	// reload hooks
-	worker.LoadHooks(ctrl.Store())
+	worker.LoadHooks(h.Store)
 
 	RedirectAfterSave(w, r, "/settings/hooks/")
 }
 
-func (ctrl SettingsCtrl) DeleteHook(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) DeleteHook(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/hooks/%s?confirm=yes", id)
@@ -72,13 +72,13 @@ func (ctrl SettingsCtrl) DeleteHook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := ctrl.Store().DeleteHook(id)
+	err := h.Store.DeleteHook(id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	// reload hooks
-	worker.LoadHooks(ctrl.Store())
+	worker.LoadHooks(h.Store)
 	http.Redirect(w, r, "/settings/hooks/", http.StatusSeeOther)
 }

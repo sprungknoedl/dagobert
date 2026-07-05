@@ -4,57 +4,48 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/sprungknoedl/dagobert/app/auth"
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-type UserCtrl struct {
-	Ctrl
-}
-
-func NewUserCtrl(store *model.Store, acl *auth.ACL) *UserCtrl {
-	return &UserCtrl{BaseCtrl{store, acl}}
-}
-
-func (ctrl UserCtrl) List(w http.ResponseWriter, r *http.Request) {
-	list, err := ctrl.Store().ListUsers()
+func (h *Handler) UserList(w http.ResponseWriter, r *http.Request) {
+	list, err := h.Store.ListUsers()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsUsersMany(Env(ctrl, r), list))
+	Render(w, r, http.StatusOK, views.SettingsUsersMany(h.Env(r), list))
 }
 
-func (ctrl UserCtrl) Edit(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UserEdit(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	obj := model.User{ID: id}
 	if id != "new" {
 		var err error
-		obj, err = ctrl.Store().GetUser(id)
+		obj, err = h.Store.GetUser(id)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsUsersOne(Env(ctrl, r), obj, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.SettingsUsersOne(h.Env(r), obj, valid.ValidationError{}))
 }
 
-func (ctrl UserCtrl) Save(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UserSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.User{}
-	err := Decode(ctrl.Store(), r, &dto, ValidateUser)
+	err := Decode(h.Store, r, &dto, ValidateUser)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.SettingsUsersOne(Env(ctrl, r), dto, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsUsersOne(h.Env(r), dto, vr))
 		return
 	} else if err != nil {
 		Warn(w, r, err)
 		return
 	}
 
-	usr, err := ctrl.Store().GetUser(dto.ID)
+	usr, err := h.Store.GetUser(dto.ID)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -68,24 +59,24 @@ func (ctrl UserCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	usr.Email = dto.Email
 
 	// Update user
-	if err := ctrl.Store().SaveUser(usr); err != nil {
+	if err := h.Store.SaveUser(usr); err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	// Update role in casbin
-	if err := ctrl.ACL().SaveUserRole(usr.ID, usr.Role); err != nil {
+	if err := h.ACL.SaveUserRole(usr.ID, usr.Role); err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	// Update permissions casbin, those need to be changed when a role change happens
-	perms, err := ctrl.Store().GetUserPermissions(usr.ID)
+	perms, err := h.Store.GetUserPermissions(usr.ID)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
-	if err := ctrl.ACL().SaveUserPermissions(usr.ID, usr.Role, perms); err != nil {
+	if err := h.ACL.SaveUserPermissions(usr.ID, usr.Role, perms); err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -93,7 +84,7 @@ func (ctrl UserCtrl) Save(w http.ResponseWriter, r *http.Request) {
 	RedirectAfterSave(w, r, "/settings/users/")
 }
 
-func (ctrl UserCtrl) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UserDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/users/%s?confirm=yes", id)
@@ -101,12 +92,12 @@ func (ctrl UserCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := ctrl.Store().DeleteUser(id); err != nil {
+	if err := h.Store.DeleteUser(id); err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	if err := ctrl.ACL().DeleteUser(id); err != nil {
+	if err := h.ACL.DeleteUser(id); err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -118,44 +109,44 @@ func (ctrl UserCtrl) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (ctrl UserCtrl) EditACL(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UserEditACL(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	obj, err := ctrl.Store().GetUser(id)
+	obj, err := h.Store.GetUser(id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	cases, err := ctrl.Store().ListCases()
+	cases, err := h.Store.ListCases()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	perms, err := ctrl.Store().GetUserPermissions(id)
+	perms, err := h.Store.GetUserPermissions(id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsUsersACL(Env(ctrl, r), obj, cases, perms, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.SettingsUsersACL(h.Env(r), obj, cases, perms, valid.ValidationError{}))
 }
 
-func (ctrl UserCtrl) SaveACL(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) UserSaveACL(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	obj, err := ctrl.Store().GetUser(id)
+	obj, err := h.Store.GetUser(id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	form := struct{ Cases []string }{}
-	if err := Decode(ctrl.Store(), r, &form, nil); err != nil {
+	if err := Decode(h.Store, r, &form, nil); err != nil {
 		Warn(w, r, err)
 		return
 	}
 
-	if err := ctrl.ACL().SaveUserPermissions(obj.ID, obj.Role, form.Cases); err != nil {
+	if err := h.ACL.SaveUserPermissions(obj.ID, obj.Role, form.Cases); err != nil {
 		Err(w, r, err)
 		return
 	}

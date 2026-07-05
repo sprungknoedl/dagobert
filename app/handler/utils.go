@@ -19,7 +19,9 @@ import (
 	"github.com/sprungknoedl/dagobert/app/model"
 	"github.com/sprungknoedl/dagobert/app/views"
 	"github.com/sprungknoedl/dagobert/app/worker"
+	"github.com/sprungknoedl/dagobert/pkg/attck"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
@@ -63,7 +65,7 @@ func ImportCSV(store *model.Store, acl *auth.ACL, w http.ResponseWriter, r *http
 	return nil
 }
 
-func ListModules[T any](ctrl Ctrl, w http.ResponseWriter, r *http.Request, fn func(cid string, oid string) (T, error)) {
+func ListModules[T any](h *Handler, w http.ResponseWriter, r *http.Request, fn func(cid string, oid string) (T, error)) {
 	oid := r.PathValue("id")
 	cid := r.PathValue("cid")
 	obj, err := fn(cid, oid)
@@ -73,7 +75,7 @@ func ListModules[T any](ctrl Ctrl, w http.ResponseWriter, r *http.Request, fn fu
 	}
 
 	modules := worker.Supported(obj)
-	list, err := ctrl.Store().GetJobs(oid)
+	list, err := h.Store.GetJobs(oid)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -88,10 +90,10 @@ func ListModules[T any](ctrl Ctrl, w http.ResponseWriter, r *http.Request, fn fu
 	})
 
 	slices.SortFunc(runs, func(a, b views.Job) int { return cmp.Compare(a.Name, b.Name) })
-	Render(w, r, http.StatusOK, views.ModuleList(Env(ctrl, r), runs))
+	Render(w, r, http.StatusOK, views.ModuleList(h.Env(r), runs))
 }
 
-func ScheduleModule[T any](ctrl Ctrl, w http.ResponseWriter, r *http.Request, fn func(cid string, oid string) (T, error)) {
+func ScheduleModule[T any](h *Handler, w http.ResponseWriter, r *http.Request, fn func(cid string, oid string) (T, error)) {
 	oid := r.PathValue("id")
 	cid := r.PathValue("cid")
 	obj, err := fn(cid, oid)
@@ -101,19 +103,19 @@ func ScheduleModule[T any](ctrl Ctrl, w http.ResponseWriter, r *http.Request, fn
 	}
 
 	dto := model.Job{}
-	err = Decode(ctrl.Store(), r, &dto, nil)
+	err = Decode(h.Store, r, &dto, nil)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	kase, err := ctrl.Store().GetCase(cid)
+	kase, err := h.Store.GetCase(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	err = ctrl.Store().PushJob(model.Job{
+	err = h.Store.PushJob(model.Job{
 		ID:       fp.Random(10),
 		Name:     dto.Name,
 		Status:   "Scheduled",
@@ -127,7 +129,7 @@ func ScheduleModule[T any](ctrl Ctrl, w http.ResponseWriter, r *http.Request, fn
 		return
 	}
 
-	ListModules(ctrl, w, r, fn)
+	ListModules(h, w, r, fn)
 }
 
 func Warn(w http.ResponseWriter, r *http.Request, err error) {
@@ -231,24 +233,20 @@ func Decode[T any](db *model.Store, r *http.Request, dst T, validator func(T, mo
 	return nil
 }
 
-type Ctrl interface {
-	Store() *model.Store
-	ACL() *auth.ACL
+// Handler holds the process-wide dependencies shared by all HTTP handlers.
+// All handler methods hang off this one struct; routes are registered in init.go.
+type Handler struct {
+	Store      *model.Store
+	ACL        *auth.ACL
+	Mitre      *attck.KB
+	Timesketch *timesketch.Client
 }
 
-type BaseCtrl struct {
-	store *model.Store
-	acl   *auth.ACL
-}
-
-func (ctrl BaseCtrl) Store() *model.Store { return ctrl.store }
-func (ctrl BaseCtrl) ACL() *auth.ACL      { return ctrl.acl }
-
-func Env(ctrl Ctrl, r *http.Request) views.Env {
-	kase := GetCase(ctrl.Store(), r)
+func (h *Handler) Env(r *http.Request) views.Env {
+	kase := GetCase(h.Store, r)
 	user := GetUser(r)
-	enums, _ := ctrl.Store().ListEnums()
-	custom, _ := ctrl.Store().ListCustomAttributes()
+	enums, _ := h.Store.ListEnums()
+	custom, _ := h.Store.ListCustomAttributes()
 
 	return views.Env{
 		Route:            r.URL.Path,
@@ -257,7 +255,7 @@ func Env(ctrl Ctrl, r *http.Request) views.Env {
 		Enums:            enums,
 		CustomAttributes: custom,
 		Allowed: func(method, url string) (string, bool) {
-			return url, ctrl.ACL().Allowed(user.ID, url, method)
+			return url, h.ACL.Allowed(user.ID, url, method)
 		},
 	}
 }

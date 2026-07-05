@@ -65,11 +65,11 @@ func maxArchiveContentSize() int64 {
 // ExportArchive streams a single case to a ZIP archive. With binaries=true the
 // evidence files and malware samples are bundled too; the default (false) is a
 // metadata-only archive for handoff/archival.
-func (ctrl CaseCtrl) ExportArchive(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ExportArchive(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	includeBinaries := r.URL.Query().Get("binaries") == "true"
 
-	kase, err := ctrl.Store().GetCase(cid)
+	kase, err := h.Store.GetCase(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -92,7 +92,7 @@ func (ctrl CaseCtrl) ExportArchive(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", filename))
 
 	// stream directly to the client; evidence binaries can be large
-	if err := writeCaseArchive(w, ctrl.Store(), cid, sourceInstance, exportedBy, includeBinaries); err != nil {
+	if err := writeCaseArchive(w, h.Store, cid, sourceInstance, exportedBy, includeBinaries); err != nil {
 		// headers/body are already (partially) committed, so we can only log
 		slog.Error("failed to export case archive", "err", err, "case", cid)
 	}
@@ -196,24 +196,24 @@ func writeFileEntry(zw *zip.Writer, name, disk string) error {
 }
 
 // ImportArchiveForm shows the upload form for a case archive.
-func (ctrl CaseCtrl) ImportArchiveForm(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ImportArchiveForm(w http.ResponseWriter, r *http.Request) {
 	Render(w, r, http.StatusOK, views.ImportArchiveDialog())
 }
 
 // ImportArchive handles both stages of the import: the initial upload (parse the
 // manifest, stage the file, show a confirmation screen) and the final commit
 // (recreate the case, restore binaries) once the operator confirms.
-func (ctrl CaseCtrl) ImportArchive(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ImportArchive(w http.ResponseWriter, r *http.Request) {
 	if token := r.FormValue("token"); r.FormValue("confirm") == "yes" && token != "" {
-		ctrl.commitImport(w, r, token)
+		h.CommitImport(w, r, token)
 		return
 	}
-	ctrl.previewImport(w, r)
+	h.PreviewImport(w, r)
 }
 
-// previewImport reads the uploaded archive, validates it, stages it to disk and
+// PreviewImport reads the uploaded archive, validates it, stages it to disk and
 // renders the confirmation screen.
-func (ctrl CaseCtrl) previewImport(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) PreviewImport(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, maxArchiveSize())
 	if err := r.ParseMultipartForm(32 << 20); err != nil {
 		Warn(w, r, fmt.Errorf("archive too large or malformed upload: %w", err))
@@ -283,9 +283,9 @@ func (ctrl CaseCtrl) previewImport(w http.ResponseWriter, r *http.Request) {
 	Render(w, r, http.StatusOK, views.ImportArchiveConfirm(manifest, token))
 }
 
-// commitImport recreates the case from the staged archive and restores its
+// CommitImport recreates the case from the staged archive and restores its
 // binaries.
-func (ctrl CaseCtrl) commitImport(w http.ResponseWriter, r *http.Request, token string) {
+func (h *Handler) CommitImport(w http.ResponseWriter, r *http.Request, token string) {
 	staged := stagedArchivePath(token)
 	defer os.Remove(staged)
 
@@ -317,7 +317,7 @@ func (ctrl CaseCtrl) commitImport(w http.ResponseWriter, r *http.Request, token 
 
 	// recreate the case + every child record in one transaction; any collision
 	// or constraint error rolls back, leaving no partial case
-	if err := ctrl.Store().ImportCaseArchive(arch); err != nil {
+	if err := h.Store.ImportCaseArchive(arch); err != nil {
 		Warn(w, r, err)
 		return
 	}
@@ -332,7 +332,7 @@ func (ctrl CaseCtrl) commitImport(w http.ResponseWriter, r *http.Request, token 
 	// grant the importing user access to what they just imported (administrators
 	// keep wildcard access regardless)
 	user := GetUser(r)
-	if err := ctrl.ACL().SaveCasePermissions(arch.Case.ID, []string{user.ID}); err != nil {
+	if err := h.ACL.SaveCasePermissions(arch.Case.ID, []string{user.ID}); err != nil {
 		Err(w, r, err)
 		return
 	}
