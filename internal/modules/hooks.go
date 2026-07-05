@@ -1,4 +1,4 @@
-package worker
+package modules
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/expr-lang/expr"
 	"github.com/sprungknoedl/dagobert/internal/model"
-	"github.com/sprungknoedl/dagobert/internal/worker/workerutils"
+	"github.com/sprungknoedl/dagobert/internal/modules/utils"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 )
 
@@ -22,7 +22,7 @@ var hooks = atomic.Value{}
 // workerutils can not import this package (the module packages sit in
 // between), so the hook trigger is wired up via a function variable.
 func init() {
-	workerutils.OnEvidenceAdded = TriggerOnEvidenceAdded
+	utils.OnEvidenceAdded = TriggerOnEvidenceAdded
 }
 
 func LoadHooks(store *model.Store) error {

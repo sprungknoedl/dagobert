@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/sprungknoedl/dagobert/internal/auth"
 	"github.com/sprungknoedl/dagobert/internal/model"
-	"github.com/sprungknoedl/dagobert/internal/worker"
+	"github.com/sprungknoedl/dagobert/internal/modules"
 	"github.com/sprungknoedl/dagobert/pkg/attck"
 	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/public"
@@ -89,7 +89,7 @@ func Run(cmd *cobra.Command, args []string) {
 	// Automations & jobs
 	// --------------------------------------
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	go worker.Start(ctx, db, ts)
+	go modules.Start(ctx, db, ts)
 	defer stop()
 
 	// --------------------------------------

@@ -1,4 +1,4 @@
-package worker
+package modules
 
 import (
 	"cmp"
@@ -12,12 +12,12 @@ import (
 	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/model"
-	"github.com/sprungknoedl/dagobert/internal/worker/abuseipdb"
-	"github.com/sprungknoedl/dagobert/internal/worker/hayabusa"
-	"github.com/sprungknoedl/dagobert/internal/worker/hybridanalysis"
-	"github.com/sprungknoedl/dagobert/internal/worker/plaso"
-	"github.com/sprungknoedl/dagobert/internal/worker/timesketch"
-	"github.com/sprungknoedl/dagobert/internal/worker/virustotal"
+	"github.com/sprungknoedl/dagobert/internal/modules/abuseipdb"
+	"github.com/sprungknoedl/dagobert/internal/modules/hayabusa"
+	"github.com/sprungknoedl/dagobert/internal/modules/hybridanalysis"
+	"github.com/sprungknoedl/dagobert/internal/modules/plaso"
+	"github.com/sprungknoedl/dagobert/internal/modules/timesketch"
+	"github.com/sprungknoedl/dagobert/internal/modules/virustotal"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	tsclient "github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"gorm.io/gorm"
