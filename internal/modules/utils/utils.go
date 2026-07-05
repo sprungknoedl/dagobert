@@ -1,4 +1,4 @@
-package workerutils
+package utils
 
 import (
 	"crypto/sha1"

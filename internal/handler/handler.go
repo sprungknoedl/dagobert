@@ -17,8 +17,8 @@ import (
 	"github.com/go-playground/form/v4"
 	"github.com/sprungknoedl/dagobert/internal/auth"
 	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/modules"
 	"github.com/sprungknoedl/dagobert/internal/views"
-	"github.com/sprungknoedl/dagobert/internal/worker"
 	"github.com/sprungknoedl/dagobert/pkg/attck"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/timesketch"
@@ -74,7 +74,7 @@ func ListModules[T any](h *Handler, w http.ResponseWriter, r *http.Request, fn f
 		return
 	}
 
-	modules := worker.Supported(obj)
+	modules := modules.Supported(obj)
 	list, err := h.Store.GetJobs(oid)
 	if err != nil {
 		Err(w, r, err)

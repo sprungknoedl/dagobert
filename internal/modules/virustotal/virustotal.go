@@ -11,7 +11,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/sprungknoedl/dagobert/internal/model"
-	"github.com/sprungknoedl/dagobert/internal/worker/workerutils"
+	"github.com/sprungknoedl/dagobert/internal/modules/utils"
 	vt "github.com/sprungknoedl/dagobert/pkg/virustotal"
 )
 
@@ -51,7 +51,7 @@ func (m *Module) Validate() (model.Module, error) {
 	}
 
 	slog.Info("validating module prerequisites", "module", "virustotal")
-	ctx, cancel := context.WithTimeout(context.Background(), workerutils.LookupTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), utils.LookupTimeout)
 	defer cancel()
 	if err := m.client.Verify(ctx); err != nil {
 		err = fmt.Errorf("connectivity check failed: %w", err)
@@ -63,12 +63,12 @@ func (m *Module) Validate() (model.Module, error) {
 }
 
 func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) error {
-	ind, err := workerutils.GuardIndicatorRun(m, job)
+	ind, err := utils.GuardIndicatorRun(m, job)
 	if err != nil {
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, workerutils.LookupTimeout)
+	ctx, cancel := context.WithTimeout(ctx, utils.LookupTimeout)
 	defer cancel()
 
 	res, err := m.client.Lookup(ctx, ind.Type, ind.Value)

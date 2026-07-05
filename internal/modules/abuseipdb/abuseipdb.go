@@ -1,4 +1,4 @@
-package hybridanalysis
+package abuseipdb
 
 import (
 	"context"
@@ -11,22 +11,22 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/sprungknoedl/dagobert/internal/model"
-	"github.com/sprungknoedl/dagobert/internal/worker/workerutils"
-	ha "github.com/sprungknoedl/dagobert/pkg/hybridanalysis"
+	"github.com/sprungknoedl/dagobert/internal/modules/utils"
+	ab "github.com/sprungknoedl/dagobert/pkg/abuseipdb"
 )
 
 type Module struct {
-	client *ha.Client
+	client *ab.Client
 }
 
 func NewModule() *Module {
-	return &Module{client: ha.NewClient(ha.Config{APIKey: os.Getenv("HYBRIDANALYSIS_APIKEY")})}
+	return &Module{client: ab.NewClient(ab.Config{APIKey: os.Getenv("ABUSEIPDB_APIKEY")})}
 }
 
-func (m *Module) Name() string { return "Hybrid Analysis" }
+func (m *Module) Name() string { return "AbuseIPDB" }
 
 func (m *Module) Description() string {
-	return "Hybrid Analysis (Falcon Sandbox) is a free malware analysis service that detects and analyzes unknown threats using a unique Hybrid Analysis technology."
+	return "AbuseIPDB is an IP reputation database that aggregates user-reported abuse to identify malicious IP addresses."
 }
 
 func (m *Module) Supports(obj any) bool {
@@ -34,7 +34,7 @@ func (m *Module) Supports(obj any) bool {
 	if !ok {
 		return false
 	}
-	if ind.Type != "Hash" {
+	if ind.Type != "IP" {
 		return false
 	}
 	return ind.TLP != "TLP:RED"
@@ -42,16 +42,16 @@ func (m *Module) Supports(obj any) bool {
 
 func (m *Module) Validate() (model.Module, error) {
 	if !m.client.Configured() {
-		slog.Info("module disabled, not configured", "module", "hybridanalysis")
-		return nil, errors.New("HYBRIDANALYSIS_APIKEY is not set, module disabled")
+		slog.Info("module disabled, not configured", "module", "abuseipdb")
+		return nil, errors.New("ABUSEIPDB_APIKEY is not set, module disabled")
 	}
 
-	slog.Info("validating module prerequisites", "module", "hybridanalysis")
-	ctx, cancel := context.WithTimeout(context.Background(), workerutils.LookupTimeout)
+	slog.Info("validating module prerequisites", "module", "abuseipdb")
+	ctx, cancel := context.WithTimeout(context.Background(), utils.LookupTimeout)
 	defer cancel()
 	if err := m.client.Verify(ctx); err != nil {
 		err = fmt.Errorf("connectivity check failed: %w", err)
-		slog.Warn("validating module prerequisites failed", "module", "hybridanalysis", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", "abuseipdb", "err", err)
 		return nil, err
 	}
 
@@ -59,12 +59,12 @@ func (m *Module) Validate() (model.Module, error) {
 }
 
 func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) error {
-	ind, err := workerutils.GuardIndicatorRun(m, job)
+	ind, err := utils.GuardIndicatorRun(m, job)
 	if err != nil {
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, workerutils.LookupTimeout)
+	ctx, cancel := context.WithTimeout(ctx, utils.LookupTimeout)
 	defer cancel()
 
 	res, err := m.client.Lookup(ctx, ind.Value)

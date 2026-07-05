@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/modules"
 	"github.com/sprungknoedl/dagobert/internal/views"
-	"github.com/sprungknoedl/dagobert/internal/worker"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -33,7 +33,7 @@ func (h *Handler) EditHook(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	enum := fp.ToList(fp.ApplyM(worker.Modules, func(m model.Module) model.Enum { return model.Enum{Name: m.Name()} }))
+	enum := fp.ToList(fp.ApplyM(modules.Modules, func(m model.Module) model.Enum { return model.Enum{Name: m.Name()} }))
 	Render(w, r, http.StatusOK, views.SettingsHooksOne(h.Env(r), obj, enum, valid.ValidationError{}))
 }
 
@@ -42,7 +42,7 @@ func (h *Handler) SaveHook(w http.ResponseWriter, r *http.Request) {
 	dto := model.Hook{ID: r.PathValue("id")}
 	err := Decode(h.Store, r, &dto, ValidateHook)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		enum := fp.ToList(fp.ApplyM(worker.Modules, func(m model.Module) model.Enum { return model.Enum{Name: m.Name()} }))
+		enum := fp.ToList(fp.ApplyM(modules.Modules, func(m model.Module) model.Enum { return model.Enum{Name: m.Name()} }))
 		Render(w, r, http.StatusUnprocessableEntity, views.SettingsHooksOne(h.Env(r), dto, enum, vr))
 		return
 	} else if err != nil {
@@ -59,7 +59,7 @@ func (h *Handler) SaveHook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// reload hooks
-	worker.LoadHooks(h.Store)
+	modules.LoadHooks(h.Store)
 
 	RedirectAfterSave(w, r, "/settings/hooks/")
 }
@@ -79,6 +79,6 @@ func (h *Handler) DeleteHook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// reload hooks
-	worker.LoadHooks(h.Store)
+	modules.LoadHooks(h.Store)
 	http.Redirect(w, r, "/settings/hooks/", http.StatusSeeOther)
 }

@@ -11,7 +11,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/sprungknoedl/dagobert/internal/model"
-	"github.com/sprungknoedl/dagobert/internal/worker/workerutils"
+	"github.com/sprungknoedl/dagobert/internal/modules/utils"
 	ts "github.com/sprungknoedl/dagobert/pkg/timesketch"
 )
 
@@ -57,7 +57,7 @@ func (m *Module) Validate() (model.Module, error) {
 }
 
 func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) error {
-	evidence, err := workerutils.GuardEvidenceRun(m, job)
+	evidence, err := utils.GuardEvidenceRun(m, job)
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 		return errors.New("timesketch: case is not linked to a sketch")
 	}
 
-	src := workerutils.Filepath(evidence)
+	src := utils.Filepath(evidence)
 	return m.client.Upload(ctx, job.Case.SketchID, src)
 }
 

@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/model"
-	"github.com/sprungknoedl/dagobert/internal/worker"
+	"github.com/sprungknoedl/dagobert/internal/modules"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -27,7 +27,7 @@ func isFlatName(name string) bool {
 	return name == filepath.Base(name) && name != "." && name != ".." && !strings.ContainsRune(name, '\\')
 }
 
-func InEnum(enum []model.Enum, item string) bool {
+func inEnum(enum []model.Enum, item string) bool {
 	return slices.Contains(
 		fp.Apply(enum, func(e model.Enum) string { return e.Name }),
 		item)
@@ -35,8 +35,8 @@ func InEnum(enum []model.Enum, item string) bool {
 
 func ValidateAsset(dto *model.Asset, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
-		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !InEnum(enums.AssetStatus, dto.Status)},
-		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !InEnum(enums.AssetTypes, dto.Type)},
+		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !inEnum(enums.AssetStatus, dto.Status)},
+		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !inEnum(enums.AssetTypes, dto.Type)},
 		{Name: "Name", Missing: dto.Name == ""},
 	})
 }
@@ -44,8 +44,8 @@ func ValidateAsset(dto *model.Asset, enums model.Enums) valid.ValidationError {
 func ValidateCase(dto *model.Case, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Name", Missing: dto.Name == ""},
-		{Name: "Severity", Message: "Invalid value.", Invalid: !InEnum(enums.CaseSeverities, dto.Severity)},
-		{Name: "Outcome", Message: "Invalid value.", Invalid: !InEnum(enums.CaseOutcomes, dto.Outcome)},
+		{Name: "Severity", Message: "Invalid value.", Invalid: !inEnum(enums.CaseSeverities, dto.Severity)},
+		{Name: "Outcome", Message: "Invalid value.", Invalid: !inEnum(enums.CaseOutcomes, dto.Outcome)},
 		{Name: "SketchID", Message: "Invalid value. Must be positive.", Invalid: dto.SketchID < 0},
 	})
 }
@@ -53,7 +53,7 @@ func ValidateCase(dto *model.Case, enums model.Enums) valid.ValidationError {
 func ValidateEvent(dto *model.Event, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Time", Missing: dto.Time.IsZero()},
-		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !InEnum(enums.EventTypes, dto.Type)},
+		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !inEnum(enums.EventTypes, dto.Type)},
 		{Name: "Event", Missing: dto.Event == ""},
 	})
 }
@@ -70,16 +70,16 @@ func ValidateEvidence(dto *model.Evidence, enums model.Enums) valid.ValidationEr
 func ValidateIndicator(dto *model.Indicator, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Value", Missing: dto.Value == ""},
-		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !InEnum(enums.IndicatorStatus, dto.Status)},
-		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !InEnum(enums.IndicatorTypes, dto.Type)},
-		{Name: "TLP", Message: "Invalid value.", Missing: dto.TLP == "", Invalid: !InEnum(enums.IndicatorTLPs, dto.TLP)},
+		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !inEnum(enums.IndicatorStatus, dto.Status)},
+		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !inEnum(enums.IndicatorTypes, dto.Type)},
+		{Name: "TLP", Message: "Invalid value.", Missing: dto.TLP == "", Invalid: !inEnum(enums.IndicatorTLPs, dto.TLP)},
 	})
 }
 
 func ValidateKey(dto *model.Key, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Name", Missing: dto.Name == ""},
-		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !InEnum(enums.KeyTypes, dto.Type)},
+		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !inEnum(enums.KeyTypes, dto.Type)},
 	})
 }
 
@@ -87,7 +87,7 @@ func ValidateMalware(dto *model.Malware, enums model.Enums) valid.ValidationErro
 	return valid.Check([]valid.Condition{
 		{Name: "Path", Missing: dto.Path == ""},
 		{Name: "Hash", Message: "Invalid hash. Only letters and digits are allowed.", Missing: dto.Hash == "", Invalid: !reAlnum.MatchString(dto.Hash)},
-		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !InEnum(enums.MalwareStatus, dto.Status)},
+		{Name: "Status", Message: "Invalid status.", Missing: dto.Status == "", Invalid: !inEnum(enums.MalwareStatus, dto.Status)},
 	})
 }
 
@@ -101,7 +101,7 @@ func ValidateNote(dto *model.Note, enums model.Enums) valid.ValidationError {
 func ValidateTask(dto *model.Task, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Task", Missing: dto.Task == ""},
-		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !InEnum(enums.TaskTypes, dto.Type)},
+		{Name: "Type", Message: "Invalid type.", Missing: dto.Type == "", Invalid: !inEnum(enums.TaskTypes, dto.Type)},
 	})
 }
 
@@ -122,24 +122,22 @@ func ValidateReport(dto *model.Report, enums model.Enums) valid.ValidationError 
 func ValidateUser(dto *model.User, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "ID", Missing: dto.ID == ""},
-		{Name: "Role", Message: "Invalid role", Invalid: !InEnum(enums.UserRoles, dto.Role)},
+		{Name: "Role", Message: "Invalid role", Invalid: !inEnum(enums.UserRoles, dto.Role)},
 	})
 }
 
 func ValidateHook(dto *model.Hook, enums model.Enums) valid.ValidationError {
-	modules := fp.Keys(worker.Modules)
-
 	// compile condition
 	msg := ""
-	_, err := worker.CompileHook(*dto)
+	_, err := modules.CompileHook(*dto)
 	if err != nil {
 		msg = err.Error()
 	}
 
 	return valid.Check([]valid.Condition{
 		{Name: "ID", Missing: dto.ID == ""},
-		{Name: "Trigger", Message: "Invalid trigger", Invalid: !InEnum(enums.HookTrigger, dto.Trigger)},
-		{Name: "Module", Message: "Invalid module", Invalid: !slices.Contains(modules, dto.Module)},
+		{Name: "Trigger", Message: "Invalid trigger", Invalid: !inEnum(enums.HookTrigger, dto.Trigger)},
+		{Name: "Module", Message: "Invalid module", Invalid: !slices.Contains(fp.Keys(modules.Modules), dto.Module)},
 		{Name: "Condition", Message: msg, Invalid: err != nil},
 	})
 }

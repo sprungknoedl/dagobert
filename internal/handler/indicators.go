@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/modules"
 	"github.com/sprungknoedl/dagobert/internal/views"
-	"github.com/sprungknoedl/dagobert/internal/worker"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/openioc"
 	"github.com/sprungknoedl/dagobert/pkg/stix"
@@ -339,7 +339,7 @@ func (h *Handler) IndicatorSave(w http.ResponseWriter, r *http.Request) {
 
 	// trigger registered hooks
 	if new {
-		worker.TriggerOnIndicatorAdded(h.Store, dto)
+		modules.TriggerOnIndicatorAdded(h.Store, dto)
 	}
 
 	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/indicators/", dto.CaseID))

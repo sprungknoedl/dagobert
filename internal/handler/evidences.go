@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/modules"
 	"github.com/sprungknoedl/dagobert/internal/views"
-	"github.com/sprungknoedl/dagobert/internal/worker"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
@@ -202,7 +202,7 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 
 	// trigger registered hooks
 	if new {
-		worker.TriggerOnEvidenceAdded(h.Store, dto)
+		modules.TriggerOnEvidenceAdded(h.Store, dto)
 	}
 
 	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/evidences/", dto.CaseID))

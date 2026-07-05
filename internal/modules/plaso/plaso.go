@@ -15,7 +15,7 @@ import (
 
 	"github.com/mattn/go-shellwords"
 	"github.com/sprungknoedl/dagobert/internal/model"
-	"github.com/sprungknoedl/dagobert/internal/worker/workerutils"
+	"github.com/sprungknoedl/dagobert/internal/modules/utils"
 	"github.com/sprungknoedl/dagobert/pkg/tty"
 )
 
@@ -74,12 +74,12 @@ func (m *Module) Validate() (model.Module, error) {
 }
 
 func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) error {
-	evidence, err := workerutils.GuardEvidenceRun(m, job)
+	evidence, err := utils.GuardEvidenceRun(m, job)
 	if err != nil {
 		return err
 	}
 
-	src := workerutils.Filepath(evidence)
+	src := utils.Filepath(evidence)
 	dst := src + ".plaso"
 
 	parser := cmp.Or(job.Settings["profile"], DefaultProfile)
@@ -108,7 +108,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 	}
 
 	return store.Transaction(func(tx *model.Store) error {
-		if err := workerutils.AddFromFS(tx, model.Evidence{
+		if err := utils.AddFromFS(tx, model.Evidence{
 			CaseID: evidence.CaseID,
 			Type:   "Other",
 			Name:   filepath.Base(dst),
@@ -118,7 +118,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 			return err
 		}
 
-		if err := workerutils.AddFromFS(tx, model.Evidence{
+		if err := utils.AddFromFS(tx, model.Evidence{
 			CaseID: evidence.CaseID,
 			Type:   "Other",
 			Name:   filepath.Base(dst) + ".csv",
