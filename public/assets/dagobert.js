@@ -179,6 +179,7 @@ document.addEventListener('change', (event) => {
 const onAccepted = {
     'reload-list': () => up.reload('#list'),
     'reload-main-root': () => up.reload('main', { layer: 'root' }),
+    'goto-cases': () => up.navigate({ url: '/cases/', layer: 'root' }),
 };
 up.compiler('[data-up-accepted]', (link) => {
     const fn = onAccepted[link.dataset.upAccepted];
