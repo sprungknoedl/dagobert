@@ -28,7 +28,13 @@ func (h *Handler) EvidenceList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.EvidencesMany(h.Env(r), list))
+	comments, err := h.Store.CountComments(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	Render(w, r, http.StatusOK, views.EvidencesMany(h.Env(r), list, comments))
 }
 
 func (h *Handler) EvidenceExport(w http.ResponseWriter, r *http.Request) {

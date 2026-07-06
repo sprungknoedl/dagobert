@@ -25,7 +25,7 @@ func techniques(mitre attck.KB, e model.Event) iter.Seq[attck.Technique] {
 	}
 }
 
-templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators []model.Indicator, mitre attck.KB) {
+templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators []model.Indicator, mitre attck.KB, comments map[string]int) {
 	@layout() {
 		@list(env, "Timeline", navHideImport(), navPreButtons(eventsManyExtra(env)), navSubtitle("Chronological log of attacker activity and analyst findings")) {
 			<div id="histogram" class="card bg-base-200 text-xs m-4 p-4" up-data={ histogramJSON(rows) }></div>
@@ -98,6 +98,7 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 												<i class="ph ph-5 ph-flag btn-flagged"></i>
 											}
 										}
+										@commentsBtn(env, "events", row.ID, comments)
 										@defaultActionBtns(env, env.Route+row.ID)
 									</div>
 								</td>

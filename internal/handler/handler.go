@@ -160,6 +160,11 @@ func Err(w http.ResponseWriter, r *http.Request, err error) {
 	views.ToastError(err).Render(r.Context(), w)
 }
 
+func Forbidden(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusForbidden)
+	w.Write([]byte(http.StatusText(http.StatusForbidden)))
+}
+
 func Serve4xx(w http.ResponseWriter, r *http.Request) {
 	Warn(w, r, errors.New("400: Client Test Error"))
 }

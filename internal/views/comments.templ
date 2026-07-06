@@ -1,0 +1,72 @@
+package views
+
+import (
+	"fmt"
+	"strconv"
+
+	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"github.com/sprungknoedl/dagobert/pkg/valid"
+)
+
+templ CommentsDialog(env Env, kind string, oid string, rows []model.Comment, edit model.Comment, vr valid.ValidationError) {
+	{{ uri := fmt.Sprintf("/cases/%s/comments/%s/%s/", env.Case.ID, kind, oid) }}
+	{{ _, canWrite := env.Allowed("POST", uri+edit.ID) }}
+	@layout() {
+		<main>
+			<h1 class="font-serif text-2xl mb-4">Comments</h1>
+			<div class="mb-4">
+				if len(rows) == 0 {
+					<p class="text-base-content/60 mb-4">No comments yet.</p>
+				}
+				for _, row := range rows {
+					<div class={ "mb-4" + fp.If(row.ID == edit.ID, " p-2 bg-flagged rounded-box", "") }>
+						<div class="flex items-center gap-2 text-sm min-h-[2rem]">
+							<span class="font-bold">{ fp.If(row.AuthorName != "", row.AuthorName, row.Author) }</span>
+							@formatTime(row.Time)
+							<div class="grow"></div>
+							if canWrite && row.ID != edit.ID && (row.Author == env.User.UPN || env.User.Role == "Administrator") {
+								<div class="join">
+									<a class="join-item btn btn-sm" href={ uri + "?edit=" + row.ID } up-target="main">
+										<i class="ph ph-5 ph-pencil-simple"></i>
+									</a>
+									// stay in the drawer: the confirm dialog and the post-delete
+									// re-render both replace this layer's main, never the page
+									<a class="join-item btn btn-sm" href={ uri + row.ID } up-method="DELETE" up-target="main">
+										<i class="ph ph-5 ph-trash"></i>
+									</a>
+								</div>
+							}
+						</div>
+						<p class="whitespace-pre-wrap">{ row.Message }</p>
+					</div>
+				}
+			</div>
+			if canWrite {
+				<form method="post" action={ uri + edit.ID } up-submit up-target="main">
+					@textareaField("Message", edit.Message, withLabel(fp.If(edit.ID == "new", "Add comment", "Edit comment")), withError(vr["Message"]))
+					<div class="flex gap-2 items-center">
+						if edit.ID != "new" {
+							<button type="submit" class="btn btn-primary">Save </button>
+							<a class="btn" href={ uri } up-target="main">Cancel </a>
+						} else {
+							<button type="submit" class="btn btn-neutral">Submit </button>
+							<a class="btn" up-dismiss>Close </a>
+						}
+					</div>
+				</form>
+			} else {
+				<a class="btn" up-dismiss>Close </a>
+			}
+		</main>
+	}
+}
+
+templ commentsBtn(env Env, kind string, oid string, comments map[string]int) {
+	@actionBtn(env, "GET", "/cases/"+env.Case.ID+"/comments/"+kind+"/"+oid+"/") {
+		<i class="ph ph-5 ph-chat-circle"></i>
+		if n := comments[kind+":"+oid]; n > 0 {
+			<span class="badge badge-sm">{ strconv.Itoa(n) }</span>
+		}
+	}
+}

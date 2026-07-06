@@ -152,6 +152,7 @@ func writeCaseArchive(out io.Writer, store *model.Store, cid, sourceInstance, ex
 			"malware":    len(arch.Malware),
 			"notes":      len(arch.Notes),
 			"tasks":      len(arch.Tasks),
+			"comments":   len(arch.Comments),
 		},
 		Warnings: warnings,
 	}

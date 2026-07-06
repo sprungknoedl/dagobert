@@ -251,6 +251,11 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("POST /cases/{cid}/notes/{id}", h.NoteSave)
 	secured.HandleFunc("DELETE /cases/{cid}/notes/{id}", h.NoteDelete)
 
+	// comments (on case sub-objects)
+	secured.HandleFunc("GET /cases/{cid}/comments/{kind}/{oid}/", h.CommentList)
+	secured.HandleFunc("POST /cases/{cid}/comments/{kind}/{oid}/{id}", h.CommentSave)
+	secured.HandleFunc("DELETE /cases/{cid}/comments/{kind}/{oid}/{id}", h.CommentDelete)
+
 	// visualizations
 	secured.HandleFunc("GET /cases/{cid}/vis/network", h.Network)
 	secured.HandleFunc("GET /cases/{cid}/vis/mitre", h.MitreAttack)

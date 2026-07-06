@@ -22,7 +22,13 @@ func (h *Handler) TaskList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.TasksMany(h.Env(r), list))
+	comments, err := h.Store.CountComments(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	Render(w, r, http.StatusOK, views.TasksMany(h.Env(r), list, comments))
 }
 
 func (h *Handler) TaskExport(w http.ResponseWriter, r *http.Request) {

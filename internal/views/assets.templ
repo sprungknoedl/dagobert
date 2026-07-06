@@ -17,7 +17,7 @@ func summarizeAssets(rows []model.Asset) map[string]int {
 	return summary
 }
 
-templ AssetsMany(env Env, title string, rows []model.Asset) {
+templ AssetsMany(env Env, title string, rows []model.Asset, comments map[string]int) {
 	{{ summary := summarizeAssets(rows) }}
 	@layout() {
 		@list(env, title, navSubtitle("Hosts, accounts, and services involved in the incident")) {
@@ -68,6 +68,7 @@ templ AssetsMany(env Env, title string, rows []model.Asset) {
 								<td class="value-5" data-search={ row.Notes }>{ row.Notes } </td>
 								<td class="text-right">
 									<div class="join">
+										@commentsBtn(env, "assets", row.ID, comments)
 										@defaultActionBtns(env, env.Route+row.ID)
 									</div>
 								</td>

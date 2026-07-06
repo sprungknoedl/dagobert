@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]model.Enrichment) {
+templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]model.Enrichment, comments map[string]int) {
 	{{ summary := summarizeIndicators(rows) }}
 	@layout() {
 		@list(env, "Indicators", navHideImport(), navHideExport(), navPreButtons(indicatorsManyExtra(env)), navSubtitle("Atomic artefacts for detection and threat hunting")) {
@@ -95,6 +95,7 @@ templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]m
 												<i class="ph ph-5 ph-lightning"></i>
 											}
 										}
+										@commentsBtn(env, "indicators", row.ID, comments)
 										@defaultActionBtns(env, env.Route+row.ID)
 									</div>
 								</td>

@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-templ TasksMany(env Env, rows []model.Task) {
+templ TasksMany(env Env, rows []model.Task, comments map[string]int) {
 	@layout() {
 		@list(env, "Tasks", navSubtitle("Work items tracked across the investigation team")) {
 			<table class="table table-default" data-default-sort="value-0">
@@ -46,6 +46,7 @@ templ TasksMany(env Env, rows []model.Task) {
 								</td>
 								<td class="text-right">
 									<div class="join">
+										@commentsBtn(env, "tasks", row.ID, comments)
 										@defaultActionBtns(env, env.Route+row.ID)
 									</div>
 								</td>

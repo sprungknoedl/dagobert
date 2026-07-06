@@ -135,5 +135,11 @@ func (store *Store) SaveCase(obj Case) error {
 }
 
 func (store *Store) DeleteCase(cid string) error {
-	return store.DB.Delete(Case{}, "id = ?", cid).Error
+	return store.Transaction(func(tx *Store) error {
+		// comments carry no foreign key, so the case FK cascade does not reach them
+		if err := tx.DB.Delete(&Comment{}, "case_id = ?", cid).Error; err != nil {
+			return err
+		}
+		return tx.DB.Delete(Case{}, "id = ?", cid).Error
+	})
 }
