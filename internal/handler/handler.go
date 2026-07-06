@@ -83,9 +83,13 @@ func ListModules[T any](h *Handler, w http.ResponseWriter, r *http.Request, fn f
 
 	jobs := fp.ToMap(list, func(j model.Job) string { return j.Name })
 	runs := fp.Apply(modules, func(m model.Module) views.Job {
+		// jobs[m.Name()] is the zero Job when the module never ran for this
+		// object; the view relies on Name for the title and the schedule form
+		job := jobs[m.Name()]
+		job.Name = m.Name()
 		return views.Job{
 			Module: m,
-			Job:    jobs[m.Name()],
+			Job:    job,
 		}
 	})
 
