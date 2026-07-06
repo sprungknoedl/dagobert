@@ -169,6 +169,64 @@ func (store *Store) ImportCaseArchive(arch CaseArchive) error {
 	})
 }
 
+// ForkCase duplicates a case into dst by round-tripping the archive
+// export/import: every child row gets a fresh id (relations remapped via one
+// old→new map), and the archive's case row is replaced with the form-submitted
+// dst. The import runs in its usual transaction, so a failed fork leaves
+// nothing behind. Files on disk and ACL rules are the caller's job.
+func (store *Store) ForkCase(srcID string, dst Case) (Case, error) {
+	arch, err := store.ExportCaseArchive(srcID)
+	if err != nil {
+		return Case{}, err
+	}
+
+	ids := map[string]string{arch.Case.ID: dst.ID}
+	remap := func(old string) string {
+		if ids[old] == "" {
+			ids[old] = fp.Random(10)
+		}
+		return ids[old]
+	}
+
+	arch.Case = dst
+	for i := range arch.Assets {
+		arch.Assets[i].ID = remap(arch.Assets[i].ID)
+		arch.Assets[i].CaseID = dst.ID
+	}
+	for i := range arch.Indicators {
+		arch.Indicators[i].ID = remap(arch.Indicators[i].ID)
+		arch.Indicators[i].CaseID = dst.ID
+	}
+	for i := range arch.Events {
+		arch.Events[i].ID = remap(arch.Events[i].ID)
+		arch.Events[i].CaseID = dst.ID
+		arch.Events[i].AssetIDs = fp.Apply(arch.Events[i].AssetIDs, remap)
+		arch.Events[i].IndicatorIDs = fp.Apply(arch.Events[i].IndicatorIDs, remap)
+	}
+	for i := range arch.Malware {
+		arch.Malware[i].ID = remap(arch.Malware[i].ID)
+		arch.Malware[i].CaseID = dst.ID
+		if arch.Malware[i].AssetID != nil {
+			id := remap(*arch.Malware[i].AssetID)
+			arch.Malware[i].AssetID = &id
+		}
+	}
+	for i := range arch.Notes {
+		arch.Notes[i].ID = remap(arch.Notes[i].ID)
+		arch.Notes[i].CaseID = dst.ID
+	}
+	for i := range arch.Tasks {
+		arch.Tasks[i].ID = remap(arch.Tasks[i].ID)
+		arch.Tasks[i].CaseID = dst.ID
+	}
+	for i := range arch.Evidences {
+		arch.Evidences[i].ID = remap(arch.Evidences[i].ID)
+		arch.Evidences[i].CaseID = dst.ID
+	}
+
+	return dst, store.ImportCaseArchive(arch)
+}
+
 // assertNoCollisions fails the import if any id in the archive already exists on
 // this instance, with a message naming the table and the colliding id(s).
 func (store *Store) assertNoCollisions(arch CaseArchive) error {
