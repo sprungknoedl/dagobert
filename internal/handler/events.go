@@ -38,8 +38,14 @@ func (h *Handler) EventList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	comments, err := h.Store.CountComments(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
 	env := h.Env(r)
-	views.EventsMany(env, list, assets, indicators, *h.Mitre).Render(r.Context(), w)
+	views.EventsMany(env, list, assets, indicators, *h.Mitre, comments).Render(r.Context(), w)
 }
 
 func (h *Handler) EventExport(w http.ResponseWriter, r *http.Request) {

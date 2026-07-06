@@ -107,6 +107,9 @@ func (store *Store) DeleteIndicator(cid string, id string) error {
 		if res.Error != nil || res.RowsAffected == 0 {
 			return res.Error
 		}
+		if err := tx.deleteObjectComments(cid, "indicators", id); err != nil {
+			return err
+		}
 		return tx.DeleteEnrichments("Indicator", id)
 	})
 }

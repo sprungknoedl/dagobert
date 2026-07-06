@@ -20,7 +20,13 @@ func (h *Handler) AssetList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.AssetsMany(h.Env(r), "Assets", list))
+	comments, err := h.Store.CountComments(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	Render(w, r, http.StatusOK, views.AssetsMany(h.Env(r), "Assets", list, comments))
 }
 
 func (h *Handler) AssetExport(w http.ResponseWriter, r *http.Request) {

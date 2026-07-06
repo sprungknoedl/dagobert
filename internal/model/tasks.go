@@ -35,5 +35,10 @@ func (store *Store) SaveTask(cid string, obj Task) error {
 }
 
 func (store *Store) DeleteTask(cid string, id string) error {
-	return store.DB.Delete(&Task{}, "id = ? AND case_id = ?", id, cid).Error
+	return store.Transaction(func(tx *Store) error {
+		if err := tx.deleteObjectComments(cid, "tasks", id); err != nil {
+			return err
+		}
+		return tx.DB.Delete(&Task{}, "id = ? AND case_id = ?", id, cid).Error
+	})
 }

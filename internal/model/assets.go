@@ -65,6 +65,9 @@ func (store *Store) DeleteAsset(cid string, id string) error {
 		if res.Error != nil || res.RowsAffected == 0 {
 			return res.Error
 		}
+		if err := tx.deleteObjectComments(cid, "assets", id); err != nil {
+			return err
+		}
 		return tx.DeleteEnrichments("Asset", id)
 	})
 }

@@ -105,7 +105,7 @@ templ ImportArchiveConfirm(m model.Manifest, token string) {
 					</dl>
 					<table class="table table-sm w-full mb-4">
 						<tbody>
-							for _, key := range []string{"assets", "events", "indicators", "malware", "evidences", "notes", "tasks"} {
+							for _, key := range []string{"assets", "events", "indicators", "malware", "evidences", "notes", "tasks", "comments"} {
 								<tr>
 									<td class="text-base-content/60 capitalize">{ key }</td>
 									<td class="text-right font-mono">{ strconv.Itoa(m.Counts[key]) }</td>

@@ -26,7 +26,7 @@ func humanizeSize(s int64) string {
 	return fmt.Sprintf(f, val, suffix)
 }
 
-templ EvidencesMany(env Env, rows []model.Evidence) {
+templ EvidencesMany(env Env, rows []model.Evidence, comments map[string]int) {
 	@layout() {
 		@list(env, "Evidences", navSubtitle("Files and artefacts collected for forensic analysis")) {
 			<table class="table table-default" data-default-sort="value-1">
@@ -76,6 +76,7 @@ templ EvidencesMany(env Env, rows []model.Evidence) {
 												<i class="ph ph-5 ph-lightning"></i>
 											}
 										}
+										@commentsBtn(env, "evidences", row.ID, comments)
 										@defaultActionBtns(env, env.Route+row.ID)
 									</div>
 								</td>

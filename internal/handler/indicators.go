@@ -35,7 +35,13 @@ func (h *Handler) IndicatorList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.IndicatorsMany(h.Env(r), list, enrichments))
+	comments, err := h.Store.CountComments(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	Render(w, r, http.StatusOK, views.IndicatorsMany(h.Env(r), list, enrichments, comments))
 }
 
 func (h *Handler) IndicatorExportCSV(w http.ResponseWriter, r *http.Request) {

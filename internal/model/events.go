@@ -78,5 +78,10 @@ func (store *Store) SaveEvent(cid string, obj Event, override bool) error {
 }
 
 func (store *Store) DeleteEvent(cid string, id string) error {
-	return store.DB.Delete(&Event{}, "id = ? AND case_id = ?", id, cid).Error
+	return store.Transaction(func(tx *Store) error {
+		if err := tx.deleteObjectComments(cid, "events", id); err != nil {
+			return err
+		}
+		return tx.DB.Delete(&Event{}, "id = ? AND case_id = ?", id, cid).Error
+	})
 }

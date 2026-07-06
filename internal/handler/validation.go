@@ -98,6 +98,12 @@ func ValidateNote(dto *model.Note, enums model.Enums) valid.ValidationError {
 	})
 }
 
+func ValidateComment(dto *model.Comment, enums model.Enums) valid.ValidationError {
+	return valid.Check([]valid.Condition{
+		{Name: "Message", Missing: dto.Message == ""},
+	})
+}
+
 func ValidateTask(dto *model.Task, enums model.Enums) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Task", Missing: dto.Task == ""},

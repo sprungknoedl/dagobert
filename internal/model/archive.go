@@ -42,6 +42,7 @@ type CaseArchive struct {
 	Notes      []Note         `json:"notes"`
 	Tasks      []Task         `json:"tasks"`
 	Evidences  []Evidence     `json:"evidences"`
+	Comments   []Comment      `json:"comments"`
 }
 
 // ArchiveEvent is the export projection of an Event: the event itself plus the
@@ -70,6 +71,11 @@ func (store *Store) ExportCaseArchive(cid string) (CaseArchive, error) {
 		return CaseArchive{}, err
 	}
 
+	comments := []Comment{}
+	if err := store.DB.Where("case_id = ?", cid).Order("time asc").Find(&comments).Error; err != nil {
+		return CaseArchive{}, err
+	}
+
 	// the case row carries the scalar fields only; the child collections live in
 	// their own top-level arrays
 	kase := obj
@@ -89,6 +95,7 @@ func (store *Store) ExportCaseArchive(cid string) (CaseArchive, error) {
 		Notes:      obj.Notes,
 		Tasks:      obj.Tasks,
 		Evidences:  obj.Evidences,
+		Comments:   comments,
 		Events: fp.Apply(events, func(e Event) ArchiveEvent {
 			ae := ArchiveEvent{
 				AssetIDs:     fp.Apply(e.Assets, func(a Asset) string { return a.ID }),
@@ -165,6 +172,11 @@ func (store *Store) ImportCaseArchive(arch CaseArchive) error {
 				return err
 			}
 		}
+		for _, c := range arch.Comments {
+			if err := tx.SaveComment(arch.Case.ID, c); err != nil {
+				return err
+			}
+		}
 		return nil
 	})
 }
@@ -223,6 +235,11 @@ func (store *Store) ForkCase(srcID string, dst Case) (Case, error) {
 		arch.Evidences[i].ID = remap(arch.Evidences[i].ID)
 		arch.Evidences[i].CaseID = dst.ID
 	}
+	for i := range arch.Comments {
+		arch.Comments[i].ID = remap(arch.Comments[i].ID)
+		arch.Comments[i].CaseID = dst.ID
+		arch.Comments[i].ObjectID = remap(arch.Comments[i].ObjectID)
+	}
 
 	return dst, store.ImportCaseArchive(arch)
 }
@@ -247,6 +264,7 @@ func (store *Store) assertNoCollisions(arch CaseArchive) error {
 		{"notes", fp.Apply(arch.Notes, func(n Note) string { return n.ID })},
 		{"tasks", fp.Apply(arch.Tasks, func(t Task) string { return t.ID })},
 		{"evidences", fp.Apply(arch.Evidences, func(e Evidence) string { return e.ID })},
+		{"comments", fp.Apply(arch.Comments, func(c Comment) string { return c.ID })},
 	}
 	for _, c := range checks {
 		found, err := store.existingIDs(c.table, c.ids)
