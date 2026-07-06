@@ -240,6 +240,55 @@ up.compiler('input[type=file][data-fill], input[type=file][data-hash]', (input) 
     return () => input.removeEventListener('change', onChange);
 });
 
+// Markdown live-preview editor (Vditor, instant-render mode) for textareas
+// marked [data-markdown] (note Description, case Summary). The textarea stays
+// in the DOM as the hidden form field; the editor syncs into it on input.
+// If Vditor fails to load, the plain textarea remains usable.
+up.compiler('textarea[data-markdown]', (textarea) => {
+    if (typeof Vditor === 'undefined') { return; }
+    const holder = document.createElement('div');
+    textarea.insertAdjacentElement('afterend', holder);
+    textarea.hidden = true;
+    const editor = new Vditor(holder, {
+        mode: 'ir',
+        lang: 'en_US',
+        icon: null, // toolbar is hidden; skips loading dist/js/icons/*.js
+        cdn: '/public/assets/vditor-3.11.2',
+        value: textarea.value,
+        toolbar: [],
+        cache: { enable: false },
+        preview: {
+            hljs: { enable: false },
+            theme: { current: 'dagobert', path: '/public/assets/vditor-3.11.2/dist/css/content-theme' },
+        },
+        minHeight: 120,
+        input: (value) => { textarea.value = value; },
+    });
+    return () => {
+        editor.destroy();
+        holder.remove();
+        textarea.hidden = false;
+    };
+});
+
+// Collapse long markdown previews in tables. CSS caps .markdown-preview at a
+// generous max-height; when the content actually overflows, add the fade-out
+// mask and a show more/less toggle below it.
+up.compiler('.markdown-preview', (elem) => {
+    if (elem.scrollHeight <= elem.clientHeight) { return; }
+    elem.classList.add('overflowing');
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-ghost btn-xs';
+    btn.textContent = 'Show more';
+    btn.addEventListener('click', () => {
+        const expanded = elem.classList.toggle('expanded');
+        btn.textContent = expanded ? 'Show less' : 'Show more';
+    });
+    elem.insertAdjacentElement('afterend', btn);
+    return () => btn.remove();
+});
+
 // Lateral-movement network graph (VisNetwork). Nodes/edges/groups arrive from
 // the server in [up-data]; vis-network is loaded on demand so it only ships on
 // this page.

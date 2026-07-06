@@ -162,9 +162,7 @@ templ CasesOne(env Env, obj model.Case, vr valid.ValidationError, opts ...CasesO
 			@dateField("OpenedAt", dateInputValue(obj.OpenedAt), withLabel("Opened"))
 			@dateField("ClosedAt", dateInputValue(obj.ClosedAt), withLabel("Closed at"))
 		}
-		<!-- x -->
-		<h2 class="text-xl font-serif mb-2 mt-4">Summary</h2>
-		@textareaField("Summary", obj.Summary, withLabel("Executive summary"), withHint("Markdown supported. Describe what happened, scope of impact, root cause, and resolution."))
+		@markdownField("Summary", obj.Summary, withLabel("Executive summary"), withHint("Markdown supported. Describe what happened, scope of impact, root cause, and resolution."))
 		<!-- x -->
 		if cfg.sketches.Show {
 			<h2 class="text-xl font-serif mb-2 mt-4">Integrations</h2>

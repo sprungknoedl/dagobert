@@ -1,6 +1,7 @@
 @import './phosphor-2.1.2.css';
 @import './unpoly-3.14.3.css';
 @import './vis-timeline-8.5.1.css';
+@import './vditor-3.11.2.css';
 
 @import 'tailwindcss';
 @plugin "@tailwindcss/typography";
@@ -173,6 +174,34 @@ border color and corner radius instead of the standalone .btn pill (2rem) above
 .join:has(.input, .select, .textarea) .btn.join-item {
     --radius-field: 0.5rem;
     --btn-border: color-mix(in oklab, var(--color-base-content) 20%, transparent);
+}
+
+/*
+MARKDOWN IN TABLES
+prose defaults to a larger base font than table cells; inherit the cell size so
+markdown scales with the rest of the row. Long notes collapse to a preview —
+the compiler in dagobert.js adds .overflowing and the show more/less toggle.
+*/
+
+.table .prose {
+    font-size: inherit;
+}
+
+/* markdown headings follow the platform's serif headings */
+.prose :where(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--font-serif);
+    font-weight: 600;
+}
+
+.markdown-preview {
+    max-height: 24rem;
+    overflow: hidden;
+}
+.markdown-preview.overflowing:not(.expanded) {
+    mask-image: linear-gradient(to bottom, black 70%, transparent);
+}
+.markdown-preview.expanded {
+    max-height: none;
 }
 
 .bg-flagged {

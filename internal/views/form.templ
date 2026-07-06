@@ -202,3 +202,12 @@ templ textareaField(name string, value string, opts ...formOption) {
 		<textarea name={ name } rows="3" class="textarea w-full">{ value }</textarea>
 	</div>
 }
+
+templ markdownField(name string, value string, opts ...formOption) {
+	{{ cfg := applyformOptions(opts) }}
+	{{ cfg.label = templ.Join(cfg.label, templ.Raw(`<i class="ph ph-4 ph-markdown-logo text-base-content/40" title="Supports markdown" aria-label="Supports markdown" role="img"></i>`)) }}
+	<div class="form-control mb-2">
+		@fieldLabel(cfg)
+		<textarea name={ name } rows="3" class="textarea w-full" data-markdown>{ value }</textarea>
+	</div>
+}

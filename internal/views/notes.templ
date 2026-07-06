@@ -24,12 +24,14 @@ templ NotesMany(env Env, rows []model.Note) {
 					} else {
 						for _, row := range rows {
 							<tr class="hover">
-								<td class="value-0" data-search={ row.Category }>{ row.Category }</td>
-								<td class="value-1" data-search={ row.Title }>{ row.Title }</td>
-								<td class="value-2 prose" data-search={ row.Description }>
-									@markdown(row.Description)
+								<td class="value-0 align-top" data-search={ row.Category }>{ row.Category }</td>
+								<td class="value-1 align-top" data-search={ row.Title }>{ row.Title }</td>
+								<td class="value-2 align-top prose" data-search={ row.Description }>
+									<div class="markdown-preview">
+										@markdown(row.Description)
+									</div>
 								</td>
-								<td class="text-right">
+								<td class="text-right align-top">
 									<div class="join">
 										@defaultActionBtns(env, env.Route+row.ID)
 									</div>
@@ -51,7 +53,7 @@ templ NotesOne(env Env, obj model.Note, vr valid.ValidationError) {
 		@hiddenField("CaseID", obj.CaseID)
 		@stringField("Category", obj.Category, required(), withLabel("Category"), withError(vr["Category"]))
 		@stringField("Title", obj.Title, required(), withLabel("Title"), withError(vr["Title"]))
-		@textareaField("Description", obj.Description, withLabel("Description"), withError(vr["Description"]))
+		@markdownField("Description", obj.Description, withLabel("Description"), withError(vr["Description"]))
 		@customAttributes(env, "Note", obj.Custom)
 		@requiredFootnote()
 	}
