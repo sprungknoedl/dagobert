@@ -154,8 +154,8 @@ templ sidebar(env Env, title string) {
 					@sidebarLink("/cases/"+env.Case.ID+"/indicators/", "Indicators", "fingerprint", title, "hue-plum")
 					@sidebarLink("/cases/"+env.Case.ID+"/evidences/", "Evidences", "cube", title, "hue-amber")
 				}
-				@sidebarLink("/cases/"+env.Case.ID+"/tasks/", "Tasks", "clipboard-text", title, "hue-green")
-				@sidebarLink("/cases/"+env.Case.ID+"/notes/", "Notes", "chat-circle", title, "hue-peri")
+				@sidebarLink("/cases/"+env.Case.ID+"/tasks/", "Tasks", "check-square", title, "hue-green")
+				@sidebarLink("/cases/"+env.Case.ID+"/notes/", "Notes", "note", title, "hue-peri")
 			</ul>
 			if !env.Case.IsTemplate {
 				<div class="divider"></div>
