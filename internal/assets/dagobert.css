@@ -140,6 +140,17 @@ pill-shaped buttons without affecting inputs/selects/tabs, which share --radius-
     --radius-field: 2rem;
 }
 
+/*
+daisyUI's join computes its corner radius from --radius-field on the join's
+*direct child*. For a dropdown button that child is the details/div wrapper,
+not the .btn summary inside, so it would resolve the theme radius instead of
+the .btn pill above — give the wrapper the same value.
+*/
+
+.join > .dropdown:has(> .btn) {
+    --radius-field: 2rem;
+}
+
 .menu :where(li:not(.menu-title) > :not(ul, details, .menu-title, .btn)) {
     --radius-field: 2rem;
 }
