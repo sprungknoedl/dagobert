@@ -95,6 +95,7 @@ type casesOneConfig struct {
 	selectedTemplate string
 	sketches         SketchInfo
 	outstanding      []string
+	fork             bool
 }
 
 type CasesOneOption func(*casesOneConfig)
@@ -122,6 +123,12 @@ func WithSketches(info SketchInfo) CasesOneOption {
 	return func(cc *casesOneConfig) { cc.sketches = info }
 }
 
+// WithFork renders the form as the fork form: env.Route (the fork URL) stays
+// the submit target and the title changes.
+func WithFork() CasesOneOption {
+	return func(cc *casesOneConfig) { cc.fork = true }
+}
+
 // WithOutstanding switches the form into "confirm close" mode: it lists the
 // outstanding items and swaps the Save/Cancel footer for a "Close anyway"
 // confirmation.
@@ -133,7 +140,7 @@ templ CasesOne(env Env, obj model.Case, vr valid.ValidationError, opts ...CasesO
 	{{ cfg := applyCasesOneOptions(opts) }}
 	{{ uri := env.Route }}
 	{{ noun := fp.If(obj.IsTemplate, "case template", "case") }}
-	{{ title := fp.If(obj.ID == "new", "Add "+noun, "Edit "+noun) }}
+	{{ title := fp.If(cfg.fork, "Fork "+noun, fp.If(obj.ID == "new", "Add "+noun, "Edit "+noun)) }}
 	{{ formOpts := fp.If(len(cfg.outstanding) > 0, []formOption{replaceFooter(closeConfirmFooterOrNil(cfg.outstanding))}, nil) }}
 	@form(env, uri, title, formOpts...) {
 		@hiddenField("ID", obj.ID)
@@ -411,6 +418,13 @@ templ caseSummaryExtra(env Env) {
 				<li><a href={ url + "?binaries=true" }>Include evidence &amp; malware</a></li>
 			</ul>
 		</details>
+	}
+	if url, ok := env.Allowed("GET", "/cases/" + env.Case.ID + "/fork"); ok {
+		// The fork handler accepts this drawer via X-Up-Accept-Layer with a
+		// {location} value; dagobert.js then navigates to the new case.
+		<a class="join-item btn" href={ url } up-layer="new drawer">
+			<i class="ph ph-6 ph-git-fork inline-block mr-1"></i> Fork
+		</a>
 	}
 	if url, ok := env.Allowed("GET", "/cases/" + env.Case.ID + "/acl"); ok {
 		// CaseSaveACL redirects to the case list; accepting on that location

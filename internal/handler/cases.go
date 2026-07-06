@@ -3,8 +3,12 @@ package handler
 import (
 	"cmp"
 	"encoding/csv"
+	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -297,6 +301,83 @@ func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
 
 	dstSummary := strings.HasSuffix(r.Referer(), "?target=summary")
 	RedirectAfterSave(w, r, fp.If(dstSummary, "/cases/"+dto.ID+"/summary/", "/cases/"))
+}
+
+// CaseForkEdit renders the case form pre-filled from the source case, posting
+// to the fork URL. The deep copy only happens on submit (CaseForkSave).
+func (h *Handler) CaseForkEdit(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	obj, err := h.Store.GetCase(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	obj.Name += " (copy)"
+	sketches := h.fetchSketches(r)
+	Render(w, r, http.StatusOK, views.CasesOne(h.Env(r), obj, valid.ValidationError{},
+		views.WithSketches(sketches),
+		views.WithFork()))
+}
+
+// CaseForkSave deep-copies the source case into a new one carrying the
+// submitted metadata: all child rows via the archive round-trip (ForkCase),
+// the evidence/malware files on disk, and the per-case ACL. File copy
+// failures are non-fatal — the DB copy is transactional and already
+// committed, so we log a warning and keep the fork.
+func (h *Handler) CaseForkSave(w http.ResponseWriter, r *http.Request) {
+	srcID := r.PathValue("cid")
+	dto := model.Case{}
+	err := Decode(h.Store, r, &dto, ValidateCase)
+	if vr, ok := err.(valid.ValidationError); err != nil && ok {
+		sketches := h.fetchSketches(r)
+		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(h.Env(r), dto, vr,
+			views.WithSketches(sketches),
+			views.WithFork()))
+		return
+	} else if err != nil {
+		Warn(w, r, err)
+		return
+	}
+
+	dto.Custom = CollectCustom(r)
+	dto.ID = fp.Random(10)
+	obj, err := h.Store.ForkCase(srcID, dto)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	for _, dir := range []string{"evidences", "malware"} {
+		src := filepath.Join("files", dir, srcID)
+		if _, err := os.Stat(src); errors.Is(err, os.ErrNotExist) {
+			continue
+		}
+		if err := os.CopyFS(filepath.Join("files", dir, obj.ID), os.DirFS(src)); err != nil {
+			slog.Warn("failed to copy files for forked case", "dir", dir, "src", srcID, "dst", obj.ID, "err", err)
+		}
+	}
+
+	users, err := h.Store.GetCasePermissions(srcID)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+	if err := h.ACL.SaveCasePermissions(obj.ID, users); err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	// The fork form opens in a drawer over the source case, but the follow-up
+	// page is the *new* case's summary — a location up-accept-location can't
+	// express. So accept the overlay from the server (like auth/change.go)
+	// with the target location; dagobert.js navigates there on acceptance.
+	if mode := r.Header.Get("X-Up-Mode"); mode != "" && mode != "root" {
+		w.Header().Set("X-Up-Accept-Layer", fmt.Sprintf(`{"location":%q,"toast":"Case forked."}`, "/cases/"+obj.ID+"/summary/"))
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+	RedirectAfterSave(w, r, "/cases/"+obj.ID+"/summary/")
 }
 
 func (h *Handler) CaseDelete(w http.ResponseWriter, r *http.Request) {

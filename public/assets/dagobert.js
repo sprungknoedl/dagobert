@@ -7,11 +7,16 @@ onload = (event) => {
     up.layer.config.drawer.size = 'large';
 
     // Show a success toast when an overlay is accepted with a {toast: "..."}
-    // value (set by the server via the X-Up-Accept-Layer header).
+    // value, and navigate the root layer when accepted with a {location: "..."}
+    // value (both set by the server via the X-Up-Accept-Layer header).
     up.on('up:layer:accepted', function (event) {
         const msg = event.value && event.value.toast;
         if (msg) {
             showToast(msg);
+        }
+        const location = event.value && event.value.location;
+        if (location) {
+            up.navigate({ url: location, layer: 'root' });
         }
     });
 

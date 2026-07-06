@@ -123,6 +123,8 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("GET /cases/{cid}", h.CaseEdit)
 	secured.HandleFunc("POST /cases/{cid}", h.CaseSave)
 	secured.HandleFunc("DELETE /cases/{cid}", h.CaseDelete)
+	secured.HandleFunc("GET /cases/{cid}/fork", h.CaseForkEdit)
+	secured.HandleFunc("POST /cases/{cid}/fork", h.CaseForkSave)
 	secured.HandleFunc("GET /cases/{cid}/acl", h.CaseEditACL)
 	secured.HandleFunc("POST /cases/{cid}/acl", h.CaseSaveACL)
 	secured.HandleFunc("GET /cases/{cid}/summary/", h.CaseSummary)
