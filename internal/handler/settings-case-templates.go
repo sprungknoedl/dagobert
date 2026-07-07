@@ -9,17 +9,17 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-func (h *Handler) ListTemplates(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CaseTemplateList(w http.ResponseWriter, r *http.Request) {
 	templates, err := h.Store.ListTemplates()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsTemplatesMany(h.Env(r), templates))
+	Render(w, r, http.StatusOK, views.SettingsCaseTemplatesMany(h.Env(r), templates))
 }
 
-func (h *Handler) EditTemplate(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CaseTemplateEdit(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	obj := model.Case{ID: cid, IsTemplate: true}
 	if cid != "new" {
@@ -34,7 +34,7 @@ func (h *Handler) EditTemplate(w http.ResponseWriter, r *http.Request) {
 	Render(w, r, http.StatusOK, views.CasesOne(h.Env(r), obj, valid.ValidationError{}))
 }
 
-func (h *Handler) SaveTemplate(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CaseTemplateSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Case{ID: r.PathValue("cid")}
 	err := Decode(h.Store, r, &dto, ValidateCase)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
@@ -54,13 +54,13 @@ func (h *Handler) SaveTemplate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RedirectAfterSave(w, r, "/settings/templates/")
+	RedirectAfterSave(w, r, "/settings/case-templates/")
 }
 
-func (h *Handler) DeleteTemplate(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CaseTemplateDelete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
-		uri := "/settings/templates/" + cid + "?confirm=yes"
+		uri := "/settings/case-templates/" + cid + "?confirm=yes"
 		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
 		return
 	}
@@ -70,20 +70,20 @@ func (h *Handler) DeleteTemplate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/settings/templates/", http.StatusSeeOther)
+	http.Redirect(w, r, "/settings/case-templates/", http.StatusSeeOther)
 }
 
-func (h *Handler) PromoteForm(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CaseTemplatePromoteForm(w http.ResponseWriter, r *http.Request) {
 	cases, err := h.Store.ListCases()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsTemplatesPromote(h.Env(r), cases))
+	Render(w, r, http.StatusOK, views.SettingsCaseTemplatesPromote(h.Env(r), cases))
 }
 
-func (h *Handler) Promote(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CaseTemplatePromote(w http.ResponseWriter, r *http.Request) {
 	form := struct {
 		SourceID string
 		Name     string
@@ -112,5 +112,5 @@ func (h *Handler) Promote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/settings/templates/", http.StatusSeeOther)
+	http.Redirect(w, r, "/settings/case-templates/", http.StatusSeeOther)
 }

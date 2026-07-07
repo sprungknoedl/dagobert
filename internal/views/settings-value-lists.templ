@@ -8,9 +8,9 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-templ SettingsEnumsMany(env Env) {
+templ SettingsValueListsMany(env Env) {
 	@layout() {
-		@list(env, "Case Objects", navSettings(), navHideAdd(), navHideExport(), navHideImport(), navHideSearch(), navSubtitle("Customisable value lists used across the app")) {
+		@list(env, "Value Lists", navSettings(), navHideAdd(), navHideExport(), navHideImport(), navHideSearch(), navSubtitle("Customisable value lists used across the app")) {
 			<table class="table table-default">
 				<thead>
 					<tr>
@@ -21,24 +21,24 @@ templ SettingsEnumsMany(env Env) {
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
-				@enumList(env, "Asset Status", env.Enums.AssetStatus)
-				@enumList(env, "Asset Types", env.Enums.AssetTypes)
-				@enumList(env, "Case Severities", env.Enums.CaseSeverities)
-				@enumList(env, "Case Outcomes", env.Enums.CaseOutcomes)
-				@enumList(env, "Event Types", env.Enums.EventTypes)
-				@enumList(env, "Evidence Types", env.Enums.EvidenceTypes)
-				@enumList(env, "Indicator Status", env.Enums.IndicatorStatus)
-				@enumList(env, "Indicator Types", env.Enums.IndicatorTypes)
-				@enumList(env, "Malware Status", env.Enums.MalwareStatus)
-				@enumList(env, "Task Types", env.Enums.TaskTypes)
+				@valueList(env, "Asset Status", env.ValueLists.AssetStatus)
+				@valueList(env, "Asset Types", env.ValueLists.AssetTypes)
+				@valueList(env, "Case Severities", env.ValueLists.CaseSeverities)
+				@valueList(env, "Case Outcomes", env.ValueLists.CaseOutcomes)
+				@valueList(env, "Event Types", env.ValueLists.EventTypes)
+				@valueList(env, "Evidence Types", env.ValueLists.EvidenceTypes)
+				@valueList(env, "Indicator Status", env.ValueLists.IndicatorStatus)
+				@valueList(env, "Indicator Types", env.ValueLists.IndicatorTypes)
+				@valueList(env, "Malware Status", env.ValueLists.MalwareStatus)
+				@valueList(env, "Task Types", env.ValueLists.TaskTypes)
 			</table>
 		}
 	}
 }
 
-templ SettingsEnumsOne(env Env, obj model.Enum, vr valid.ValidationError) {
-	{{ uri := "/settings/enums/" + obj.ID }}
-	{{ title := fp.If(obj.ID == "new", "Add case object", "Edit case object") }}
+templ SettingsValueListsOne(env Env, obj model.ValueListItem, vr valid.ValidationError) {
+	{{ uri := "/settings/value-lists/" + obj.ID }}
+	{{ title := fp.If(obj.ID == "new", "Add value", "Edit value") }}
 	@form(env, uri, title) {
 		@hiddenField("ID", obj.ID)
 		@hiddenField("Category", obj.Category)
@@ -64,8 +64,8 @@ templ SettingsEnumsOne(env Env, obj model.Enum, vr valid.ValidationError) {
 	}
 }
 
-templ enumList(env Env, title string, rows []model.Enum) {
-	@settingsCategoryBand(env, title, "/settings/enums/new", "?category="+strings.ReplaceAll(title, " ", ""))
+templ valueList(env Env, title string, rows []model.ValueListItem) {
+	@settingsCategoryBand(env, title, "/settings/value-lists/new", "?category="+strings.ReplaceAll(title, " ", ""))
 	<tbody class="values">
 		if len(rows) == 0 {
 			@emptyTable(env, "No values defined.", "Each category lists the values available in a drop-down elsewhere in the app. Add, remove, or reorder entries to match your organisation's taxonomy.")

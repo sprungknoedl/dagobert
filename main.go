@@ -61,7 +61,7 @@ func main() {
 	cmd.AddCommand(updateCmd)
 
 	cmd.AddCommand(&cobra.Command{Use: "create-user USERNAME", Short: "Create a user.", RunE: cli.CreateUser, Args: cobra.ExactArgs(1)})
-	cmd.AddCommand(&cobra.Command{Use: "create-key NAME", Short: "Create a API key.", RunE: cli.CreateKey, Args: cobra.ExactArgs(1)})
+	cmd.AddCommand(&cobra.Command{Use: "create-api-key NAME", Short: "Create an API key.", RunE: cli.CreateAPIKey, Args: cobra.ExactArgs(1)})
 	cmd.AddCommand(&cobra.Command{Use: "change-password USERNAME", Short: "Change password for an user.", RunE: cli.ChangePassword, Args: cobra.ExactArgs(1)})
 	cmd.Execute()
 }

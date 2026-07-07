@@ -61,7 +61,7 @@ templ SettingsUsersOne(env Env, obj model.User, vr valid.ValidationError) {
 	{{ title := fp.If(obj.ID == "new", "Add user", "Edit user") }}
 	@form(env, uri, title) {
 		@stringField("ID", obj.ID, required(), withLabel("ID"), withError(vr["ID"]))
-		@selectField("Role", obj.Role, env.Enums.UserRoles, required(), withLabel("Role"), withError(vr["Role"]))
+		@selectField("Role", obj.Role, env.ValueLists.UserRoles, required(), withLabel("Role"), withError(vr["Role"]))
 		@stringField("Name", obj.Name, withLabel("Name"), withError(vr["Name"]))
 		<div class="form-control mb-2">
 			<label class="label justify-start gap-2">

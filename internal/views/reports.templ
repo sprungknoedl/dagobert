@@ -2,7 +2,7 @@ package views
 
 import "github.com/sprungknoedl/dagobert/internal/model"
 
-templ ReportsDialog(env Env, rows []model.Report) {
+templ ReportsDialog(env Env, rows []model.ReportTemplate) {
 	@layout() {
 		<main>
 			<form method="post" action={ "/cases/" + env.Case.ID + "/render" }>

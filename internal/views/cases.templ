@@ -53,10 +53,10 @@ templ CasesMany(env Env, rows []model.Case) {
 									<td class="value-1" data-search={ row.Name }><a class="link" href={ url }>{ row.Name }</a> </td>
 									<td class="value-2" data-search={ row.Classification }>{ row.Classification } </td>
 									<td class="value-3" data-search={ row.Severity }>
-										@enum(env.Enums.CaseSeverities, row.Severity)
+										@valueBadge(env.ValueLists.CaseSeverities, row.Severity)
 									</td>
 									<td class="value-4" data-search={ row.Outcome }>
-										@enum(env.Enums.CaseOutcomes, row.Outcome)
+										@valueBadge(env.ValueLists.CaseOutcomes, row.Outcome)
 									</td>
 									<td class="value-5" data-search={ fp.If(row.Closed, "closed", "open") }>
 										@caseStatusPill(row.Closed)
@@ -162,8 +162,8 @@ templ CasesOne(env Env, obj model.Case, vr valid.ValidationError, opts ...CasesO
 		}
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
 		@stringField("Classification", obj.Classification, withLabel("Classification"), withError(vr["Classification"]))
-		@selectField("Severity", obj.Severity, env.Enums.CaseSeverities, withLabel("Severity"), withError(vr["Severity"]))
-		@selectField("Outcome", obj.Outcome, env.Enums.CaseOutcomes, withLabel("Outcome"), withError(vr["Outcome"]))
+		@selectField("Severity", obj.Severity, env.ValueLists.CaseSeverities, withLabel("Severity"), withError(vr["Severity"]))
+		@selectField("Outcome", obj.Outcome, env.ValueLists.CaseOutcomes, withLabel("Outcome"), withError(vr["Outcome"]))
 		@booleanField("Closed", obj.Closed, withLabel("Closed"))
 		if !obj.IsTemplate {
 			@dateField("OpenedAt", dateInputValue(obj.OpenedAt), withLabel("Opened"))
@@ -292,7 +292,7 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 								for _, ev := range keyEvents {
 									<tr>
 										<td class="w-1/3 text-base-content/60 align-top">
-											@enumIcon(env.Enums.EventTypes, ev.Type) {
+											@valueIcon(env.ValueLists.EventTypes, ev.Type) {
 												@formatTime(ev.Time)
 											}
 										</td>
@@ -316,7 +316,7 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 								for _, a := range compromisedAssets {
 									<tr>
 										<td class="w-1/3 text-base-content/60">
-											@enumIcon(env.Enums.AssetTypes, a.Type) {
+											@valueIcon(env.ValueLists.AssetTypes, a.Type) {
 												{ a.Type }
 											}
 										</td>
@@ -338,7 +338,7 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 								for _, i := range flaggedIndicators {
 									<tr>
 										<td class="w-1/3 text-base-content/60">
-											@enumIcon(env.Enums.IndicatorTypes, i.Type) {
+											@valueIcon(env.ValueLists.IndicatorTypes, i.Type) {
 												{ i.Type }
 											}
 										</td>

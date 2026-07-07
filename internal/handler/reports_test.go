@@ -33,8 +33,8 @@ func TestResolveReportFileRejectsInvalidUpload(t *testing.T) {
 	t.Chdir(t.TempDir())
 	f, size := openUpload(t, []byte("not a real docx"))
 
-	dto := model.Report{ID: "new", Name: "broken.docx"}
-	err := resolveReportFile(nil, dto, true, f, &multipart.FileHeader{Filename: "broken.docx", Size: size})
+	dto := model.ReportTemplate{ID: "new", Name: "broken.docx"}
+	err := resolveReportTemplateFile(nil, dto, true, f, &multipart.FileHeader{Filename: "broken.docx", Size: size})
 
 	var terr templateError
 	if !errors.As(err, &terr) {
@@ -49,16 +49,16 @@ func TestResolveReportFileRejectsInvalidUpload(t *testing.T) {
 func TestResolveReportFileRenamesOnNameChange(t *testing.T) {
 	t.Chdir(t.TempDir())
 	db := setupArchiveDB(t)
-	obj := model.Report{ID: "rep01", Name: "old.docx"}
-	if err := db.SaveReport(obj); err != nil {
+	obj := model.ReportTemplate{ID: "rep01", Name: "old.docx"}
+	if err := db.SaveReportTemplate(obj); err != nil {
 		t.Fatal(err)
 	}
 	dir := filepath.Join("files", "templates")
 	os.MkdirAll(dir, 0755)
 	os.WriteFile(filepath.Join(dir, "old.docx"), []byte("tmpl"), 0666)
 
-	dto := model.Report{ID: "rep01", Name: "new.docx"}
-	if err := resolveReportFile(db, dto, false, nil, nil); err != nil {
+	dto := model.ReportTemplate{ID: "rep01", Name: "new.docx"}
+	if err := resolveReportTemplateFile(db, dto, false, nil, nil); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := os.Stat(filepath.Join(dir, "new.docx")); err != nil {

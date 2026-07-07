@@ -343,7 +343,7 @@ func (h *Handler) IndicatorSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// trigger registered hooks
+	// trigger registered automation rules
 	if new {
 		modules.TriggerOnIndicatorAdded(h.Store, dto)
 	}

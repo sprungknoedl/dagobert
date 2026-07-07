@@ -43,7 +43,7 @@ func LoadTemplate(name string) (doct.Template, error) {
 }
 
 func (h *Handler) ReportDialog(w http.ResponseWriter, r *http.Request) {
-	list, err := h.Store.ListReports()
+	list, err := h.Store.ListReportTemplates()
 	if err != nil {
 		Err(w, r, err)
 		return

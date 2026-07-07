@@ -31,7 +31,7 @@ templ TasksMany(env Env, rows []model.Task, comments map[string]int) {
 									{ row.DateDue.Format("2006-01-02") }
 								</td>
 								<td class="value-1 truncate" data-search={ row.Type }>
-									@enum(env.Enums.TaskTypes, row.Type)
+									@valueBadge(env.ValueLists.TaskTypes, row.Type)
 								</td>
 								<td class="value-2" data-search={ row.Task }>{ row.Task } </td>
 								<td class="value-3" data-search={ row.Owner }>{ row.Owner } </td>
@@ -65,7 +65,7 @@ templ TasksOne(env Env, obj model.Task, vr valid.ValidationError) {
 	@form(env, uri, title) {
 		@hiddenField("ID", obj.ID)
 		@hiddenField("CaseID", obj.CaseID)
-		@selectField("Type", obj.Type, env.Enums.TaskTypes, required(), withLabel("Type"), withError(vr["Type"]))
+		@selectField("Type", obj.Type, env.ValueLists.TaskTypes, required(), withLabel("Type"), withError(vr["Type"]))
 		@stringField("Task", obj.Task, required(), withLabel("Task"), withError(vr["Task"]))
 		@stringField("Owner", obj.Owner, withLabel("Owner"), withError(vr["Owner"]))
 		<div class="form-control mb-2">

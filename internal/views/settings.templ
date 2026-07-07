@@ -11,13 +11,13 @@ templ SettingsOverview(env Env) {
 					</tr>
 				</thead>
 				<tbody>
-					@settingsOverviewRow("/settings/enums/", "briefcase", "Case Objects", "Customisable value lists used across the app", false)
-					@settingsOverviewRow("/settings/custom/", "stack", "Custom Attributes", "Extra fields captured on case objects", true)
+					@settingsOverviewRow("/settings/value-lists/", "briefcase", "Value Lists", "Customisable value lists used across the app", false)
+					@settingsOverviewRow("/settings/custom-attributes/", "stack", "Custom Attributes", "Extra fields captured on case objects", true)
 					@settingsOverviewDivider()
-					@settingsOverviewRow("/settings/templates/", "copy", "Case Templates", "Reusable checklists of tasks and notes for new cases", false)
-					@settingsOverviewRow("/settings/reports/", "file-arrow-down", "Report Templates", "Templates for generating investigation reports", true)
+					@settingsOverviewRow("/settings/case-templates/", "copy", "Case Templates", "Reusable checklists of tasks and notes for new cases", false)
+					@settingsOverviewRow("/settings/report-templates/", "file-arrow-down", "Report Templates", "DOCX/ODT documents used to generate investigation reports", true)
 					@settingsOverviewDivider()
-					@settingsOverviewRow("/settings/hooks/", "engine", "Automation Rules", "Automation rules triggered by case object changes", false)
+					@settingsOverviewRow("/settings/automation-rules/", "engine", "Automation Rules", "Run modules automatically when case objects change", false)
 					@settingsOverviewRow("/settings/users/", "users", "Users", "Manage user accounts and role assignments", false)
 					@settingsOverviewRow("/settings/api-keys/", "key", "API Keys", "Long-lived keys for external integrations", false)
 				</tbody>

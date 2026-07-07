@@ -20,8 +20,8 @@ func TestValidateReportName(t *testing.T) {
 		{"", true},              // empty is Missing, still not accepted
 	}
 	for _, tt := range tests {
-		dto := &model.Report{Name: tt.name}
-		vr := ValidateReport(dto, model.Enums{})
+		dto := &model.ReportTemplate{Name: tt.name}
+		vr := ValidateReportTemplate(dto, model.ValueLists{})
 		c, flagged := vr["Name"]
 		if flagged != tt.invalid {
 			t.Errorf("name %q: got flagged=%v, want %v (%+v)", tt.name, flagged, tt.invalid, c)
@@ -44,7 +44,7 @@ func TestValidateMalwareHash(t *testing.T) {
 	}
 	for _, tt := range tests {
 		dto := &model.Malware{Hash: tt.hash, Path: "x", Status: "Clean", Asset: model.Asset{ID: "a1"}}
-		vr := ValidateMalware(dto, model.Enums{})
+		vr := ValidateMalware(dto, model.ValueLists{})
 		c, flagged := vr["Hash"]
 		if flagged != tt.invalid {
 			t.Errorf("hash %q: got flagged=%v, want %v (%+v)", tt.hash, flagged, tt.invalid, c)

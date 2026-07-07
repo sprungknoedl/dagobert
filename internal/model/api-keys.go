@@ -10,9 +10,9 @@ import (
 )
 
 const (
-	// KeyPrefix is the global prefix every issued key carries. The key type
+	// APIKeyPrefix is the global prefix every issued key carries. The key type
 	// stays in the DB Type column rather than in a per-type prefix.
-	KeyPrefix      = "dgb_"
+	APIKeyPrefix   = "dgb_"
 	keyBodyLen     = 64
 	keyChecksumLen = 6
 )
@@ -20,37 +20,37 @@ const (
 // base62 is the alphabet used to encode the checksum, matching GitHub's scheme.
 const base62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
-type Key struct {
+type APIKey struct {
 	Key  string `gorm:"primaryKey"`
 	Name string
 	Type string
 	Hint string
 }
 
-// GenerateKey mints a new API key. It returns the one-time plaintext shown to
+// GenerateAPIKey mints a new API key. It returns the one-time plaintext shown to
 // the admin, the SHA-256 hash persisted at rest, and a non-secret hint for the
 // list view. The plaintext is never stored.
-func GenerateKey() (plaintext, hash, hint string) {
+func GenerateAPIKey() (plaintext, hash, hint string) {
 	body := fp.Random(keyBodyLen)
-	plaintext = KeyPrefix + body + keyChecksum(body)
-	hash = HashKey(plaintext)
+	plaintext = APIKeyPrefix + body + keyChecksum(body)
+	hash = HashAPIKey(plaintext)
 	hint = plaintext[:6] + strings.Repeat("•", len(plaintext)-12) + plaintext[len(plaintext)-6:]
 	return plaintext, hash, hint
 }
 
-// HashKey returns the hex-encoded SHA-256 of the plaintext key.
-func HashKey(plaintext string) string {
+// HashAPIKey returns the hex-encoded SHA-256 of the plaintext key.
+func HashAPIKey(plaintext string) string {
 	sum := sha256.Sum256([]byte(plaintext))
 	return hex.EncodeToString(sum[:])
 }
 
-// ValidKeyFormat reports whether plaintext has the dgb_ prefix and a checksum
+// ValidAPIKeyFormat reports whether plaintext has the dgb_ prefix and a checksum
 // that matches its body, so a malformed/typo'd key is rejected without a DB hit.
-func ValidKeyFormat(plaintext string) bool {
-	if !strings.HasPrefix(plaintext, KeyPrefix) {
+func ValidAPIKeyFormat(plaintext string) bool {
+	if !strings.HasPrefix(plaintext, APIKeyPrefix) {
 		return false
 	}
-	rest := plaintext[len(KeyPrefix):]
+	rest := plaintext[len(APIKeyPrefix):]
 	if len(rest) != keyBodyLen+keyChecksumLen {
 		return false
 	}
@@ -77,35 +77,35 @@ func keyChecksum(body string) string {
 	return string(out)
 }
 
-// KeyType binds an API key type to the principal its keys authenticate as.
-type KeyType struct {
+// APIKeyType binds an API key type to the principal its keys authenticate as.
+type APIKeyType struct {
 	Name      string
 	Icon      string
 	Principal *User
 }
 
-// KeyTypes is the code-defined registry of API key types. It replaces the old
-// user-editable "KeyTypes" enum: the key form, list display, validation, and
+// APIKeyTypes is the code-defined registry of API key types. It replaces the old
+// user-editable "KeyTypes" value list: the key form, list display, validation, and
 // the api-key middleware all derive from this single source of truth.
-var KeyTypes = []KeyType{
+var APIKeyTypes = []APIKeyType{
 	{"API", "ph-flask", &SystemUser},
 	{"Donald", "ph-bird", &DonaldUser},
 	{"MCP", "ph-cpu", &McpUser},
 }
 
-// KeyTypeEnums projects the registry into []Enum for views and validation.
-func KeyTypeEnums() []Enum {
-	enums := make([]Enum, 0, len(KeyTypes))
-	for _, kt := range KeyTypes {
-		enums = append(enums, Enum{Name: kt.Name, Icon: kt.Icon})
+// APIKeyTypeValues projects the registry into []ValueListItem for views and validation.
+func APIKeyTypeValues() []ValueListItem {
+	valueLists := make([]ValueListItem, 0, len(APIKeyTypes))
+	for _, kt := range APIKeyTypes {
+		valueLists = append(valueLists, ValueListItem{Name: kt.Name, Icon: kt.Icon})
 	}
-	return enums
+	return valueLists
 }
 
-// PrincipalForKeyType resolves the principal an api key of the given type
+// PrincipalForAPIKeyType resolves the principal an api key of the given type
 // authenticates as. The second return value is false for unknown types.
-func PrincipalForKeyType(t string) (*User, bool) {
-	for _, kt := range KeyTypes {
+func PrincipalForAPIKeyType(t string) (*User, bool) {
+	for _, kt := range APIKeyTypes {
 		if kt.Name == t {
 			return kt.Principal, true
 		}
@@ -113,24 +113,24 @@ func PrincipalForKeyType(t string) (*User, bool) {
 	return nil, false
 }
 
-func (store *Store) ListKeys() ([]Key, error) {
-	list := []Key{}
+func (store *Store) ListAPIKeys() ([]APIKey, error) {
+	list := []APIKey{}
 	tx := store.DB.
 		Order("name asc").
 		Find(&list)
 	return list, tx.Error
 }
 
-func (store *Store) GetKey(key string) (Key, error) {
-	obj := Key{}
+func (store *Store) GetAPIKey(key string) (APIKey, error) {
+	obj := APIKey{}
 	tx := store.DB.First(&obj, "key = ?", key)
 	return obj, tx.Error
 }
 
-func (store *Store) SaveKey(obj Key) error {
+func (store *Store) SaveAPIKey(obj APIKey) error {
 	return store.DB.Save(&obj).Error
 }
 
-func (store *Store) DeleteKey(key string) error {
-	return store.DB.Delete(Key{}, "key = ?", key).Error
+func (store *Store) DeleteAPIKey(key string) error {
+	return store.DB.Delete(APIKey{}, "key = ?", key).Error
 }

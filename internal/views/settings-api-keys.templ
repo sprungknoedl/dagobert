@@ -6,7 +6,7 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-templ SettingsKeyMany(env Env, keys []model.Key) {
+templ SettingsAPIKeysMany(env Env, keys []model.APIKey) {
 	@layout() {
 		@list(env, "API Keys", navSettings(), navHideExport(), navHideImport(), navSubtitle("Long-lived keys for external integrations")) {
 			<h2 class="text-xl font-serif p-2">Keys</h2>
@@ -26,7 +26,7 @@ templ SettingsKeyMany(env Env, keys []model.Key) {
 						for _, row := range keys {
 							<tr class="hover">
 								<td class="value-0 truncate" data-search={ row.Type }>
-									@enum(env.Enums.KeyTypes, row.Type)
+									@valueBadge(env.ValueLists.APIKeyTypes, row.Type)
 								</td>
 								<td class="value-1" data-search={ row.Name }>{ row.Name } </td>
 								<td class="value-2 font-mono text-xs" data-search={ row.Hint }>{ row.Hint } </td>
@@ -44,7 +44,7 @@ templ SettingsKeyMany(env Env, keys []model.Key) {
 	}
 }
 
-templ SettingsKeyReveal(env Env, plaintext string) {
+templ SettingsAPIKeysReveal(env Env, plaintext string) {
 	@layout() {
 		<main>
 			<h1 class="font-serif text-2xl mb-4">API key created</h1>
@@ -64,12 +64,12 @@ templ SettingsKeyReveal(env Env, plaintext string) {
 	}
 }
 
-templ SettingsKeysOne(env Env, obj model.Key, vr valid.ValidationError) {
+templ SettingsAPIKeysOne(env Env, obj model.APIKey, vr valid.ValidationError) {
 	{{ uri := "/settings/api-keys/" + obj.Key }}
 	{{ title := fp.If(obj.Key == "new", "Add API key", "Edit API key") }}
 	@form(env, uri, title) {
 		@hiddenField("Key", obj.Key)
-		@selectField("Type", obj.Type, env.Enums.KeyTypes, required(), withLabel("Type"), withError(vr["Type"]))
+		@selectField("Type", obj.Type, env.ValueLists.APIKeyTypes, required(), withLabel("Type"), withError(vr["Type"]))
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
 		@requiredFootnote()
 	}

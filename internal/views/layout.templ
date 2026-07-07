@@ -82,7 +82,7 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 					</ul>
 				</div>
 				if env.Case.IsTemplate {
-					<a href="/settings/templates/" class="badge badge-outline badge-primary" title="Manage case templates">Template</a>
+					<a href="/settings/case-templates/" class="badge badge-outline badge-primary" title="Manage case templates">Template</a>
 				}
 			</div>
 			if cfg.subtitle != "" {
@@ -210,7 +210,7 @@ templ defaultActionBtns(env Env, url string) {
 	}
 }
 
-templ enum(list []model.Enum, value string) {
+templ valueBadge(list []model.ValueListItem, value string) {
 	for _, x := range list {
 		if x.Name == value {
 			<span class={ "flex gap-2" + fp.If(x.State != "", " text-"+x.State, "") }>
@@ -223,7 +223,7 @@ templ enum(list []model.Enum, value string) {
 	}
 }
 
-templ enumIcon(list []model.Enum, value string) {
+templ valueIcon(list []model.ValueListItem, value string) {
 	for _, x := range list {
 		if x.Name == value {
 			<span class={ "flex gap-2" + fp.If(x.State != "", " text-"+x.State, "") }>

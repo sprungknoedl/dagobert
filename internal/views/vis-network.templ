@@ -51,27 +51,27 @@ func networkJSON(env Env, nodes []Node, edges []Edge) string {
 	b, _ := json.Marshal(map[string]any{
 		"nodes":  nodes,
 		"edges":  edges,
-		"groups": networkGroups(env.Enums.AssetTypes, env.Enums.IndicatorTypes),
+		"groups": networkGroups(env.ValueLists.AssetTypes, env.ValueLists.IndicatorTypes),
 	})
 	return string(b)
 }
 
-func networkGroups(assets []model.Enum, indicators []model.Enum) map[string]group {
+func networkGroups(assets []model.ValueListItem, indicators []model.ValueListItem) map[string]group {
 	groups := map[string]group{}
-	for _, enum := range assets {
-		groups["Asset"+enum.Name] = group{
+	for _, entry := range assets {
+		groups["Asset"+entry.Name] = group{
 			Icon: icon{
-				Code:  string(iconMap[enum.Icon]),
+				Code:  string(iconMap[entry.Icon]),
 				Color: "oklch(25% 0.02 60)",
 				Size:  32,
 			},
 		}
 	}
 
-	for _, enum := range indicators {
-		groups["Indicator"+enum.Name] = group{
+	for _, entry := range indicators {
+		groups["Indicator"+entry.Name] = group{
 			Icon: icon{
-				Code:  string(iconMap[enum.Icon]),
+				Code:  string(iconMap[entry.Icon]),
 				Color: "oklch(45% 0.13 25)",
 				Size:  24,
 			},

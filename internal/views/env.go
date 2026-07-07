@@ -49,12 +49,12 @@ func ValidSection(to string) string {
 }
 
 // Env is the core view-model injected into template renders via middleware.
-// It carries the current case, user, customizable enums, active route, and the
+// It carries the current case, user, customizable valueLists, active route, and the
 // ACL predicate used to gate links and actions.
 type Env struct {
 	Case             model.Case
 	User             model.User
-	Enums            model.Enums
+	ValueLists       model.ValueLists
 	CustomAttributes []model.CustomAttribute
 	Route            string
 	Allowed          func(method, url string) (string, bool)

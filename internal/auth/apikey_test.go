@@ -32,13 +32,13 @@ func setupDB(t *testing.T) *model.Store {
 func TestApiKeyMiddleware(t *testing.T) {
 	db := setupDB(t)
 
-	apiKey, apiHash, _ := model.GenerateKey()
-	donaldKey, donaldHash, _ := model.GenerateKey()
-	bogusKey, bogusHash, _ := model.GenerateKey()
+	apiKey, apiHash, _ := model.GenerateAPIKey()
+	donaldKey, donaldHash, _ := model.GenerateAPIKey()
+	bogusKey, bogusHash, _ := model.GenerateAPIKey()
 
-	assert.NoError(t, db.SaveKey(model.Key{Key: apiHash, Name: "admin", Type: "API"}))
-	assert.NoError(t, db.SaveKey(model.Key{Key: donaldHash, Name: "triage", Type: "Donald"}))
-	assert.NoError(t, db.SaveKey(model.Key{Key: bogusHash, Name: "broken", Type: "Bogus"}))
+	assert.NoError(t, db.SaveAPIKey(model.APIKey{Key: apiHash, Name: "admin", Type: "API"}))
+	assert.NoError(t, db.SaveAPIKey(model.APIKey{Key: donaldHash, Name: "triage", Type: "Donald"}))
+	assert.NoError(t, db.SaveAPIKey(model.APIKey{Key: bogusHash, Name: "broken", Type: "Bogus"}))
 
 	acl := NewACL(db)
 	ok := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
@@ -83,11 +83,11 @@ func TestApiKeyMiddleware(t *testing.T) {
 	})
 
 	t.Run("X-API-Key with a wrong prefix is rejected offline", func(t *testing.T) {
-		assert.Equal(t, http.StatusUnauthorized, do(HeaderApiKey, "xyz_"+apiKey[len(model.KeyPrefix):], "GET", "/cases/"))
+		assert.Equal(t, http.StatusUnauthorized, do(HeaderApiKey, "xyz_"+apiKey[len(model.APIKeyPrefix):], "GET", "/cases/"))
 	})
 
 	t.Run("X-API-Key with a valid format but unknown hash is rejected", func(t *testing.T) {
-		unknown, _, _ := model.GenerateKey()
+		unknown, _, _ := model.GenerateAPIKey()
 		assert.Equal(t, http.StatusUnauthorized, do(HeaderApiKey, unknown, "GET", "/cases/"))
 	})
 

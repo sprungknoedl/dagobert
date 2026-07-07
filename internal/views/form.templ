@@ -158,12 +158,12 @@ templ numberField(name string, value int, opts ...formOption) {
 	</div>
 }
 
-templ selectField(name string, value string, enum []model.Enum, opts ...formOption) {
+templ selectField(name string, value string, item []model.ValueListItem, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
 	<div class="form-control mb-2">
 		@fieldLabel(cfg)
 		<select name={ name } class="select w-full">
-			for _, e := range enum {
+			for _, e := range item {
 				<option selected?={ e.Name == value }>{ e.Name }</option>
 			}
 		</select>

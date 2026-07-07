@@ -199,7 +199,7 @@ func JoinV(errs ...error) error {
 	}
 }
 
-func Decode[T any](db *model.Store, r *http.Request, dst T, validator func(T, model.Enums) valid.ValidationError) error {
+func Decode[T any](db *model.Store, r *http.Request, dst T, validator func(T, model.ValueLists) valid.ValidationError) error {
 	if strings.Contains(r.Header.Get("Content-Type"), "application/json") {
 		return json.NewDecoder(r.Body).Decode(dst)
 	}
@@ -240,11 +240,11 @@ func Decode[T any](db *model.Store, r *http.Request, dst T, validator func(T, mo
 	}
 
 	if validator != nil {
-		enums, err := db.ListEnums()
+		valueLists, err := db.ListValueLists()
 		if err != nil {
 			return err
 		}
-		if vr := validator(dst, enums); !vr.Valid() {
+		if vr := validator(dst, valueLists); !vr.Valid() {
 			return vr
 		}
 	}
@@ -264,14 +264,14 @@ type Handler struct {
 func (h *Handler) Env(r *http.Request) views.Env {
 	kase := GetCase(h.Store, r)
 	user := GetUser(r)
-	enums, _ := h.Store.ListEnums()
+	valueLists, _ := h.Store.ListValueLists()
 	custom, _ := h.Store.ListCustomAttributes()
 
 	return views.Env{
 		Route:            r.URL.Path,
 		Case:             kase,
 		User:             user,
-		Enums:            enums,
+		ValueLists:       valueLists,
 		CustomAttributes: custom,
 		Allowed: func(method, url string) (string, bool) {
 			return url, h.ACL.Allowed(user.ID, url, method)

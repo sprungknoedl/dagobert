@@ -23,7 +23,7 @@ var customTypeInfo = map[string]struct{ Icon, Label string }{
 	"select":    {"caret-up-down", "Dropdown"},
 }
 
-templ SettingsCustomMany(env Env) {
+templ SettingsCustomAttributesMany(env Env) {
 	@layout() {
 		@list(env, "Custom Attributes", navSettings(), navHideAdd(), navHideExport(), navHideImport(), navHideSearch(), navSubtitle("Extra fields captured on case objects")) {
 			<table class="table table-default">
@@ -37,15 +37,15 @@ templ SettingsCustomMany(env Env) {
 					</tr>
 				</thead>
 				for _, entity := range customEntities {
-					@customAttributeList(env, entity)
+					@customAttributeTable(env, entity)
 				}
 			</table>
 		}
 	}
 }
 
-templ SettingsCustomOne(env Env, obj model.CustomAttribute, vr valid.ValidationError) {
-	{{ uri := "/settings/custom/" + obj.ID }}
+templ SettingsCustomAttributesOne(env Env, obj model.CustomAttribute, vr valid.ValidationError) {
+	{{ uri := "/settings/custom-attributes/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add custom attribute", "Edit custom attribute") }}
 	@form(env, uri, title) {
 		@hiddenField("ID", obj.ID)
@@ -84,9 +84,9 @@ templ customType(t string) {
 	}
 }
 
-templ customAttributeList(env Env, entity string) {
+templ customAttributeTable(env Env, entity string) {
 	{{ rows := fp.Filter(env.CustomAttributes, func(c model.CustomAttribute) bool { return c.Entity == entity }) }}
-	@settingsCategoryBand(env, entity, "/settings/custom/new", "?entity="+entity)
+	@settingsCategoryBand(env, entity, "/settings/custom-attributes/new", "?entity="+entity)
 	<tbody class="values">
 		if len(rows) == 0 {
 			<tr>

@@ -46,7 +46,7 @@ type Job struct {
 	Object   Object `gorm:"type:bytes"`
 }
 
-type Hook struct {
+type AutomationRule struct {
 	ID        string
 	Trigger   string
 	Name      string
@@ -252,22 +252,22 @@ func (store *Store) RescheduleStaleJobs() error {
 		Error
 }
 
-func (store *Store) ListHooks() ([]Hook, error) {
-	list := []Hook{}
+func (store *Store) ListAutomationRules() ([]AutomationRule, error) {
+	list := []AutomationRule{}
 	tx := store.DB.Find(&list)
 	return list, tx.Error
 }
 
-func (store *Store) GetHook(id string) (Hook, error) {
-	obj := Hook{}
+func (store *Store) GetHook(id string) (AutomationRule, error) {
+	obj := AutomationRule{}
 	tx := store.DB.First(&obj, "id = ?", id)
 	return obj, tx.Error
 }
 
-func (store *Store) SaveHook(obj Hook) error {
+func (store *Store) SaveHook(obj AutomationRule) error {
 	return store.DB.Save(&obj).Error
 }
 
 func (store *Store) DeleteHook(id string) error {
-	return store.DB.Delete(Hook{}, "id = ?", id).Error
+	return store.DB.Delete(AutomationRule{}, "id = ?", id).Error
 }

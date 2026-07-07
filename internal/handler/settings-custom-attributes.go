@@ -11,11 +11,11 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-func (h *Handler) ListCustomAttributes(w http.ResponseWriter, r *http.Request) {
-	Render(w, r, http.StatusOK, views.SettingsCustomMany(h.Env(r)))
+func (h *Handler) CustomAttributeList(w http.ResponseWriter, r *http.Request) {
+	Render(w, r, http.StatusOK, views.SettingsCustomAttributesMany(h.Env(r)))
 }
 
-func (h *Handler) EditCustomAttribute(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CustomAttributeEdit(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	entity := r.URL.Query().Get("entity")
 	obj, err := GetObject(id, model.CustomAttribute{ID: id, Entity: entity}, h.Store.GetCustomAttribute)
@@ -24,14 +24,14 @@ func (h *Handler) EditCustomAttribute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsCustomOne(h.Env(r), obj, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.SettingsCustomAttributesOne(h.Env(r), obj, valid.ValidationError{}))
 }
 
-func (h *Handler) SaveCustomAttribute(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CustomAttributeSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.CustomAttribute{ID: r.PathValue("id")}
 	err := Decode(h.Store, r, &dto, ValidateCustomAttribute)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.SettingsCustomOne(h.Env(r), dto, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsCustomAttributesOne(h.Env(r), dto, vr))
 		return
 	} else if err != nil {
 		Err(w, r, err)
@@ -49,13 +49,13 @@ func (h *Handler) SaveCustomAttribute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RedirectAfterSave(w, r, "/settings/custom/")
+	RedirectAfterSave(w, r, "/settings/custom-attributes/")
 }
 
-func (h *Handler) DeleteCustomAttribute(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) CustomAttributeDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if r.URL.Query().Get("confirm") != "yes" {
-		uri := fmt.Sprintf("/settings/custom/%s?confirm=yes", id)
+		uri := fmt.Sprintf("/settings/custom-attributes/%s?confirm=yes", id)
 		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
 		return
 	}
@@ -66,5 +66,5 @@ func (h *Handler) DeleteCustomAttribute(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	http.Redirect(w, r, "/settings/custom/", http.StatusSeeOther)
+	http.Redirect(w, r, "/settings/custom-attributes/", http.StatusSeeOther)
 }

@@ -2,9 +2,9 @@ package views
 
 import "github.com/sprungknoedl/dagobert/internal/model"
 
-templ SettingsTemplatesMany(env Env, rows []model.Case) {
+templ SettingsCaseTemplatesMany(env Env, rows []model.Case) {
 	@layout() {
-		@list(env, "Case Templates", navSettings(), navHideExport(), navHideImport(), navPreButtons(settingsTemplatesPromoteBtn(env)), navSubtitle("Reusable checklists of tasks and notes for new cases")) {
+		@list(env, "Case Templates", navSettings(), navHideExport(), navHideImport(), navPreButtons(settingsCaseTemplatesPromoteBtn(env)), navSubtitle("Reusable checklists of tasks and notes for new cases")) {
 			<table class="table table-default" data-default-sort="value-0">
 				<thead>
 					<tr>
@@ -29,7 +29,7 @@ templ SettingsTemplatesMany(env Env, rows []model.Case) {
 							</td>
 							<td class="value-1" data-search={ row.Classification }>{ row.Classification } </td>
 							<td class="value-2" data-search={ row.Severity }>
-								@enum(env.Enums.CaseSeverities, row.Severity)
+								@valueBadge(env.ValueLists.CaseSeverities, row.Severity)
 							</td>
 							<td class="text-right">
 								<div class="join">
@@ -44,16 +44,16 @@ templ SettingsTemplatesMany(env Env, rows []model.Case) {
 	}
 }
 
-templ settingsTemplatesPromoteBtn(env Env) {
-	if url, ok := env.Allowed("GET", "/settings/templates/promote"); ok {
-		<a class="join-item btn" href={ url } up-layer="new drawer" up-accept-location="/settings/templates/">
+templ settingsCaseTemplatesPromoteBtn(env Env) {
+	if url, ok := env.Allowed("GET", "/settings/case-templates/promote"); ok {
+		<a class="join-item btn" href={ url } up-layer="new drawer" up-accept-location="/settings/case-templates/">
 			<i class="ph ph-6 ph-copy inline-block mr-1"></i> Promote case…
 		</a>
 	}
 }
 
-templ SettingsTemplatesPromote(env Env, cases []model.Case) {
-	@form(env, "/settings/templates/promote", "Promote case to template") {
+templ SettingsCaseTemplatesPromote(env Env, cases []model.Case) {
+	@form(env, "/settings/case-templates/promote", "Promote case to template") {
 		<p class="flex items-center gap-2 mb-4">
 			<i class="ph ph-5 ph-info inline-block"></i>
 			Copies the case's tasks and notes into a new template. The source case is left unchanged.

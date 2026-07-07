@@ -41,7 +41,7 @@ with the CLI instead:
 
 ```sh
 dagobert create-user <USERNAME>   # creates an Administrator (prompts for a password)
-dagobert create-key  <NAME>       # creates an API key and prints it
+dagobert create-api-key <NAME>       # creates an API key and prints it
 ```
 
 Run these against a configured database — in a Docker deployment, prefix with

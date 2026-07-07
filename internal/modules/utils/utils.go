@@ -17,7 +17,7 @@ import (
 // server shutdown cancels in-flight requests.
 const LookupTimeout = 20 * time.Second
 
-// OnEvidenceAdded is wired to the hooks engine by the worker package; this
+// OnEvidenceAdded is wired to the automation-rules engine by the worker package; this
 // package can not import worker directly, because the module packages that
 // import workerutils are themselves imported by worker.
 var OnEvidenceAdded func(store *model.Store, obj model.Evidence)

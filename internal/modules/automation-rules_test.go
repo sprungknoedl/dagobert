@@ -46,12 +46,12 @@ func TestTriggerGating(t *testing.T) {
 	kase := model.Case{ID: fp.Random(10), Name: "Test Case"}
 	assert.Nil(t, store.SaveCase(kase))
 
-	// register the fake module and a compiled OnIndicatorAdded hook
-	savedModules, savedHooks := Modules, hooks
-	defer func() { Modules, hooks = savedModules, savedHooks }()
+	// register the fake module and a compiled OnIndicatorAdded rule
+	savedModules, savedHooks := Modules, rules
+	defer func() { Modules, rules = savedModules, savedHooks }()
 	Modules = map[string]model.Module{"FakeTI": fakeModule{}}
 
-	hook, err := CompileHook(model.Hook{
+	rule, err := CompileAutomationRule(model.AutomationRule{
 		ID:        fp.Random(10),
 		Trigger:   "OnIndicatorAdded",
 		Name:      "enrich",
@@ -60,7 +60,7 @@ func TestTriggerGating(t *testing.T) {
 		Enabled:   true,
 	})
 	assert.Nil(t, err) // condition compiles against model.Indicator
-	hooks.Store([]Hook{hook})
+	rules.Store([]AutomationRule{rule})
 
 	t.Run("schedules a job for a supported indicator", func(t *testing.T) {
 		ind := model.Indicator{ID: fp.Random(10), CaseID: kase.ID, Type: "IP", Value: "1.2.3.4", TLP: "TLP:GREEN"}
