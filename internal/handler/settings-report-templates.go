@@ -15,37 +15,37 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-func (h *Handler) ListReports(w http.ResponseWriter, r *http.Request) {
-	reports, err := h.Store.ListReports()
+func (h *Handler) ReportTemplateList(w http.ResponseWriter, r *http.Request) {
+	reports, err := h.Store.ListReportTemplates()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsReportsMany(h.Env(r), reports))
+	Render(w, r, http.StatusOK, views.SettingsReportTemplatesMany(h.Env(r), reports))
 }
 
-func (h *Handler) EditReport(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ReportTemplateEdit(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
-	obj := model.Report{ID: id}
+	obj := model.ReportTemplate{ID: id}
 	if id != "new" {
 		var err error
-		obj, err = h.Store.GetReport(id)
+		obj, err = h.Store.GetReportTemplate(id)
 		if err != nil {
 			Err(w, r, err)
 			return
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsReportsOne(h.Env(r), obj, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.SettingsReportTemplatesOne(h.Env(r), obj, valid.ValidationError{}))
 }
 
-func (h *Handler) SaveReport(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ReportTemplateSave(w http.ResponseWriter, r *http.Request) {
 	// decode form
-	dto := model.Report{ID: r.PathValue("id")}
-	err := Decode(h.Store, r, &dto, ValidateReport)
+	dto := model.ReportTemplate{ID: r.PathValue("id")}
+	err := Decode(h.Store, r, &dto, ValidateReportTemplate)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.SettingsReportsOne(h.Env(r), dto, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsReportTemplatesOne(h.Env(r), dto, vr))
 		return
 	} else if err != nil {
 		Err(w, r, err)
@@ -60,7 +60,7 @@ func (h *Handler) SaveReport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	new := dto.ID == "new"
-	if err := resolveReportFile(h.Store, dto, new, fr, fh); err != nil {
+	if err := resolveReportTemplateFile(h.Store, dto, new, fr, fh); err != nil {
 		var terr templateError
 		if errors.As(err, &terr) {
 			Warn(w, r, err) // invalid template: user error, not a server fault
@@ -72,22 +72,22 @@ func (h *Handler) SaveReport(w http.ResponseWriter, r *http.Request) {
 
 	// finally save database object
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)
-	if err := h.Store.SaveReport(dto); err != nil {
+	if err := h.Store.SaveReportTemplate(dto); err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	RedirectAfterSave(w, r, "/settings/reports/")
+	RedirectAfterSave(w, r, "/settings/report-templates/")
 }
 
 // templateError marks a rejected report template (syntax or marker errors) so
 // the handler can answer with a 400 instead of a 500.
 type templateError struct{ error }
 
-// resolveReportFile stores an uploaded report template (validating it and
+// resolveReportTemplateFile stores an uploaded report template (validating it and
 // rolling a brand-new file back on rejection), or renames the stored template
 // when an existing report changed its name. It is HTTP-free.
-func resolveReportFile(store *model.Store, dto model.Report, isNew bool, upload multipart.File, fh *multipart.FileHeader) error {
+func resolveReportTemplateFile(store *model.Store, dto model.ReportTemplate, isNew bool, upload multipart.File, fh *multipart.FileHeader) error {
 	if fh != nil && fh.Size > 0 {
 		// prepare location for report storage
 		dst := filepath.Join("files", BucketReportTemplates, dto.Name)
@@ -120,7 +120,7 @@ func resolveReportFile(store *model.Store, dto model.Report, isNew bool, upload 
 
 		// remove the previous template when the upload replaced it under a new name
 		if !isNew {
-			obj, err := store.GetReport(dto.ID)
+			obj, err := store.GetReportTemplate(dto.ID)
 			if err != nil {
 				return err
 			}
@@ -133,7 +133,7 @@ func resolveReportFile(store *model.Store, dto model.Report, isNew bool, upload 
 
 	// no upload: a rename of an existing report moves the stored template along
 	if !isNew {
-		obj, err := store.GetReport(dto.ID)
+		obj, err := store.GetReportTemplate(dto.ID)
 		if err != nil {
 			return err
 		}
@@ -146,38 +146,25 @@ func resolveReportFile(store *model.Store, dto model.Report, isNew bool, upload 
 	return nil
 }
 
-func (h *Handler) DownloadReport(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	obj, err := h.Store.GetReport(id)
-	if err != nil {
-		Err(w, r, err)
-		return
-	}
-
-	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", obj.Name))
-	w.WriteHeader(http.StatusOK)
-	http.ServeFile(w, r, filepath.Join("files", "templates", obj.Name))
-}
-
-func (h *Handler) DeleteReport(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ReportTemplateDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if r.URL.Query().Get("confirm") != "yes" {
-		uri := fmt.Sprintf("/settings/reports/%s?confirm=yes", id)
+		uri := fmt.Sprintf("/settings/report-templates/%s?confirm=yes", id)
 		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
 		return
 	}
 
 	// try to delete file from disk
-	obj, err := h.Store.GetReport(id)
+	obj, err := h.Store.GetReportTemplate(id)
 	if err == nil {
 		os.Remove(filepath.Join("files", "templates", obj.Name))
 	}
 
-	err = h.Store.DeleteReport(id)
+	err = h.Store.DeleteReportTemplate(id)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	http.Redirect(w, r, "/settings/reports/", http.StatusSeeOther)
+	http.Redirect(w, r, "/settings/report-templates/", http.StatusSeeOther)
 }

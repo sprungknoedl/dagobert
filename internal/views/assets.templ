@@ -22,7 +22,7 @@ templ AssetsMany(env Env, title string, rows []model.Asset, comments map[string]
 	@layout() {
 		@list(env, title, navSubtitle("Hosts, accounts, and services involved in the incident")) {
 			<div class="stats w-full mb-4">
-				for _, status := range env.Enums.AssetStatus {
+				for _, status := range env.ValueLists.AssetStatus {
 					@stat(status.State, status.Icon, status.Name, summary[status.Name])
 				}
 			</div>
@@ -45,10 +45,10 @@ templ AssetsMany(env Env, title string, rows []model.Asset, comments map[string]
 						for _, row := range rows {
 							<tr class="hover">
 								<td class="value-0 truncate" data-search={ row.Status }>
-									@enum(env.Enums.AssetStatus, row.Status)
+									@valueBadge(env.ValueLists.AssetStatus, row.Status)
 								</td>
 								<td class="value-1 truncate" data-search={ row.Type }>
-									@enum(env.Enums.AssetTypes, row.Type)
+									@valueBadge(env.ValueLists.AssetTypes, row.Type)
 								</td>
 								<td class="value-2" data-search={ row.Name }>{ row.Name } </td>
 								<td class="value-3 font-mono text-xs" data-search={ row.Addr }>{ row.Addr } </td>
@@ -87,8 +87,8 @@ templ AssetsOne(env Env, obj model.Asset, vr valid.ValidationError) {
 	@form(env, uri, title) {
 		@hiddenField("ID", obj.ID)
 		@hiddenField("CaseID", obj.CaseID)
-		@selectField("Status", obj.Status, env.Enums.AssetStatus, required(), withLabel("Status"), withError(vr["Status"]))
-		@selectField("Type", obj.Type, env.Enums.AssetTypes, required(), withLabel("Type"), withError(vr["Type"]))
+		@selectField("Status", obj.Status, env.ValueLists.AssetStatus, required(), withLabel("Status"), withError(vr["Status"]))
+		@selectField("Type", obj.Type, env.ValueLists.AssetTypes, required(), withLabel("Type"), withError(vr["Type"]))
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
 		@stringField("Addr", obj.Addr, withLabel("Address / Domain"), withError(vr["Addr"]))
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))

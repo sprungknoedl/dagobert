@@ -206,7 +206,7 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// trigger registered hooks
+	// trigger registered automation rules
 	if new {
 		modules.TriggerOnEvidenceAdded(h.Store, dto)
 	}

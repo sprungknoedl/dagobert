@@ -10,7 +10,7 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/model"
 )
 
-func CreateKey(cmd *cobra.Command, args []string) error {
+func CreateAPIKey(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	dburl := cmp.Or(os.Getenv("DB_URL"), model.DefaultUrl)
@@ -21,16 +21,16 @@ func CreateKey(cmd *cobra.Command, args []string) error {
 	}
 
 	// Mint the key exactly like the UI does: persist only the hash + hint,
-	// reveal the plaintext once. See handler/settings-keys.go Save.
-	plaintext, hash, hint := model.GenerateKey()
+	// reveal the plaintext once. See handler/settings-api-keys.go Save.
+	plaintext, hash, hint := model.GenerateAPIKey()
 	slog.Info("Adding key", "name", name)
-	obj := model.Key{
+	obj := model.APIKey{
 		Key:  hash,
 		Hint: hint,
 		Name: name,
 		Type: "API",
 	}
-	if err := db.SaveKey(obj); err != nil {
+	if err := db.SaveAPIKey(obj); err != nil {
 		slog.Error("failed to create key", "err", err)
 		return err
 	}

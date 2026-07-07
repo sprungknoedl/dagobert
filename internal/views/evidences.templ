@@ -50,7 +50,7 @@ templ EvidencesMany(env Env, rows []model.Evidence, comments map[string]int) {
 						for _, row := range rows {
 							<tr class="hover">
 								<td class="value-0 truncate">
-									@enum(env.Enums.EvidenceTypes, row.Type)
+									@valueBadge(env.ValueLists.EvidenceTypes, row.Type)
 								</td>
 								<td class="value-1" data-search={ row.Name }>
 									{ row.Name }
@@ -95,7 +95,7 @@ templ EvidencesOne(env Env, obj model.Evidence, vr valid.ValidationError) {
 	@form(env, uri, title, enctype("multipart/form-data")) {
 		@hiddenField("ID", obj.ID)
 		@hiddenField("CaseID", obj.CaseID)
-		@selectField("Type", obj.Type, env.Enums.EvidenceTypes, required(), withLabel("Type"), withError(vr["Type"]))
+		@selectField("Type", obj.Type, env.ValueLists.EvidenceTypes, required(), withLabel("Type"), withError(vr["Type"]))
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
 		if obj.ID == "new" || vr["File"].Invalid {
 			<div class="form-control mb-2">

@@ -16,7 +16,7 @@ templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]m
 	@layout() {
 		@list(env, "Indicators", navHideImport(), navHideExport(), navPreButtons(indicatorsManyExtra(env)), navSubtitle("Atomic artefacts for detection and threat hunting")) {
 			<div class="stats w-full mb-4">
-				for _, status := range env.Enums.IndicatorStatus {
+				for _, status := range env.ValueLists.IndicatorStatus {
 					@stat(status.State, status.Icon, status.Name, summary[status.Name])
 				}
 			</div>
@@ -40,10 +40,10 @@ templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]m
 							{{ worst, worstSeverity, results := summarizeEnrichment(enrichments[row.ID]) }}
 							<tr class={ fp.If(row.Flagged, "hover bg-flagged", "hover") }>
 								<td class="value-0 truncate" data-search={ row.Status }>
-									@enum(env.Enums.IndicatorStatus, row.Status)
+									@valueBadge(env.ValueLists.IndicatorStatus, row.Status)
 								</td>
 								<td class="value-1 truncate" data-search={ row.Type }>
-									@enum(env.Enums.IndicatorTypes, row.Type)
+									@valueBadge(env.ValueLists.IndicatorTypes, row.Type)
 								</td>
 								<td class="value-2 font-mono text-xs" data-search={ row.Value }>
 									{ row.Value }
@@ -122,10 +122,10 @@ templ IndicatorsOne(env Env, obj model.Indicator, overlap IndicatorOverlap, enri
 	@form(env, uri, title) {
 		@hiddenField("ID", obj.ID)
 		@hiddenField("CaseID", obj.CaseID)
-		@selectField("Status", obj.Status, env.Enums.IndicatorStatus, required(), withLabel("Status"), withError(vr["Status"]))
-		@selectField("Type", obj.Type, env.Enums.IndicatorTypes, required(), withLabel("Type"), withError(vr["Type"]))
+		@selectField("Status", obj.Status, env.ValueLists.IndicatorStatus, required(), withLabel("Status"), withError(vr["Status"]))
+		@selectField("Type", obj.Type, env.ValueLists.IndicatorTypes, required(), withLabel("Type"), withError(vr["Type"]))
 		@stringField("Value", obj.Value, required(), withLabel("Value"), withError(vr["Value"]))
-		@selectField("TLP", obj.TLP, env.Enums.IndicatorTLPs, required(), withLabel("TLP"), withError(vr["TLP"]), withHint("Traffic Light Protocol: controls how widely this indicator can be shared. TLP:RED = named recipients only; TLP:GREEN = community; TLP:WHITE = public."))
+		@selectField("TLP", obj.TLP, env.ValueLists.IndicatorTLPs, required(), withLabel("TLP"), withError(vr["TLP"]), withHint("Traffic Light Protocol: controls how widely this indicator can be shared. TLP:RED = named recipients only; TLP:GREEN = community; TLP:WHITE = public."))
 		@booleanField("Flagged", obj.Flagged, withLabel("Flagged"), withHint("Mark this indicator as significant. Flagged indicators are highlighted in the list and appear on the case summary page."))
 		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]), withHint("Where this indicator was found or provided by (e.g. \"VirusTotal\", \"customer firewall logs\", analyst name)."))
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))

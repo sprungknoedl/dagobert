@@ -21,7 +21,7 @@ func ApiKeyMiddleware(db *model.Store) func(http.Handler) http.Handler {
 			key := r.Header.Get(HeaderApiKey)
 			if key == "" {
 				if bearer, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer "); ok &&
-					strings.HasPrefix(bearer, model.KeyPrefix) {
+					strings.HasPrefix(bearer, model.APIKeyPrefix) {
 					key = bearer
 				}
 			}
@@ -31,13 +31,13 @@ func ApiKeyMiddleware(db *model.Store) func(http.Handler) http.Handler {
 			}
 
 			// reject malformed/typo'd keys offline, before any DB query
-			if !model.ValidKeyFormat(key) {
+			if !model.ValidAPIKeyFormat(key) {
 				slog.Warn("api key has invalid format")
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
 
-			k, err := db.GetKey(model.HashKey(key))
+			k, err := db.GetAPIKey(model.HashAPIKey(key))
 			if err != nil {
 				slog.Warn("failed to get api key", "err", err)
 				w.WriteHeader(http.StatusUnauthorized)
@@ -46,7 +46,7 @@ func ApiKeyMiddleware(db *model.Store) func(http.Handler) http.Handler {
 
 			// resolve the principal bound to this key's type; fail closed on
 			// unknown/empty types rather than silently granting admin access
-			principal, ok := model.PrincipalForKeyType(k.Type)
+			principal, ok := model.PrincipalForAPIKeyType(k.Type)
 			if !ok {
 				slog.Warn("api key has unknown type", "type", k.Type)
 				w.WriteHeader(http.StatusUnauthorized)

@@ -68,10 +68,10 @@ func Start(ctx context.Context, store *model.Store, ts *tsclient.Client) {
 		go runner(ctx, store, modules)
 	}
 
-	slog.Debug("Loading hooks")
-	err = LoadHooks(store)
+	slog.Debug("Loading automation rules")
+	err = LoadAutomationRules(store)
 	if err != nil {
-		slog.Error("Failed to load hooks", "err", err)
+		slog.Error("Failed to load automation rules", "err", err)
 		return
 	}
 
