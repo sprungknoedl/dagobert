@@ -103,7 +103,7 @@ templ CasesACL(env Env, obj model.Case, users []model.User, perms []string) {
 	@form(env, uri, title) {
 		<p class="mb-2">The following users are allowed to access <strong>{ obj.Name }</strong>:</p>
 		for _, user := range users {
-			if user.Role != "Administrator" {
+			if user.Role != "Administrator" && !user.Builtin() {
 				<div class="form-control mb-2">
 					<label class="label cursor-pointer justify-start gap-2">
 						<input name="Users" value={ user.ID } type="checkbox" class="checkbox" checked?={ slices.Contains(perms, user.ID) }/>
