@@ -433,6 +433,13 @@ func (h *Handler) CaseSaveACL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for _, uid := range form.Users {
+		if (&model.User{ID: uid}).Builtin() {
+			Warn(w, r, model.ErrUserProtected)
+			return
+		}
+	}
+
 	if err := h.ACL.SaveCasePermissions(obj.ID, form.Users); err != nil {
 		Err(w, r, err)
 		return

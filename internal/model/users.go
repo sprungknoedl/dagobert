@@ -38,6 +38,10 @@ type User struct {
 
 func (u *User) String() string { return fmt.Sprintf("%s (%s)", u.Name, u.UPN) }
 
+func (u *User) Builtin() bool {
+	return u.ID == SystemUser.ID || u.ID == DonaldUser.ID || u.ID == McpUser.ID
+}
+
 func (store *Store) ListUsers() ([]User, error) {
 	list := []User{}
 	tx := store.DB.
@@ -59,14 +63,14 @@ func (store *Store) GetUserByUPN(upn string) (User, error) {
 }
 
 func (store *Store) SaveUser(obj User) error {
-	if obj.ID == SystemUser.ID || obj.ID == DonaldUser.ID || obj.ID == McpUser.ID {
+	if obj.Builtin() {
 		return ErrUserProtected
 	}
 	return store.DB.Save(obj).Error
 }
 
 func (store *Store) DeleteUser(id string) error {
-	if id == SystemUser.ID || id == DonaldUser.ID || id == McpUser.ID {
+	if (&User{ID: id}).Builtin() {
 		return ErrUserProtected
 	}
 	return store.DB.Delete(&User{}, "id = ?", id).Error
