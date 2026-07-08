@@ -18,7 +18,7 @@ func (h *Handler) AutomationRuleList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsAutomationRulesMany(h.Env(r), rules))
+	Render(w, r, http.StatusOK, views.SettingsAutomationRulesMany(h.Env(r), rules), nil)
 }
 
 func (h *Handler) AutomationRuleEdit(w http.ResponseWriter, r *http.Request) {
@@ -34,7 +34,7 @@ func (h *Handler) AutomationRuleEdit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	item := fp.ToList(fp.ApplyM(modules.Modules, func(m model.Module) model.ValueListItem { return model.ValueListItem{Name: m.Name()} }))
-	Render(w, r, http.StatusOK, views.SettingsAutomationRulesOne(h.Env(r), obj, item, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.SettingsAutomationRulesOne(h.Env(r), obj, item, valid.ValidationError{}), nil)
 }
 
 func (h *Handler) AutomationRuleSave(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +43,7 @@ func (h *Handler) AutomationRuleSave(w http.ResponseWriter, r *http.Request) {
 	err := Decode(h.Store, r, &dto, ValidateAutomationRule)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
 		item := fp.ToList(fp.ApplyM(modules.Modules, func(m model.Module) model.ValueListItem { return model.ValueListItem{Name: m.Name()} }))
-		Render(w, r, http.StatusUnprocessableEntity, views.SettingsAutomationRulesOne(h.Env(r), dto, item, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsAutomationRulesOne(h.Env(r), dto, item, vr), nil)
 		return
 	} else if err != nil {
 		Err(w, r, err)
@@ -61,14 +61,14 @@ func (h *Handler) AutomationRuleSave(w http.ResponseWriter, r *http.Request) {
 	// reload rules
 	modules.LoadAutomationRules(h.Store)
 
-	RedirectAfterSave(w, r, "/settings/automation-rules/")
+	RedirectAfterSave(w, r, "/settings/automation-rules/", nil)
 }
 
 func (h *Handler) AutomationRuleDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/automation-rules/%s?confirm=yes", id)
-		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri), nil)
 		return
 	}
 

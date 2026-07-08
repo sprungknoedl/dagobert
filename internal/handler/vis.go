@@ -56,7 +56,7 @@ func (h *Handler) Network(w http.ResponseWriter, r *http.Request) {
 	edges = slices.Compact(edges)
 
 	slog.Debug("rendering network", "nodes", nodes, "edges", edges)
-	Render(w, r, http.StatusOK, views.VisNetwork(h.Env(r), fp.ToList(nodes), edges))
+	Render(w, r, http.StatusOK, views.VisNetwork(h.Env(r), fp.ToList(nodes), edges), nil)
 }
 
 func (h *Handler) MitreAttack(w http.ResponseWriter, r *http.Request) {
@@ -92,5 +92,5 @@ func (h *Handler) MitreAttack(w http.ResponseWriter, r *http.Request) {
 		matrix = matrix.Filter(func(t attck.Technique) bool { return counts[t.ID] > 0 })
 	}
 
-	Render(w, r, http.StatusOK, views.VisMitreAttack(h.Env(r), counts, matrix, hide))
+	Render(w, r, http.StatusOK, views.VisMitreAttack(h.Env(r), counts, matrix, hide), nil)
 }

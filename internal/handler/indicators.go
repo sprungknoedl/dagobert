@@ -41,7 +41,7 @@ func (h *Handler) IndicatorList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.IndicatorsMany(h.Env(r), list, enrichments, comments))
+	Render(w, r, http.StatusOK, views.IndicatorsMany(h.Env(r), list, enrichments, comments), list)
 }
 
 func (h *Handler) IndicatorExportCSV(w http.ResponseWriter, r *http.Request) {
@@ -317,14 +317,18 @@ func (h *Handler) IndicatorEdit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.IndicatorsOne(h.Env(r), obj, overlap, enrichments, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.IndicatorsOne(h.Env(r), obj, overlap, enrichments, valid.ValidationError{}), obj)
 }
 
 func (h *Handler) IndicatorSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Indicator{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
 	err := Decode(h.Store, r, &dto, ValidateIndicator)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.IndicatorsOne(h.Env(r), dto, views.IndicatorOverlap{}, nil, vr))
+		if wantsJSON(r) {
+			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
+			return
+		}
+		Render(w, r, http.StatusUnprocessableEntity, views.IndicatorsOne(h.Env(r), dto, views.IndicatorOverlap{}, nil, vr), nil)
 		return
 	} else if err != nil {
 		Warn(w, r, err)
@@ -348,15 +352,15 @@ func (h *Handler) IndicatorSave(w http.ResponseWriter, r *http.Request) {
 		modules.TriggerOnIndicatorAdded(h.Store, dto)
 	}
 
-	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/indicators/", dto.CaseID))
+	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/indicators/", dto.CaseID), dto)
 }
 
 func (h *Handler) IndicatorDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
-	if r.URL.Query().Get("confirm") != "yes" {
+	if r.URL.Query().Get("confirm") != "yes" && !wantsJSON(r) {
 		uri := fmt.Sprintf("/cases/%s/indicators/%s?confirm=yes", cid, id)
-		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri), nil)
 		return
 	}
 
@@ -366,6 +370,10 @@ func (h *Handler) IndicatorDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if wantsJSON(r) {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/indicators/", cid), http.StatusSeeOther)
 }
 

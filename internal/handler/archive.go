@@ -198,7 +198,7 @@ func writeFileEntry(zw *zip.Writer, name, disk string) error {
 
 // ImportArchiveForm shows the upload form for a case archive.
 func (h *Handler) ImportArchiveForm(w http.ResponseWriter, r *http.Request) {
-	Render(w, r, http.StatusOK, views.ImportArchiveDialog())
+	Render(w, r, http.StatusOK, views.ImportArchiveDialog(), nil)
 }
 
 // ImportArchive handles both stages of the import: the initial upload (parse the
@@ -281,7 +281,7 @@ func (h *Handler) PreviewImport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.ImportArchiveConfirm(manifest, token))
+	Render(w, r, http.StatusOK, views.ImportArchiveConfirm(manifest, token), nil)
 }
 
 // CommitImport recreates the case from the staged archive and restores its

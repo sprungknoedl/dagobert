@@ -20,7 +20,7 @@ func (h *Handler) NoteList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.NotesMany(h.Env(r), list))
+	Render(w, r, http.StatusOK, views.NotesMany(h.Env(r), list), list)
 }
 
 func (h *Handler) NoteExport(w http.ResponseWriter, r *http.Request) {
@@ -91,14 +91,18 @@ func (h *Handler) NoteEdit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.NotesOne(h.Env(r), obj, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.NotesOne(h.Env(r), obj, valid.ValidationError{}), obj)
 }
 
 func (h *Handler) NoteSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Note{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
 	err := Decode(h.Store, r, &dto, ValidateNote)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.NotesOne(h.Env(r), dto, vr))
+		if wantsJSON(r) {
+			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
+			return
+		}
+		Render(w, r, http.StatusUnprocessableEntity, views.NotesOne(h.Env(r), dto, vr), nil)
 		return
 	} else if err != nil {
 		Warn(w, r, err)
@@ -116,15 +120,15 @@ func (h *Handler) NoteSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/notes/", dto.CaseID))
+	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/notes/", dto.CaseID), dto)
 }
 
 func (h *Handler) NoteDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
-	if r.URL.Query().Get("confirm") != "yes" {
+	if r.URL.Query().Get("confirm") != "yes" && !wantsJSON(r) {
 		uri := fmt.Sprintf("/cases/%s/notes/%s?confirm=yes", cid, id)
-		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri), nil)
 		return
 	}
 
@@ -134,5 +138,9 @@ func (h *Handler) NoteDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if wantsJSON(r) {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/notes/", cid), http.StatusSeeOther)
 }

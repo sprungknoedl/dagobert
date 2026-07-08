@@ -26,7 +26,7 @@ func (h *Handler) AssetList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.AssetsMany(h.Env(r), "Assets", list, comments))
+	Render(w, r, http.StatusOK, views.AssetsMany(h.Env(r), "Assets", list, comments), list)
 }
 
 func (h *Handler) AssetExport(w http.ResponseWriter, r *http.Request) {
@@ -101,14 +101,18 @@ func (h *Handler) AssetEdit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.AssetsOne(h.Env(r), obj, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.AssetsOne(h.Env(r), obj, valid.ValidationError{}), obj)
 }
 
 func (h *Handler) AssetSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Asset{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
 	err := Decode(h.Store, r, &dto, ValidateAsset)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.AssetsOne(h.Env(r), dto, vr))
+		if wantsJSON(r) {
+			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
+			return
+		}
+		Render(w, r, http.StatusUnprocessableEntity, views.AssetsOne(h.Env(r), dto, vr), nil)
 		return
 	} else if err != nil {
 		Warn(w, r, err)
@@ -126,13 +130,13 @@ func (h *Handler) AssetSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/assets/", dto.CaseID))
+	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/assets/", dto.CaseID), dto)
 }
 
 func (h *Handler) AssetDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
-	if r.URL.Query().Get("confirm") != "yes" {
+	if r.URL.Query().Get("confirm") != "yes" && !wantsJSON(r) {
 		uri := fmt.Sprintf("/cases/%s/assets/%s?confirm=yes", cid, id)
 		views.ConfirmDialog(uri).Render(r.Context(), w)
 		return
@@ -144,5 +148,9 @@ func (h *Handler) AssetDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if wantsJSON(r) {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/assets/", cid), http.StatusSeeOther)
 }

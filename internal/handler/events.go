@@ -45,7 +45,7 @@ func (h *Handler) EventList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	env := h.Env(r)
-	views.EventsMany(env, list, assets, indicators, *h.Mitre, comments).Render(r.Context(), w)
+	Render(w, r, http.StatusOK, views.EventsMany(env, list, assets, indicators, *h.Mitre, comments), list)
 }
 
 func (h *Handler) EventExport(w http.ResponseWriter, r *http.Request) {
@@ -233,7 +233,7 @@ func (h *Handler) EventEdit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.EventsOne(h.Env(r), obj, assets, indicators, h.Mitre, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.EventsOne(h.Env(r), obj, assets, indicators, h.Mitre, valid.ValidationError{}), obj)
 }
 
 func (h *Handler) EventSave(w http.ResponseWriter, r *http.Request) {
@@ -246,6 +246,10 @@ func (h *Handler) EventSave(w http.ResponseWriter, r *http.Request) {
 		Decode(h.Store, r, &dto, ValidateEvent),
 		Decode(h.Store, r, &tmp, nil))
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
+		if wantsJSON(r) {
+			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
+			return
+		}
 		var ev model.Event
 		var err1 error
 		if dto.ID != "new" {
@@ -261,7 +265,7 @@ func (h *Handler) EventSave(w http.ResponseWriter, r *http.Request) {
 		// changes in the form to the selects will be lost, but this is easier than the other way around ...
 		dto.Assets = ev.Assets
 		dto.Indicators = ev.Indicators
-		Render(w, r, http.StatusUnprocessableEntity, views.EventsOne(h.Env(r), dto, assets, indicators, h.Mitre, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.EventsOne(h.Env(r), dto, assets, indicators, h.Mitre, vr), nil)
 		return
 	} else if err != nil {
 		Warn(w, r, err)
@@ -297,13 +301,13 @@ func (h *Handler) EventSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/events/", dto.CaseID))
+	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/events/", dto.CaseID), dto)
 }
 
 func (h *Handler) EventDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
-	if r.URL.Query().Get("confirm") != "yes" {
+	if r.URL.Query().Get("confirm") != "yes" && !wantsJSON(r) {
 		uri := fmt.Sprintf("/cases/%s/events/%s?confirm=yes", cid, id)
 		views.ConfirmDialog(uri).Render(r.Context(), w)
 		return
@@ -315,6 +319,10 @@ func (h *Handler) EventDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if wantsJSON(r) {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/events/", cid), http.StatusSeeOther)
 }
 

@@ -28,7 +28,7 @@ func (h *Handler) TaskList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.TasksMany(h.Env(r), list, comments))
+	Render(w, r, http.StatusOK, views.TasksMany(h.Env(r), list, comments), list)
 }
 
 func (h *Handler) TaskExport(w http.ResponseWriter, r *http.Request) {
@@ -113,14 +113,18 @@ func (h *Handler) TaskEdit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.TasksOne(h.Env(r), obj, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.TasksOne(h.Env(r), obj, valid.ValidationError{}), obj)
 }
 
 func (h *Handler) TaskSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Task{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
 	err := Decode(h.Store, r, &dto, ValidateTask)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.TasksOne(h.Env(r), dto, vr))
+		if wantsJSON(r) {
+			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
+			return
+		}
+		Render(w, r, http.StatusUnprocessableEntity, views.TasksOne(h.Env(r), dto, vr), nil)
 		return
 	} else if err != nil {
 		Warn(w, r, err)
@@ -138,15 +142,15 @@ func (h *Handler) TaskSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/tasks/", dto.CaseID))
+	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/tasks/", dto.CaseID), dto)
 }
 
 func (h *Handler) TaskDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
-	if r.URL.Query().Get("confirm") != "yes" {
+	if r.URL.Query().Get("confirm") != "yes" && !wantsJSON(r) {
 		uri := fmt.Sprintf("/cases/%s/tasks/%s?confirm=yes", cid, id)
-		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri), nil)
 		return
 	}
 
@@ -156,5 +160,9 @@ func (h *Handler) TaskDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if wantsJSON(r) {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/tasks/", cid), http.StatusSeeOther)
 }
