@@ -34,15 +34,16 @@ type Manifest struct {
 // many2many event links are flattened onto each event as id lists rather than
 // as separate join arrays.
 type CaseArchive struct {
-	Case       Case           `json:"case"`
-	Assets     []Asset        `json:"assets"`
-	Indicators []Indicator    `json:"indicators"`
-	Events     []ArchiveEvent `json:"events"`
-	Malware    []Malware      `json:"malware"`
-	Notes      []Note         `json:"notes"`
-	Tasks      []Task         `json:"tasks"`
-	Evidences  []Evidence     `json:"evidences"`
-	Comments   []Comment      `json:"comments"`
+	Case         Case           `json:"case"`
+	Assets       []Asset        `json:"assets"`
+	Indicators   []Indicator    `json:"indicators"`
+	Events       []ArchiveEvent `json:"events"`
+	Malware      []Malware      `json:"malware"`
+	Notes        []Note         `json:"notes"`
+	Tasks        []Task         `json:"tasks"`
+	Evidences    []Evidence     `json:"evidences"`
+	Comments     []Comment      `json:"comments"`
+	EvidenceLogs []EvidenceLog  `json:"evidenceLogs"`
 }
 
 // ArchiveEvent is the export projection of an Event: the event itself plus the
@@ -76,6 +77,11 @@ func (store *Store) ExportCaseArchive(cid string) (CaseArchive, error) {
 		return CaseArchive{}, err
 	}
 
+	evidenceLogs := []EvidenceLog{}
+	if err := store.DB.Where("case_id = ?", cid).Order("time asc").Find(&evidenceLogs).Error; err != nil {
+		return CaseArchive{}, err
+	}
+
 	// the case row carries the scalar fields only; the child collections live in
 	// their own top-level arrays
 	kase := obj
@@ -88,14 +94,15 @@ func (store *Store) ExportCaseArchive(cid string) (CaseArchive, error) {
 	kase.Tasks = nil
 
 	arch := CaseArchive{
-		Case:       kase,
-		Assets:     obj.Assets,
-		Indicators: obj.Indicators,
-		Malware:    obj.Malware,
-		Notes:      obj.Notes,
-		Tasks:      obj.Tasks,
-		Evidences:  obj.Evidences,
-		Comments:   comments,
+		Case:         kase,
+		Assets:       obj.Assets,
+		Indicators:   obj.Indicators,
+		Malware:      obj.Malware,
+		Notes:        obj.Notes,
+		Tasks:        obj.Tasks,
+		Evidences:    obj.Evidences,
+		Comments:     comments,
+		EvidenceLogs: evidenceLogs,
 		Events: fp.Apply(events, func(e Event) ArchiveEvent {
 			ae := ArchiveEvent{
 				AssetIDs:     fp.Apply(e.Assets, func(a Asset) string { return a.ID }),
@@ -177,6 +184,11 @@ func (store *Store) ImportCaseArchive(arch CaseArchive) error {
 				return err
 			}
 		}
+		for _, l := range arch.EvidenceLogs {
+			if err := tx.SaveEvidenceLog(arch.Case.ID, l); err != nil {
+				return err
+			}
+		}
 		return nil
 	})
 }
@@ -240,6 +252,11 @@ func (store *Store) ForkCase(srcID string, dst Case) (Case, error) {
 		arch.Comments[i].CaseID = dst.ID
 		arch.Comments[i].ObjectID = remap(arch.Comments[i].ObjectID)
 	}
+	for i := range arch.EvidenceLogs {
+		arch.EvidenceLogs[i].ID = remap(arch.EvidenceLogs[i].ID)
+		arch.EvidenceLogs[i].CaseID = dst.ID
+		arch.EvidenceLogs[i].EvidenceID = remap(arch.EvidenceLogs[i].EvidenceID)
+	}
 
 	return dst, store.ImportCaseArchive(arch)
 }
@@ -265,6 +282,7 @@ func (store *Store) assertNoCollisions(arch CaseArchive) error {
 		{"tasks", fp.Apply(arch.Tasks, func(t Task) string { return t.ID })},
 		{"evidences", fp.Apply(arch.Evidences, func(e Evidence) string { return e.ID })},
 		{"comments", fp.Apply(arch.Comments, func(c Comment) string { return c.ID })},
+		{"evidence_logs", fp.Apply(arch.EvidenceLogs, func(l EvidenceLog) string { return l.ID })},
 	}
 	for _, c := range checks {
 		found, err := store.existingIDs(c.table, c.ids)

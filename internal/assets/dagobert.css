@@ -243,6 +243,13 @@ up-drawer[size=large] up-drawer-box {
     width: 66% !important;
 }
 
+/* extra-wide, fixed-width drawer for wide tables (e.g. the evidence log) —
+deliberately not "full": that's 100vw and removes the dimmed-background edge
+that signals "this is still an overlay" */
+up-drawer[size=xlarge] up-drawer-box {
+    width: 90% !important;
+}
+
 up-popup {
     border-radius: var(--radius-box);
     margin-top: 0.5rem;
