@@ -39,13 +39,13 @@ func TestCrossCaseIsolation(t *testing.T) {
 	})
 
 	t.Run("Delete is case-scoped", func(t *testing.T) {
-		assert.Nil(t, db.DeleteEvidence("A", "shared"))
+		assert.Nil(t, db.DeleteEvidence("A", "shared", "tester"))
 		// still there
 		_, err := db.GetEvidence("B", "shared")
 		assert.Nil(t, err)
 
 		// owner can delete
-		assert.Nil(t, db.DeleteEvidence("B", "shared"))
+		assert.Nil(t, db.DeleteEvidence("B", "shared", "tester"))
 		_, err = db.GetEvidence("B", "shared")
 		assert.ErrorIs(t, err, gorm.ErrRecordNotFound)
 	})

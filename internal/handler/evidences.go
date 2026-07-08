@@ -6,11 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/model"
@@ -80,6 +82,7 @@ func (h *Handler) EvidenceExport(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) EvidenceImport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/evidences/", cid)
+	user := GetUser(r)
 	h.Store.Transaction(func(tx *model.Store) error {
 		return ImportCSV(tx, h.ACL, w, r, uri, 0, func(rec []string) {
 			size, err := strconv.ParseInt(rec[4], 10, 64)
@@ -136,6 +139,14 @@ func (h *Handler) EvidenceImport(w http.ResponseWriter, r *http.Request) {
 				Err(w, r, err)
 				return
 			}
+
+			tx.SaveEvidenceLog(cid, model.EvidenceLog{
+				EvidenceID: obj.ID,
+				Name:       obj.Name,
+				User:       user.String(),
+				Event:      model.EvidenceLogUploaded,
+				Details:    "imported via CSV",
+			})
 		})
 	})
 }
@@ -210,7 +221,35 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)
-	if err := h.Store.SaveEvidence(dto.CaseID, dto); err != nil {
+
+	var old model.Evidence
+	if !new {
+		old, err = h.Store.GetEvidence(dto.CaseID, dto.ID)
+		if err != nil {
+			Err(w, r, err)
+			return
+		}
+	}
+
+	user := GetUser(r)
+	details := fp.If(new, dto.Hash, diffEvidence(old, dto))
+	err = h.Store.Transaction(func(tx *model.Store) error {
+		if err := tx.SaveEvidence(dto.CaseID, dto); err != nil {
+			return err
+		}
+		if !new && details == "" {
+			return nil // no-op edit — nothing changed, nothing to log
+		}
+
+		return tx.SaveEvidenceLog(dto.CaseID, model.EvidenceLog{
+			EvidenceID: dto.ID,
+			Name:       dto.Name,
+			User:       user.String(),
+			Event:      fp.If(new, model.EvidenceLogUploaded, model.EvidenceLogEdited),
+			Details:    details,
+		})
+	})
+	if err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -283,6 +322,43 @@ func hashCopy(dst io.Writer, src io.Reader) (string, error) {
 	return fmt.Sprintf("%x", hasher.Sum(nil)), nil
 }
 
+// diffEvidence returns the comma-separated list of changed field names between
+// old and new, for the "edited" log entry. The rename is spelled out with its
+// old/new values; every other field only names itself — the full values are
+// deliberately not stored (bloat; would leak the archive password).
+//
+// This is a display heuristic, not an equality check: it skips Hash/Size
+// (recomputed from disk, not user-edited) and only covers today's editable
+// fields. Do not use an empty result to skip the SaveEvidence write itself.
+func diffEvidence(old, new model.Evidence) string {
+	changes := []string{}
+	if old.Name != new.Name {
+		changes = append(changes, fmt.Sprintf("name: %q → %q", old.Name, new.Name))
+	}
+	if old.Type != new.Type {
+		changes = append(changes, "Type")
+	}
+	if old.Source != new.Source {
+		changes = append(changes, "Source")
+	}
+	if old.Notes != new.Notes {
+		changes = append(changes, "Notes")
+	}
+	if old.Password != new.Password {
+		changes = append(changes, "Password")
+	}
+	if old.StartsAt.Format(time.RFC3339) != new.StartsAt.Format(time.RFC3339) {
+		changes = append(changes, "StartsAt")
+	}
+	if old.EndsAt.Format(time.RFC3339) != new.EndsAt.Format(time.RFC3339) {
+		changes = append(changes, "EndsAt")
+	}
+	if !maps.Equal(old.Custom, new.Custom) {
+		changes = append(changes, "Custom")
+	}
+	return strings.Join(changes, ", ")
+}
+
 func (h *Handler) EvidenceDownload(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
@@ -291,6 +367,14 @@ func (h *Handler) EvidenceDownload(w http.ResponseWriter, r *http.Request) {
 		Err(w, r, err)
 		return
 	}
+
+	user := GetUser(r)
+	h.Store.SaveEvidenceLog(cid, model.EvidenceLog{
+		EvidenceID: obj.ID,
+		Name:       obj.Name,
+		User:       user.String(),
+		Event:      model.EvidenceLogDownloaded,
+	})
 
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", obj.Name))
 	w.WriteHeader(http.StatusOK)
@@ -312,7 +396,8 @@ func (h *Handler) EvidenceDelete(w http.ResponseWriter, r *http.Request) {
 		os.Remove(filepath.Join("files", "evidences", obj.CaseID, obj.Name))
 	}
 
-	err = h.Store.DeleteEvidence(cid, id)
+	user := GetUser(r)
+	err = h.Store.DeleteEvidence(cid, id, user.String())
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -330,5 +415,88 @@ func (h *Handler) EvidenceListModules(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) EvidenceScheduleModule(w http.ResponseWriter, r *http.Request) {
-	ScheduleModule(h, w, r, h.Store.GetEvidence)
+	user := GetUser(r)
+	ScheduleModule(h, w, r, h.Store.GetEvidence, func(tx *model.Store, cid, oid string, obj model.Evidence, module string) error {
+		return tx.SaveEvidenceLog(cid, model.EvidenceLog{
+			EvidenceID: oid,
+			Name:       obj.Name,
+			User:       user.String(),
+			Event:      model.EvidenceLogModuleRun,
+			Details:    module,
+		})
+	})
+}
+
+func (h *Handler) EvidenceLogList(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	logs, err := h.Store.ListEvidenceLogs(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	evidences, err := h.Store.ListEvidences(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	live := fp.ToMap(evidences, func(e model.Evidence) string { return e.ID })
+	Render(w, r, http.StatusOK, views.EvidenceLogsMany(h.Env(r), logs, live), logs)
+}
+
+func (h *Handler) EvidenceLogExport(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	list, err := h.Store.ListEvidenceLogs(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	kase := GetCase(h.Store, r)
+	filename := fmt.Sprintf("%s - %s - Evidence Log.csv", time.Now().Format("20060102"), kase.Name)
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+filename+"\"")
+	w.WriteHeader(http.StatusOK)
+
+	cw := csv.NewWriter(w)
+	cw.Write([]string{"Time", "Evidence", "Event", "User", "Details", "EvidenceID"})
+	for _, l := range list {
+		cw.Write([]string{
+			l.Time.Format(time.RFC3339),
+			l.Name,
+			l.Event,
+			l.User,
+			l.Details,
+			l.EvidenceID,
+		})
+	}
+	cw.Flush()
+}
+
+// EvidenceLogPurge permanently removes all log rows for one deleted evidence.
+// Administrator only — analysts must not be able to erase their own trail.
+func (h *Handler) EvidenceLogPurge(w http.ResponseWriter, r *http.Request) {
+	cid := r.PathValue("cid")
+	eid := r.PathValue("eid")
+	if GetUser(r).Role != "Administrator" {
+		Forbidden(w, r)
+		return
+	}
+
+	if r.URL.Query().Get("confirm") != "yes" && !wantsJSON(r) {
+		uri := fmt.Sprintf("/cases/%s/evidences/logs/%s?confirm=yes", cid, eid)
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri), nil)
+		return
+	}
+
+	if err := h.Store.PurgeEvidenceLogs(cid, eid); err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	if wantsJSON(r) {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/logs", cid), http.StatusSeeOther)
 }

@@ -233,6 +233,12 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("GET /cases/{cid}/evidences/{id}/run", h.EvidenceListModules)
 	secured.HandleFunc("POST /cases/{cid}/evidences/{id}/run", h.EvidenceScheduleModule)
 
+	// evidence access log — the literal "logs" beats the "{id}" wildcard in the
+	// Go 1.22 mux, making "logs" a reserved evidence ID (fine: IDs are fp.Random)
+	secured.HandleFunc("GET /cases/{cid}/evidences/logs", h.EvidenceLogList)
+	secured.HandleFunc("GET /cases/{cid}/evidences/logs/export/csv", h.EvidenceLogExport)
+	secured.HandleFunc("DELETE /cases/{cid}/evidences/logs/{eid}", h.EvidenceLogPurge)
+
 	// tasks
 	secured.HandleFunc("GET /cases/{cid}/tasks/", h.TaskList)
 	secured.HandleFunc("GET /cases/{cid}/tasks/export/csv", h.TaskExport)

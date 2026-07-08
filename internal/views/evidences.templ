@@ -28,7 +28,7 @@ func humanizeSize(s int64) string {
 
 templ EvidencesMany(env Env, rows []model.Evidence, comments map[string]int) {
 	@layout() {
-		@list(env, "Evidences", navSubtitle("Files and artefacts collected for forensic analysis")) {
+		@list(env, "Evidences", navPreButtons(evidenceLogLink(env)), navSubtitle("Files and artefacts collected for forensic analysis")) {
 			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>
@@ -137,5 +137,114 @@ templ EvidencesOne(env Env, obj model.Evidence, vr valid.ValidationError) {
 		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
 		@customAttributes(env, "Evidence", obj.Custom)
 		@requiredFootnote()
+	}
+}
+
+templ evidenceLogLink(env Env) {
+	if _, ok := env.Allowed("GET", "/cases/"+env.Case.ID+"/evidences/logs"); ok {
+		<a class="join-item btn" href={ "/cases/" + env.Case.ID + "/evidences/logs" } up-layer="new drawer" up-size="xlarge">
+			<i class="ph ph-6 ph-scroll inline-block mr-1"></i> Log
+		</a>
+	}
+}
+
+templ evidenceLogExportBtn(env Env) {
+	if _, ok := env.Allowed("GET", "/cases/"+env.Case.ID+"/evidences/logs/export/csv"); ok {
+		<a class="join-item btn" href={ "/cases/" + env.Case.ID + "/evidences/logs/export/csv" }>
+			<i class="ph ph-6 ph-sort-descending inline-block mr-1"></i> Export
+		</a>
+	}
+}
+
+templ evidenceLogBadge(event string) {
+	switch event {
+		case model.EvidenceLogUploaded:
+			<span class="badge badge-lg badge-outline badge-info">Uploaded</span>
+		case model.EvidenceLogDownloaded:
+			<span class="badge badge-lg badge-outline badge-accent">Downloaded</span>
+		case model.EvidenceLogEdited:
+			<span class="badge badge-lg badge-outline badge-warning">Edited</span>
+		case model.EvidenceLogModuleRun:
+			<span class="badge badge-lg badge-outline badge-secondary">Module run</span>
+		case model.EvidenceLogDeleted:
+			<span class="badge badge-lg badge-outline badge-error">Deleted</span>
+	}
+}
+
+templ EvidenceLogsMany(env Env, rows []model.EvidenceLog, live map[string]model.Evidence) {
+	@layout() {
+		<main class="p-4 max-w-full">
+			<!-- Drawer header: this page is only reached from the Evidences
+			toolbar (no sidebar entry), so it's a bare drawer body like
+			ReportsDialog/ModuleList rather than the full @list() app shell. -->
+			<div class="flex items-center gap-3 mb-4">
+				<h1 class="font-serif font-semibold text-2xl grow">Evidence Log</h1>
+				<label class="w-96 input flex items-center gap-2">
+					<input type="search" name="search" class="search grow" placeholder="Search ..."/>
+					<svg class="w-6 h-6 opacity-70" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+						<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"></path>
+					</svg>
+				</label>
+				<div class="join">
+					@evidenceLogExportBtn(env)
+				</div>
+				<a class="btn" up-dismiss>Close</a>
+			</div>
+			<div id="list">
+				<table class="table table-default">
+					<thead>
+						<tr>
+							<th data-sort="value-0" class="sort px-3 py-4 text-left">Time</th>
+							<th data-sort="value-1" class="sort px-3 py-4 text-left">Evidence</th>
+							<th data-sort="value-2" class="sort px-3 py-4 text-left">Event</th>
+							<th data-sort="value-3" class="sort px-3 py-4 text-left">User</th>
+							<th data-sort="value-4" class="sort px-3 py-4 text-left">Details</th>
+							<th style="width: 7rem"></th>
+						</tr>
+					</thead>
+					<tbody class="values">
+						if len(rows) == 0 {
+							<tr>
+								<td colspan="100" class="py-8 text-center text-base-content/50">
+									@plateStroller("w-52 max-w-full mx-auto mb-4")
+									<p class="font-serif italic text-lg text-base-content/60 mb-2">No access recorded yet.</p>
+								</td>
+							</tr>
+						} else {
+							for _, row := range rows {
+								{{ ev, isLive := live[row.EvidenceID] }}
+								<tr class="hover">
+									<td class="value-0" data-search={ row.Time.Format(time.RFC3339) }>
+										@formatTime(row.Time)
+									</td>
+									<td class="value-1" data-search={ fp.If(isLive, ev.Name, row.Name) }>
+										if isLive {
+											<a href={ "/cases/" + env.Case.ID + "/evidences/" + row.EvidenceID } up-layer="new drawer" up-accept-location={ "/cases/" + env.Case.ID + "/evidences/" }>
+												{ ev.Name }
+											</a>
+										} else {
+											<span class="line-through text-base-content/50">{ row.Name }</span>
+											<span class="badge badge-sm badge-ghost ml-2">deleted</span>
+										}
+									</td>
+									<td class="value-2" data-search={ row.Event }>
+										@evidenceLogBadge(row.Event)
+									</td>
+									<td class="value-3" data-search={ row.User }>{ row.User } </td>
+									<td class="value-4" data-search={ row.Details }>{ row.Details } </td>
+									<td class="text-right">
+										if row.Event == model.EvidenceLogDeleted && env.User.Role == "Administrator" {
+											@actionBtn(env, "DELETE", "/cases/"+env.Case.ID+"/evidences/logs/"+row.EvidenceID) {
+												<i class="ph ph-5 ph-trash"></i> Purge history…
+											}
+										}
+									</td>
+								</tr>
+							}
+						}
+					</tbody>
+				</table>
+			</div>
+		</main>
 	}
 }

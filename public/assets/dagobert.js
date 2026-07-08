@@ -49,8 +49,12 @@ onload = (event) => {
             ],
             listClass: 'values'
         };
-        var table = document.querySelector("#list table");
-        var search = document.querySelector("[name='search']");
+        // scoped from elem (this #list instance), not document — an overlay's
+        // #list coexists in the DOM with the base layer's own #list/search
+        // while open, and a document-wide lookup would silently bind to
+        // whichever one comes first
+        var table = elem.querySelector("table");
+        var search = elem.closest("main")?.querySelector("[name='search']");
         var list = new List(table, options);
 
         if (search) {
@@ -63,7 +67,7 @@ onload = (event) => {
         var order = table?.dataset?.defaultSort;
         if (order) {
             list.sort(order, { order: "asc" });
-            document.querySelector("[data-sort='" + order + "']").classList.add("asc");
+            elem.querySelector("[data-sort='" + order + "']").classList.add("asc");
         }
 
         // lock table size in place

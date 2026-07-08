@@ -2,6 +2,7 @@ package modules
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"sync/atomic"
 
@@ -77,13 +78,31 @@ func triggerAutomationRules(store *model.Store, obj any, caseID, objID string) {
 		}
 
 		log.Printf("running %s -> %s", rule.Name, rule.ModuleObj.Name())
-		err := store.PushJob(model.Job{
-			ID:       fp.Random(10),
-			Name:     rule.ModuleObj.Name(),
-			Status:   "Scheduled",
-			Case:     kase,
-			ObjectID: objID,
-			Object:   model.Object{Payload: obj},
+		err := store.Transaction(func(tx *model.Store) error {
+			if err := tx.PushJob(model.Job{
+				ID:       fp.Random(10),
+				Name:     rule.ModuleObj.Name(),
+				Status:   "Scheduled",
+				Case:     kase,
+				ObjectID: objID,
+				Object:   model.Object{Payload: obj},
+			}); err != nil {
+				return err
+			}
+
+			// evidence access log: a rule-scheduled module run is logged at
+			// schedule time (same as a manually scheduled one), with the rule
+			// as the actor
+			if evidence, ok := obj.(model.Evidence); ok {
+				return tx.SaveEvidenceLog(evidence.CaseID, model.EvidenceLog{
+					EvidenceID: evidence.ID,
+					Name:       evidence.Name,
+					User:       fmt.Sprintf("automation rule %q", rule.Name),
+					Event:      model.EvidenceLogModuleRun,
+					Details:    rule.ModuleObj.Name(),
+				})
+			}
+			return nil
 		})
 		if err != nil {
 			log.Printf("error scheduling job for %s -> %s", rule.ModuleObj.Name(), err)

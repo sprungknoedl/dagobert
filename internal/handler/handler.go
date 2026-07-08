@@ -97,7 +97,11 @@ func ListModules[T any](h *Handler, w http.ResponseWriter, r *http.Request, fn f
 	Render(w, r, http.StatusOK, views.ModuleList(h.Env(r), runs), nil)
 }
 
-func ScheduleModule[T any](h *Handler, w http.ResponseWriter, r *http.Request, fn func(cid string, oid string) (T, error)) {
+// ScheduleModule pushes a job for obj's module and re-renders the module list.
+// scheduled, if given, runs in the same transaction as the job push (e.g. to
+// write an access log entry) with the object and the scheduled module's name;
+// an error there rolls back the job push too.
+func ScheduleModule[T any](h *Handler, w http.ResponseWriter, r *http.Request, fn func(cid string, oid string) (T, error), scheduled ...func(tx *model.Store, cid, oid string, obj T, module string) error) {
 	oid := r.PathValue("id")
 	cid := r.PathValue("cid")
 	obj, err := fn(cid, oid)
@@ -119,14 +123,25 @@ func ScheduleModule[T any](h *Handler, w http.ResponseWriter, r *http.Request, f
 		return
 	}
 
-	err = h.Store.PushJob(model.Job{
-		ID:       fp.Random(10),
-		Name:     dto.Name,
-		Status:   "Scheduled",
-		Case:     kase,
-		ObjectID: oid,
-		Object:   model.Object{Payload: obj},
-		Settings: dto.Settings,
+	err = h.Store.Transaction(func(tx *model.Store) error {
+		if err := tx.PushJob(model.Job{
+			ID:       fp.Random(10),
+			Name:     dto.Name,
+			Status:   "Scheduled",
+			Case:     kase,
+			ObjectID: oid,
+			Object:   model.Object{Payload: obj},
+			Settings: dto.Settings,
+		}); err != nil {
+			return err
+		}
+
+		for _, cb := range scheduled {
+			if err := cb(tx, cid, oid, obj, dto.Name); err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 	if err != nil {
 		Err(w, r, err)

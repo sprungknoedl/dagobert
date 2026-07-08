@@ -142,6 +142,19 @@ components:
         Custom: { $ref: '#/components/schemas/Custom' }
       required: [Name, Type]
 
+    EvidenceLog:
+      type: object
+      description: Read-only, append-only access log row for one evidence entry.
+      properties:
+        ID: { type: string }
+        CaseID: { type: string }
+        EvidenceID: { type: string }
+        Name: { type: string, description: Evidence name at the time of the event. }
+        User: { type: string, description: Display string of the acting user, or an automation rule reference. }
+        Event: { type: string, enum: [uploaded, downloaded, edited, 'module run', deleted] }
+        Details: { type: string }
+        Time: { type: string, format: date-time }
+
     Indicator:
       type: object
       properties:
@@ -535,6 +548,35 @@ paths:
       summary: Delete an evidence entry
       operationId: deleteEvidence
       parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      responses:
+        '204': { $ref: '#/components/responses/NoContent' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}/evidences/logs:
+    get:
+      summary: List the evidence access log
+      operationId: listEvidenceLogs
+      parameters: [{ $ref: '#/components/parameters/cid' }]
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/EvidenceLog' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}/evidences/logs/{eid}:
+    delete:
+      summary: Purge the access log history of one deleted evidence
+      description: Administrator only.
+      operationId: purgeEvidenceLogs
+      parameters:
+        - { $ref: '#/components/parameters/cid' }
+        - name: eid
+          in: path
+          required: true
+          schema: { type: string }
+          description: Evidence ID whose log rows are purged.
       responses:
         '204': { $ref: '#/components/responses/NoContent' }
         '401': { $ref: '#/components/responses/Unauthorized' }
