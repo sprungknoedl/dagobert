@@ -1,0 +1,684 @@
+openapi: 3.1.0
+info:
+  title: Dagobert case-data API
+  version: "1.0"
+  description: |
+    REST-like JSON access to Dagobert's case-data CRUD operations. Every route
+    below also serves the normal HTML application for browser clients — send
+    `Accept: application/json` to get JSON instead (API keys default to JSON
+    automatically). See docs/api.md for a getting-started guide.
+
+servers:
+  - url: /
+
+security:
+  - ApiKeyHeader: []
+  - ApiKeyBearer: []
+
+components:
+  securitySchemes:
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: An API key created via `dagobert create-api-key` (or Settings → API keys), prefixed `dgb_`.
+    ApiKeyBearer:
+      type: http
+      scheme: bearer
+      description: "The same API key, sent as `Authorization: Bearer <key>` instead of `X-API-Key`."
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    Condition:
+      type: object
+      properties:
+        Name:
+          type: string
+        Message:
+          type: string
+        Missing:
+          type: boolean
+        Invalid:
+          type: boolean
+      required: [Name, Message, Missing, Invalid]
+
+    ValidationError:
+      type: object
+      description: Map of field name to the condition that failed for it.
+      additionalProperties:
+        $ref: '#/components/schemas/Condition'
+
+    Custom:
+      type: object
+      description: Custom-attribute label → value map.
+      additionalProperties:
+        type: string
+
+    Case:
+      type: object
+      properties:
+        ID: { type: string }
+        Name: { type: string }
+        Summary: { type: string }
+        Classification: { type: string }
+        Severity: { type: string }
+        Outcome: { type: string }
+        Closed: { type: boolean }
+        IsTemplate: { type: boolean }
+        OpenedAt: { type: string, format: date }
+        ClosedAt: { type: string, format: date }
+        Custom: { $ref: '#/components/schemas/Custom' }
+        SketchID: { type: integer }
+        Assets: { type: array, items: { $ref: '#/components/schemas/Asset' } }
+        Events: { type: array, items: { $ref: '#/components/schemas/Event' } }
+        Evidences: { type: array, items: { $ref: '#/components/schemas/Evidence' } }
+        Indicators: { type: array, items: { $ref: '#/components/schemas/Indicator' } }
+        Malware: { type: array, items: { $ref: '#/components/schemas/Malware' } }
+        Notes: { type: array, items: { $ref: '#/components/schemas/Note' } }
+        Tasks: { type: array, items: { $ref: '#/components/schemas/Task' } }
+      required: [ID, Name]
+
+    Asset:
+      type: object
+      properties:
+        ID: { type: string }
+        Status: { type: string }
+        Type: { type: string }
+        Name: { type: string }
+        Addr: { type: string }
+        Notes: { type: string }
+        CaseID: { type: string }
+        Custom: { $ref: '#/components/schemas/Custom' }
+        FirstSeen: { type: string, format: date-time, description: Read-only, derived from linked events. }
+        LastSeen: { type: string, format: date-time, description: Read-only, derived from linked events. }
+        Events: { type: integer, description: Read-only count of linked events. }
+      required: [Status, Type, Name]
+
+    Event:
+      type: object
+      properties:
+        ID: { type: string }
+        Time: { type: string, format: date-time }
+        Type: { type: string }
+        Event: { type: string }
+        Raw: { type: string }
+        Source: { type: string }
+        Flagged: { type: boolean }
+        CaseID: { type: string }
+        Custom: { $ref: '#/components/schemas/Custom' }
+        Techniques: { type: array, items: { type: string }, description: MITRE ATT&CK technique IDs. }
+        RawAssets: { type: string, format: byte, description: Unused; reserved. }
+        RawIndicators: { type: string, format: byte, description: Unused; reserved. }
+        Assets:
+          type: array
+          items: { $ref: '#/components/schemas/Asset' }
+          description: Set via the `Assets` string array on save (asset names; created if missing).
+        Indicators:
+          type: array
+          items: { $ref: '#/components/schemas/Indicator' }
+          description: Set via the `Indicators` string array on save (indicator values; created if missing).
+      required: [Time, Type, Event]
+
+    Evidence:
+      type: object
+      properties:
+        ID: { type: string }
+        Type: { type: string }
+        Name: { type: string }
+        Hash: { type: string }
+        Size: { type: integer, format: int64 }
+        Source: { type: string }
+        Notes: { type: string }
+        Password: { type: string }
+        CaseID: { type: string }
+        StartsAt: { type: string, format: date-time }
+        EndsAt: { type: string, format: date-time }
+        Custom: { $ref: '#/components/schemas/Custom' }
+      required: [Name, Type]
+
+    Indicator:
+      type: object
+      properties:
+        ID: { type: string }
+        Flagged: { type: boolean }
+        Status: { type: string }
+        Type: { type: string }
+        Value: { type: string }
+        TLP: { type: string }
+        Source: { type: string }
+        Notes: { type: string }
+        CaseID: { type: string }
+        Custom: { $ref: '#/components/schemas/Custom' }
+        FirstSeen: { type: string, format: date-time, description: Read-only, derived from linked events. }
+        LastSeen: { type: string, format: date-time, description: Read-only, derived from linked events. }
+        Events: { type: integer, description: Read-only count of linked events. }
+        OtherCases: { type: integer, description: Read-only count of other non-template cases sharing this value/type. }
+      required: [Value, Status, Type, TLP]
+
+    Malware:
+      type: object
+      properties:
+        ID: { type: string }
+        Status: { type: string }
+        Path: { type: string }
+        Hash: { type: string }
+        Notes: { type: string }
+        Password: { type: string }
+        CaseID: { type: string }
+        Custom: { $ref: '#/components/schemas/Custom' }
+        RawAsset: { type: string, format: byte, description: Unused; reserved. }
+        AssetID:
+          type: [string, "null"]
+          description: Source asset ID; optional.
+        Asset: { $ref: '#/components/schemas/Asset' }
+      required: [Path, Hash, Status]
+
+    Note:
+      type: object
+      properties:
+        ID: { type: string }
+        Title: { type: string }
+        Category: { type: string }
+        Description: { type: string }
+        CaseID: { type: string }
+        Custom: { $ref: '#/components/schemas/Custom' }
+      required: [Title, Category]
+
+    Task:
+      type: object
+      properties:
+        ID: { type: string }
+        Type: { type: string }
+        Task: { type: string }
+        Done: { type: boolean }
+        Owner: { type: string }
+        DateDue: { type: string, format: date-time }
+        CaseID: { type: string }
+        Custom: { $ref: '#/components/schemas/Custom' }
+      required: [Task, Type]
+
+    Comment:
+      type: object
+      properties:
+        ID: { type: string }
+        CaseID: { type: string }
+        Kind: { type: string, description: 'Parent object kind, e.g. "events", "assets".' }
+        ObjectID: { type: string, description: Parent object ID. }
+        Author: { type: string, description: Read-only; the authenticated user's UPN. }
+        Time: { type: string, format: date-time, description: Read-only; set on create, kept on edit. }
+        Message: { type: string }
+      required: [Message]
+
+  parameters:
+    cid:
+      name: cid
+      in: path
+      required: true
+      schema: { type: string }
+      description: Case ID.
+    id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+      description: Record ID, or `new` to create.
+    kind:
+      name: kind
+      in: path
+      required: true
+      schema: { type: string }
+      description: 'Parent object kind, e.g. "events", "assets".'
+    oid:
+      name: oid
+      in: path
+      required: true
+      schema: { type: string }
+      description: Parent object ID.
+
+  responses:
+    BadRequest:
+      description: Malformed request body.
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Unauthorized:
+      description: Missing or invalid API key.
+    Forbidden:
+      description: The authenticated principal is not permitted to perform this operation.
+    NotFound:
+      description: Parent object does not exist.
+    ValidationFailed:
+      description: One or more fields failed validation.
+      content: { application/json: { schema: { $ref: '#/components/schemas/ValidationError' } } }
+    NoContent:
+      description: Deleted.
+
+paths:
+  /cases/:
+    get:
+      summary: List cases
+      operationId: listCases
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Case' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}:
+    get:
+      summary: Get a case
+      operationId: getCase
+      parameters: [{ $ref: '#/components/parameters/cid' }]
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { $ref: '#/components/schemas/Case' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      summary: Create or update a case
+      description: |
+        Use `{cid}` = `new` to create. `?Template=<id>` copies the template's
+        tasks and notes into the new case (create only).
+      operationId: saveCase
+      parameters: [{ $ref: '#/components/parameters/cid' }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/Case' } } }
+      responses:
+        '201':
+          description: Created/updated
+          content: { application/json: { schema: { $ref: '#/components/schemas/Case' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+    delete:
+      summary: Delete a case
+      operationId: deleteCase
+      parameters: [{ $ref: '#/components/parameters/cid' }]
+      responses:
+        '204': { $ref: '#/components/responses/NoContent' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}/events/:
+    get:
+      summary: List events
+      operationId: listEvents
+      parameters: [{ $ref: '#/components/parameters/cid' }]
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Event' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}/events/{id}:
+    get:
+      summary: Get an event
+      operationId: getEvent
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { $ref: '#/components/schemas/Event' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      summary: Create or update an event
+      operationId: saveEvent
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/Event' } } }
+      responses:
+        '201':
+          description: Created/updated
+          content: { application/json: { schema: { $ref: '#/components/schemas/Event' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+    delete:
+      summary: Delete an event
+      operationId: deleteEvent
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      responses:
+        '204': { $ref: '#/components/responses/NoContent' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}/assets/:
+    get:
+      summary: List assets
+      operationId: listAssets
+      parameters: [{ $ref: '#/components/parameters/cid' }]
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Asset' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}/assets/{id}:
+    get:
+      summary: Get an asset
+      operationId: getAsset
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { $ref: '#/components/schemas/Asset' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      summary: Create or update an asset
+      operationId: saveAsset
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/Asset' } } }
+      responses:
+        '201':
+          description: Created/updated
+          content: { application/json: { schema: { $ref: '#/components/schemas/Asset' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+    delete:
+      summary: Delete an asset
+      operationId: deleteAsset
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      responses:
+        '204': { $ref: '#/components/responses/NoContent' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}/malware/:
+    get:
+      summary: List malware
+      operationId: listMalware
+      parameters: [{ $ref: '#/components/parameters/cid' }]
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Malware' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}/malware/{id}:
+    get:
+      summary: Get a malware entry
+      operationId: getMalware
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { $ref: '#/components/schemas/Malware' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      summary: Create or update a malware entry
+      description: |
+        JSON saves carry metadata only; a sample upload requires
+        `multipart/form-data` with a `File` field instead (still returns JSON
+        with `Accept: application/json`). Replacing the file of an existing
+        entry is not supported.
+      operationId: saveMalware
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/Malware' } } }
+      responses:
+        '201':
+          description: Created/updated
+          content: { application/json: { schema: { $ref: '#/components/schemas/Malware' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+    delete:
+      summary: Delete a malware entry
+      operationId: deleteMalware
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      responses:
+        '204': { $ref: '#/components/responses/NoContent' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}/indicators/:
+    get:
+      summary: List indicators
+      operationId: listIndicators
+      parameters: [{ $ref: '#/components/parameters/cid' }]
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Indicator' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}/indicators/{id}:
+    get:
+      summary: Get an indicator
+      operationId: getIndicator
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { $ref: '#/components/schemas/Indicator' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      summary: Create or update an indicator
+      operationId: saveIndicator
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/Indicator' } } }
+      responses:
+        '201':
+          description: Created/updated
+          content: { application/json: { schema: { $ref: '#/components/schemas/Indicator' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+    delete:
+      summary: Delete an indicator
+      operationId: deleteIndicator
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      responses:
+        '204': { $ref: '#/components/responses/NoContent' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}/evidences/:
+    get:
+      summary: List evidences
+      operationId: listEvidences
+      parameters: [{ $ref: '#/components/parameters/cid' }]
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Evidence' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}/evidences/{id}:
+    get:
+      summary: Get an evidence entry
+      operationId: getEvidence
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { $ref: '#/components/schemas/Evidence' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      summary: Create or update an evidence entry
+      description: |
+        JSON saves carry metadata only; a file upload requires
+        `multipart/form-data` with a `File` field instead (still returns JSON
+        with `Accept: application/json`). Replacing the file of an existing
+        entry is not supported.
+      operationId: saveEvidence
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/Evidence' } } }
+      responses:
+        '201':
+          description: Created/updated
+          content: { application/json: { schema: { $ref: '#/components/schemas/Evidence' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+    delete:
+      summary: Delete an evidence entry
+      operationId: deleteEvidence
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      responses:
+        '204': { $ref: '#/components/responses/NoContent' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}/tasks/:
+    get:
+      summary: List tasks
+      operationId: listTasks
+      parameters: [{ $ref: '#/components/parameters/cid' }]
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Task' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}/tasks/{id}:
+    get:
+      summary: Get a task
+      operationId: getTask
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { $ref: '#/components/schemas/Task' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      summary: Create or update a task
+      operationId: saveTask
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/Task' } } }
+      responses:
+        '201':
+          description: Created/updated
+          content: { application/json: { schema: { $ref: '#/components/schemas/Task' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+    delete:
+      summary: Delete a task
+      operationId: deleteTask
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      responses:
+        '204': { $ref: '#/components/responses/NoContent' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}/notes/:
+    get:
+      summary: List notes
+      operationId: listNotes
+      parameters: [{ $ref: '#/components/parameters/cid' }]
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Note' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}/notes/{id}:
+    get:
+      summary: Get a note
+      operationId: getNote
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { $ref: '#/components/schemas/Note' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      summary: Create or update a note
+      operationId: saveNote
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/Note' } } }
+      responses:
+        '201':
+          description: Created/updated
+          content: { application/json: { schema: { $ref: '#/components/schemas/Note' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+    delete:
+      summary: Delete a note
+      operationId: deleteNote
+      parameters: [{ $ref: '#/components/parameters/cid' }, { $ref: '#/components/parameters/id' }]
+      responses:
+        '204': { $ref: '#/components/responses/NoContent' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /cases/{cid}/comments/{kind}/{oid}/:
+    get:
+      summary: List comments on a case sub-object
+      description: There is no single-comment Get route; use the list.
+      operationId: listComments
+      parameters:
+        - { $ref: '#/components/parameters/cid' }
+        - { $ref: '#/components/parameters/kind' }
+        - { $ref: '#/components/parameters/oid' }
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Comment' } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /cases/{cid}/comments/{kind}/{oid}/{id}:
+    post:
+      summary: Create or update a comment
+      description: |
+        Use `{id}` = `new` to create. Edits and deletes are restricted to the
+        comment's author or an Administrator.
+      operationId: saveComment
+      parameters:
+        - { $ref: '#/components/parameters/cid' }
+        - { $ref: '#/components/parameters/kind' }
+        - { $ref: '#/components/parameters/oid' }
+        - { $ref: '#/components/parameters/id' }
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/Comment' } } }
+      responses:
+        '201':
+          description: Created/updated
+          content: { application/json: { schema: { $ref: '#/components/schemas/Comment' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+    delete:
+      summary: Delete a comment
+      operationId: deleteComment
+      parameters:
+        - { $ref: '#/components/parameters/cid' }
+        - { $ref: '#/components/parameters/kind' }
+        - { $ref: '#/components/parameters/oid' }
+        - { $ref: '#/components/parameters/id' }
+      responses:
+        '204': { $ref: '#/components/responses/NoContent' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }

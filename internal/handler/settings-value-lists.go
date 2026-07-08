@@ -11,7 +11,7 @@ import (
 )
 
 func (h *Handler) ValueListList(w http.ResponseWriter, r *http.Request) {
-	Render(w, r, http.StatusOK, views.SettingsValueListsMany(h.Env(r)))
+	Render(w, r, http.StatusOK, views.SettingsValueListsMany(h.Env(r)), nil)
 }
 
 func (h *Handler) ValueListEdit(w http.ResponseWriter, r *http.Request) {
@@ -23,7 +23,7 @@ func (h *Handler) ValueListEdit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsValueListsOne(h.Env(r), obj, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.SettingsValueListsOne(h.Env(r), obj, valid.ValidationError{}), nil)
 }
 
 func (h *Handler) ValueListSave(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +31,7 @@ func (h *Handler) ValueListSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.ValueListItem{ID: r.PathValue("id")}
 	err := Decode(h.Store, r, &dto, ValidateValueListItem)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.SettingsValueListsOne(h.Env(r), dto, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsValueListsOne(h.Env(r), dto, vr), nil)
 		return
 	} else if err != nil {
 		Err(w, r, err)
@@ -46,14 +46,14 @@ func (h *Handler) ValueListSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RedirectAfterSave(w, r, "/settings/value-lists/")
+	RedirectAfterSave(w, r, "/settings/value-lists/", nil)
 }
 
 func (h *Handler) ValueListDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/value-lists/%s?confirm=yes", id)
-		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri), nil)
 		return
 	}
 

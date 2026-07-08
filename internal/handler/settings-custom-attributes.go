@@ -12,7 +12,7 @@ import (
 )
 
 func (h *Handler) CustomAttributeList(w http.ResponseWriter, r *http.Request) {
-	Render(w, r, http.StatusOK, views.SettingsCustomAttributesMany(h.Env(r)))
+	Render(w, r, http.StatusOK, views.SettingsCustomAttributesMany(h.Env(r)), nil)
 }
 
 func (h *Handler) CustomAttributeEdit(w http.ResponseWriter, r *http.Request) {
@@ -24,14 +24,14 @@ func (h *Handler) CustomAttributeEdit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsCustomAttributesOne(h.Env(r), obj, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.SettingsCustomAttributesOne(h.Env(r), obj, valid.ValidationError{}), nil)
 }
 
 func (h *Handler) CustomAttributeSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.CustomAttribute{ID: r.PathValue("id")}
 	err := Decode(h.Store, r, &dto, ValidateCustomAttribute)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.SettingsCustomAttributesOne(h.Env(r), dto, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsCustomAttributesOne(h.Env(r), dto, vr), nil)
 		return
 	} else if err != nil {
 		Err(w, r, err)
@@ -49,14 +49,14 @@ func (h *Handler) CustomAttributeSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RedirectAfterSave(w, r, "/settings/custom-attributes/")
+	RedirectAfterSave(w, r, "/settings/custom-attributes/", nil)
 }
 
 func (h *Handler) CustomAttributeDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/custom-attributes/%s?confirm=yes", id)
-		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri), nil)
 		return
 	}
 

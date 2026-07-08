@@ -41,7 +41,7 @@ func (h *Handler) CaseList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.CasesMany(h.Env(r), list))
+	Render(w, r, http.StatusOK, views.CasesMany(h.Env(r), list), list)
 }
 
 func (h *Handler) CaseExport(w http.ResponseWriter, r *http.Request) {
@@ -164,7 +164,7 @@ func (h *Handler) CaseEdit(w http.ResponseWriter, r *http.Request) {
 	sketches := h.fetchSketches(r)
 	Render(w, r, http.StatusOK, views.CasesOne(h.Env(r), obj, valid.ValidationError{},
 		views.WithTemplates(templates, ""),
-		views.WithSketches(sketches)))
+		views.WithSketches(sketches)), obj)
 }
 
 // outstandingOnClose returns human-readable, count-only messages for case
@@ -220,11 +220,15 @@ func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Case{ID: r.PathValue("cid")}
 	err := Decode(h.Store, r, &dto, ValidateCase)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
+		if wantsJSON(r) {
+			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
+			return
+		}
 		sketches := h.fetchSketches(r)
 		templates, _ := h.Store.ListTemplates()
 		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(h.Env(r), dto, vr,
 			views.WithTemplates(templates, r.FormValue("Template")),
-			views.WithSketches(sketches)))
+			views.WithSketches(sketches)), nil)
 		return
 	} else if err != nil {
 		Warn(w, r, err)
@@ -254,8 +258,9 @@ func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
 
 	// Soft-confirm on an open->closed transition when outstanding items remain.
 	// The user can always override via "Close anyway" (Confirm=yes); this never
-	// hard-blocks the save.
-	if dto.Closed && !dto.IsTemplate && r.FormValue("Confirm") != "yes" {
+	// hard-blocks the save. JSON clients skip this entirely — like delete, an
+	// explicit POST with Closed:true from a JSON client is the confirmation.
+	if dto.Closed && !dto.IsTemplate && !wantsJSON(r) && r.FormValue("Confirm") != "yes" {
 		wasClosed := false
 		if !new {
 			prior, err := h.Store.GetCase(dto.ID)
@@ -278,7 +283,7 @@ func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
 				Render(w, r, http.StatusOK, views.CasesOne(h.Env(r), dto, valid.ValidationError{},
 					views.WithTemplates(templates, r.FormValue("Template")),
 					views.WithSketches(sketches),
-					views.WithOutstanding(outstanding)))
+					views.WithOutstanding(outstanding)), nil)
 				return
 			}
 		}
@@ -300,7 +305,7 @@ func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dstSummary := strings.HasSuffix(r.Referer(), "?target=summary")
-	RedirectAfterSave(w, r, fp.If(dstSummary, "/cases/"+dto.ID+"/summary/", "/cases/"))
+	RedirectAfterSave(w, r, fp.If(dstSummary, "/cases/"+dto.ID+"/summary/", "/cases/"), dto)
 }
 
 // CaseForkEdit renders the case form pre-filled from the source case, posting
@@ -317,7 +322,7 @@ func (h *Handler) CaseForkEdit(w http.ResponseWriter, r *http.Request) {
 	sketches := h.fetchSketches(r)
 	Render(w, r, http.StatusOK, views.CasesOne(h.Env(r), obj, valid.ValidationError{},
 		views.WithSketches(sketches),
-		views.WithFork()))
+		views.WithFork()), nil)
 }
 
 // CaseForkSave deep-copies the source case into a new one carrying the
@@ -333,7 +338,7 @@ func (h *Handler) CaseForkSave(w http.ResponseWriter, r *http.Request) {
 		sketches := h.fetchSketches(r)
 		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(h.Env(r), dto, vr,
 			views.WithSketches(sketches),
-			views.WithFork()))
+			views.WithFork()), nil)
 		return
 	} else if err != nil {
 		Warn(w, r, err)
@@ -377,12 +382,12 @@ func (h *Handler) CaseForkSave(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
-	RedirectAfterSave(w, r, "/cases/"+obj.ID+"/summary/")
+	RedirectAfterSave(w, r, "/cases/"+obj.ID+"/summary/", nil)
 }
 
 func (h *Handler) CaseDelete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	if r.URL.Query().Get("confirm") != "yes" {
+	if r.URL.Query().Get("confirm") != "yes" && !wantsJSON(r) {
 		uri := fmt.Sprintf("/cases/%s?confirm=yes", cid)
 		views.ConfirmDialog(uri).Render(r.Context(), w)
 		return
@@ -393,6 +398,10 @@ func (h *Handler) CaseDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if wantsJSON(r) {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
@@ -416,7 +425,7 @@ func (h *Handler) CaseEditACL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.CasesACL(h.Env(r), obj, users, perms))
+	Render(w, r, http.StatusOK, views.CasesACL(h.Env(r), obj, users, perms), nil)
 }
 
 func (h *Handler) CaseSaveACL(w http.ResponseWriter, r *http.Request) {
@@ -445,7 +454,7 @@ func (h *Handler) CaseSaveACL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RedirectAfterSave(w, r, "/cases/")
+	RedirectAfterSave(w, r, "/cases/", nil)
 }
 
 // Switch renders the quick case-switcher popup: the cases the user can access,
@@ -477,7 +486,7 @@ func (h *Handler) CaseSwitch(w http.ResponseWriter, r *http.Request) {
 		return true
 	})
 
-	Render(w, r, http.StatusOK, views.CaseSwitcher(env, cases, from, to))
+	Render(w, r, http.StatusOK, views.CaseSwitcher(env, cases, from, to), nil)
 }
 
 func (h *Handler) CaseSummary(w http.ResponseWriter, r *http.Request) {
@@ -507,5 +516,5 @@ func (h *Handler) CaseSummary(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	Render(w, r, http.StatusOK, views.CasesSummary(h.Env(r), obj, events, assets, indicators))
+	Render(w, r, http.StatusOK, views.CasesSummary(h.Env(r), obj, events, assets, indicators), nil)
 }

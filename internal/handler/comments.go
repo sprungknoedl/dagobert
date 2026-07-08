@@ -58,7 +58,7 @@ func (h *Handler) CommentList(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.CommentsDialog(h.Env(r), kind, oid, list, edit, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.CommentsDialog(h.Env(r), kind, oid, list, edit, valid.ValidationError{}), list)
 }
 
 func (h *Handler) CommentSave(w http.ResponseWriter, r *http.Request) {
@@ -71,13 +71,17 @@ func (h *Handler) CommentSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Comment{}
 	err := Decode(h.Store, r, &dto, ValidateComment)
 	if vr, isVr := err.(valid.ValidationError); err != nil && isVr {
+		if wantsJSON(r) {
+			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
+			return
+		}
 		list, lerr := h.Store.ListComments(cid, kind, oid)
 		if lerr != nil {
 			Err(w, r, lerr)
 			return
 		}
 		dto.ID = id
-		Render(w, r, http.StatusUnprocessableEntity, views.CommentsDialog(h.Env(r), kind, oid, list, dto, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.CommentsDialog(h.Env(r), kind, oid, list, dto, vr), nil)
 		return
 	} else if err != nil {
 		Warn(w, r, err)
@@ -110,7 +114,7 @@ func (h *Handler) CommentSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/comments/%s/%s/", cid, kind, oid))
+	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/comments/%s/%s/", cid, kind, oid), dto)
 }
 
 func (h *Handler) CommentDelete(w http.ResponseWriter, r *http.Request) {
@@ -130,9 +134,9 @@ func (h *Handler) CommentDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.URL.Query().Get("confirm") != "yes" {
+	if r.URL.Query().Get("confirm") != "yes" && !wantsJSON(r) {
 		uri := fmt.Sprintf("/cases/%s/comments/%s/%s/%s?confirm=yes", cid, kind, oid, id)
-		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri), nil)
 		return
 	}
 
@@ -141,5 +145,9 @@ func (h *Handler) CommentDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if wantsJSON(r) {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/comments/%s/%s/", cid, kind, oid), http.StatusSeeOther)
 }

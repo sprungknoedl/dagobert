@@ -30,7 +30,6 @@ type ctxKey int
 
 const (
 	ctxKeyUser ctxKey = iota
-	ctxKeyAPI
 )
 
 type Auth struct {
@@ -89,16 +88,6 @@ func CurrentUser(r *http.Request) (*model.User, error) {
 		return nil, errors.New("not authenticated")
 	}
 	return user, nil
-}
-
-// IsAPIRequest reports whether the request authenticated via a non-interactive
-// machine mechanism (e.g. an API key) rather than an interactive browser
-// session. Auth middlewares set this marker once, so handlers can vary their
-// response (status codes vs. browser redirects) without coupling to how the
-// request was authenticated.
-func IsAPIRequest(r *http.Request) bool {
-	api, _ := r.Context().Value(ctxKeyAPI).(bool)
-	return api
 }
 
 // Require gates the secured mux. It checks the context (set by LoadUser or

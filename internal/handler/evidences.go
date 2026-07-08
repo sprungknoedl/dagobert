@@ -34,7 +34,7 @@ func (h *Handler) EvidenceList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.EvidencesMany(h.Env(r), list, comments))
+	Render(w, r, http.StatusOK, views.EvidencesMany(h.Env(r), list, comments), list)
 }
 
 func (h *Handler) EvidenceExport(w http.ResponseWriter, r *http.Request) {
@@ -159,13 +159,14 @@ func (h *Handler) EvidenceEdit(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	Render(w, r, http.StatusOK, views.EvidencesOne(h.Env(r), obj, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.EvidencesOne(h.Env(r), obj, valid.ValidationError{}), obj)
 }
 
 func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
-	// get handle to form file
+	// get handle to form file; JSON metadata-only saves carry no file, so a
+	// multipart-less body (ErrNotMultipart) is tolerated like ErrMissingFile
 	fr, fh, err := r.FormFile("File")
-	if err != nil && err != http.ErrMissingFile {
+	if err != nil && err != http.ErrMissingFile && err != http.ErrNotMultipart {
 		Warn(w, r, err)
 		return
 	}
@@ -173,7 +174,11 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Evidence{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
 	err = Decode(h.Store, r, &dto, ValidateEvidence)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(h.Env(r), dto, vr))
+		if wantsJSON(r) {
+			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
+			return
+		}
+		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(h.Env(r), dto, vr), nil)
 		return
 	} else if err != nil {
 		Err(w, r, err)
@@ -185,7 +190,11 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 	if fh != nil && fh.Size > 0 && dto.ID != "new" {
 		vr := valid.ValidationError{"File": valid.Condition{Name: "File", Invalid: true,
 			Message: "Replacing the file of an existing entry is not supported — create a new entry instead."}}
-		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(h.Env(r), dto, vr))
+		if wantsJSON(r) {
+			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
+			return
+		}
+		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(h.Env(r), dto, vr), nil)
 		return
 	}
 
@@ -211,7 +220,7 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 		modules.TriggerOnEvidenceAdded(h.Store, dto)
 	}
 
-	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/evidences/", dto.CaseID))
+	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/evidences/", dto.CaseID), dto)
 }
 
 // resolveEvidenceFile fills dto.Size and dto.Hash from the uploaded file, the
@@ -291,9 +300,9 @@ func (h *Handler) EvidenceDownload(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) EvidenceDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
-	if r.URL.Query().Get("confirm") != "yes" {
+	if r.URL.Query().Get("confirm") != "yes" && !wantsJSON(r) {
 		uri := fmt.Sprintf("/cases/%s/evidences/%s?confirm=yes", cid, id)
-		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri), nil)
 		return
 	}
 
@@ -309,6 +318,10 @@ func (h *Handler) EvidenceDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if wantsJSON(r) {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
 	http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/", cid), http.StatusSeeOther)
 }
 

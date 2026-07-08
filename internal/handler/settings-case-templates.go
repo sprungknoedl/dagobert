@@ -16,7 +16,7 @@ func (h *Handler) CaseTemplateList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsCaseTemplatesMany(h.Env(r), templates))
+	Render(w, r, http.StatusOK, views.SettingsCaseTemplatesMany(h.Env(r), templates), nil)
 }
 
 func (h *Handler) CaseTemplateEdit(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +31,7 @@ func (h *Handler) CaseTemplateEdit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.CasesOne(h.Env(r), obj, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.CasesOne(h.Env(r), obj, valid.ValidationError{}), nil)
 }
 
 func (h *Handler) CaseTemplateSave(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +39,7 @@ func (h *Handler) CaseTemplateSave(w http.ResponseWriter, r *http.Request) {
 	err := Decode(h.Store, r, &dto, ValidateCase)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
 		dto.IsTemplate = true
-		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(h.Env(r), dto, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(h.Env(r), dto, vr), nil)
 		return
 	} else if err != nil {
 		Warn(w, r, err)
@@ -54,14 +54,14 @@ func (h *Handler) CaseTemplateSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RedirectAfterSave(w, r, "/settings/case-templates/")
+	RedirectAfterSave(w, r, "/settings/case-templates/", nil)
 }
 
 func (h *Handler) CaseTemplateDelete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := "/settings/case-templates/" + cid + "?confirm=yes"
-		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri), nil)
 		return
 	}
 
@@ -80,7 +80,7 @@ func (h *Handler) CaseTemplatePromoteForm(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsCaseTemplatesPromote(h.Env(r), cases))
+	Render(w, r, http.StatusOK, views.SettingsCaseTemplatesPromote(h.Env(r), cases), nil)
 }
 
 func (h *Handler) CaseTemplatePromote(w http.ResponseWriter, r *http.Request) {

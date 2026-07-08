@@ -94,7 +94,7 @@ func ListModules[T any](h *Handler, w http.ResponseWriter, r *http.Request, fn f
 	})
 
 	slices.SortFunc(runs, func(a, b views.Job) int { return cmp.Compare(a.Name, b.Name) })
-	Render(w, r, http.StatusOK, views.ModuleList(h.Env(r), runs))
+	Render(w, r, http.StatusOK, views.ModuleList(h.Env(r), runs), nil)
 }
 
 func ScheduleModule[T any](h *Handler, w http.ResponseWriter, r *http.Request, fn func(cid string, oid string) (T, error)) {
@@ -146,6 +146,12 @@ func Warn(w http.ResponseWriter, r *http.Request, err error) {
 		"raddr", r.RemoteAddr,
 		"method", r.Method,
 		"url", r.URL)
+	if wantsJSON(r) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
 	w.WriteHeader(http.StatusBadRequest)
 	views.ToastWarning(err).Render(r.Context(), w)
 }
@@ -160,6 +166,12 @@ func Err(w http.ResponseWriter, r *http.Request, err error) {
 		"raddr", r.RemoteAddr,
 		"method", r.Method,
 		"url", r.URL)
+	if wantsJSON(r) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
 	w.WriteHeader(http.StatusInternalServerError)
 	views.ToastError(err).Render(r.Context(), w)
 }
@@ -201,7 +213,10 @@ func JoinV(errs ...error) error {
 
 func Decode[T any](db *model.Store, r *http.Request, dst T, validator func(T, model.ValueLists) valid.ValidationError) error {
 	if strings.Contains(r.Header.Get("Content-Type"), "application/json") {
-		return json.NewDecoder(r.Body).Decode(dst)
+		if err := json.NewDecoder(r.Body).Decode(dst); err != nil {
+			return err
+		}
+		return runValidator(db, dst, validator)
 	}
 
 	if strings.Contains(r.Header.Get("Content-Type"), "multipart/form-data") {
@@ -239,16 +254,20 @@ func Decode[T any](db *model.Store, r *http.Request, dst T, validator func(T, mo
 		return err
 	}
 
-	if validator != nil {
-		valueLists, err := db.ListValueLists()
-		if err != nil {
-			return err
-		}
-		if vr := validator(dst, valueLists); !vr.Valid() {
-			return vr
-		}
-	}
+	return runValidator(db, dst, validator)
+}
 
+func runValidator[T any](db *model.Store, dst T, validator func(T, model.ValueLists) valid.ValidationError) error {
+	if validator == nil {
+		return nil
+	}
+	valueLists, err := db.ListValueLists()
+	if err != nil {
+		return err
+	}
+	if vr := validator(dst, valueLists); !vr.Valid() {
+		return vr
+	}
 	return nil
 }
 
@@ -324,7 +343,24 @@ func ServeDir(prefix string, root fs.FS) http.Handler {
 	return http.StripPrefix(prefix, fs)
 }
 
-func Render(w http.ResponseWriter, r *http.Request, status int, c templ.Component) {
+// wantsJSON reports whether the response should be JSON rather than HTML.
+// ApiKeyMiddleware defaults the Accept header for keyed clients that sent none,
+// so this is the single predicate the whole response path consults.
+func wantsJSON(r *http.Request) bool {
+	return strings.Contains(r.Header.Get("Accept"), "application/json")
+}
+
+// Render renders c for browser clients. When the client wants JSON and data is
+// non-nil, it marshals data instead — c is a lazy templ closure, so building an
+// unused component costs nothing.
+func Render(w http.ResponseWriter, r *http.Request, status int, c templ.Component, data any) {
+	if wantsJSON(r) && data != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(status)
+		json.NewEncoder(w).Encode(data)
+		return
+	}
+
 	w.WriteHeader(status)
 	if err := c.Render(r.Context(), w); err != nil {
 		slog.Error("failed to render template",
@@ -337,13 +373,15 @@ func Render(w http.ResponseWriter, r *http.Request, status int, c templ.Componen
 }
 
 // RedirectAfterSave issues the post-save redirect to a list page for browser
-// (Unpoly) clients, but answers non-interactive API callers with 201 Created.
-// API clients follow 3xx redirects automatically; bouncing them to an HTML list
-// page they may not be permitted to read (e.g. a create-only Donald key) would
-// turn a successful write into a spurious 403.
-func RedirectAfterSave(w http.ResponseWriter, r *http.Request, url string) {
-	if auth.IsAPIRequest(r) {
+// (Unpoly) clients, but answers JSON clients with 201 Created and the saved
+// record. API clients follow 3xx redirects automatically; bouncing them to an
+// HTML list page they may not be permitted to read (e.g. a create-only Donald
+// key) would turn a successful write into a spurious 403.
+func RedirectAfterSave(w http.ResponseWriter, r *http.Request, url string, record any) {
+	if wantsJSON(r) {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(record)
 		return
 	}
 	http.Redirect(w, r, url, http.StatusSeeOther)

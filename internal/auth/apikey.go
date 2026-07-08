@@ -58,10 +58,15 @@ func ApiKeyMiddleware(db *model.Store) func(http.Handler) http.Handler {
 			r.Header.Del("Authorization")
 			r.Header.Del("Cookie")
 
-			// embed the bound principal into the request context and mark this
-			// as a non-interactive API request so handlers can tailor responses
+			// machine clients default to JSON: a keyed client that sent no
+			// meaningful Accept header gets JSON responses; an explicit Accept
+			// (e.g. text/html) still wins downstream
+			if accept := r.Header.Get("Accept"); accept == "" || accept == "*/*" {
+				r.Header.Set("Accept", "application/json")
+			}
+
+			// embed the bound principal into the request context
 			ctx := context.WithValue(r.Context(), ctxKeyUser, principal)
-			ctx = context.WithValue(ctx, ctxKeyAPI, true)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

@@ -16,7 +16,7 @@ func (h *Handler) APIKeyList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsAPIKeysMany(h.Env(r), list))
+	Render(w, r, http.StatusOK, views.SettingsAPIKeysMany(h.Env(r), list), nil)
 }
 
 func (h *Handler) APIKeyEdit(w http.ResponseWriter, r *http.Request) {
@@ -31,14 +31,14 @@ func (h *Handler) APIKeyEdit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsAPIKeysOne(h.Env(r), obj, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.SettingsAPIKeysOne(h.Env(r), obj, valid.ValidationError{}), nil)
 }
 
 func (h *Handler) APIKeySave(w http.ResponseWriter, r *http.Request) {
 	dto := model.APIKey{}
 	err := Decode(h.Store, r, &dto, ValidateAPIKey)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.SettingsAPIKeysOne(h.Env(r), dto, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsAPIKeysOne(h.Env(r), dto, vr), nil)
 		return
 	} else if err != nil {
 		Warn(w, r, err)
@@ -53,7 +53,7 @@ func (h *Handler) APIKeySave(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// reveal the plaintext exactly once; it lives only in this response
-		Render(w, r, http.StatusOK, views.SettingsAPIKeysReveal(h.Env(r), plaintext))
+		Render(w, r, http.StatusOK, views.SettingsAPIKeysReveal(h.Env(r), plaintext), nil)
 		return
 	}
 
@@ -71,14 +71,14 @@ func (h *Handler) APIKeySave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RedirectAfterSave(w, r, "/settings/api-keys/")
+	RedirectAfterSave(w, r, "/settings/api-keys/", nil)
 }
 
 func (h *Handler) APIKeyDelete(w http.ResponseWriter, r *http.Request) {
 	key := r.PathValue("key")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/api-keys/%s?confirm=yes", key)
-		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri), nil)
 		return
 	}
 

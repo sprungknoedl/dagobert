@@ -49,7 +49,7 @@ func (h *Handler) ReportDialog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.ReportsDialog(h.Env(r), list))
+	Render(w, r, http.StatusOK, views.ReportsDialog(h.Env(r), list), nil)
 }
 
 func (h *Handler) ReportGenerate(w http.ResponseWriter, r *http.Request) {

@@ -16,7 +16,7 @@ func (h *Handler) UserList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsUsersMany(h.Env(r), list))
+	Render(w, r, http.StatusOK, views.SettingsUsersMany(h.Env(r), list), nil)
 }
 
 func (h *Handler) UserEdit(w http.ResponseWriter, r *http.Request) {
@@ -31,14 +31,14 @@ func (h *Handler) UserEdit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsUsersOne(h.Env(r), obj, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.SettingsUsersOne(h.Env(r), obj, valid.ValidationError{}), nil)
 }
 
 func (h *Handler) UserSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.User{}
 	err := Decode(h.Store, r, &dto, ValidateUser)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.SettingsUsersOne(h.Env(r), dto, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsUsersOne(h.Env(r), dto, vr), nil)
 		return
 	} else if err != nil {
 		Warn(w, r, err)
@@ -81,14 +81,14 @@ func (h *Handler) UserSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RedirectAfterSave(w, r, "/settings/users/")
+	RedirectAfterSave(w, r, "/settings/users/", nil)
 }
 
 func (h *Handler) UserDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/users/%s?confirm=yes", id)
-		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri), nil)
 		return
 	}
 
@@ -129,7 +129,7 @@ func (h *Handler) UserEditACL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsUsersACL(h.Env(r), obj, cases, perms, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.SettingsUsersACL(h.Env(r), obj, cases, perms, valid.ValidationError{}), nil)
 }
 
 func (h *Handler) UserSaveACL(w http.ResponseWriter, r *http.Request) {
@@ -151,5 +151,5 @@ func (h *Handler) UserSaveACL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RedirectAfterSave(w, r, "/settings/users/")
+	RedirectAfterSave(w, r, "/settings/users/", nil)
 }

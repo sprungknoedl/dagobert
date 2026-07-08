@@ -22,7 +22,7 @@ func (h *Handler) ReportTemplateList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsReportTemplatesMany(h.Env(r), reports))
+	Render(w, r, http.StatusOK, views.SettingsReportTemplatesMany(h.Env(r), reports), nil)
 }
 
 func (h *Handler) ReportTemplateEdit(w http.ResponseWriter, r *http.Request) {
@@ -37,7 +37,7 @@ func (h *Handler) ReportTemplateEdit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.SettingsReportTemplatesOne(h.Env(r), obj, valid.ValidationError{}))
+	Render(w, r, http.StatusOK, views.SettingsReportTemplatesOne(h.Env(r), obj, valid.ValidationError{}), nil)
 }
 
 func (h *Handler) ReportTemplateSave(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +45,7 @@ func (h *Handler) ReportTemplateSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.ReportTemplate{ID: r.PathValue("id")}
 	err := Decode(h.Store, r, &dto, ValidateReportTemplate)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.SettingsReportTemplatesOne(h.Env(r), dto, vr))
+		Render(w, r, http.StatusUnprocessableEntity, views.SettingsReportTemplatesOne(h.Env(r), dto, vr), nil)
 		return
 	} else if err != nil {
 		Err(w, r, err)
@@ -77,7 +77,7 @@ func (h *Handler) ReportTemplateSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	RedirectAfterSave(w, r, "/settings/report-templates/")
+	RedirectAfterSave(w, r, "/settings/report-templates/", nil)
 }
 
 // templateError marks a rejected report template (syntax or marker errors) so
@@ -150,7 +150,7 @@ func (h *Handler) ReportTemplateDelete(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if r.URL.Query().Get("confirm") != "yes" {
 		uri := fmt.Sprintf("/settings/report-templates/%s?confirm=yes", id)
-		Render(w, r, http.StatusOK, views.ConfirmDialog(uri))
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri), nil)
 		return
 	}
 
