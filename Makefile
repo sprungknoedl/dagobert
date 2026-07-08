@@ -1,6 +1,6 @@
 .PHONY: build build-web build-go check fmt vet test validate-exports docker run clean
 .EXPORT_ALL_VARIABLES:
--include dagobert.env
+-include .env
 
 TAILWIND_VERSION = 4.3.2
 DAISYUI_VERSION  = 5.6.6

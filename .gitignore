@@ -4,7 +4,7 @@
 internal/assets/daisyui*.js
 CLAUDE.md
 dagobert
-dagobert.env
+.env
 docs/adr
 docs/reviews
 docs/specs
