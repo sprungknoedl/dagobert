@@ -368,6 +368,15 @@ func (h *Handler) EvidenceDownload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	path := filepath.Join("files", "evidences", obj.CaseID, obj.Name)
+	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
+		http.Error(w, "file not found", http.StatusNotFound)
+		return
+	} else if err != nil {
+		Err(w, r, err)
+		return
+	}
+
 	user := GetUser(r)
 	h.Store.SaveEvidenceLog(cid, model.EvidenceLog{
 		EvidenceID: obj.ID,
@@ -377,8 +386,9 @@ func (h *Handler) EvidenceDownload(w http.ResponseWriter, r *http.Request) {
 	})
 
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", obj.Name))
-	w.WriteHeader(http.StatusOK)
-	http.ServeFile(w, r, filepath.Join("files", "evidences", obj.CaseID, obj.Name))
+	// No explicit WriteHeader here: ServeFile picks the status itself
+	// (200 / 206 Range / 304 conditional) and a premature 200 would override it.
+	http.ServeFile(w, r, path)
 }
 
 func (h *Handler) EvidenceDelete(w http.ResponseWriter, r *http.Request) {
