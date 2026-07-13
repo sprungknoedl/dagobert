@@ -61,6 +61,7 @@ func ValidateEvent(dto *model.Event, valueLists model.ValueLists) valid.Validati
 func ValidateEvidence(dto *model.Evidence, valueLists model.ValueLists) valid.ValidationError {
 	return valid.Check([]valid.Condition{
 		{Name: "Name", Missing: dto.Name == ""},
+		{Name: "Name", Message: "Invalid file name.", Invalid: dto.Name != "" && !isFlatName(dto.Name)},
 		{Name: "Type", Missing: dto.Type == ""},
 		{Name: "StartsAt", Message: "Start time is required when end time is set.", Invalid: !dto.EndsAt.IsZero() && dto.StartsAt.IsZero()},
 		{Name: "EndsAt", Message: "End time must be after start time.", Invalid: !dto.StartsAt.IsZero() && !dto.EndsAt.IsZero() && time.Time(dto.EndsAt).Before(time.Time(dto.StartsAt))},
