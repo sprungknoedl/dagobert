@@ -14,6 +14,7 @@ type Evidence struct {
 	Name     string
 	Hash     string
 	Size     int64
+	Fileless bool
 	Source   string
 	Notes    string
 	Password string
@@ -36,6 +37,17 @@ func (store *Store) GetEvidence(cid string, id string) (Evidence, error) {
 	obj := Evidence{}
 	tx := store.DB.First(&obj, "id = ? AND case_id = ?", id, cid)
 	return obj, tx.Error
+}
+
+// EvidenceNameTaken reports whether another evidence record in the case
+// already uses name (excluding id itself, so saving a record under its own
+// current name doesn't collide with itself).
+func (store *Store) EvidenceNameTaken(cid, id, name string) (bool, error) {
+	var count int64
+	tx := store.DB.Model(&Evidence{}).
+		Where("case_id = ? AND name = ? AND id != ?", cid, name, id).
+		Count(&count)
+	return count > 0, tx.Error
 }
 
 func (store *Store) SaveEvidence(cid string, obj Evidence) error {
@@ -86,6 +98,7 @@ const (
 	EvidenceLogEdited     = "edited"
 	EvidenceLogModuleRun  = "module run"
 	EvidenceLogDeleted    = "deleted"
+	EvidenceLogAttached   = "attached"
 )
 
 // EvidenceLog is an append-only, self-contained record of an access-relevant

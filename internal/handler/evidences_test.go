@@ -21,42 +21,46 @@ func TestResolveEvidenceFileAdoptsFileOnDisk(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	dto := model.Evidence{ID: "new", CaseID: "case01", Name: "dump.bin"}
-	got, err := resolveEvidenceFile(nil, dto, nil, nil)
+	dto := model.Evidence{ID: "ev01", CaseID: "case01", Name: "dump.bin", Fileless: true}
+	got, attached, details, err := resolveEvidenceFile(dto, model.Evidence{}, true, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.Size != 11 || got.Hash != helloHash {
-		t.Errorf("got size=%d hash=%q, want size=11 hash=%q", got.Size, got.Hash, helloHash)
+	if !attached || details == "" {
+		t.Errorf("got attached=%v details=%q, want an attach with details", attached, details)
+	}
+	if got.Fileless || got.Size != 11 || got.Hash != helloHash {
+		t.Errorf("got size=%d hash=%q fileless=%v, want size=11 hash=%q fileless=false", got.Size, got.Hash, got.Fileless, helloHash)
 	}
 }
 
 func TestResolveEvidenceFileNoFileIsNotAnError(t *testing.T) {
 	t.Chdir(t.TempDir())
-	dto := model.Evidence{ID: "new", CaseID: "case01", Name: "missing.bin"}
-	got, err := resolveEvidenceFile(nil, dto, nil, nil)
+	dto := model.Evidence{ID: "ev01", CaseID: "case01", Name: "missing.bin", Fileless: true}
+	got, attached, _, err := resolveEvidenceFile(dto, model.Evidence{}, true, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.Size != 0 || got.Hash != "" {
-		t.Errorf("got size=%d hash=%q, want empty metadata", got.Size, got.Hash)
+	if attached {
+		t.Error("want not attached when nothing to adopt")
+	}
+	if !got.Fileless || got.Size != 0 || got.Hash != "" {
+		t.Errorf("got size=%d hash=%q fileless=%v, want empty metadata and still fileless", got.Size, got.Hash, got.Fileless)
 	}
 }
 
 func TestResolveEvidenceFileKeepsStoredMetadata(t *testing.T) {
 	t.Chdir(t.TempDir())
-	db := setupArchiveDB(t)
-	kase := seedCase(t, db)
-	ev := model.Evidence{ID: "ev01", CaseID: kase.ID, Name: "dump.bin", Size: 11, Hash: helloHash}
-	if err := db.SaveEvidence(kase.ID, ev); err != nil {
-		t.Fatal(err)
-	}
+	old := model.Evidence{ID: "ev01", CaseID: "case01", Name: "dump.bin", Size: 11, Hash: helloHash}
 
 	// simulate a form save of the existing entry without a new upload
-	dto := model.Evidence{ID: ev.ID, CaseID: kase.ID, Name: ev.Name, Size: ev.Size}
-	got, err := resolveEvidenceFile(db, dto, nil, nil)
+	dto := model.Evidence{ID: old.ID, CaseID: old.CaseID, Name: old.Name}
+	got, attached, _, err := resolveEvidenceFile(dto, old, false, nil, nil)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if attached {
+		t.Error("want not attached for a file-backed entry")
 	}
 	if got.Size != 11 || got.Hash != helloHash {
 		t.Errorf("got size=%d hash=%q, want stored metadata", got.Size, got.Hash)

@@ -118,6 +118,9 @@ func writeCaseArchive(out io.Writer, store *model.Store, cid, sourceInstance, ex
 	var warnings []string
 	if includeBinaries {
 		for _, e := range arch.Evidences {
+			if e.Fileless {
+				continue
+			}
 			disk := filepath.Join("files", "evidences", cid, e.Name)
 			if _, err := os.Stat(disk); err != nil {
 				warnings = append(warnings, fmt.Sprintf("evidence %q: binary missing on disk", e.Name))

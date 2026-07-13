@@ -188,7 +188,7 @@ templ formatTime(t model.Time) {
 
 templ actionBtn(env Env, method, url string) {
 	if _, ok := env.Allowed(method, url); ok {
-		<a class="join-item btn btn-sm" href={ url } up-method={ method } up-layer="new drawer" up-accept-location={ env.Route }>
+		<a class="join-item btn btn-sm text-nowrap" href={ url } up-method={ method } up-layer="new drawer" up-accept-location={ env.Route }>
 			{ children... }
 		</a>
 	}

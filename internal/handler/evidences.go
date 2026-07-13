@@ -53,7 +53,7 @@ func (h *Handler) EvidenceExport(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Type", "Name", "Hash", "Size", "Notes", "StartsAt", "EndsAt", "Custom"})
+	cw.Write([]string{"ID", "Type", "Name", "Hash", "Size", "Notes", "StartsAt", "EndsAt", "Custom", "Fileless"})
 	for _, e := range list {
 		startsAt := ""
 		if !e.StartsAt.IsZero() {
@@ -73,6 +73,7 @@ func (h *Handler) EvidenceExport(w http.ResponseWriter, r *http.Request) {
 			startsAt,
 			endsAt,
 			e.Custom.JSON(),
+			strconv.FormatBool(e.Fileless),
 		})
 	}
 
@@ -84,42 +85,53 @@ func (h *Handler) EvidenceImport(w http.ResponseWriter, r *http.Request) {
 	uri := fmt.Sprintf("/cases/%s/evidences/", cid)
 	user := GetUser(r)
 	h.Store.Transaction(func(tx *model.Store) error {
-		return ImportCSV(tx, h.ACL, w, r, uri, 0, func(rec []string) {
+		return ImportCSV(tx, h.ACL, w, r, uri, 10, func(rec []string) {
 			size, err := strconv.ParseInt(rec[4], 10, 64)
 			if err != nil {
 				Warn(w, r, err)
 				return
 			}
 
-			loc := filepath.Base(filepath.Clean(rec[2]))
-			if _, err := os.Stat(filepath.Join("files", "evidences", cid, loc)); errors.Is(err, os.ErrNotExist) {
+			fileless, err := strconv.ParseBool(rec[9])
+			if err != nil {
 				Warn(w, r, err)
 				return
 			}
 
+			loc := filepath.Base(filepath.Clean(rec[2]))
+			if !fileless {
+				if _, err := os.Stat(filepath.Join("files", "evidences", cid, loc)); errors.Is(err, os.ErrNotExist) {
+					Warn(w, r, err)
+					return
+				}
+			}
+
 			var startsAt model.Time
-			if len(rec) > 6 && rec[6] != "" {
+			if rec[6] != "" {
 				t, err := time.Parse(time.RFC3339, rec[6])
 				if err != nil {
 					Warn(w, r, err)
+					return
 				} else {
 					startsAt = model.Time(t)
 				}
 			}
 
 			var endsAt model.Time
-			if len(rec) > 7 && rec[7] != "" {
+			if rec[7] != "" {
 				t, err := time.Parse(time.RFC3339, rec[7])
 				if err != nil {
 					Warn(w, r, err)
+					return
 				} else {
 					endsAt = model.Time(t)
 				}
 			}
 
 			var custom model.Custom
-			if len(rec) > 8 {
-				custom.Scan(rec[8])
+			if err = custom.Scan(rec[8]); err != nil {
+				Warn(w, r, err)
+				return
 			}
 
 			obj := model.Evidence{
@@ -129,6 +141,7 @@ func (h *Handler) EvidenceImport(w http.ResponseWriter, r *http.Request) {
 				Name:     loc,
 				Hash:     rec[3],
 				Size:     size, // rec[4]
+				Fileless: fileless,
 				Notes:    rec[5],
 				StartsAt: startsAt,
 				EndsAt:   endsAt,
@@ -154,7 +167,9 @@ func (h *Handler) EvidenceImport(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) EvidenceEdit(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
-	obj := model.Evidence{ID: id, CaseID: cid}
+	// new entries start fileless: the form must render the manual Hash/Size
+	// inputs as editable and let the file picker adopt-or-attach on save.
+	obj := model.Evidence{ID: id, CaseID: cid, Fileless: true}
 	if id != "new" {
 		var err error
 		obj, err = h.Store.GetEvidence(cid, id)
@@ -163,12 +178,6 @@ func (h *Handler) EvidenceEdit(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
-	// assets, err := h.Store.ListAssets(cid)
-	// if err != nil {
-	// 	Err(w, r, err)
-	// 	return
-	// }
 
 	Render(w, r, http.StatusOK, views.EvidencesOne(h.Env(r), obj, valid.ValidationError{}), obj)
 }
@@ -182,7 +191,27 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto := model.Evidence{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
+	id := r.PathValue("id")
+	cid := r.PathValue("cid")
+	new := id == "new"
+	if new {
+		id = fp.Random(10)
+	}
+
+	// patch semantics: prefill dto from the stored record before Decode, so
+	// both form and JSON decoding merge over current values — unsent fields
+	// keep their value, an explicitly submitted "" clears
+	dto := model.Evidence{ID: id, CaseID: cid}
+	var old model.Evidence
+	if !new {
+		old, err = h.Store.GetEvidence(cid, id)
+		if err != nil {
+			Err(w, r, err)
+			return
+		}
+		dto = old
+	}
+
 	err = Decode(h.Store, r, &dto, ValidateEvidence)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
 		if wantsJSON(r) {
@@ -196,9 +225,36 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// replacing the stored file is not supported; the check stays here because
-	// its outcome is a rendered validation error, an HTTP concern
-	if fh != nil && fh.Size > 0 && dto.ID != "new" {
+	// re-force path/served fields — no request body can flip them
+	dto.ID = id
+	dto.CaseID = cid
+	if !new {
+		dto.Fileless = old.Fileless
+	} else {
+		// creation infers the kind from upload presence; the attach routine
+		// may still adopt a same-named disk file for a fileless creation
+		dto.Fileless = fh == nil
+	}
+
+	if taken, err := h.Store.EvidenceNameTaken(cid, id, dto.Name); err != nil {
+		Err(w, r, err)
+		return
+	} else if taken {
+		vr := valid.ValidationError{"Name": valid.Condition{Name: "Name", Invalid: true,
+			Message: "A file with this name already exists in this case."}}
+		if wantsJSON(r) {
+			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
+			return
+		}
+		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(h.Env(r), dto, vr), nil)
+		return
+	}
+
+	// replacing the stored file of a file-backed entry is not supported; the
+	// check stays here because its outcome is a rendered validation error,
+	// an HTTP concern. Keyed on the stored record's Fileless flag (not on
+	// dto.ID != "new") so an upload can still attach onto a fileless entry.
+	if fh != nil && !new && !old.Fileless {
 		vr := valid.ValidationError{"File": valid.Condition{Name: "File", Invalid: true,
 			Message: "Replacing the file of an existing entry is not supported — create a new entry instead."}}
 		if wantsJSON(r) {
@@ -209,26 +265,24 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dto, err = resolveEvidenceFile(h.Store, dto, fr, fh)
-	if err != nil {
+	dto, attached, attachDetails, err := resolveEvidenceFile(dto, old, new, fr, fh)
+	if vr, ok := err.(valid.ValidationError); ok {
+		if wantsJSON(r) {
+			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
+			return
+		}
+		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(h.Env(r), dto, vr), nil)
+		return
+	} else if err != nil {
 		Err(w, r, err)
 		return
 	}
 
-	// NOTE: form-only for now — CollectCustom reads r.PostForm, so a JSON API
-	// request yields an empty map and won't carry custom values.
-	dto.Custom = CollectCustom(r)
-
-	new := dto.ID == "new"
-	dto.ID = fp.If(new, fp.Random(10), dto.ID)
-
-	var old model.Evidence
-	if !new {
-		old, err = h.Store.GetEvidence(dto.CaseID, dto.ID)
-		if err != nil {
-			Err(w, r, err)
-			return
-		}
+	// form-only: CollectCustom reads r.PostForm, which is empty for a JSON
+	// request — assigning it unconditionally would wipe custom attributes
+	// carried by a JSON patch
+	if !strings.Contains(r.Header.Get("Content-Type"), "application/json") {
+		dto.Custom = CollectCustom(r)
 	}
 
 	user := GetUser(r)
@@ -237,6 +291,19 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 		if err := tx.SaveEvidence(dto.CaseID, dto); err != nil {
 			return err
 		}
+
+		if attached {
+			if err := tx.SaveEvidenceLog(dto.CaseID, model.EvidenceLog{
+				EvidenceID: dto.ID,
+				Name:       dto.Name,
+				User:       user.String(),
+				Event:      model.EvidenceLogAttached,
+				Details:    attachDetails,
+			}); err != nil {
+				return err
+			}
+		}
+
 		if !new && details == "" {
 			return nil // no-op edit — nothing changed, nothing to log
 		}
@@ -262,55 +329,118 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 	RedirectAfterSave(w, r, fmt.Sprintf("/cases/%s/evidences/", dto.CaseID), dto)
 }
 
-// resolveEvidenceFile fills dto.Size and dto.Hash from the uploaded file, the
-// existing DB record, or a file already present on disk (in that order). It is
-// HTTP-free; the caller has already rejected uploads for existing entries.
-func resolveEvidenceFile(store *model.Store, dto model.Evidence, upload multipart.File, fh *multipart.FileHeader) (model.Evidence, error) {
-	dto.Name = filepath.Base(dto.Name) // sanitize name
+// resolveEvidenceFile is HTTP-free (its validation errors are rendered by the
+// caller) and splits on dto.Fileless, which the caller has already finalized:
+// file-backed entries keep their stored metadata and only rename the disk
+// file on a Name change (fresh file-backed creations write the upload
+// instead, since there is no prior file to rename from); fileless entries run
+// the attach routine, which may turn them file-backed. attached reports
+// whether attach actually fired, for the caller's separate log entry.
+func resolveEvidenceFile(dto, old model.Evidence, new bool, upload multipart.File, fh *multipart.FileHeader) (result model.Evidence, attached bool, details string, err error) {
 	path := filepath.Join("files", "evidences", dto.CaseID, dto.Name)
 
-	switch {
-	case fh != nil && fh.Size > 0:
-		// new upload: write to disk (fail if the file exists) and hash while writing
-		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-			return dto, err
+	if !dto.Fileless {
+		if new {
+			dto.Hash, dto.Size, err = writeEvidenceFile(path, upload, fh.Size)
+			return dto, false, "", err
 		}
-		fw, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
-		if err != nil {
-			return dto, err
-		}
-		defer fw.Close()
-		if dto.Hash, err = hashCopy(fw, upload); err != nil {
-			return dto, err
-		}
-		dto.Size = fh.Size
 
-	case dto.ID != "new" && dto.Size > 0:
-		// existing entry without new file: keep stored metadata
-		obj, err := store.GetEvidence(dto.CaseID, dto.ID)
-		if err != nil {
-			return dto, err
-		}
-		dto.Size, dto.Hash = obj.Size, obj.Hash
-
-	default:
-		// adopt a file already present on disk; no file, no metadata — not an error
-		dto.Size, dto.Hash = 0, ""
-		fr, err := os.Open(path)
-		if err != nil {
-			return dto, nil
-		}
-		defer fr.Close()
-		stat, err := fr.Stat()
-		if err != nil {
-			return dto, err
-		}
-		if dto.Hash, err = hashCopy(io.Discard, fr); err != nil {
-			return dto, err
-		}
-		dto.Size = stat.Size()
+		// existing file-backed entry: Hash/Size are server-owned, always
+		// re-forced from the stored record regardless of what was submitted
+		dto.Hash, dto.Size = old.Hash, old.Size
+		err = renameEvidenceFile(dto.CaseID, old.Name, dto.Name)
+		return dto, false, "", err
 	}
-	return dto, nil
+
+	return attachEvidenceFile(dto, path, upload, fh)
+}
+
+// writeEvidenceFile writes upload to path, failing if it already exists, and
+// returns the SHA-1 hash and size of the copied bytes.
+func writeEvidenceFile(path string, upload multipart.File, size int64) (string, int64, error) {
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return "", 0, err
+	}
+	fw, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0666)
+	if errors.Is(err, os.ErrExist) {
+		return "", 0, valid.ValidationError{"Name": valid.Condition{Name: "Name", Invalid: true,
+			Message: "A file with this name already exists in this case."}}
+	} else if err != nil {
+		return "", 0, err
+	}
+	defer fw.Close()
+
+	hash, err := hashCopy(fw, upload)
+	if err != nil {
+		return "", 0, err
+	}
+	return hash, size, nil
+}
+
+// renameEvidenceFile moves a file-backed entry's disk file when its name
+// changed. os.SameFile lets a case-only rename succeed on a case-insensitive
+// filesystem (APFS), where stat-ing the destination resolves to the source
+// file itself; any other existing file at the destination is a real
+// collision. Other rename errors (e.g. the source file missing) propagate —
+// a file-backed record whose disk file is gone is real corruption.
+func renameEvidenceFile(cid, oldName, newName string) error {
+	if oldName == newName {
+		return nil
+	}
+
+	src := filepath.Join("files", "evidences", cid, oldName)
+	dst := filepath.Join("files", "evidences", cid, newName)
+	if dstStat, err := os.Stat(dst); err == nil {
+		srcStat, err := os.Stat(src)
+		if err != nil || !os.SameFile(dstStat, srcStat) {
+			return valid.ValidationError{"Name": valid.Condition{Name: "Name", Invalid: true,
+				Message: "A file with this name already exists in this case."}}
+		}
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+
+	return os.Rename(src, dst)
+}
+
+// attachEvidenceFile is the one sanctioned fileless → file-backed transition.
+// It fires when an upload is present, or when a file already sits on disk
+// under dto's name (adopt — the path for files too big to upload, copied
+// server-side). Either way it writes/reads the file, computes its SHA-1,
+// flips Fileless to false, and reports the entry's prior manual Hash/Size so
+// the caller can log the custody-relevant overwrite. A fileless entry with
+// neither trigger is returned unchanged — that is not an error.
+func attachEvidenceFile(dto model.Evidence, path string, upload multipart.File, fh *multipart.FileHeader) (model.Evidence, bool, string, error) {
+	prevHash, prevSize := dto.Hash, dto.Size
+
+	if fh != nil {
+		hash, size, err := writeEvidenceFile(path, upload, fh.Size)
+		if err != nil {
+			return dto, false, "", err
+		}
+		dto.Hash, dto.Size, dto.Fileless = hash, size, false
+		return dto, true, fmt.Sprintf("recorded hash was %q, size %d", prevHash, prevSize), nil
+	}
+
+	fr, err := os.Open(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return dto, false, "", nil
+	} else if err != nil {
+		return dto, false, "", err
+	}
+	defer fr.Close()
+
+	stat, err := fr.Stat()
+	if err != nil {
+		return dto, false, "", err
+	}
+	hash, err := hashCopy(io.Discard, fr)
+	if err != nil {
+		return dto, false, "", err
+	}
+
+	dto.Hash, dto.Size, dto.Fileless = hash, stat.Size(), false
+	return dto, true, fmt.Sprintf("recorded hash was %q, size %d", prevHash, prevSize), nil
 }
 
 // hashCopy copies src to dst and returns the sha1 of the copied bytes.
@@ -327,9 +457,9 @@ func hashCopy(dst io.Writer, src io.Reader) (string, error) {
 // old/new values; every other field only names itself — the full values are
 // deliberately not stored (bloat; would leak the archive password).
 //
-// This is a display heuristic, not an equality check: it skips Hash/Size
-// (recomputed from disk, not user-edited) and only covers today's editable
-// fields. Do not use an empty result to skip the SaveEvidence write itself.
+// This is a display heuristic, not an equality check: it covers only today's
+// editable fields, which for a fileless entry includes Hash/Size. Do not use
+// an empty result to skip the SaveEvidence write itself.
 func diffEvidence(old, new model.Evidence) string {
 	changes := []string{}
 	if old.Name != new.Name {
@@ -337,6 +467,12 @@ func diffEvidence(old, new model.Evidence) string {
 	}
 	if old.Type != new.Type {
 		changes = append(changes, "Type")
+	}
+	if old.Hash != new.Hash {
+		changes = append(changes, "Hash")
+	}
+	if old.Size != new.Size {
+		changes = append(changes, "Size")
 	}
 	if old.Source != new.Source {
 		changes = append(changes, "Source")
@@ -400,9 +536,11 @@ func (h *Handler) EvidenceDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// try to delete file from disk
+	// try to delete file from disk — fileless entries have none, and today's
+	// unconditional remove-by-name would risk deleting another record's file
+	// on pre-uniqueness data that can still hold duplicate names
 	obj, err := h.Store.GetEvidence(cid, id)
-	if err == nil {
+	if err == nil && !obj.Fileless {
 		os.Remove(filepath.Join("files", "evidences", obj.CaseID, obj.Name))
 	}
 

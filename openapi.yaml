@@ -133,6 +133,7 @@ components:
         Name: { type: string }
         Hash: { type: string }
         Size: { type: integer, format: int64 }
+        Fileless: { type: boolean }
         Source: { type: string }
         Notes: { type: string }
         Password: { type: string }
@@ -151,7 +152,7 @@ components:
         EvidenceID: { type: string }
         Name: { type: string, description: Evidence name at the time of the event. }
         User: { type: string, description: Display string of the acting user, or an automation rule reference. }
-        Event: { type: string, enum: [uploaded, downloaded, edited, 'module run', deleted] }
+        Event: { type: string, enum: [uploaded, downloaded, edited, 'module run', deleted, attached] }
         Details: { type: string }
         Time: { type: string, format: date-time }
 
