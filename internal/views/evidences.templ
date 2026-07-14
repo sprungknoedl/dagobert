@@ -248,11 +248,19 @@ templ EvidenceLogsMany(env Env, rows []model.EvidenceLog, live map[string]model.
 									<td class="value-4" data-search={ row.Details }>{ row.Details } </td>
 									<td class="text-right">
 										if row.Event == model.EvidenceLogDeleted && env.User.Role == "Administrator" {
-											<div class="join">
-												@actionBtn(env, "DELETE", "/cases/"+env.Case.ID+"/evidences/logs/"+row.EvidenceID) {
-													<i class="ph ph-5 ph-trash"></i> Purge history
-												}
-											</div>
+											{{ purgeURL := "/cases/" + env.Case.ID + "/evidences/logs/" + row.EvidenceID }}
+											if _, ok := env.Allowed("DELETE", purgeURL); ok {
+												<!-- Dedicated markup, not actionBtn: this button opens a confirm
+												overlay nested inside the Log drawer, so it must not carry
+												actionBtn's up-accept-location (it would auto-accept on the
+												drawer's own URL and misfire dagobert.js's root-navigation
+												handler, which sends the drawer's document to the root layer). -->
+												<div class="join">
+													<a class="join-item btn btn-sm text-nowrap" href={ purgeURL } up-method="DELETE" up-layer="new drawer">
+														<i class="ph ph-5 ph-trash"></i> Purge history
+													</a>
+												</div>
+											}
 										}
 									</td>
 								</tr>
