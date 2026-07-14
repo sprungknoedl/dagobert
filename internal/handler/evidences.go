@@ -630,5 +630,25 @@ func (h *Handler) EvidenceLogPurge(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
-	http.Redirect(w, r, fmt.Sprintf("/cases/%s/evidences/logs", cid), http.StatusSeeOther)
+
+	// Accept the confirm overlay explicitly instead of redirecting: a 303 to
+	// the Evidence Log drawer's own URL would auto-accept via up-accept-location
+	// and trigger dagobert.js's root-navigation handler, sending the drawer's
+	// document to the root layer. The response body still renders the full
+	// Evidence Log page so #list's up-hungry/up-if-layer="subtree" pair
+	// (dagobert.js) picks up the refreshed rows in the still-open drawer.
+	w.Header().Set("X-Up-Accept-Layer", `{"toast":"Evidence log purged."}`)
+
+	logs, err := h.Store.ListEvidenceLogs(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+	evidences, err := h.Store.ListEvidences(cid)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+	live := fp.ToMap(evidences, func(e model.Evidence) string { return e.ID })
+	Render(w, r, http.StatusOK, views.EvidenceLogsMany(h.Env(r), logs, live), logs)
 }
