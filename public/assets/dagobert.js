@@ -244,6 +244,8 @@ up.compiler('input[type=file][data-fill], input[type=file][data-hash]', (input) 
         }
         if (input.dataset.hash !== undefined && input.files[0]) {
             hashfile(input.files[0], form);
+            const size = form.querySelector('input[name="Size"]');
+            if (size) { size.value = input.files[0].size; }
         }
     };
     input.addEventListener('change', onChange);
