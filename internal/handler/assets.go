@@ -108,11 +108,7 @@ func (h *Handler) AssetSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Asset{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
 	err := Decode(h.Store, r, &dto, ValidateAsset)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		if wantsJSON(r) {
-			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
-			return
-		}
-		Render(w, r, http.StatusUnprocessableEntity, views.AssetsOne(h.Env(r), dto, vr), nil)
+		Render(w, r, http.StatusUnprocessableEntity, views.AssetsOne(h.Env(r), dto, vr), vr)
 		return
 	} else if err != nil {
 		Warn(w, r, err)

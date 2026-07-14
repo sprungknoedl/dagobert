@@ -42,6 +42,12 @@ var userRoles = []ValueListItem{
 }
 
 func (store *Store) ListValueLists() (ValueLists, error) {
+	store.valueListsMu.Lock()
+	defer store.valueListsMu.Unlock()
+	if store.valueListsCache != nil {
+		return *store.valueListsCache, nil
+	}
+
 	// fetch valueLists
 	list := []ValueListItem{}
 	tx := store.DB.Order("category, rank, name asc").Find(&list)
@@ -78,6 +84,7 @@ func (store *Store) ListValueLists() (ValueLists, error) {
 		}
 	}
 
+	store.valueListsCache = &valueLists
 	return valueLists, nil
 }
 
@@ -88,9 +95,17 @@ func (store *Store) GetEnum(id string) (ValueListItem, error) {
 }
 
 func (store *Store) SaveEnum(obj ValueListItem) error {
-	return store.DB.Save(obj).Error
+	err := store.DB.Save(obj).Error
+	store.valueListsMu.Lock()
+	store.valueListsCache = nil
+	store.valueListsMu.Unlock()
+	return err
 }
 
 func (store *Store) DeleteEnum(id string) error {
-	return store.DB.Delete(&ValueListItem{}, "id = ?", id).Error
+	err := store.DB.Delete(&ValueListItem{}, "id = ?", id).Error
+	store.valueListsMu.Lock()
+	store.valueListsCache = nil
+	store.valueListsMu.Unlock()
+	return err
 }

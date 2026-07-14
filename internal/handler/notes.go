@@ -98,11 +98,7 @@ func (h *Handler) NoteSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Note{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
 	err := Decode(h.Store, r, &dto, ValidateNote)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		if wantsJSON(r) {
-			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
-			return
-		}
-		Render(w, r, http.StatusUnprocessableEntity, views.NotesOne(h.Env(r), dto, vr), nil)
+		Render(w, r, http.StatusUnprocessableEntity, views.NotesOne(h.Env(r), dto, vr), vr)
 		return
 	} else if err != nil {
 		Warn(w, r, err)

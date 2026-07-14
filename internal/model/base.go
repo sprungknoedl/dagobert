@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"gorm.io/driver/sqlite"
@@ -24,6 +25,16 @@ var DefaultUrl = "file:files/dagobert.db?_pragma=foreign_keys(ON)&_pragma=journa
 type Store struct {
 	RawConn *sql.DB
 	DB      *gorm.DB
+
+	// valueListsCache and customAttributesCache hold the process-wide
+	// reference data returned by ListValueLists/ListCustomAttributes. They are
+	// nil'd out on write (SaveEnum/DeleteEnum, SaveCustomAttribute/
+	// DeleteCustomAttribute/EnsureCustomAttribute) and lazily repopulated on
+	// the next read.
+	valueListsMu          sync.Mutex
+	valueListsCache       *ValueLists
+	customAttributesMu    sync.Mutex
+	customAttributesCache *[]CustomAttribute
 }
 
 func Connect(dburl string) (*Store, error) {

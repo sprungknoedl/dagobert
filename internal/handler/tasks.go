@@ -120,11 +120,7 @@ func (h *Handler) TaskSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Task{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
 	err := Decode(h.Store, r, &dto, ValidateTask)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		if wantsJSON(r) {
-			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
-			return
-		}
-		Render(w, r, http.StatusUnprocessableEntity, views.TasksOne(h.Env(r), dto, vr), nil)
+		Render(w, r, http.StatusUnprocessableEntity, views.TasksOne(h.Env(r), dto, vr), vr)
 		return
 	} else if err != nil {
 		Warn(w, r, err)
