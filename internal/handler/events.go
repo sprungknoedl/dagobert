@@ -246,10 +246,6 @@ func (h *Handler) EventSave(w http.ResponseWriter, r *http.Request) {
 		Decode(h.Store, r, &dto, ValidateEvent),
 		Decode(h.Store, r, &tmp, nil))
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		if wantsJSON(r) {
-			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
-			return
-		}
 		var ev model.Event
 		var err1 error
 		if dto.ID != "new" {
@@ -265,7 +261,7 @@ func (h *Handler) EventSave(w http.ResponseWriter, r *http.Request) {
 		// changes in the form to the selects will be lost, but this is easier than the other way around ...
 		dto.Assets = ev.Assets
 		dto.Indicators = ev.Indicators
-		Render(w, r, http.StatusUnprocessableEntity, views.EventsOne(h.Env(r), dto, assets, indicators, h.Mitre, vr), nil)
+		Render(w, r, http.StatusUnprocessableEntity, views.EventsOne(h.Env(r), dto, assets, indicators, h.Mitre, vr), vr)
 		return
 	} else if err != nil {
 		Warn(w, r, err)

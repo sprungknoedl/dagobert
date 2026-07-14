@@ -366,8 +366,7 @@ func wantsJSON(r *http.Request) bool {
 }
 
 // Render renders c for browser clients. When the client wants JSON and data is
-// non-nil, it marshals data instead — c is a lazy templ closure, so building an
-// unused component costs nothing.
+// non-nil, it marshals data instead.
 func Render(w http.ResponseWriter, r *http.Request, status int, c templ.Component, data any) {
 	if wantsJSON(r) && data != nil {
 		w.Header().Set("Content-Type", "application/json")

@@ -214,11 +214,7 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 
 	err = Decode(h.Store, r, &dto, ValidateEvidence)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		if wantsJSON(r) {
-			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
-			return
-		}
-		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(h.Env(r), dto, vr), nil)
+		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(h.Env(r), dto, vr), vr)
 		return
 	} else if err != nil {
 		Err(w, r, err)
@@ -242,11 +238,7 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 	} else if taken {
 		vr := valid.ValidationError{"Name": valid.Condition{Name: "Name", Invalid: true,
 			Message: "A file with this name already exists in this case."}}
-		if wantsJSON(r) {
-			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
-			return
-		}
-		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(h.Env(r), dto, vr), nil)
+		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(h.Env(r), dto, vr), vr)
 		return
 	}
 
@@ -257,21 +249,13 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 	if fh != nil && !new && !old.Fileless {
 		vr := valid.ValidationError{"File": valid.Condition{Name: "File", Invalid: true,
 			Message: "Replacing the file of an existing entry is not supported — create a new entry instead."}}
-		if wantsJSON(r) {
-			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
-			return
-		}
-		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(h.Env(r), dto, vr), nil)
+		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(h.Env(r), dto, vr), vr)
 		return
 	}
 
 	dto, attached, attachDetails, err := resolveEvidenceFile(dto, old, new, fr, fh)
 	if vr, ok := err.(valid.ValidationError); ok {
-		if wantsJSON(r) {
-			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
-			return
-		}
-		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(h.Env(r), dto, vr), nil)
+		Render(w, r, http.StatusUnprocessableEntity, views.EvidencesOne(h.Env(r), dto, vr), vr)
 		return
 	} else if err != nil {
 		Err(w, r, err)

@@ -220,15 +220,11 @@ func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Case{ID: r.PathValue("cid")}
 	err := Decode(h.Store, r, &dto, ValidateCase)
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		if wantsJSON(r) {
-			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
-			return
-		}
 		sketches := h.fetchSketches(r)
 		templates, _ := h.Store.ListTemplates()
 		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(h.Env(r), dto, vr,
 			views.WithTemplates(templates, r.FormValue("Template")),
-			views.WithSketches(sketches)), nil)
+			views.WithSketches(sketches)), vr)
 		return
 	} else if err != nil {
 		Warn(w, r, err)

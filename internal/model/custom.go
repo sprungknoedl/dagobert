@@ -15,9 +15,20 @@ type CustomAttribute struct {
 }
 
 func (store *Store) ListCustomAttributes() ([]CustomAttribute, error) {
+	store.customAttributesMu.Lock()
+	defer store.customAttributesMu.Unlock()
+	if store.customAttributesCache != nil {
+		return *store.customAttributesCache, nil
+	}
+
 	list := []CustomAttribute{}
 	tx := store.DB.Order("entity, rank, label asc").Find(&list)
-	return list, tx.Error
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	store.customAttributesCache = &list
+	return list, nil
 }
 
 func (store *Store) GetCustomAttribute(id string) (CustomAttribute, error) {
@@ -27,11 +38,19 @@ func (store *Store) GetCustomAttribute(id string) (CustomAttribute, error) {
 }
 
 func (store *Store) SaveCustomAttribute(obj CustomAttribute) error {
-	return store.DB.Save(obj).Error
+	err := store.DB.Save(obj).Error
+	store.customAttributesMu.Lock()
+	store.customAttributesCache = nil
+	store.customAttributesMu.Unlock()
+	return err
 }
 
 func (store *Store) DeleteCustomAttribute(id string) error {
-	return store.DB.Delete(&CustomAttribute{}, "id = ?", id).Error
+	err := store.DB.Delete(&CustomAttribute{}, "id = ?", id).Error
+	store.customAttributesMu.Lock()
+	store.customAttributesCache = nil
+	store.customAttributesMu.Unlock()
+	return err
 }
 
 // EnsureCustomAttribute creates the (entity, label) definition if it does not
@@ -47,7 +66,7 @@ func (store *Store) EnsureCustomAttribute(entity, label, typ string, options Str
 		return err
 	}
 
-	return store.DB.Create(&CustomAttribute{
+	err = store.DB.Create(&CustomAttribute{
 		ID:      fp.Random(10),
 		Entity:  entity,
 		Label:   label,
@@ -55,4 +74,9 @@ func (store *Store) EnsureCustomAttribute(entity, label, typ string, options Str
 		Options: options,
 		Rank:    rank,
 	}).Error
+
+	store.customAttributesMu.Lock()
+	store.customAttributesCache = nil
+	store.customAttributesMu.Unlock()
+	return err
 }

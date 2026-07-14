@@ -71,17 +71,13 @@ func (h *Handler) CommentSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Comment{}
 	err := Decode(h.Store, r, &dto, ValidateComment)
 	if vr, isVr := err.(valid.ValidationError); err != nil && isVr {
-		if wantsJSON(r) {
-			Render(w, r, http.StatusUnprocessableEntity, nil, vr)
-			return
-		}
 		list, lerr := h.Store.ListComments(cid, kind, oid)
 		if lerr != nil {
 			Err(w, r, lerr)
 			return
 		}
 		dto.ID = id
-		Render(w, r, http.StatusUnprocessableEntity, views.CommentsDialog(h.Env(r), kind, oid, list, dto, vr), nil)
+		Render(w, r, http.StatusUnprocessableEntity, views.CommentsDialog(h.Env(r), kind, oid, list, dto, vr), vr)
 		return
 	} else if err != nil {
 		Warn(w, r, err)
