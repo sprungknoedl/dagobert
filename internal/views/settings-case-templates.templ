@@ -63,7 +63,7 @@ templ SettingsCaseTemplatesPromote(env Env, cases []model.Case) {
 				Source case
 				@requiredLabel()
 			</label>
-			<select name="SourceID" class="select w-full" data-onchange="applyTemplateName">
+			<select name="SourceID" class="select w-full" data-apply-template-name>
 				for _, c := range cases {
 					<option value={ c.ID }>{ c.Name }</option>
 				}

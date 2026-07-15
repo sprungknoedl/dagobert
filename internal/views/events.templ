@@ -125,7 +125,7 @@ templ EventsOne(env Env, obj model.Event, assets []model.Asset, indicators []mod
 			</label>
 			<div class="join w-full">
 				<input name="Time" type="text" class="join-item input w-full" value={ obj.Time.Format("2006-01-02T15:04:05Z07:00") }/>
-				<a class="join-item btn" data-onclick="setNow">Now</a>
+				<a class="join-item btn" data-set-now>Now</a>
 			</div>
 		</div>
 		@selectField("Type", obj.Type, env.ValueLists.EventTypes, required(), withLabel("Type"), withError(vr["Type"]))

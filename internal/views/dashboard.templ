@@ -146,9 +146,9 @@ templ Dashboard(env Env, from time.Time, to time.Time, matrixKey string, matrix 
 templ dashboardDateExtra(from time.Time, to time.Time) {
 	<input type="date" name="from" value={ fp.If(from.IsZero(), "", from.Format("2006-01-02")) } class="join-item input" placeholder="From"/>
 	<input type="date" name="to" value={ fp.If(to.IsZero(), "", to.Format("2006-01-02")) } class="join-item input" placeholder="To"/>
-	<button type="button" class="join-item btn" data-onclick="fillDateRange" data-range="this-year">This year</button>
-	<button type="button" class="join-item btn" data-onclick="fillDateRange" data-range="last-year">Last year</button>
-	<button type="button" class="join-item btn" data-onclick="fillDateRange" data-range="all-time">All time</button>
+	<button type="button" class="join-item btn" data-fill-date-range="this-year">This year</button>
+	<button type="button" class="join-item btn" data-fill-date-range="last-year">Last year</button>
+	<button type="button" class="join-item btn" data-fill-date-range="all-time">All time</button>
 }
 
 // dashboardBreakdownCard renders one of the three value->count cards; kept as
