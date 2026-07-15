@@ -57,7 +57,7 @@ templ SettingsCustomAttributesOne(env Env, obj model.CustomAttribute, vr valid.V
 				Type
 				@validationError(vr["Type"])
 			</label>
-			<select name="Type" class="select w-full" data-onchange="toggleCustomOptions">
+			<select name="Type" class="select w-full" data-toggle-custom-options>
 				for _, t := range customTypes {
 					<option value={ t } selected?={ obj.Type == t }>{ customTypeInfo[t].Label }</option>
 				}

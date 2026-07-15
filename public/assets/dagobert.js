@@ -138,62 +138,126 @@ onload = (event) => {
     });
 };
 
-// applyCaseTemplate fills the case form's case-level defaults from the picked
-// template's inline data-* attributes, with no server roundtrip. Wired to the
-// "Create from template" <select> on the new-case form (see CasesOne).
-function applyCaseTemplate(select) {
-    const opt = select.options[select.selectedIndex];
-    const form = select.form;
-    form.elements['Classification'].value = opt.dataset.classification || '';
-    form.elements['Severity'].value = opt.dataset.severity || '';
-    form.elements['Summary'].value = opt.dataset.summary || '';
-}
+// --- Per-behavior compilers (CSP: no inline onclick=/onchange= attributes) -
+// Each behavior gets its own up.compiler(); Unpoly runs these on the initial
+// page and re-runs them on every fragment swap, so no destructors are needed
+// — the listeners die with the compiled element (or its subtree) on removal.
+// Style rationale: ADR 0004.
 
-// --- Delegated dispatch (CSP: no inline onclick=/onchange= attributes) -----
-// Document-level listeners need no up.compiler() registration/teardown —
-// they're live for the initial page and all later Unpoly fragment swaps
-// without rebinding.
-const actions = {
-    togglePassword,
-    setNow,
-    toggleCustomOptions,
-    applyCaseTemplate,
-    toggleCategory,
-    fillDateRange,
-    removeSelf: (el) => el.remove(),
-    copyRevealKey: () => navigator.clipboard.writeText(document.getElementById('reveal-key').value),
-    applyTemplateName: (el) => {
-        document.querySelector('input[name=Name]').value =
-            el.options[el.selectedIndex].text + ' (Template)';
-    },
-    stopPropagation: (el, event) => event.stopPropagation(),
-};
-
-document.addEventListener('click', (event) => {
-    const el = event.target.closest('[data-onclick]');
-    if (el) { actions[el.dataset.onclick]?.(el, event); }
-
-    const link = event.target.closest('[data-href]');
-    if (link && !event.target.closest('a, button')) { location.assign(link.dataset.href); }
+// Flips a password field between masked and plain text. Reveal button on
+// password fields (see passwordField in form.templ).
+up.compiler('[data-toggle-password]', (btn) => {
+    btn.addEventListener('click', () => {
+        const input = btn.parentElement.querySelector('input');
+        input.type = input.type === 'password' ? 'text' : 'password';
+    });
 });
 
-document.addEventListener('change', (event) => {
-    const el = event.target.closest('[data-onchange]');
-    if (el) { actions[el.dataset.onchange]?.(el, event); }
+// Fills the text input in the same .join group with the current time in
+// ISO-8601. "Now" button on event/task forms.
+up.compiler('[data-set-now]', (btn) => {
+    btn.addEventListener('click', () => {
+        const input = btn.parentElement.querySelector('input');
+        if (input) { input.value = new Date().toISOString(); }
+    });
+});
+
+// Sets the from/to date inputs in the same form to the quick range named by
+// the button's data-fill-date-range, and dispatches a change event so the
+// form's up-autosubmit picks it up. Dashboard's quick-range buttons.
+up.compiler('[data-fill-date-range]', (btn) => {
+    btn.addEventListener('click', () => {
+        const form = btn.closest('form');
+        const from = form.querySelector('input[name="from"]');
+        const to = form.querySelector('input[name="to"]');
+        const range = btn.dataset.fillDateRange;
+        const year = new Date().getFullYear();
+        if (range === 'this-year') {
+            from.value = `${year}-01-01`;
+            to.value = `${year}-12-31`;
+        } else if (range === 'last-year') {
+            from.value = `${year - 1}-01-01`;
+            to.value = `${year - 1}-12-31`;
+        } else {
+            from.value = '';
+            to.value = '';
+        }
+        from.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+});
+
+// Collapses/expands a settings category. Bound on the category band row; the
+// next <tbody> holds that category's data rows.
+up.compiler('[data-toggle-category]', (el) => {
+    el.addEventListener('click', () => {
+        const band = el.closest('tbody');
+        const data = band?.nextElementSibling;
+        if (!data) { return; }
+        data.toggleAttribute('hidden');
+        band.querySelector('.chevron')?.classList.toggle('rotate-90');
+    });
+});
+
+up.compiler('[data-remove-self]', (el) => {
+    el.addEventListener('click', () => el.remove());
+});
+
+up.compiler('[data-copy-reveal-key]', (el) => {
+    el.addEventListener('click', () => navigator.clipboard.writeText(document.getElementById('reveal-key').value));
+});
+
+up.compiler('[data-stop-propagation]', (el) => {
+    el.addEventListener('click', (event) => event.stopPropagation());
+});
+
+// Shows the "Options" field only for the "select" custom attribute type.
+up.compiler('[data-toggle-custom-options]', (sel) => {
+    sel.addEventListener('change', () => {
+        document.getElementById('custom-options').style.display = sel.value === 'select' ? '' : 'none';
+    });
+});
+
+// Fills the case form's case-level defaults from the picked template's inline
+// data-* attributes, with no server roundtrip. "Create from template" <select>
+// on the new-case form (see CasesOne).
+up.compiler('[data-apply-case-template]', (select) => {
+    select.addEventListener('change', () => {
+        const opt = select.options[select.selectedIndex];
+        const form = select.form;
+        form.elements['Classification'].value = opt.dataset.classification || '';
+        form.elements['Severity'].value = opt.dataset.severity || '';
+        form.elements['Summary'].value = opt.dataset.summary || '';
+    });
+});
+
+up.compiler('[data-apply-template-name]', (el) => {
+    el.addEventListener('change', () => {
+        document.querySelector('input[name=Name]').value =
+            el.options[el.selectedIndex].text + ' (Template)';
+    });
 });
 
 // Faithful non-eval replacement for up-on-accepted="..." (Unpoly's internal
 // new Function() eval, blocked by CSP with no 'unsafe-eval'). Unpoly fires
 // up:layer:accepted on the link that opened the layer, same as what
 // up-on-accepted evaluates internally.
-const onAccepted = {
-    'reload-list': () => up.reload('#list'),
-    'reload-main-root': () => up.reload('main', { layer: 'root' }),
-    'goto-cases': () => up.navigate({ url: '/cases/', layer: 'root' }),
-};
-up.compiler('[data-up-accepted]', (link) => {
-    const fn = onAccepted[link.dataset.upAccepted];
-    if (fn) { link.addEventListener('up:layer:accepted', fn); }
+up.compiler('[data-on-accepted=reload-list]', (link) => {
+    link.addEventListener('up:layer:accepted', () => up.reload('#list'));
+});
+up.compiler('[data-on-accepted=reload-main-root]', (link) => {
+    link.addEventListener('up:layer:accepted', () => up.reload('main', { layer: 'root' }));
+});
+up.compiler('[data-on-accepted=goto-cases]', (link) => {
+    link.addEventListener('up:layer:accepted', () => up.navigate({ url: '/cases/', layer: 'root' }));
+});
+
+// Row navigation for settings-style tables: clicking a row (but not a link or
+// button inside it) navigates to its data-href.
+up.compiler('table:has([data-href])', (table) => {
+    table.addEventListener('click', (event) => {
+        const row = event.target.closest('[data-href]');
+        if (row && !event.target.closest('a, button')) { location.assign(row.dataset.href); }
+    });
 });
 
 // showToast renders a transient success toast into the root #errors section,
@@ -214,16 +278,6 @@ function showToast(message) {
     container.appendChild(alert);
 
     setTimeout(() => alert.remove(), 4000);
-}
-
-// toggleCategory collapses/expands a settings category. Bound via inline onclick
-// on the category band row; the next <tbody> holds that category's data rows.
-function toggleCategory(el) {
-    const band = el.closest('tbody');
-    const data = band?.nextElementSibling;
-    if (!data) { return; }
-    data.toggleAttribute('hidden');
-    band.querySelector('.chevron')?.classList.toggle('rotate-90');
 }
 
 // --- Fragment compilers ---------------------------------------------------
@@ -347,49 +401,6 @@ up.compiler('#histogram', (elem, data) => {
 });
 
 // --- Helpers invoked from inline on* handlers / the compilers above -------
-
-// togglePassword flips a password field between masked and plain text. Wired via
-// inline onclick on the reveal button (see passwordField in form.templ).
-function togglePassword(btn) {
-    const input = btn.parentElement.querySelector('input');
-    input.type = input.type === 'password' ? 'text' : 'password';
-}
-
-// setNow fills the text input in the same .join group with the current time in
-// ISO-8601. Wired via inline onclick on the "Now" button (event/task forms).
-function setNow(btn) {
-    const input = btn.parentElement.querySelector('input');
-    if (input) { input.value = new Date().toISOString(); }
-}
-
-// fillDateRange sets the from/to date inputs in the same form to the quick
-// range named by the button's data-range, and dispatches a change event so
-// the form's up-autosubmit picks it up. Wired via data-onclick on the
-// dashboard's quick-range buttons.
-function fillDateRange(btn) {
-    const form = btn.closest('form');
-    const from = form.querySelector('input[name="from"]');
-    const to = form.querySelector('input[name="to"]');
-    const range = btn.dataset.range;
-    const year = new Date().getFullYear();
-    if (range === 'this-year') {
-        from.value = `${year}-01-01`;
-        to.value = `${year}-12-31`;
-    } else if (range === 'last-year') {
-        from.value = `${year - 1}-01-01`;
-        to.value = `${year - 1}-12-31`;
-    } else {
-        from.value = '';
-        to.value = '';
-    }
-    from.dispatchEvent(new Event('change', { bubbles: true }));
-}
-
-// toggleCustomOptions shows the "Options" field only for the "select" custom
-// attribute type. Wired via inline onchange on the type <select>.
-function toggleCustomOptions(sel) {
-    document.getElementById('custom-options').style.display = sel.value === 'select' ? '' : 'none';
-}
 
 // hashfile computes the SHA-1 of the picked file and writes it (hex) into the
 // form's Hash field.
