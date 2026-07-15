@@ -394,6 +394,9 @@ func (h *Handler) CaseDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	os.RemoveAll(filepath.Join("files", "evidences", cid))
+	os.RemoveAll(filepath.Join("files", "malware", cid))
+
 	if wantsJSON(r) {
 		w.WriteHeader(http.StatusNoContent)
 		return
