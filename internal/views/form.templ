@@ -85,6 +85,14 @@ func replaceFooter(footer templ.Component) formOption {
 	return func(fc *formConfig) { fc.footer = footer }
 }
 
+// closeOnlyFooter takes over the form's Save/Cancel spot with a Close
+// button, for forms with nothing to submit (e.g. an empty ACL list).
+templ closeOnlyFooter() {
+	<div class="flex gap-2 items-center">
+		<a class="btn" up-dismiss>Close </a>
+	</div>
+}
+
 templ requiredLabel() {
 	<span class="text-neutral">*</span>
 }
