@@ -1,0 +1,180 @@
+package views
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/sprungknoedl/dagobert/pkg/attck"
+	"github.com/sprungknoedl/dagobert/pkg/fp"
+)
+
+// DashboardStats is the view-model for the cross-case dashboard, built by
+// (*handler.Handler).Dashboard from plain aggregation over accessible cases.
+type DashboardStats struct {
+	Total  int
+	Open   int
+	Closed int
+
+	MedianCloseDays float64
+	HasMedian       bool
+
+	Classification []DashboardBreakdownRow
+	Severity       []DashboardBreakdownRow
+	Outcome        []DashboardBreakdownRow
+
+	TechniqueCounts   map[string]int
+	MaxTechniqueCount int
+}
+
+type DashboardBreakdownRow struct {
+	Value string
+	Count int
+}
+
+templ Dashboard(env Env, from time.Time, to time.Time, matrixKey string, matrix *attck.Matrix, hide bool, stats DashboardStats) {
+	@layout() {
+		<section id="errors"></section>
+		@sidebar(env, "Dashboard")
+		<main class="pl-20 p-4 grow max-w-full flex flex-col h-screen">
+			<form method="get" up-autosubmit up-target="#list" up-history="true">
+				@navbar(env, "Dashboard", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navHideRefresh(), navTitleIcon("chart-bar"), navSubtitle("Cross-case retrospective across every investigation you can access"), navPreButtons(dashboardDateExtra(from, to)))
+				<div id="list">
+					<div class="stats w-full mb-6">
+						<div class="stat">
+							<div class="stat-title">Cases in scope</div>
+							<div class="stat-value text-2xl">{ stats.Total }</div>
+							<div class="stat-desc">accessible to you</div>
+						</div>
+						<div class="stat">
+							<div class="stat-title">Open</div>
+							<div class="stat-value text-2xl">{ stats.Open }</div>
+							<div class="stat-desc">still under investigation</div>
+						</div>
+						<div class="stat">
+							<div class="stat-title">Closed</div>
+							<div class="stat-value text-2xl">{ stats.Closed }</div>
+							<div class="stat-desc">resolved in scope</div>
+						</div>
+						<div class="stat">
+							<div class="stat-title">Median time-to-close</div>
+							if stats.HasMedian {
+								<div class="stat-value text-2xl">{ fmt.Sprintf("%.1f", stats.MedianCloseDays) } <span class="text-base font-normal text-base-content/50">days</span></div>
+							} else {
+								<div class="stat-value text-2xl">—</div>
+							}
+							<div class="stat-desc">closed cases with both dates set</div>
+						</div>
+					</div>
+					<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+						@dashboardBreakdownCard("Classification", "bg-hue-teal", stats.Classification, stats.Total)
+						@dashboardBreakdownCard("Severity", "bg-hue-plum", stats.Severity, stats.Total)
+						@dashboardBreakdownCard("Outcome", "bg-hue-olive", stats.Outcome, stats.Total)
+					</div>
+					<div class="flex items-end justify-between gap-4 mb-3">
+						<div>
+							<h2 class="text-xl font-serif">MITRE ATT&CK® Heatmap</h2>
+							<p class="text-sm text-base-content/60">Number of distinct cases each technique appears in, across the cases in scope</p>
+						</div>
+						<div class="flex items-center gap-4">
+							<div class="flex items-center gap-1.5 text-xs text-base-content/60">
+								@heatmapLegend("cases")
+							</div>
+							<div class="join" role="group" up-autosubmit>
+								<label class="join-item btn pr-4">
+									<input type="radio" name="matrix" value="enterprise" class="radio" checked?={ matrixKey == "enterprise" }/>
+									Enterprise
+								</label>
+								<label class="join-item btn pr-4">
+									<input type="radio" name="matrix" value="mobile" class="radio" checked?={ matrixKey == "mobile" }/>
+									Mobile
+								</label>
+								<label class="join-item btn pr-4">
+									<input type="radio" name="matrix" value="ics" class="radio" checked?={ matrixKey == "ics" }/>
+									ICS
+								</label>
+								<label class="join-item btn pr-4">
+									<input type="checkbox" name="hide" value="on" class="toggle toggle-info" checked?={ hide }/>
+									Hide missing
+								</label>
+							</div>
+						</div>
+					</div>
+					<div class="overflow-x-auto border border-base-300 rounded-box">
+						<table class="table table-default">
+							<thead>
+								<tr>
+									for tactic := range matrix.Tactics.Values() {
+										<th class="px-3 py-4 text-left"><a target="_blank" href={ tactic.URL }>{ tactic.Name }</a></th>
+									}
+								</tr>
+							</thead>
+							<tbody>
+								for i := range matrix.DimY() {
+									<tr>
+										for tactic := range matrix.Tactics.Values() {
+											if i < len(tactic.Techniques) {
+												{{ t := tactic.Techniques[i] }}
+												{{ count := stats.TechniqueCounts[t.ID] }}
+												<td class={ templ.KV("bg-base-200", t.IsSubTechnique) } style={ heatmapCellStyle(count, stats.MaxTechniqueCount) }>
+													<a target="_blank" href={ "https://attack.mitre.org/techniques/" + t.ID }>{ t.Name }</a>
+													if count > 0 {
+														<div class="text-xs font-mono opacity-70">
+															{ count }
+															if count == 1 {
+																case
+															} else {
+																cases
+															}
+														</div>
+													}
+												</td>
+											} else {
+												<td></td>
+											}
+										}
+									</tr>
+								}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</form>
+		</main>
+	}
+}
+
+templ dashboardDateExtra(from time.Time, to time.Time) {
+	<input type="date" name="from" value={ fp.If(from.IsZero(), "", from.Format("2006-01-02")) } class="join-item input" placeholder="From"/>
+	<input type="date" name="to" value={ fp.If(to.IsZero(), "", to.Format("2006-01-02")) } class="join-item input" placeholder="To"/>
+	<button type="button" class="join-item btn" data-onclick="fillDateRange" data-range="this-year">This year</button>
+	<button type="button" class="join-item btn" data-onclick="fillDateRange" data-range="last-year">Last year</button>
+	<button type="button" class="join-item btn" data-onclick="fillDateRange" data-range="all-time">All time</button>
+}
+
+// dashboardBreakdownCard renders one of the three value->count cards; kept as
+// its own component since it's used three times (Classification, Severity,
+// Outcome) with different data and bar colors.
+templ dashboardBreakdownCard(title string, barClass string, rows []DashboardBreakdownRow, total int) {
+	<div class="border border-base-300 rounded-box p-5 bg-base-100">
+		<h2 class="text-xl font-serif mb-3">{ title }</h2>
+		if len(rows) == 0 {
+			<p class="font-serif italic text-base-content/60">No cases in scope.</p>
+		}
+		for _, row := range rows {
+			{{ pct := 0 }}
+			if total > 0 {
+				{{ pct = row.Count * 100 / total }}
+			}
+			{{ bar := fp.If(row.Value == "Unset", "bg-base-content/25", barClass) }}
+			<div class="mb-3">
+				<div class={ "flex justify-between text-sm mb-1", templ.KV("italic text-base-content/50", row.Value == "Unset") }>
+					<span>{ row.Value }</span>
+					<span class="font-mono text-base-content/60">{ row.Count }</span>
+				</div>
+				<div class="h-2 rounded bg-base-200 overflow-hidden">
+					<div class={ "h-full rounded", bar } style={ fmt.Sprintf("width: %d%%", pct) }></div>
+				</div>
+			</div>
+		}
+	</div>
+}

@@ -7,6 +7,7 @@ import (
 
 type navbarConfig struct {
 	preTitle    templ.Component
+	preJoin     templ.Component
 	preButtons  templ.Component
 	titleIcon   string
 	subtitle    string
@@ -32,6 +33,13 @@ func navPreTitle(c templ.Component) navbarOption {
 }
 func navPreButtons(c templ.Component) navbarOption {
 	return func(nc *navbarConfig) { nc.preButtons = c }
+}
+
+// navPreJoin renders c as its own element to the left of the button pill
+// group, rather than inside it — for content (like a legend) that isn't
+// itself a button and would otherwise break the group's joined pill styling.
+func navPreJoin(c templ.Component) navbarOption {
+	return func(nc *navbarConfig) { nc.preJoin = c }
 }
 
 func navSubtitle(subtitle string) navbarOption {
@@ -100,6 +108,9 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 					</svg>
 				</label>
 			}
+			if cfg.preJoin != nil {
+				@cfg.preJoin
+			}
 			<!-- buttons -->
 			<div class="join" role="group" up-autosubmit>
 				if cfg.preButtons != nil {
@@ -142,6 +153,7 @@ templ sidebar(env Env, title string) {
 		<div class="divider"></div>
 		<ul class="menu gap-2">
 			@sidebarLink("/", "Cases", "briefcase", title, "hue-gold")
+			@sidebarLink("/dashboard", "Dashboard", "chart-bar", title, "hue-slate")
 		</ul>
 		if env.Case.ID != "" {
 			<div class="divider"></div>

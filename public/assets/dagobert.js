@@ -159,6 +159,7 @@ const actions = {
     toggleCustomOptions,
     applyCaseTemplate,
     toggleCategory,
+    fillDateRange,
     removeSelf: (el) => el.remove(),
     copyRevealKey: () => navigator.clipboard.writeText(document.getElementById('reveal-key').value),
     applyTemplateName: (el) => {
@@ -359,6 +360,29 @@ function togglePassword(btn) {
 function setNow(btn) {
     const input = btn.parentElement.querySelector('input');
     if (input) { input.value = new Date().toISOString(); }
+}
+
+// fillDateRange sets the from/to date inputs in the same form to the quick
+// range named by the button's data-range, and dispatches a change event so
+// the form's up-autosubmit picks it up. Wired via data-onclick on the
+// dashboard's quick-range buttons.
+function fillDateRange(btn) {
+    const form = btn.closest('form');
+    const from = form.querySelector('input[name="from"]');
+    const to = form.querySelector('input[name="to"]');
+    const range = btn.dataset.range;
+    const year = new Date().getFullYear();
+    if (range === 'this-year') {
+        from.value = `${year}-01-01`;
+        to.value = `${year}-12-31`;
+    } else if (range === 'last-year') {
+        from.value = `${year - 1}-01-01`;
+        to.value = `${year - 1}-12-31`;
+    } else {
+        from.value = '';
+        to.value = '';
+    }
+    from.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 // toggleCustomOptions shows the "Options" field only for the "select" custom
