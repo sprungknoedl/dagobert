@@ -82,9 +82,13 @@ func (h *Handler) MitreAttack(w http.ResponseWriter, r *http.Request) {
 	}
 
 	counts := map[string]int{}
+	maxCount := 0
 	for _, ev := range events {
 		for _, tid := range ev.Techniques {
 			counts[tid] = counts[tid] + 1
+			if counts[tid] > maxCount {
+				maxCount = counts[tid]
+			}
 		}
 	}
 
@@ -92,5 +96,5 @@ func (h *Handler) MitreAttack(w http.ResponseWriter, r *http.Request) {
 		matrix = matrix.Filter(func(t attck.Technique) bool { return counts[t.ID] > 0 })
 	}
 
-	Render(w, r, http.StatusOK, views.VisMitreAttack(h.Env(r), counts, matrix, hide), nil)
+	Render(w, r, http.StatusOK, views.VisMitreAttack(h.Env(r), counts, maxCount, matrix, hide), nil)
 }

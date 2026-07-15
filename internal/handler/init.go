@@ -110,8 +110,11 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("GET /auth/changepassword", a.ChangePasswordForm)
 	secured.HandleFunc("POST /auth/changepassword", a.ChangePassword)
 
-	// cases
+	// dashboard
 	h := &Handler{Store: db, ACL: acl, Mitre: mitre, Timesketch: ts}
+	secured.HandleFunc("GET /dashboard", h.Dashboard)
+
+	// cases
 	secured.HandleFunc("GET /cases/", h.CaseList)
 	secured.HandleFunc("GET /cases/export/csv", h.CaseExport)
 	secured.HandleFunc("GET /cases/import/csv", h.CaseImport)

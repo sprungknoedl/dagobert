@@ -288,3 +288,14 @@ sit ~52-62% lightness so they read gently on the cream paper.
 .hue-cyan  { color: oklch(56% 0.09 220); }
 .hue-brick { color: oklch(52% 0.13 28); }
 .hue-olive { color: oklch(54% 0.08 110); }
+
+/*
+BREAKDOWN BAR FILLS
+same muted hue family as above, as background fills for the dashboard's
+proportional bars — deliberately not the semantic success/warning/error
+colors, so a bar's color never implies a status judgement.
+*/
+
+.bg-hue-teal  { background-color: oklch(55% 0.08 200); }
+.bg-hue-plum  { background-color: oklch(52% 0.10 345); }
+.bg-hue-olive { background-color: oklch(54% 0.08 110); }

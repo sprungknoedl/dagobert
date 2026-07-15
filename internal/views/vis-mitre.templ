@@ -1,43 +1,101 @@
 package views
 
-import "github.com/sprungknoedl/dagobert/pkg/attck"
+import (
+	"fmt"
 
-templ VisMitreAttack(env Env, counts map[string]int, matrix *attck.Matrix, hide bool) {
+	"github.com/sprungknoedl/dagobert/pkg/attck"
+)
+
+templ VisMitreAttack(env Env, counts map[string]int, maxCount int, matrix *attck.Matrix, hide bool) {
 	@layout() {
 		<section id="errors"></section>
 		@sidebar(env, "MITRE ATT&CK® Matrix")
 		<main class="pl-20 p-4 grow max-w-full flex flex-col h-screen">
 			<form method="get" up-autosubmit up-target="#list" up-history="true">
-				@navbar(env, "ATT&CK Navigator", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navPreButtons(mitreExtra(env, hide)), navSubtitle("Map observed techniques to the MITRE ATT&CK framework"))
+				@navbar(env, "ATT&CK Navigator", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navPreJoin(mitreLegend()), navPreButtons(mitreExtra(env, hide)), navSubtitle("Map observed techniques to the MITRE ATT&CK framework"))
 			</form>
 			<div id="list">
-				<table class="table table-default">
-					<thead>
-						<tr>
-							for tactic := range matrix.Tactics.Values() {
-								<th class="px-3 py-4 text-left"><a target="_blank" href={ tactic.URL }>{ tactic.Name }</a></th>
-							}
-						</tr>
-					</thead>
-					<tbody class="values">
-						for i := range matrix.DimY() {
+				<div class="overflow-x-auto">
+					<table class="table table-default">
+						<thead>
 							<tr>
 								for tactic := range matrix.Tactics.Values() {
-									if i < len(tactic.Techniques) {
-										<td class={ templ.KV("bg-base-200", tactic.Techniques[i].IsSubTechnique), templ.KV("bg-primary", counts[tactic.Techniques[i].ID] > 0) }>
-											<a target="_blank" href={ "https://attack.mitre.org/techniques/" + tactic.Techniques[i].ID }>{ tactic.Techniques[i].Name }</a>
-										</td>
-									} else {
-										<td></td>
-									}
+									<th class="px-3 py-4 text-left"><a target="_blank" href={ tactic.URL }>{ tactic.Name }</a></th>
 								}
 							</tr>
-						}
-					</tbody>
-				</table>
+						</thead>
+						<tbody class="values">
+							for i := range matrix.DimY() {
+								<tr>
+									for tactic := range matrix.Tactics.Values() {
+										if i < len(tactic.Techniques) {
+											{{ t := tactic.Techniques[i] }}
+											{{ count := counts[t.ID] }}
+											<td class={ templ.KV("bg-base-200", t.IsSubTechnique) } style={ heatmapCellStyle(count, maxCount) }>
+												<a target="_blank" href={ "https://attack.mitre.org/techniques/" + t.ID }>{ t.Name }</a>
+												if count > 0 {
+													<div class="text-xs font-mono opacity-70">
+														{ count }
+														if count == 1 {
+															event
+														} else {
+															events
+														}
+													</div>
+												}
+											</td>
+										} else {
+											<td></td>
+										}
+									}
+								</tr>
+							}
+						</tbody>
+					</table>
+				</div>
 			</div>
 		</main>
 	}
+}
+
+// heatmapCellStyle shades a heatmap cell's background proportional to count
+// relative to max, so one heavily-referenced technique doesn't just look
+// identical to one referenced only once. Shared by the per-case ATT&CK
+// Navigator and the cross-case dashboard heatmap.
+func heatmapCellStyle(count, max int) string {
+	if count == 0 || max == 0 {
+		return ""
+	}
+	return "background-color: " + heatmapSwatch(15+count*75/max)
+}
+
+// heatmapSwatch is the same intensity scale heatmapCellStyle shades cells
+// with, exposed separately so the legend can render sample swatches at fixed
+// points on that scale.
+func heatmapSwatch(pct int) string {
+	return fmt.Sprintf("color-mix(in oklab, var(--color-primary) %d%%, var(--color-base-100))", pct)
+}
+
+// heatmapLegend is the bare swatch+label content (no positioning/wrapper
+// classes) so each heatmap can embed it in its own header row — the per-case
+// Navigator joins it into the navbar's button pill group, the dashboard sits
+// it plainly next to the matrix selector.
+templ heatmapLegend(unit string) {
+	<span>Fewer</span>
+	for _, pct := range []int{15, 40, 65, 90} {
+		<span class="inline-block w-3 h-3 rounded-sm" style={ "background-color: " + heatmapSwatch(pct) }></span>
+	}
+	<span>More { unit }</span>
+}
+
+// mitreLegend wraps the shared heatmapLegend for the navbar's navPreJoin slot
+// — plain (not a join-item/btn), so it sits to the left of the button pill
+// group instead of inside it, where a non-button element would break the
+// group's joined corner styling.
+templ mitreLegend() {
+	<div class="flex items-center gap-1.5 text-xs text-base-content/60">
+		@heatmapLegend("events")
+	</div>
 }
 
 templ mitreExtra(env Env, hide bool) {
