@@ -64,7 +64,7 @@ templ CasesMany(env Env, rows []model.Case) {
 									<td class="value-6" data-search={ dateOrDash(row.OpenedAt) }>{ dateOrDash(row.OpenedAt) }</td>
 									<td class="text-right">
 										<div class="join">
-											@actionBtn(env, "GET", env.Route+row.ID+"/acl") {
+											@actionBtn(env, "GET", "/settings/cases/"+row.ID+"/acl") {
 												ACL
 											}
 											@defaultActionBtns(env, env.Route+row.ID)
@@ -426,7 +426,7 @@ templ caseSummaryExtra(env Env) {
 			<i class="ph ph-6 ph-git-fork inline-block mr-1"></i> Fork
 		</a>
 	}
-	if url, ok := env.Allowed("GET", "/cases/" + env.Case.ID + "/acl"); ok {
+	if url, ok := env.Allowed("GET", "/settings/cases/" + env.Case.ID + "/acl"); ok {
 		// CaseSaveACL redirects to the case list; accepting on that location
 		// closes the drawer while staying on the summary.
 		<a class="join-item btn" href={ url } up-layer="new drawer" up-accept-location="/cases/">

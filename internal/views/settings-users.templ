@@ -11,15 +11,14 @@ import (
 templ SettingsUsersMany(env Env, rows []model.User) {
 	@layout() {
 		@list(env, "Users", navSettings(), navHideExport(), navHideImport(), navSubtitle("Manage user accounts and role assignments")) {
-			<table class="table table-default" data-default-sort="value-1">
+			<table class="table table-default" data-default-sort="value-0">
 				<thead>
 					<tr>
-						<th data-sort="value-0" class="sort px-3 py-4 text-left">ID</th>
-						<th data-sort="value-1" class="sort px-3 py-4 text-left">Name</th>
-						<th data-sort="value-2" class="sort px-3 py-4 text-left">UPN</th>
-						<th data-sort="value-3" class="sort px-3 py-4 text-left">Email</th>
-						<th data-sort="value-4" class="sort px-3 py-4 text-left">Role</th>
-						<th data-sort="value-5" class="sort px-3 py-4 text-left">Last login</th>
+						<th data-sort="value-0" class="sort px-3 py-4 text-left">Name</th>
+						<th data-sort="value-1" class="sort px-3 py-4 text-left">UPN</th>
+						<th data-sort="value-2" class="sort px-3 py-4 text-left">Email</th>
+						<th data-sort="value-3" class="sort px-3 py-4 text-left">Role</th>
+						<th data-sort="value-4" class="sort px-3 py-4 text-left">Last login</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
@@ -28,23 +27,37 @@ templ SettingsUsersMany(env Env, rows []model.User) {
 						@emptyTable(env, "No accounts on record.", "Add an account for each analyst who needs access. Assign Administrator for full access, User for standard write access, or Read-Only for view-only.")
 					} else {
 						for _, row := range rows {
-							<tr class="hover">
-								<td class="value-0" data-search={ row.ID }>{ row.ID } </td>
-								<td class="value-1" data-search={ row.Name }>{ row.Name } </td>
-								<td class="value-2" data-search={ row.UPN }>{ row.UPN } </td>
-								<td class="value-3" data-search={ row.Email }>{ row.Email } </td>
-								<td class="value-4" data-search={ row.Role }>{ row.Role } </td>
-								<td class="value-5" data-search={ row.LastLogin.Format(time.RFC3339) }>
+							{{ sortKey := fp.If(row.Builtin(), "1_", "0_") }}
+							<tr class={ "hover" + fp.If(row.Builtin(), " text-base-content/50", "") }>
+								<td class="value-0" data-search={ sortKey + row.Name }>
+									<span class="flex items-center gap-2">
+										{ row.Name }
+										if row.Builtin() {
+											<i class="ph ph-4 ph-lock text-base-content/40" title="Built-in account"></i>
+										}
+									</span>
+								</td>
+								<td class="value-1" data-search={ sortKey + row.UPN }>{ row.UPN } </td>
+								<td class="value-2" data-search={ sortKey + row.Email }>{ row.Email } </td>
+								<td class="value-3" data-search={ sortKey + row.Role }>
+									<span class="flex items-center gap-2">
+										<i class={ "ph ph-5 " + userRoleIcon(row.Role) }></i>
+										{ row.Role }
+									</span>
+								</td>
+								<td class="value-4" data-search={ sortKey + row.LastLogin.Format(time.RFC3339) }>
 									@formatTime(row.LastLogin)
 								</td>
 								<td class="text-right">
 									<div class="join">
-										if url, ok := env.Allowed("GET", env.Route+row.ID+"/acl"); ok && row.Role != "Administrator" {
+										if url, ok := env.Allowed("GET", env.Route+row.ID+"/acl"); ok && row.Role != "Administrator" && !row.Builtin() {
 											@actionBtn(env, "GET", url) {
 												ACL
 											}
 										}
-										@defaultActionBtns(env, env.Route+row.ID)
+										if !row.Builtin() {
+											@defaultActionBtns(env, env.Route+row.ID)
+										}
 									</div>
 								</td>
 							</tr>
@@ -83,18 +96,40 @@ templ SettingsUsersOne(env Env, obj model.User, vr valid.ValidationError) {
 	}
 }
 
+func userRoleIcon(role string) string {
+	switch role {
+	case "Administrator":
+		return "ph-shield-star"
+	case "User":
+		return "ph-user"
+	case "Read-Only":
+		return "ph-eye"
+	case "Donald":
+		return "ph-robot"
+	case "MCP":
+		return "ph-plug"
+	default:
+		return "ph-question"
+	}
+}
+
 templ SettingsUsersACL(env Env, obj model.User, cases []model.Case, perms []string, vr valid.ValidationError) {
 	{{ uri := "/settings/users/" + obj.ID + "/acl" }}
 	{{ title := "Access control" }}
-	@form(env, uri, title) {
-		<p class="mb-2">User <strong>{ obj.Name } ({ obj.UPN })</strong> is allowed to access the following cases:</p>
-		for _, kase := range cases {
-			<div class="form-control mb-2">
-				<label class="label cursor-pointer justify-start gap-2">
-					<input name="Cases" value={ kase.ID } type="checkbox" class="checkbox" checked?={ slices.Contains(perms, kase.ID) }/>
-					{ kase.Name }
-				</label>
-			</div>
+	{{ formOpts := fp.If(len(cases) == 0, []formOption{replaceFooter(closeOnlyFooter())}, nil) }}
+	@form(env, uri, title, formOpts...) {
+		if len(cases) == 0 {
+			<p class="mb-2">There are no cases to assign yet.</p>
+		} else {
+			<p class="mb-2">User <strong>{ obj.Name } ({ obj.UPN })</strong> is allowed to access the following cases:</p>
+			for _, kase := range cases {
+				<div class="form-control mb-2">
+					<label class="label cursor-pointer justify-start gap-2">
+						<input name="Cases" value={ kase.ID } type="checkbox" class="checkbox" checked?={ slices.Contains(perms, kase.ID) }/>
+						{ kase.Name }
+					</label>
+				</div>
+			}
 		}
 	}
 }

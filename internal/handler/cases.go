@@ -417,6 +417,7 @@ func (h *Handler) CaseEditACL(w http.ResponseWriter, r *http.Request) {
 		Err(w, r, err)
 		return
 	}
+	users = fp.Filter(users, func(u model.User) bool { return u.Role != "Administrator" && !u.Builtin() })
 
 	perms, err := h.Store.GetCasePermissions(cid)
 	if err != nil {
