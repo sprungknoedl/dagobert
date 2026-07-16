@@ -25,6 +25,8 @@ can work on a case concurrently.
 
 - **Multi-case management** — separate workspaces per investigation, with
   per-case access control (role-based, managed in the UI).
+- **Cross-case dashboard** — an overview across all cases, including a MITRE
+  ATT&CK heatmap of observed techniques.
 - **Timeline** — a unified chronology of attacker activity and investigative
   actions, with MITRE ATT&CK technique mapping.
 - **Evidence, indicators & malware tracking** — structured records for assets,
@@ -133,7 +135,7 @@ claude mcp add --transport http dagobert https://<dagobert>/mcp --header "X-API-
 
 ## Development
 
-You need Go 1.25+. TailwindCSS is built with the standalone CLI — `make
+You need Go 1.26+. TailwindCSS is built with the standalone CLI — `make
 build-web` downloads the pinned binary and daisyUI plugin files automatically, no Node.js required.
 
 ```sh
@@ -156,10 +158,10 @@ creates the database if missing, applies pending migrations, and downloads or
 refreshes the MITRE ATT&CK data. It is idempotent — re-run it after pulling a
 new build to apply any new migrations and data.
 
-HTML templates are [templ](https://templ.guide/) files in `app/views/`; run
-`go tool templ generate` (included in `make build-go` and `make check`) after
-editing them. Database migrations are plain SQL files in
-`app/model/migrations/`, applied with `dagobert update`.
+HTML templates are [templ](https://templ.guide/) files in `internal/views/`;
+run `go tool templ generate` (included in `make build-go` and `make check`)
+after editing them. Database migrations are plain SQL files in
+`internal/model/migrations/`, applied with `dagobert update`.
 
 ## Contributing
 
