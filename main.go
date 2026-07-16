@@ -1,3 +1,4 @@
+// Command dagobert is the entry point: it wires up the Cobra CLI (server, update, create-user, create-api-key, change-password).
 package main
 
 import (

@@ -1,3 +1,4 @@
+// Package auth handles session-based authentication: OIDC login/logout, API keys, and password changes.
 package auth
 
 import (

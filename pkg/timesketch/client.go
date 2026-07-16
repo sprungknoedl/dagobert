@@ -1,6 +1,4 @@
 // Package timesketch implements a client for the Timesketch HTTP API.
-// The client that logs in lazily on first use and re-authenticates once
-// when the session expires.
 package timesketch
 
 import (

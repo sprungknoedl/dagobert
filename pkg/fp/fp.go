@@ -1,3 +1,4 @@
+// Package fp provides small functional-style helpers (list/slice utilities, random IDs).
 package fp
 
 import "iter"

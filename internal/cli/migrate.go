@@ -1,3 +1,4 @@
+// Package cli implements the dagobert CLI subcommands (update, create-user, create-api-key).
 package cli
 
 import (

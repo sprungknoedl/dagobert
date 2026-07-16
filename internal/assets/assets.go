@@ -1,3 +1,4 @@
+// Package assets embeds static vendor assets (e.g. Phosphor icons CSS) not covered by public/public.go.
 package assets
 
 import (

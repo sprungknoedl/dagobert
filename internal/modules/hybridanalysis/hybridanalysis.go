@@ -1,3 +1,4 @@
+// Package hybridanalysis implements the Hybrid Analysis enrichment module.
 package hybridanalysis
 
 import (

@@ -1,3 +1,4 @@
+// Package hayabusa implements the Hayabusa evidence-processing module.
 package hayabusa
 
 import (

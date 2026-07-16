@@ -1,3 +1,4 @@
+// Package views implements dagobert's server-rendered Templ views.
 package views
 
 import (

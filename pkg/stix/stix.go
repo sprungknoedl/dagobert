@@ -1,6 +1,4 @@
-// Package stix builds minimal STIX 2.1 bundles of indicator objects. It owns
-// the format-level invariants (required SDO properties, UTC timestamps, pattern
-// literal escaping) so callers only need to supply STIX patterns.
+// Package stix builds minimal STIX 2.1 bundles of indicator objects.
 package stix
 
 import (

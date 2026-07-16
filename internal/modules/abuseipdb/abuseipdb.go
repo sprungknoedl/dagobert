@@ -1,3 +1,4 @@
+// Package abuseipdb implements the AbuseIPDB enrichment module.
 package abuseipdb
 
 import (

@@ -1,3 +1,4 @@
+// Package model defines the GORM models and database connection for dagobert.
 package model
 
 import (

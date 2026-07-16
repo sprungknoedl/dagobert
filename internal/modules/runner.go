@@ -1,3 +1,4 @@
+// Package modules runs the in-process job worker pool and the automation-rules engine.
 package modules
 
 import (
