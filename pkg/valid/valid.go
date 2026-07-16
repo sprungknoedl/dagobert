@@ -1,3 +1,4 @@
+// Package valid provides a fluent validation-error builder for boundary input checks.
 package valid
 
 import (

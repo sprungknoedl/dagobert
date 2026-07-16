@@ -1,3 +1,4 @@
+// Package doct renders Office (docx/odt) report templates by patching their XML in place.
 package doct
 
 import (

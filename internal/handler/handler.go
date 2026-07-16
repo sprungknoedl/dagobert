@@ -1,3 +1,4 @@
+// Package handler implements the HTTP handlers that make up the dagobert web app.
 package handler
 
 import (

@@ -1,3 +1,4 @@
+// Package virustotal implements the VirusTotal enrichment module.
 package virustotal
 
 import (

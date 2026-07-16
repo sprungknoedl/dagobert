@@ -1,6 +1,4 @@
-// Package openioc builds OpenIOC 1.1 documents. It owns the format-level
-// invariants (namespace, required attributes, schema element names, XML
-// escaping) so callers only need to supply indicator items.
+// Package openioc builds OpenIOC 1.1 documents from indicator items.
 package openioc
 
 import (

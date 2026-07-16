@@ -1,3 +1,4 @@
+// Package attck loads and queries the pinned MITRE ATT&CK dataset.
 package attck
 
 import (

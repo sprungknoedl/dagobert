@@ -1,3 +1,4 @@
+// Package plaso implements the Plaso evidence-processing module.
 package plaso
 
 import (

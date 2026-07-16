@@ -1,3 +1,4 @@
+// Package utils provides shared helpers for the enrichment/processing modules.
 package utils
 
 import (
