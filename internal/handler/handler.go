@@ -28,7 +28,9 @@ import (
 
 func ImportCSV(store *model.Store, acl *auth.ACL, w http.ResponseWriter, r *http.Request, uri string, numFields int, cb func(rec []string)) error {
 	if r.Method == http.MethodGet {
-		views.ImportDialog().Render(r.Context(), w)
+		if err := views.ImportDialog().Render(r.Context(), w); err != nil {
+			slog.Error("failed to render template", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
+		}
 		return nil
 	}
 
@@ -49,7 +51,7 @@ func ImportCSV(store *model.Store, acl *auth.ACL, w http.ResponseWriter, r *http
 		cr = csv.NewReader(fr)
 		cr.Comma = ';'
 		cr.FieldsPerRecord = numFields
-		cr.Read() // skip header
+		_, _ = cr.Read() //nolint:errcheck // skip header; any read error recurs on the next Read() in the loop below, where it is handled
 	}
 
 	for {
@@ -168,11 +170,15 @@ func Warn(w http.ResponseWriter, r *http.Request, err error) {
 	if wantsJSON(r) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}); err != nil {
+			slog.Error("failed to encode error response", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
+		}
 		return
 	}
 	w.WriteHeader(http.StatusBadRequest)
-	views.ToastWarning(err).Render(r.Context(), w)
+	if err := views.ToastWarning(err).Render(r.Context(), w); err != nil {
+		slog.Error("failed to render template", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
+	}
 }
 
 func Err(w http.ResponseWriter, r *http.Request, err error) {
@@ -188,16 +194,20 @@ func Err(w http.ResponseWriter, r *http.Request, err error) {
 	if wantsJSON(r) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}); err != nil {
+			slog.Error("failed to encode error response", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
+		}
 		return
 	}
 	w.WriteHeader(http.StatusInternalServerError)
-	views.ToastError(err).Render(r.Context(), w)
+	if err := views.ToastError(err).Render(r.Context(), w); err != nil {
+		slog.Error("failed to render template", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
+	}
 }
 
 func Forbidden(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusForbidden)
-	w.Write([]byte(http.StatusText(http.StatusForbidden)))
+	_, _ = w.Write([]byte(http.StatusText(http.StatusForbidden))) //nolint:errcheck // status already sent; nothing left to do on a body write failure
 }
 
 func Serve4xx(w http.ResponseWriter, r *http.Request) {
@@ -375,7 +385,14 @@ func Render(w http.ResponseWriter, r *http.Request, status int, c templ.Componen
 	if wantsJSON(r) && data != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(status)
-		json.NewEncoder(w).Encode(data)
+		if err := json.NewEncoder(w).Encode(data); err != nil {
+			slog.Error("failed to encode json response",
+				"err", err,
+				"raddr", r.RemoteAddr,
+				"method", r.Method,
+				"status", status,
+				"url", r.URL)
+		}
 		return
 	}
 
@@ -399,7 +416,9 @@ func RedirectAfterSave(w http.ResponseWriter, r *http.Request, url string, recor
 	if wantsJSON(r) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(record)
+		if err := json.NewEncoder(w).Encode(record); err != nil {
+			slog.Error("failed to encode json response", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
+		}
 		return
 	}
 	http.Redirect(w, r, url, http.StatusSeeOther)
