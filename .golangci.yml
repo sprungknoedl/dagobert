@@ -2,3 +2,9 @@ version: "2"
 
 linters:
   default: standard
+
+# Report everything rather than capping output, so `make check` can't pass
+# with issues silently hidden behind golangci-lint's default output limits.
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
