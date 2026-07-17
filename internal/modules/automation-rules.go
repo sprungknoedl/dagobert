@@ -3,7 +3,7 @@ package modules
 import (
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"sync/atomic"
 
 	"github.com/expr-lang/expr"
@@ -29,7 +29,7 @@ func init() {
 func LoadAutomationRules(store *model.Store) error {
 	list, err := store.ListAutomationRules()
 	if err != nil {
-		log.Printf("error loading rule definitions: %v", err)
+		slog.Error("error loading rule definitions", "err", err)
 		return err
 	}
 
@@ -41,7 +41,7 @@ func LoadAutomationRules(store *model.Store) error {
 
 		rule, err := CompileAutomationRule(def)
 		if err != nil {
-			log.Printf("error compiling rule %q (%s): %v", def.Name, def.Condition, err)
+			slog.Error("error compiling rule", "rule", def.Name, "condition", def.Condition, "err", err)
 			continue
 		}
 
@@ -67,17 +67,17 @@ func TriggerOnIndicatorAdded(store *model.Store, obj model.Indicator) {
 func triggerAutomationRules(store *model.Store, obj any, caseID, objID string) {
 	kase, err := store.GetCase(caseID)
 	if err != nil {
-		// TODO: error logging
+		slog.Error("error loading case for automation rules", "case", caseID, "err", err)
 		return
 	}
 
-	list := rules.Load().([]AutomationRule)
+	list, _ := rules.Load().([]AutomationRule)
 	for _, rule := range list {
 		if !rule.ConditionFn(obj) || !rule.ModuleObj.Supports(obj) {
 			continue
 		}
 
-		log.Printf("running %s -> %s", rule.Name, rule.ModuleObj.Name())
+		slog.Info("running automation rule", "rule", rule.Name, "module", rule.ModuleObj.Name())
 		err := store.Transaction(func(tx *model.Store) error {
 			if err := tx.PushJob(model.Job{
 				ID:       fp.Random(10),
@@ -105,8 +105,8 @@ func triggerAutomationRules(store *model.Store, obj any, caseID, objID string) {
 			return nil
 		})
 		if err != nil {
-			log.Printf("error scheduling job for %s -> %s", rule.ModuleObj.Name(), err)
-			return
+			slog.Error("error scheduling job", "module", rule.ModuleObj.Name(), "err", err)
+			continue
 		}
 	}
 }
@@ -145,7 +145,7 @@ func CompileAutomationRule(rule model.AutomationRule) (AutomationRule, error) {
 	compiled.ConditionFn = func(obj any) bool {
 		out, err := expr.Run(program, map[string]any{"obj": obj})
 		if err != nil {
-			log.Printf("error evaluating rule expression: %v", err)
+			slog.Error("error evaluating rule expression", "err", err)
 			return false
 		}
 
