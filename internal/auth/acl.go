@@ -2,9 +2,9 @@ package auth
 
 import (
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/casbin/casbin/v2"
 	cm "github.com/casbin/casbin/v2/model"
@@ -27,7 +27,8 @@ func NewACL(db *model.Store) *ACL {
 
 	enforcer, err := casbin.NewEnforcer(m, db)
 	if err != nil {
-		log.Fatalf("Failed to init casbin enforcer: %v \n", err.Error())
+		slog.Error("Failed to init casbin enforcer", "err", err)
+		os.Exit(1)
 	}
 
 	enforcer.EnableAutoSave(true)
