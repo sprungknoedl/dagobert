@@ -13,6 +13,10 @@ linters:
         - (io/fs.File).Close
         - (*archive/zip.ReadCloser).Close
         - (*database/sql.DB).Close
+        # csv.Writer buffers internally; the stdlib-documented idiom is to
+        # ignore per-Write errors and check the accumulated error once via
+        # Error() after Flush().
+        - (*encoding/csv.Writer).Write
 
 # Report everything rather than capping output, so `make check` can't pass
 # with issues silently hidden behind golangci-lint's default output limits.

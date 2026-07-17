@@ -74,6 +74,9 @@ func (h *Handler) IndicatorExportCSV(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cw.Flush()
+	if err := cw.Error(); err != nil {
+		slog.Error("failed to write indicator export csv", "err", err, "raddr", r.RemoteAddr, "case", cid)
+	}
 }
 
 func (h *Handler) IndicatorExportOpenIOC(w http.ResponseWriter, r *http.Request) {
