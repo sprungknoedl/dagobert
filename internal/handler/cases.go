@@ -83,7 +83,7 @@ func (h *Handler) CaseExport(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CaseImport(w http.ResponseWriter, r *http.Request) {
 	uri := "/"
 	if err := h.Store.Transaction(func(tx *model.Store) error {
-		return ImportCSV(tx, h.ACL, w, r, uri, 10, func(rec []string) {
+		return ImportCSV(w, r, uri, 10, func(rec []string) {
 			closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
 			if err != nil {
 				Warn(w, r, err)

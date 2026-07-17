@@ -59,7 +59,7 @@ func (h *Handler) NoteImport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/notes/", cid)
 	if err := h.Store.Transaction(func(tx *model.Store) error {
-		return ImportCSV(tx, h.ACL, w, r, uri, 5, func(rec []string) {
+		return ImportCSV(w, r, uri, 5, func(rec []string) {
 			var custom model.Custom
 			if len(rec) > 4 {
 				if err := custom.Scan(rec[4]); err != nil {

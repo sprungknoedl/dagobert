@@ -26,7 +26,7 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-func ImportCSV(store *model.Store, acl *auth.ACL, w http.ResponseWriter, r *http.Request, uri string, numFields int, cb func(rec []string)) error {
+func ImportCSV(w http.ResponseWriter, r *http.Request, uri string, numFields int, cb func(rec []string)) error {
 	if r.Method == http.MethodGet {
 		if err := views.ImportDialog().Render(r.Context(), w); err != nil {
 			slog.Error("failed to render template", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)

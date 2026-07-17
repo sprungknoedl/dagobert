@@ -89,7 +89,7 @@ func (h *Handler) EventImportCSV(w http.ResponseWriter, r *http.Request) {
 	uri := fmt.Sprintf("/cases/%s/events/", cid)
 
 	if err := h.Store.Transaction(func(tx *model.Store) error {
-		return ImportCSV(h.Store, h.ACL, w, r, uri, 9, func(rec []string) {
+		return ImportCSV(w, r, uri, 9, func(rec []string) {
 			t, err := time.Parse(time.RFC3339, rec[1])
 			if err != nil {
 				Warn(w, r, err)

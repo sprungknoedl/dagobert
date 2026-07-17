@@ -89,7 +89,7 @@ func (h *Handler) EvidenceImport(w http.ResponseWriter, r *http.Request) {
 	uri := fmt.Sprintf("/cases/%s/evidences/", cid)
 	user := GetUser(r)
 	if err := h.Store.Transaction(func(tx *model.Store) error {
-		return ImportCSV(tx, h.ACL, w, r, uri, 10, func(rec []string) {
+		return ImportCSV(w, r, uri, 10, func(rec []string) {
 			size, err := strconv.ParseInt(rec[4], 10, 64)
 			if err != nil {
 				Warn(w, r, err)
