@@ -2,6 +2,16 @@ version: "2"
 
 linters:
   default: standard
+  settings:
+    errcheck:
+      # Closing something that was only ever read from can't fail in a way
+      # that matters here; excluded by type so this only ever covers
+      # read-only closers, never writers (e.g. *os.File, which is used for
+      # both, is deliberately not in this list).
+      exclude-functions:
+        - (io.Closer).Close
+        - (*archive/zip.ReadCloser).Close
+        - (*database/sql.DB).Close
 
 # Report everything rather than capping output, so `make check` can't pass
 # with issues silently hidden behind golangci-lint's default output limits.
