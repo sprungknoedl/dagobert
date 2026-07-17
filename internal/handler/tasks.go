@@ -73,11 +73,13 @@ func (h *Handler) TaskImport(w http.ResponseWriter, r *http.Request) {
 			done, err := strconv.ParseBool(cmp.Or(rec[3], "false"))
 			if err != nil {
 				Warn(w, r, err)
+				return
 			}
 
 			datedue, err := time.Parse(time.RFC3339, cmp.Or(rec[5], time.Time{}.Format(time.RFC3339)))
 			if err != nil {
 				Warn(w, r, err)
+				return
 			}
 
 			var custom model.Custom
