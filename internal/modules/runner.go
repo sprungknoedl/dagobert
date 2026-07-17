@@ -53,6 +53,11 @@ func Start(ctx context.Context, store *model.Store, ts *tsclient.Client) {
 		}
 	}
 
+	slog.Debug("Loading automation rules")
+	if err := LoadAutomationRules(store); err != nil {
+		slog.Error("Failed to load automation rules", "err", err)
+	}
+
 	if len(modules) == 0 {
 		slog.Warn("no job modules available — configure MODULE_* env vars")
 		return
@@ -67,13 +72,6 @@ func Start(ctx context.Context, store *model.Store, ts *tsclient.Client) {
 	slog.Info("Starting job runners", "num", num, "modules", fp.Keys(modules))
 	for range num {
 		go runner(ctx, store, modules)
-	}
-
-	slog.Debug("Loading automation rules")
-	err = LoadAutomationRules(store)
-	if err != nil {
-		slog.Error("Failed to load automation rules", "err", err)
-		return
 	}
 
 	slog.Debug("Rescheduling stale jobs")
