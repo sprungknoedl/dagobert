@@ -109,7 +109,10 @@ func (h *Handler) EventImportCSV(w http.ResponseWriter, r *http.Request) {
 
 			var custom model.Custom
 			if len(rec) > 8 {
-				custom.Scan(rec[8])
+				if err := custom.Scan(rec[8]); err != nil {
+					Warn(w, r, err)
+					return
+				}
 			}
 
 			obj := model.Event{

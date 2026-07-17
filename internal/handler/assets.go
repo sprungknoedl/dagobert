@@ -67,7 +67,10 @@ func (h *Handler) AssetImport(w http.ResponseWriter, r *http.Request) {
 		return ImportCSV(tx, h.ACL, w, r, uri, 7, func(rec []string) {
 			var custom model.Custom
 			if len(rec) > 6 {
-				custom.Scan(rec[6])
+				if err := custom.Scan(rec[6]); err != nil {
+					Warn(w, r, err)
+					return
+				}
 			}
 
 			obj := model.Asset{

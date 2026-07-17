@@ -59,7 +59,10 @@ func (h *Handler) NoteImport(w http.ResponseWriter, r *http.Request) {
 		return ImportCSV(tx, h.ACL, w, r, uri, 5, func(rec []string) {
 			var custom model.Custom
 			if len(rec) > 4 {
-				custom.Scan(rec[4])
+				if err := custom.Scan(rec[4]); err != nil {
+					Warn(w, r, err)
+					return
+				}
 			}
 
 			obj := model.Note{
