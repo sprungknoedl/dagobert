@@ -251,19 +251,19 @@ func (h *Handler) PreviewImport(w http.ResponseWriter, r *http.Request) {
 	}
 	if _, err := io.Copy(fw, fr); err != nil {
 		err = errors.Join(err, fw.Close())
-		os.Remove(staged)
+		removeStaged(staged)
 		Warn(w, r, err)
 		return
 	}
 	if err := fw.Close(); err != nil {
-		os.Remove(staged)
+		removeStaged(staged)
 		Warn(w, r, err)
 		return
 	}
 
 	zr, err := zip.OpenReader(staged)
 	if err != nil {
-		os.Remove(staged)
+		removeStaged(staged)
 		Warn(w, r, fmt.Errorf("not a valid zip archive: %w", err))
 		return
 	}
@@ -271,24 +271,24 @@ func (h *Handler) PreviewImport(w http.ResponseWriter, r *http.Request) {
 
 	manifest, err := readManifest(&zr.Reader)
 	if err != nil {
-		os.Remove(staged)
+		removeStaged(staged)
 		Warn(w, r, err)
 		return
 	}
 	if err := validateManifest(manifest); err != nil {
-		os.Remove(staged)
+		removeStaged(staged)
 		Warn(w, r, err)
 		return
 	}
 	// decode the graph and check entry paths now so the confirmation screen is
 	// only shown for an archive we can actually import
 	if _, err := readCaseArchive(&zr.Reader); err != nil {
-		os.Remove(staged)
+		removeStaged(staged)
 		Warn(w, r, err)
 		return
 	}
 	if err := validateArchivePaths(&zr.Reader); err != nil {
-		os.Remove(staged)
+		removeStaged(staged)
 		Warn(w, r, err)
 		return
 	}
@@ -300,7 +300,7 @@ func (h *Handler) PreviewImport(w http.ResponseWriter, r *http.Request) {
 // binaries.
 func (h *Handler) CommitImport(w http.ResponseWriter, r *http.Request, token string) {
 	staged := stagedArchivePath(token)
-	defer os.Remove(staged)
+	defer removeStaged(staged)
 
 	zr, err := zip.OpenReader(staged)
 	if err != nil {
@@ -357,6 +357,14 @@ func (h *Handler) CommitImport(w http.ResponseWriter, r *http.Request, token str
 // given token. filepath.Base defends against a tampered token.
 func stagedArchivePath(token string) string {
 	return filepath.Join("files", "tmp", filepath.Base(token)+".zip")
+}
+
+// removeStaged best-effort deletes a staged archive upload; a failure just
+// leaves a stray file in files/tmp, so it's logged rather than surfaced.
+func removeStaged(staged string) {
+	if err := os.Remove(staged); err != nil && !errors.Is(err, os.ErrNotExist) {
+		slog.Warn("failed to remove staged archive", "err", err, "path", staged)
+	}
 }
 
 func readManifest(zr *zip.Reader) (model.Manifest, error) {
