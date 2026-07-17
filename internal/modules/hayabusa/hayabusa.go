@@ -62,7 +62,7 @@ func (m *Module) Validate() (model.Module, error) {
 	if out, err := cmd.CombinedOutput(); err != nil {
 		err = fmt.Errorf("command %q is not runnable: %w", m.args[0], err)
 		slog.Warn("validating module prerequisites failed", "module", "hayabusa", "err", err)
-		os.Stderr.Write(out)
+		_, _ = os.Stderr.Write(out) //nolint:errcheck // best-effort diagnostic dump; err is already captured and returned
 		return nil, err
 	}
 
@@ -96,7 +96,9 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 	slog.Debug("running command", "module", "hayabusa", "args", cmd.Args)
 	if err := cmd.Run(); err != nil {
 		// try to clean up
-		os.Remove(dst)
+		if rerr := os.Remove(dst); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
+			slog.Warn("failed to remove partial output file", "module", "hayabusa", "err", rerr, "path", dst)
+		}
 		return err
 	}
 
