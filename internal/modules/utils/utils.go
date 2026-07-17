@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"time"
@@ -32,7 +33,11 @@ func AddFromFS(store *model.Store, obj model.Evidence) error {
 	if err != nil {
 		return err
 	}
-	defer fr.Close()
+	defer func() {
+		if cerr := fr.Close(); cerr != nil {
+			slog.Warn("failed to close evidence file", "err", cerr, "path", Filepath(obj))
+		}
+	}()
 
 	stat, err := fr.Stat()
 	if err != nil {

@@ -195,7 +195,11 @@ func writeFileEntry(zw *zip.Writer, name, disk string) error {
 	if err != nil {
 		return err
 	}
-	defer fr.Close()
+	defer func() {
+		if cerr := fr.Close(); cerr != nil {
+			slog.Warn("failed to close archive source file", "err", cerr, "path", disk)
+		}
+	}()
 	_, err = io.Copy(fw, fr)
 	return err
 }
