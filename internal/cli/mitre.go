@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -95,7 +96,9 @@ func download(url, dst string) error {
 	_, copyErr := io.Copy(f, resp.Body)
 	closeErr := f.Close()
 	if err := cmpErr(copyErr, closeErr); err != nil {
-		os.Remove(tmp)
+		if rerr := os.Remove(tmp); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
+			slog.Warn("failed to remove incomplete download", "err", rerr, "path", tmp)
+		}
 		return err
 	}
 	return os.Rename(tmp, dst)

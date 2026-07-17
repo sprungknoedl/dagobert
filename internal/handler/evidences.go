@@ -542,7 +542,9 @@ func (h *Handler) EvidenceDelete(w http.ResponseWriter, r *http.Request) {
 	// on pre-uniqueness data that can still hold duplicate names
 	obj, err := h.Store.GetEvidence(cid, id)
 	if err == nil && !obj.Fileless {
-		os.Remove(filepath.Join("files", "evidences", obj.CaseID, obj.Name))
+		if rerr := os.Remove(filepath.Join("files", "evidences", obj.CaseID, obj.Name)); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
+			slog.Warn("failed to remove evidence file", "err", rerr, "case", obj.CaseID, "evidence", obj.ID)
+		}
 	}
 
 	user := GetUser(r)

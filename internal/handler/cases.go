@@ -406,8 +406,15 @@ func (h *Handler) CaseDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	os.RemoveAll(filepath.Join("files", "evidences", cid))
-	os.RemoveAll(filepath.Join("files", "malware", cid))
+	// The case row is already gone; a cleanup failure here would only leave
+	// orphaned files on disk, not corrupt anything, so log rather than fail
+	// a delete that already succeeded.
+	if err := os.RemoveAll(filepath.Join("files", "evidences", cid)); err != nil {
+		slog.Warn("failed to remove case evidence directory", "err", err, "case", cid)
+	}
+	if err := os.RemoveAll(filepath.Join("files", "malware", cid)); err != nil {
+		slog.Warn("failed to remove case malware directory", "err", err, "case", cid)
+	}
 
 	if wantsJSON(r) {
 		w.WriteHeader(http.StatusNoContent)

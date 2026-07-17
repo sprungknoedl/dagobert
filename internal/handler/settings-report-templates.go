@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -113,7 +114,9 @@ func resolveReportTemplateFile(store *model.Store, dto model.ReportTemplate, isN
 		// and template syntax errors surface now instead of at report time
 		if _, err := LoadTemplate(dto.Name); err != nil {
 			if !existed {
-				os.Remove(dst)
+				if rerr := os.Remove(dst); rerr != nil {
+					err = errors.Join(err, rerr)
+				}
 			}
 			return templateError{err}
 		}
@@ -157,7 +160,9 @@ func (h *Handler) ReportTemplateDelete(w http.ResponseWriter, r *http.Request) {
 	// try to delete file from disk
 	obj, err := h.Store.GetReportTemplate(id)
 	if err == nil {
-		os.Remove(filepath.Join("files", "templates", obj.Name))
+		if rerr := os.Remove(filepath.Join("files", "templates", obj.Name)); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
+			slog.Warn("failed to remove report template file", "err", rerr, "template", obj.Name)
+		}
 	}
 
 	err = h.Store.DeleteReportTemplate(id)
