@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"mime/multipart"
 	"net/http"
 	"net/http/cookiejar"
@@ -214,7 +215,9 @@ func (c *Client) login(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("timesketch: login: %w", err)
 	}
-	io.Copy(io.Discard, resp.Body)
+	if _, err := io.Copy(io.Discard, resp.Body); err != nil {
+		slog.Warn("timesketch: failed to drain response body", "err", err)
+	}
 	resp.Body.Close()
 
 	// Timesketch answers bad credentials with a 200 login page, so verify
@@ -246,7 +249,9 @@ func (c *Client) probe(ctx context.Context) error {
 		return err
 	}
 	defer resp.Body.Close()
-	io.Copy(io.Discard, resp.Body)
+	if _, err := io.Copy(io.Discard, resp.Body); err != nil {
+		slog.Warn("timesketch: failed to drain response body", "err", err)
+	}
 
 	if resp.StatusCode != http.StatusOK || !strings.Contains(resp.Header.Get("Content-Type"), "json") {
 		return fmt.Errorf("not authenticated (status %s)", resp.Status)
@@ -377,7 +382,9 @@ func (c *Client) attempt(build func() (*http.Request, error), out any) error {
 	if out != nil {
 		return json.NewDecoder(resp.Body).Decode(out)
 	}
-	io.Copy(io.Discard, resp.Body)
+	if _, err := io.Copy(io.Discard, resp.Body); err != nil {
+		slog.Warn("timesketch: failed to drain response body", "err", err)
+	}
 	return nil
 }
 
