@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/csv"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -134,7 +135,9 @@ func (h *Handler) AssetDelete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" && !wantsJSON(r) {
 		uri := fmt.Sprintf("/cases/%s/assets/%s?confirm=yes", cid, id)
-		views.ConfirmDialog(uri).Render(r.Context(), w)
+		if err := views.ConfirmDialog(uri).Render(r.Context(), w); err != nil {
+			slog.Error("failed to render template", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
+		}
 		return
 	}
 
