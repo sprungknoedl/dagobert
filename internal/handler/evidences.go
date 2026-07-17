@@ -85,7 +85,7 @@ func (h *Handler) EvidenceImport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/evidences/", cid)
 	user := GetUser(r)
-	h.Store.Transaction(func(tx *model.Store) error {
+	if err := h.Store.Transaction(func(tx *model.Store) error {
 		return ImportCSV(tx, h.ACL, w, r, uri, 10, func(rec []string) {
 			size, err := strconv.ParseInt(rec[4], 10, 64)
 			if err != nil {
@@ -165,7 +165,11 @@ func (h *Handler) EvidenceImport(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		})
-	})
+	}); err != nil {
+		// ImportCSV already wrote the HTTP response before Transaction() returns,
+		// so a commit failure here can only be surfaced via logging.
+		slog.Error("evidence import transaction failed to commit", "err", err, "case", cid)
+	}
 }
 
 func (h *Handler) EvidenceEdit(w http.ResponseWriter, r *http.Request) {
