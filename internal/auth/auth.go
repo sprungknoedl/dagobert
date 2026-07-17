@@ -5,6 +5,7 @@ import (
 	"cmp"
 	"context"
 	"errors"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"os"
@@ -222,7 +223,9 @@ func (a *Auth) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.session.RenewToken(r.Context())
+	if err := a.session.RenewToken(r.Context()); err != nil {
+		slog.Error("failed to renew session token", "err", err)
+	}
 	a.session.Put(r.Context(), SessionUserID, user.ID)
 	a.redirectAfterLogin(w, r)
 }
@@ -245,9 +248,14 @@ func (a *Auth) LoginLocal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.LastLogin = model.Time(time.Now())
-	a.store.SaveUser(user)
+	if err := a.store.SaveUser(user); err != nil {
+		http.Error(w, "failed to save user", http.StatusInternalServerError)
+		return
+	}
 
-	a.session.RenewToken(r.Context())
+	if err := a.session.RenewToken(r.Context()); err != nil {
+		slog.Error("failed to renew session token", "err", err)
+	}
 	a.session.Put(r.Context(), SessionUserID, user.ID)
 	a.redirectAfterLogin(w, r)
 }
@@ -255,6 +263,8 @@ func (a *Auth) LoginLocal(w http.ResponseWriter, r *http.Request) {
 // Logout destroys the session.
 // GET /auth/logout (invariant 7 — nav link is a GET)
 func (a *Auth) Logout(w http.ResponseWriter, r *http.Request) {
-	a.session.Destroy(r.Context())
+	if err := a.session.Destroy(r.Context()); err != nil {
+		slog.Error("failed to destroy session", "err", err)
+	}
 	http.Redirect(w, r, "/auth/login", http.StatusSeeOther)
 }
