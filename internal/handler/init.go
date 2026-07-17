@@ -314,7 +314,9 @@ func Run(cmd *cobra.Command, args []string) {
 		<-ctx.Done()
 		sctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		srv.Shutdown(sctx)
+		if err := srv.Shutdown(sctx); err != nil {
+			slog.Error("failed to shut down web server gracefully", "err", err)
+		}
 	}()
 
 	slog.Info("Starting web server", "addr", ":8080")
