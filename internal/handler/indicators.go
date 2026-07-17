@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"path/filepath"
 	"strings"
@@ -188,7 +189,7 @@ func buildStixBundle(list []model.Indicator, now time.Time) *stix.Bundle {
 func (h *Handler) IndicatorImportCSV(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/indicators/", cid)
-	h.Store.Transaction(func(tx *model.Store) error {
+	if err := h.Store.Transaction(func(tx *model.Store) error {
 		return ImportCSV(tx, h.ACL, w, r, uri, 8, func(rec []string) {
 			var custom model.Custom
 			if len(rec) > 7 {
@@ -212,7 +213,11 @@ func (h *Handler) IndicatorImportCSV(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		})
-	})
+	}); err != nil {
+		// ImportCSV already wrote the HTTP response before Transaction() returns,
+		// so a commit failure here can only be surfaced via logging.
+		slog.Error("indicator import transaction failed to commit", "err", err, "case", cid)
+	}
 }
 
 func (h *Handler) IndicatorImportTimesketch(w http.ResponseWriter, r *http.Request) {

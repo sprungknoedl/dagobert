@@ -63,7 +63,7 @@ func (h *Handler) AssetExport(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) AssetImport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/assets/", cid)
-	h.Store.Transaction(func(tx *model.Store) error {
+	if err := h.Store.Transaction(func(tx *model.Store) error {
 		return ImportCSV(tx, h.ACL, w, r, uri, 7, func(rec []string) {
 			var custom model.Custom
 			if len(rec) > 6 {
@@ -86,7 +86,11 @@ func (h *Handler) AssetImport(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		})
-	})
+	}); err != nil {
+		// ImportCSV already wrote the HTTP response before Transaction() returns,
+		// so a commit failure here can only be surfaced via logging.
+		slog.Error("asset import transaction failed to commit", "err", err, "case", cid)
+	}
 }
 
 func (h *Handler) AssetEdit(w http.ResponseWriter, r *http.Request) {

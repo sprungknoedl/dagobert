@@ -79,7 +79,7 @@ func (h *Handler) CaseExport(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) CaseImport(w http.ResponseWriter, r *http.Request) {
 	uri := "/"
-	h.Store.Transaction(func(tx *model.Store) error {
+	if err := h.Store.Transaction(func(tx *model.Store) error {
 		return ImportCSV(tx, h.ACL, w, r, uri, 10, func(rec []string) {
 			closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
 			if err != nil {
@@ -135,7 +135,11 @@ func (h *Handler) CaseImport(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		})
-	})
+	}); err != nil {
+		// ImportCSV already wrote the HTTP response before Transaction() returns,
+		// so a commit failure here can only be surfaced via logging.
+		slog.Error("case import transaction failed to commit", "err", err)
+	}
 }
 
 func (h *Handler) CaseEdit(w http.ResponseWriter, r *http.Request) {

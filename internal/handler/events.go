@@ -85,7 +85,7 @@ func (h *Handler) EventImportCSV(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/events/", cid)
 
-	h.Store.Transaction(func(tx *model.Store) error {
+	if err := h.Store.Transaction(func(tx *model.Store) error {
 		return ImportCSV(h.Store, h.ACL, w, r, uri, 9, func(rec []string) {
 			t, err := time.Parse(time.RFC3339, rec[1])
 			if err != nil {
@@ -130,7 +130,11 @@ func (h *Handler) EventImportCSV(w http.ResponseWriter, r *http.Request) {
 			}
 		})
 
-	})
+	}); err != nil {
+		// ImportCSV already wrote the HTTP response before Transaction() returns,
+		// so a commit failure here can only be surfaced via logging.
+		slog.Error("event import transaction failed to commit", "err", err, "case", cid)
+	}
 }
 
 func (h *Handler) EventImportTimesketch(w http.ResponseWriter, r *http.Request) {
