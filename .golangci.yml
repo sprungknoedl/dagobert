@@ -2,6 +2,13 @@ version: "2"
 
 linters:
   default: standard
+  exclusions:
+    rules:
+      # Test fixture/httptest writes and cleanup calls fail loudly via a later
+      # assertion or t.Fatal, not silently; checking every one is ceremony.
+      - path: _test\.go$
+        linters:
+          - errcheck
   settings:
     errcheck:
       # Closing something that was only ever read from can't fail in a way
