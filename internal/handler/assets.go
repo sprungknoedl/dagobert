@@ -58,6 +58,9 @@ func (h *Handler) AssetExport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cw.Flush()
+	if err := cw.Error(); err != nil {
+		slog.Error("failed to write asset export csv", "err", err, "raddr", r.RemoteAddr, "case", cid)
+	}
 }
 
 func (h *Handler) AssetImport(w http.ResponseWriter, r *http.Request) {

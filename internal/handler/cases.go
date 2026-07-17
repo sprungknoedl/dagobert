@@ -75,6 +75,9 @@ func (h *Handler) CaseExport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cw.Flush()
+	if err := cw.Error(); err != nil {
+		slog.Error("failed to write case export csv", "err", err, "raddr", r.RemoteAddr)
+	}
 }
 
 func (h *Handler) CaseImport(w http.ResponseWriter, r *http.Request) {

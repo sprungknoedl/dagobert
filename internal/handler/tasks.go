@@ -60,6 +60,9 @@ func (h *Handler) TaskExport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cw.Flush()
+	if err := cw.Error(); err != nil {
+		slog.Error("failed to write task export csv", "err", err, "raddr", r.RemoteAddr, "case", cid)
+	}
 }
 
 func (h *Handler) TaskImport(w http.ResponseWriter, r *http.Request) {

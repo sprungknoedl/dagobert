@@ -50,6 +50,9 @@ func (h *Handler) NoteExport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cw.Flush()
+	if err := cw.Error(); err != nil {
+		slog.Error("failed to write note export csv", "err", err, "raddr", r.RemoteAddr, "case", cid)
+	}
 }
 
 func (h *Handler) NoteImport(w http.ResponseWriter, r *http.Request) {
