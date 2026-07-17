@@ -69,7 +69,7 @@ func (h *Handler) TaskImport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/tasks/", cid)
 	if err := h.Store.Transaction(func(tx *model.Store) error {
-		return ImportCSV(tx, h.ACL, w, r, uri, 7, func(rec []string) {
+		return ImportCSV(w, r, uri, 7, func(rec []string) {
 			done, err := strconv.ParseBool(cmp.Or(rec[3], "false"))
 			if err != nil {
 				Warn(w, r, err)

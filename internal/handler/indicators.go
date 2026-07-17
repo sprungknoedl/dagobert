@@ -198,7 +198,7 @@ func (h *Handler) IndicatorImportCSV(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/indicators/", cid)
 	if err := h.Store.Transaction(func(tx *model.Store) error {
-		return ImportCSV(tx, h.ACL, w, r, uri, 8, func(rec []string) {
+		return ImportCSV(w, r, uri, 8, func(rec []string) {
 			var custom model.Custom
 			if len(rec) > 7 {
 				if err := custom.Scan(rec[7]); err != nil {

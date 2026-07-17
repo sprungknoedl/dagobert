@@ -49,10 +49,6 @@ func main() {
 		Short: "Collaborative Incident Response Platform",
 	}
 
-	_ = cobra.Command{
-		Args: cobra.ExactArgs(1),
-	}
-
 	cmd.Run = handler.Run // default command
 	cmd.CompletionOptions = cobra.CompletionOptions{DisableDefaultCmd: true}
 	cmd.AddCommand(&cobra.Command{Use: "server", Short: "Start web server and API.", Run: handler.Run})

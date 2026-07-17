@@ -107,14 +107,6 @@ func (store *Store) assertCaseOwnership(model any, id, cid string) error {
 	return nil
 }
 
-func FromEnv(name string, defaults []string) []string {
-	list := strings.Split(os.Getenv(name), ";")
-	if len(list) > 1 {
-		return list
-	}
-	return defaults
-}
-
 type Time time.Time
 
 func (t Time) Format(layout string) string { return time.Time(t).Format(layout) }
