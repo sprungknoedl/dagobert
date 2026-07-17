@@ -88,8 +88,13 @@ func Run(cmd *cobra.Command, args []string) {
 	// --------------------------------------
 	// Automations & jobs
 	// --------------------------------------
+	// Register populates the global Modules map read by request handlers, so
+	// it must complete before the server starts serving (unlike Start, which
+	// does network validation and can run in the background).
+	modules.Register(ts)
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	go modules.Start(ctx, db, ts)
+	go modules.Start(ctx, db)
 	defer stop()
 
 	// --------------------------------------
