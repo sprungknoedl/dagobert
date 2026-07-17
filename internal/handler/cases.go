@@ -88,7 +88,10 @@ func (h *Handler) CaseImport(w http.ResponseWriter, r *http.Request) {
 			}
 
 			var custom model.Custom
-			custom.Scan(rec[9])
+			if err = custom.Scan(rec[9]); err != nil {
+				Warn(w, r, err)
+				return
+			}
 
 			var openedAt, closedAt model.Date
 			if rec[7] != "" {

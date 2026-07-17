@@ -79,7 +79,10 @@ func (h *Handler) TaskImport(w http.ResponseWriter, r *http.Request) {
 
 			var custom model.Custom
 			if len(rec) > 6 {
-				custom.Scan(rec[6])
+				if err := custom.Scan(rec[6]); err != nil {
+					Warn(w, r, err)
+					return
+				}
 			}
 
 			obj := model.Task{
