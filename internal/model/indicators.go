@@ -31,6 +31,20 @@ type IndicatorCaseRef struct {
 	Closed   bool
 }
 
+// ListIndicatorsLean returns a case's indicators without the first-seen/
+// last-seen/event-count/other-cases aggregates ListIndicators computes (the
+// other-cases count in particular scans indicators x cases). For read paths
+// that only need id/type/value — tag pickers, event-text highlighting — and
+// never render those stats.
+func (store *Store) ListIndicatorsLean(cid string) ([]Indicator, error) {
+	list := []Indicator{}
+	tx := store.DB.
+		Where("case_id = ?", cid).
+		Order("type asc, value asc").
+		Find(&list)
+	return list, tx.Error
+}
+
 func (store *Store) ListIndicators(cid string) ([]Indicator, error) {
 	list := []Indicator{}
 	fsq := store.DB.Table("events").Joins("LEFT JOIN event_indicators ON events.id = event_indicators.event_id").Where("event_indicators.indicator_id = indicators.id").Select("min(time)")

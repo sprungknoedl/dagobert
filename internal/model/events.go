@@ -38,6 +38,19 @@ func (e Event) HasTechnique(t string) bool {
 	return slices.Contains(e.Techniques, t)
 }
 
+// ListEventTechniques returns events for cid with only the Techniques field
+// populated, skipping the Assets/Indicators preloads ListEvents does. For
+// read paths that only aggregate MITRE technique counts (dashboard, MITRE
+// ATT&CK vis) and never touch the associations.
+func (store *Store) ListEventTechniques(cid string) ([]Event, error) {
+	list := []Event{}
+	tx := store.DB.
+		Select("techniques").
+		Where("case_id = ?", cid).
+		Find(&list)
+	return list, tx.Error
+}
+
 func (store *Store) ListEvents(cid string) ([]Event, error) {
 	list := []Event{}
 	tx := store.DB.

@@ -61,7 +61,7 @@ func (h *Handler) Network(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) MitreAttack(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	events, err := h.Store.ListEvents(cid)
+	events, err := h.Store.ListEventTechniques(cid)
 	if err != nil {
 		Err(w, r, err)
 		return

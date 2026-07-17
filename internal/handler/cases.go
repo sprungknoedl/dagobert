@@ -522,7 +522,7 @@ func (h *Handler) CaseSummary(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	indicators, err := h.Store.ListIndicators(cid)
+	indicators, err := h.Store.ListIndicatorsLean(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
