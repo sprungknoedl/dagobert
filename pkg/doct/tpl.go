@@ -30,7 +30,6 @@ func processZip(r io.ReaderAt, size int64, w io.Writer, fn Processor) error {
 	}
 
 	zw := zip.NewWriter(w)
-	defer zw.Close()
 
 	for _, item := range zr.File {
 		err = func() error {
