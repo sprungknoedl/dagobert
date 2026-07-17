@@ -42,7 +42,10 @@ func ImportCSV(store *model.Store, acl *auth.ACL, w http.ResponseWriter, r *http
 	cr.FieldsPerRecord = numFields
 	_, err = cr.Read()                                                          // skip header
 	if perr, ok := err.(*csv.ParseError); ok && perr.Err == csv.ErrFieldCount { // try semicolon instead, Excel often exports CSVs with ;
-		fr.Seek(0, 0)
+		if _, err := fr.Seek(0, 0); err != nil {
+			Warn(w, r, err)
+			return err
+		}
 		cr = csv.NewReader(fr)
 		cr.Comma = ';'
 		cr.FieldsPerRecord = numFields
