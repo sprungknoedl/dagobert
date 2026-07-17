@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"crypto/sha1"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -245,12 +246,16 @@ func (h *Handler) PreviewImport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if _, err := io.Copy(fw, fr); err != nil {
-		fw.Close()
+		err = errors.Join(err, fw.Close())
 		os.Remove(staged)
 		Warn(w, r, err)
 		return
 	}
-	fw.Close()
+	if err := fw.Close(); err != nil {
+		os.Remove(staged)
+		Warn(w, r, err)
+		return
+	}
 
 	zr, err := zip.OpenReader(staged)
 	if err != nil {
