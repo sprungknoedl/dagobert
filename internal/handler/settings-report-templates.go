@@ -104,7 +104,7 @@ func resolveReportTemplateFile(store *model.Store, dto model.ReportTemplate, isN
 			return err
 		}
 		_, err = io.Copy(fw, upload)
-		fw.Close()
+		err = errors.Join(err, fw.Close())
 		if err != nil {
 			return err
 		}
