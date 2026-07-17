@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 
 	"github.com/sprungknoedl/dagobert/internal/model"
@@ -59,7 +60,9 @@ func (h *Handler) AutomationRuleSave(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// reload rules
-	modules.LoadAutomationRules(h.Store)
+	if err := modules.LoadAutomationRules(h.Store); err != nil {
+		slog.Error("failed to reload automation rules", "err", err)
+	}
 
 	RedirectAfterSave(w, r, "/settings/automation-rules/", nil)
 }
@@ -79,6 +82,8 @@ func (h *Handler) AutomationRuleDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// reload rules
-	modules.LoadAutomationRules(h.Store)
+	if err := modules.LoadAutomationRules(h.Store); err != nil {
+		slog.Error("failed to reload automation rules", "err", err)
+	}
 	http.Redirect(w, r, "/settings/automation-rules/", http.StatusSeeOther)
 }
