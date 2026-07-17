@@ -48,7 +48,7 @@ func (acl *ACL) Protect(next http.Handler) http.Handler {
 				"method", r.Method,
 				"url", r.URL)
 			w.WriteHeader(http.StatusForbidden)
-			w.Write([]byte(http.StatusText(http.StatusForbidden)))
+			_, _ = w.Write([]byte(http.StatusText(http.StatusForbidden))) //nolint:errcheck // status already sent; nothing left to do on a body write failure
 			return
 		}
 
