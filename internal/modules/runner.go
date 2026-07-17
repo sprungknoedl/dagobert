@@ -5,6 +5,7 @@ import (
 	"cmp"
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"maps"
 	"os"
@@ -30,10 +31,11 @@ func Supported(obj any) []model.Module {
 	return fp.ToList(fp.FilterM(Modules, func(p model.Module) bool { return p.Supports(obj) }))
 }
 
-// Start validates modules and launches the runner pool. Called from
-// handler.Run; ctx is the server's shutdown context, ts the shared
-// Timesketch client.
-func Start(ctx context.Context, store *model.Store, ts *tsclient.Client) {
+// Register populates the global Modules map. It must be called synchronously
+// before the HTTP server starts serving requests: Supported (called from
+// request handlers) reads Modules without synchronization, so a concurrent
+// write from an async Start would race it.
+func Register(ts *tsclient.Client) {
 	for _, m := range []model.Module{
 		abuseipdb.NewModule(),
 		hayabusa.NewModule(),
@@ -44,7 +46,12 @@ func Start(ctx context.Context, store *model.Store, ts *tsclient.Client) {
 	} {
 		Modules[m.Name()] = m
 	}
+}
 
+// Start validates modules and launches the runner pool. Called from
+// handler.Run after Register; ctx is the server's shutdown context, store
+// the shared DB handle.
+func Start(ctx context.Context, store *model.Store) {
 	slog.Debug("Loading modules")
 	modules := map[string]model.Module{}
 	for _, name := range slices.Sorted(maps.Keys(Modules)) {
@@ -101,17 +108,29 @@ func runner(ctx context.Context, store *model.Store, modules map[string]model.Mo
 			// PopJob returns the job's own columns but not the Case
 			// association, so load it here. After this, modules can rely on
 			// job.Case being populated.
-			errmsg := ""
-			if kase, err := store.GetCase(job.CaseID); err != nil {
-				errmsg = err.Error()
-				slog.Warn("failed to load job case", "job", job.ID, "case", job.CaseID, "err", err)
-			} else {
+			errmsg := func() (errmsg string) {
+				// a panicking module must not take down this pool goroutine
+				// permanently and strand the job in "Running" until restart.
+				defer func() {
+					if r := recover(); r != nil {
+						errmsg = fmt.Sprintf("panic: %v", r)
+						slog.Error("job panicked", "job", job.ID, "module", job.Name, "panic", r)
+					}
+				}()
+
+				kase, err := store.GetCase(job.CaseID)
+				if err != nil {
+					slog.Warn("failed to load job case", "job", job.ID, "case", job.CaseID, "err", err)
+					return err.Error()
+				}
+
 				job.Case = kase
 				if err := modules[job.Name].Run(ctx, store, job); err != nil {
-					errmsg = err.Error()
 					slog.Warn("failed to process job", "job", job.ID, "module", job.Name, "err", err)
+					return err.Error()
 				}
-			}
+				return ""
+			}()
 
 			err = store.AckJob(model.Job{
 				ID:     job.ID,
