@@ -17,7 +17,9 @@ func (a *Auth) ChangePasswordForm(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/auth/login", http.StatusFound)
 		return
 	}
-	views.ChangePassword(user, nil).Render(r.Context(), w)
+	if err := views.ChangePassword(user, nil).Render(r.Context(), w); err != nil {
+		slog.Error("failed to render template", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
+	}
 }
 
 // ChangePassword verifies the current password and stores a new one.
@@ -48,7 +50,9 @@ func (a *Auth) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	}
 	if !vr.Valid() {
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		views.ChangePassword(user, vr).Render(r.Context(), w)
+		if err := views.ChangePassword(user, vr).Render(r.Context(), w); err != nil {
+			slog.Error("failed to render template", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
+		}
 		return
 	}
 

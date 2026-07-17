@@ -236,14 +236,18 @@ func (a *Auth) Callback(w http.ResponseWriter, r *http.Request) {
 // GET/POST /auth/login
 func (a *Auth) LoginLocal(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		views.Login("").Render(r.Context(), w)
+		if err := views.Login("").Render(r.Context(), w); err != nil {
+			slog.Error("failed to render template", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
+		}
 		return
 	}
 
 	user, err := a.store.GetUserByUPN(r.FormValue("email")) // UPN, see invariant 2
 	if err != nil || user.Password == "" ||
 		bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(r.FormValue("password"))) != nil {
-		views.Login("Invalid username or password").Render(r.Context(), w)
+		if err := views.Login("Invalid username or password").Render(r.Context(), w); err != nil {
+			slog.Error("failed to render template", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
+		}
 		return
 	}
 
