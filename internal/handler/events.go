@@ -141,11 +141,11 @@ func (h *Handler) EventImportTimesketch(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if !h.Timesketch.Configured() {
-		Warn(w, r, errors.New("Timesketch integration is not configured"))
+		Warn(w, r, errors.New("timesketch integration is not configured"))
 		return
 	}
 	if kase.SketchID == 0 {
-		Warn(w, r, errors.New("Case is not linked to a Timesketch sketch"))
+		Warn(w, r, errors.New("case is not linked to a Timesketch sketch"))
 		return
 	}
 

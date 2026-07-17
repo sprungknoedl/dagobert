@@ -309,7 +309,7 @@ func hoistPivots(raw []byte, markers []marker) ([]byte, error) {
 			return
 		}
 
-		if dissolvable(raw, anchor, markers) && !(cellTags[lca.tag] && len(lca.children) == 1) {
+		if dissolvable(raw, anchor, markers) && (!cellTags[lca.tag] || len(lca.children) != 1) {
 			if !dissolved[anchor] {
 				dissolved[anchor] = true
 				group := structuralMarkersIn(anchor, markers)
