@@ -461,7 +461,11 @@ func (c *Client) Upload(ctx context.Context, sketch int, path string) error {
 	if err != nil {
 		return err
 	}
-	defer fh.Close()
+	defer func() {
+		if cerr := fh.Close(); cerr != nil {
+			slog.Warn("timesketch: failed to close upload file", "err", cerr, "path", path)
+		}
+	}()
 
 	stat, err := fh.Stat()
 	if err != nil {

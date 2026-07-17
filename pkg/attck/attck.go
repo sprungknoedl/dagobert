@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"iter"
+	"log/slog"
 	"os"
 	"sort"
 
@@ -158,7 +159,11 @@ func LoadMatrix(path string) (*Matrix, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer fh.Close()
+	defer func() {
+		if cerr := fh.Close(); cerr != nil {
+			slog.Warn("attck: failed to close matrix file", "err", cerr, "path", path)
+		}
+	}()
 
 	c := collection{}
 	err = json.NewDecoder(fh).Decode(&c)

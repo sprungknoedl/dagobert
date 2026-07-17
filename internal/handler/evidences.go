@@ -416,7 +416,11 @@ func attachEvidenceFile(dto model.Evidence, path string, upload multipart.File, 
 	} else if err != nil {
 		return dto, false, "", err
 	}
-	defer fr.Close()
+	defer func() {
+		if cerr := fr.Close(); cerr != nil {
+			slog.Warn("failed to close evidence file", "err", cerr, "path", path)
+		}
+	}()
 
 	stat, err := fr.Stat()
 	if err != nil {
