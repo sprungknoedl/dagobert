@@ -94,8 +94,11 @@ func (h *Handler) IndicatorExportOpenIOC(w http.ResponseWriter, r *http.Request)
 	export := buildOpenIOC(list, GetUser(r).Name, time.Now())
 
 	xw := xml.NewEncoder(w)
-	xw.Encode(export)
-	xw.Flush()
+	encode := xw.Encode(export)
+	flush := xw.Flush()
+	if err = errors.Join(encode, flush); err != nil {
+		slog.Error("failed to write openioc export", "err", err, "raddr", r.RemoteAddr, "case", cid)
+	}
 }
 
 // buildOpenIOC maps a list of indicators into an OpenIOC 1.1 document. The
@@ -149,7 +152,9 @@ func (h *Handler) IndicatorExportStix(w http.ResponseWriter, r *http.Request) {
 	export := buildStixBundle(list, time.Now())
 
 	jw := json.NewEncoder(w)
-	jw.Encode(export)
+	if err := jw.Encode(export); err != nil {
+		slog.Error("failed to encode stix export", "err", err, "raddr", r.RemoteAddr, "case", cid)
+	}
 }
 
 // buildStixBundle maps a list of indicators into a STIX 2.1 bundle. The pkg/stix
