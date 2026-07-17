@@ -478,7 +478,7 @@ func restoreBinaries(zr *zip.Reader, caseID string, evidences []model.Evidence) 
 // written bytes. *budget is the number of decompressed bytes still allowed
 // across the import; it is decremented by the amount written, and exceeding it
 // is a hard error so a zip bomb can't exhaust the disk.
-func writeZipFile(f *zip.File, dst string, budget *int64) (string, error) {
+func writeZipFile(f *zip.File, dst string, budget *int64) (hash string, err error) {
 	if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
 		return "", err
 	}
@@ -493,7 +493,7 @@ func writeZipFile(f *zip.File, dst string, budget *int64) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer fw.Close()
+	defer func() { err = errors.Join(err, fw.Close()) }()
 
 	// read one byte past the budget so a copy that stops exactly at *budget is
 	// distinguishable from one that would have overrun; the latter is rejected
