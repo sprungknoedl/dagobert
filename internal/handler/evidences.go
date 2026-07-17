@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"maps"
 	"mime/multipart"
 	"net/http"
@@ -153,13 +154,16 @@ func (h *Handler) EvidenceImport(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			tx.SaveEvidenceLog(cid, model.EvidenceLog{
+			if err := tx.SaveEvidenceLog(cid, model.EvidenceLog{
 				EvidenceID: obj.ID,
 				Name:       obj.Name,
 				User:       user.String(),
 				Event:      model.EvidenceLogUploaded,
 				Details:    "imported via CSV",
-			})
+			}); err != nil {
+				Err(w, r, err)
+				return
+			}
 		})
 	})
 }
@@ -498,12 +502,14 @@ func (h *Handler) EvidenceDownload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := GetUser(r)
-	h.Store.SaveEvidenceLog(cid, model.EvidenceLog{
+	if err := h.Store.SaveEvidenceLog(cid, model.EvidenceLog{
 		EvidenceID: obj.ID,
 		Name:       obj.Name,
 		User:       user.String(),
 		Event:      model.EvidenceLogDownloaded,
-	})
+	}); err != nil {
+		slog.Warn("failed to log evidence download", "err", err, "case", cid, "evidence", obj.ID)
+	}
 
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", obj.Name))
 	// No explicit WriteHeader here: ServeFile picks the status itself
