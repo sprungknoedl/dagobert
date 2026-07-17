@@ -33,7 +33,7 @@ func (h *Handler) EventList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	indicators, err := h.Store.ListIndicators(cid)
+	indicators, err := h.Store.ListIndicatorsLean(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -238,7 +238,7 @@ func (h *Handler) EventEdit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	indicators, err := h.Store.ListIndicators(cid)
+	indicators, err := h.Store.ListIndicatorsLean(cid)
 	if err != nil {
 		Err(w, r, err)
 		return
@@ -263,7 +263,7 @@ func (h *Handler) EventSave(w http.ResponseWriter, r *http.Request) {
 			ev, err1 = h.Store.GetEvent(dto.CaseID, dto.ID)
 		}
 		assets, err2 := h.Store.ListAssets(dto.CaseID)
-		indicators, err3 := h.Store.ListIndicators(dto.CaseID)
+		indicators, err3 := h.Store.ListIndicatorsLean(dto.CaseID)
 		if err := errors.Join(err1, err2, err3); err != nil {
 			Err(w, r, err)
 			return

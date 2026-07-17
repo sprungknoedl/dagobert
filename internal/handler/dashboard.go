@@ -48,7 +48,7 @@ func (h *Handler) Dashboard(w http.ResponseWriter, r *http.Request) {
 
 	techniquesByCase := map[string][]string{}
 	for _, c := range cases {
-		events, err := h.Store.ListEvents(c.ID)
+		events, err := h.Store.ListEventTechniques(c.ID)
 		if err != nil {
 			Err(w, r, err)
 			return
