@@ -345,7 +345,7 @@ func resolveEvidenceFile(dto, old model.Evidence, new bool, upload multipart.Fil
 
 // writeEvidenceFile writes upload to path, failing if it already exists, and
 // returns the SHA-1 hash and size of the copied bytes.
-func writeEvidenceFile(path string, upload multipart.File, size int64) (string, int64, error) {
+func writeEvidenceFile(path string, upload multipart.File, size int64) (hash string, _ int64, err error) {
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return "", 0, err
 	}
@@ -356,9 +356,9 @@ func writeEvidenceFile(path string, upload multipart.File, size int64) (string, 
 	} else if err != nil {
 		return "", 0, err
 	}
-	defer fw.Close()
+	defer func() { err = errors.Join(err, fw.Close()) }()
 
-	hash, err := hashCopy(fw, upload)
+	hash, err = hashCopy(fw, upload)
 	if err != nil {
 		return "", 0, err
 	}
