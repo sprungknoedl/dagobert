@@ -10,6 +10,7 @@ linters:
       # both, is deliberately not in this list).
       exclude-functions:
         - (io.Closer).Close
+        - (io/fs.File).Close
         - (*archive/zip.ReadCloser).Close
         - (*database/sql.DB).Close
 
