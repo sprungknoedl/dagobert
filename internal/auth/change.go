@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/sprungknoedl/dagobert/internal/views"
@@ -63,7 +64,9 @@ func (a *Auth) ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	a.session.RenewToken(r.Context())
+	if err := a.session.RenewToken(r.Context()); err != nil {
+		slog.Error("failed to renew session token", "err", err)
+	}
 
 	// Close the unpoly drawer the form was submitted from. There is no list
 	// page to redirect to (unlike the other drawer forms that rely on
