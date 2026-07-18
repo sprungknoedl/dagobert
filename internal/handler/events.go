@@ -318,9 +318,7 @@ func (h *Handler) EventDelete(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	if r.URL.Query().Get("confirm") != "yes" && !wantsJSON(r) {
 		uri := fmt.Sprintf("/cases/%s/events/%s?confirm=yes", cid, id)
-		if err := views.ConfirmDialog(uri).Render(r.Context(), w); err != nil {
-			slog.Error("failed to render template", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
-		}
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri), nil)
 		return
 	}
 
