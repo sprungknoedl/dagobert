@@ -165,7 +165,10 @@ func (h *Handler) CaseEdit(w http.ResponseWriter, r *http.Request) {
 	} else {
 		var err error
 		obj, err = h.Store.GetCase(cid)
-		if err != nil {
+		if errors.Is(err, model.ErrNotFound) {
+			NotFound(w, r, err)
+			return
+		} else if err != nil {
 			Err(w, r, err)
 			return
 		}
@@ -270,7 +273,10 @@ func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
 		wasClosed := false
 		if !new {
 			prior, err := h.Store.GetCase(dto.ID)
-			if err != nil {
+			if errors.Is(err, model.ErrNotFound) {
+				NotFound(w, r, err)
+				return
+			} else if err != nil {
 				Err(w, r, err)
 				return
 			}
@@ -319,7 +325,10 @@ func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CaseForkEdit(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	obj, err := h.Store.GetCase(cid)
-	if err != nil {
+	if errors.Is(err, model.ErrNotFound) {
+		NotFound(w, r, err)
+		return
+	} else if err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -426,7 +435,10 @@ func (h *Handler) CaseDelete(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CaseEditACL(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	obj, err := h.Store.GetCase(cid)
-	if err != nil {
+	if errors.Is(err, model.ErrNotFound) {
+		NotFound(w, r, err)
+		return
+	} else if err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -450,7 +462,10 @@ func (h *Handler) CaseEditACL(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CaseSaveACL(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	obj, err := h.Store.GetCase(cid)
-	if err != nil {
+	if errors.Is(err, model.ErrNotFound) {
+		NotFound(w, r, err)
+		return
+	} else if err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -511,7 +526,10 @@ func (h *Handler) CaseSwitch(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CaseSummary(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	obj, err := h.Store.GetCase(cid)
-	if err != nil {
+	if errors.Is(err, model.ErrNotFound) {
+		NotFound(w, r, err)
+		return
+	} else if err != nil {
 		Err(w, r, err)
 		return
 	}

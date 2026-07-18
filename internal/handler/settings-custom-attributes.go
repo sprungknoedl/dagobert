@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -19,7 +20,10 @@ func (h *Handler) CustomAttributeEdit(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	entity := r.URL.Query().Get("entity")
 	obj, err := GetObject(id, model.CustomAttribute{ID: id, Entity: entity}, h.Store.GetCustomAttribute)
-	if err != nil {
+	if errors.Is(err, model.ErrNotFound) {
+		NotFound(w, r, err)
+		return
+	} else if err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -34,7 +38,7 @@ func (h *Handler) CustomAttributeSave(w http.ResponseWriter, r *http.Request) {
 		Render(w, r, http.StatusUnprocessableEntity, views.SettingsCustomAttributesOne(h.Env(r), dto, vr), nil)
 		return
 	} else if err != nil {
-		Err(w, r, err)
+		Warn(w, r, err)
 		return
 	}
 

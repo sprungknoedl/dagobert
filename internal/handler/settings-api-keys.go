@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -25,7 +26,10 @@ func (h *Handler) APIKeyEdit(w http.ResponseWriter, r *http.Request) {
 	if key != "new" {
 		var err error
 		obj, err = h.Store.GetAPIKey(key)
-		if err != nil {
+		if errors.Is(err, model.ErrNotFound) {
+			NotFound(w, r, err)
+			return
+		} else if err != nil {
 			Err(w, r, err)
 			return
 		}
@@ -60,7 +64,10 @@ func (h *Handler) APIKeySave(w http.ResponseWriter, r *http.Request) {
 	// existing key: load the stored row and update only Type/Name so the
 	// persisted hash/Hint are preserved (don't trust client-supplied values)
 	obj, err := h.Store.GetAPIKey(dto.Key)
-	if err != nil {
+	if errors.Is(err, model.ErrNotFound) {
+		NotFound(w, r, err)
+		return
+	} else if err != nil {
 		Err(w, r, err)
 		return
 	}

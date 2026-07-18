@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -96,7 +97,10 @@ func (h *Handler) NoteEdit(w http.ResponseWriter, r *http.Request) {
 	if id != "new" {
 		var err error
 		obj, err = h.Store.GetNote(cid, id)
-		if err != nil {
+		if errors.Is(err, model.ErrNotFound) {
+			NotFound(w, r, err)
+			return
+		} else if err != nil {
 			Err(w, r, err)
 			return
 		}

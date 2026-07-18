@@ -184,7 +184,10 @@ func (h *Handler) EvidenceEdit(w http.ResponseWriter, r *http.Request) {
 	if id != "new" {
 		var err error
 		obj, err = h.Store.GetEvidence(cid, id)
-		if err != nil {
+		if errors.Is(err, model.ErrNotFound) {
+			NotFound(w, r, err)
+			return
+		} else if err != nil {
 			Err(w, r, err)
 			return
 		}
@@ -216,7 +219,10 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 	var old model.Evidence
 	if !new {
 		old, err = h.Store.GetEvidence(cid, id)
-		if err != nil {
+		if errors.Is(err, model.ErrNotFound) {
+			NotFound(w, r, err)
+			return
+		} else if err != nil {
 			Err(w, r, err)
 			return
 		}
@@ -498,7 +504,10 @@ func (h *Handler) EvidenceDownload(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cid := r.PathValue("cid")
 	obj, err := h.Store.GetEvidence(cid, id)
-	if err != nil {
+	if errors.Is(err, model.ErrNotFound) {
+		NotFound(w, r, err)
+		return
+	} else if err != nil {
 		Err(w, r, err)
 		return
 	}

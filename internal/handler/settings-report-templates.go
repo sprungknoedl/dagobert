@@ -32,7 +32,10 @@ func (h *Handler) ReportTemplateEdit(w http.ResponseWriter, r *http.Request) {
 	if id != "new" {
 		var err error
 		obj, err = h.Store.GetReportTemplate(id)
-		if err != nil {
+		if errors.Is(err, model.ErrNotFound) {
+			NotFound(w, r, err)
+			return
+		} else if err != nil {
 			Err(w, r, err)
 			return
 		}
@@ -49,7 +52,7 @@ func (h *Handler) ReportTemplateSave(w http.ResponseWriter, r *http.Request) {
 		Render(w, r, http.StatusUnprocessableEntity, views.SettingsReportTemplatesOne(h.Env(r), dto, vr), nil)
 		return
 	} else if err != nil {
-		Err(w, r, err)
+		Warn(w, r, err)
 		return
 	}
 

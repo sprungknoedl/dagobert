@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -25,7 +26,10 @@ func (h *Handler) UserEdit(w http.ResponseWriter, r *http.Request) {
 	if id != "new" {
 		var err error
 		obj, err = h.Store.GetUser(id)
-		if err != nil {
+		if errors.Is(err, model.ErrNotFound) {
+			NotFound(w, r, err)
+			return
+		} else if err != nil {
 			Err(w, r, err)
 			return
 		}
@@ -47,7 +51,7 @@ func (h *Handler) UserSave(w http.ResponseWriter, r *http.Request) {
 
 	usr, err := h.Store.GetUser(dto.ID)
 	if err != nil {
-		Err(w, r, err)
+		Warn(w, r, err)
 		return
 	}
 
@@ -112,7 +116,10 @@ func (h *Handler) UserDelete(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) UserEditACL(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	obj, err := h.Store.GetUser(id)
-	if err != nil {
+	if errors.Is(err, model.ErrNotFound) {
+		NotFound(w, r, err)
+		return
+	} else if err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -135,7 +142,10 @@ func (h *Handler) UserEditACL(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) UserSaveACL(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	obj, err := h.Store.GetUser(id)
-	if err != nil {
+	if errors.Is(err, model.ErrNotFound) {
+		NotFound(w, r, err)
+		return
+	} else if err != nil {
 		Err(w, r, err)
 		return
 	}

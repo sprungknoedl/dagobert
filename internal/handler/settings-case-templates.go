@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/sprungknoedl/dagobert/internal/model"
@@ -25,7 +26,10 @@ func (h *Handler) CaseTemplateEdit(w http.ResponseWriter, r *http.Request) {
 	if cid != "new" {
 		var err error
 		obj, err = h.Store.GetCase(cid)
-		if err != nil {
+		if errors.Is(err, model.ErrNotFound) {
+			NotFound(w, r, err)
+			return
+		} else if err != nil {
 			Err(w, r, err)
 			return
 		}
@@ -95,7 +99,7 @@ func (h *Handler) CaseTemplatePromote(w http.ResponseWriter, r *http.Request) {
 
 	src, err := h.Store.GetCase(form.SourceID)
 	if err != nil {
-		Err(w, r, err)
+		Warn(w, r, err)
 		return
 	}
 

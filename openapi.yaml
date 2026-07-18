@@ -294,6 +294,7 @@ paths:
           content: { application/json: { schema: { $ref: '#/components/schemas/Case' } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
     post:
       summary: Create or update a case
       description: |
@@ -342,6 +343,7 @@ paths:
           content: { application/json: { schema: { $ref: '#/components/schemas/Event' } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
     post:
       summary: Create or update an event
       operationId: saveEvent
@@ -387,6 +389,7 @@ paths:
           content: { application/json: { schema: { $ref: '#/components/schemas/Asset' } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
     post:
       summary: Create or update an asset
       operationId: saveAsset
@@ -432,6 +435,7 @@ paths:
           content: { application/json: { schema: { $ref: '#/components/schemas/Malware' } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
     post:
       summary: Create or update a malware entry
       description: |
@@ -482,6 +486,7 @@ paths:
           content: { application/json: { schema: { $ref: '#/components/schemas/Indicator' } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
     post:
       summary: Create or update an indicator
       operationId: saveIndicator
@@ -527,6 +532,7 @@ paths:
           content: { application/json: { schema: { $ref: '#/components/schemas/Evidence' } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
     post:
       summary: Create or update an evidence entry
       description: |
@@ -606,6 +612,7 @@ paths:
           content: { application/json: { schema: { $ref: '#/components/schemas/Task' } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
     post:
       summary: Create or update a task
       operationId: saveTask
@@ -651,6 +658,7 @@ paths:
           content: { application/json: { schema: { $ref: '#/components/schemas/Note' } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
     post:
       summary: Create or update a note
       operationId: saveNote
