@@ -43,6 +43,41 @@ func TestRescheduleStaleJobs(t *testing.T) {
 	assert.Equal(t, gorm.ErrRecordNotFound, err)
 }
 
+func TestAckJob(t *testing.T) {
+	db, close := setupDB()
+	defer close()
+
+	kase := Case{ID: fp.Random(10), Name: "Test Case"}
+	assert.Nil(t, db.SaveCase(kase))
+
+	t.Run("Success records status and results, clears error", func(t *testing.T) {
+		job := Job{ID: fp.Random(10), CaseID: kase.ID, ObjectID: "obj1", Name: "Hayabusa", Status: "Running"}
+		assert.Nil(t, db.PushJob(job))
+
+		assert.Nil(t, db.AckJob(Job{ID: job.ID, Status: "Success", Results: map[string]string{"summary": "clean"}}))
+
+		list, err := db.GetJobs("obj1")
+		assert.Nil(t, err)
+		assert.Len(t, list, 1)
+		assert.Equal(t, "Success", list[0].Status)
+		assert.Equal(t, "", list[0].Error)
+		assert.Equal(t, map[string]string{"summary": "clean"}, list[0].Results)
+	})
+
+	t.Run("Failed records status and error message", func(t *testing.T) {
+		job := Job{ID: fp.Random(10), CaseID: kase.ID, ObjectID: "obj2", Name: "Hayabusa", Status: "Running"}
+		assert.Nil(t, db.PushJob(job))
+
+		assert.Nil(t, db.AckJob(Job{ID: job.ID, Status: "Failed", Error: "boom"}))
+
+		list, err := db.GetJobs("obj2")
+		assert.Nil(t, err)
+		assert.Len(t, list, 1)
+		assert.Equal(t, "Failed", list[0].Status)
+		assert.Equal(t, "boom", list[0].Error)
+	})
+}
+
 // The runner pool polls PopJob from multiple goroutines; concurrent write
 // statements on a file-backed database must wait for the lock (busy_timeout)
 // instead of failing with SQLITE_BUSY.
