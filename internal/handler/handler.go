@@ -205,6 +205,30 @@ func Err(w http.ResponseWriter, r *http.Request, err error) {
 	}
 }
 
+func NotFound(w http.ResponseWriter, r *http.Request, err error) {
+	if err == nil {
+		return
+	}
+
+	slog.Warn("404: Not Found",
+		"err", err,
+		"raddr", r.RemoteAddr,
+		"method", r.Method,
+		"url", r.URL)
+	if wantsJSON(r) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusNotFound)
+		if err := json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}); err != nil {
+			slog.Error("failed to encode error response", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
+		}
+		return
+	}
+	w.WriteHeader(http.StatusNotFound)
+	if err := views.ToastError(err).Render(r.Context(), w); err != nil {
+		slog.Error("failed to render template", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
+	}
+}
+
 func Forbidden(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusForbidden)
 	_, _ = w.Write([]byte(http.StatusText(http.StatusForbidden))) //nolint:errcheck // status already sent; nothing left to do on a body write failure

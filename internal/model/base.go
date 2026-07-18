@@ -92,6 +92,11 @@ func (store *Store) Transaction(fn func(tx *Store) error) error {
 // record.
 var ErrForeignCase = errors.New("record belongs to another case")
 
+// ErrNotFound is returned when a Get* lookup finds no matching row. It aliases
+// GORM's sentinel so callers (notably internal/handler) can check for it
+// without importing gorm.io/gorm themselves.
+var ErrNotFound = gorm.ErrRecordNotFound
+
 // assertCaseOwnership rejects a Save when a row of model with the given id is
 // already owned by a case other than cid. A brand-new id (no existing row)
 // passes, so creates and same-case updates are unaffected. model must be a

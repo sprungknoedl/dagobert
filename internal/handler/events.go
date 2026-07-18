@@ -16,7 +16,6 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
-	"gorm.io/gorm"
 )
 
 func (h *Handler) EventList(w http.ResponseWriter, r *http.Request) {
@@ -226,7 +225,10 @@ func (h *Handler) EventEdit(w http.ResponseWriter, r *http.Request) {
 	if id != "new" {
 		var err error
 		obj, err = h.Store.GetEvent(cid, id)
-		if err != nil {
+		if errors.Is(err, model.ErrNotFound) {
+			NotFound(w, r, err)
+			return
+		} else if err != nil {
 			Err(w, r, err)
 			return
 		}
@@ -343,9 +345,9 @@ func getOrCreateAssets(db *model.Store, cid string, names []string) ([]model.Ass
 		}
 
 		obj, err := db.GetAssetByName(cid, asset)
-		if err != nil && err != gorm.ErrRecordNotFound {
+		if err != nil && !errors.Is(err, model.ErrNotFound) {
 			return nil, fmt.Errorf("get asset by name: %w", err)
-		} else if err != nil && err == gorm.ErrRecordNotFound {
+		} else if err != nil && errors.Is(err, model.ErrNotFound) {
 			obj = model.Asset{
 				ID:     fp.Random(10),
 				CaseID: cid,
@@ -372,9 +374,9 @@ func getOrCreateIndicators(db *model.Store, cid string, values []string) ([]mode
 		}
 
 		obj, err := db.GetIndicatorByValue(cid, indicator)
-		if err != nil && err != gorm.ErrRecordNotFound {
+		if err != nil && !errors.Is(err, model.ErrNotFound) {
 			return nil, fmt.Errorf("get indicator by value: %w", err)
-		} else if err != nil && err == gorm.ErrRecordNotFound {
+		} else if err != nil && errors.Is(err, model.ErrNotFound) {
 			obj = model.Indicator{
 				ID:     fp.Random(10),
 				CaseID: cid,

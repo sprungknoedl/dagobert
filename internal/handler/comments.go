@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -21,7 +22,7 @@ func (h *Handler) commentParent(w http.ResponseWriter, r *http.Request) (cid str
 		return "", "", "", false
 	}
 	if !found {
-		http.NotFound(w, r)
+		NotFound(w, r, model.ErrNotFound)
 		return "", "", "", false
 	}
 
@@ -48,7 +49,10 @@ func (h *Handler) CommentList(w http.ResponseWriter, r *http.Request) {
 	// ?edit= prefills the form at the bottom with an existing comment
 	edit := model.Comment{ID: "new"}
 	if eid := r.URL.Query().Get("edit"); eid != "" {
-		if edit, err = h.Store.GetComment(cid, eid); err != nil {
+		if edit, err = h.Store.GetComment(cid, eid); errors.Is(err, model.ErrNotFound) {
+			NotFound(w, r, err)
+			return
+		} else if err != nil {
 			Err(w, r, err)
 			return
 		}
@@ -93,7 +97,10 @@ func (h *Handler) CommentSave(w http.ResponseWriter, r *http.Request) {
 		dto.Time = model.Time(time.Now())
 	} else {
 		old, err := h.Store.GetComment(cid, id)
-		if err != nil {
+		if errors.Is(err, model.ErrNotFound) {
+			NotFound(w, r, err)
+			return
+		} else if err != nil {
 			Err(w, r, err)
 			return
 		}
@@ -121,7 +128,10 @@ func (h *Handler) CommentDelete(w http.ResponseWriter, r *http.Request) {
 
 	id := r.PathValue("id")
 	obj, err := h.Store.GetComment(cid, id)
-	if err != nil {
+	if errors.Is(err, model.ErrNotFound) {
+		NotFound(w, r, err)
+		return
+	} else if err != nil {
 		Err(w, r, err)
 		return
 	}

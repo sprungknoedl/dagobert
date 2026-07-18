@@ -307,7 +307,10 @@ func (h *Handler) IndicatorEdit(w http.ResponseWriter, r *http.Request) {
 	if id != "new" {
 		var err error
 		obj, err = h.Store.GetIndicator(cid, id)
-		if err != nil {
+		if errors.Is(err, model.ErrNotFound) {
+			NotFound(w, r, err)
+			return
+		} else if err != nil {
 			Err(w, r, err)
 			return
 		}

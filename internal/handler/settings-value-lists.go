@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -18,7 +19,10 @@ func (h *Handler) ValueListEdit(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	cat := r.URL.Query().Get("category")
 	obj, err := GetObject(id, model.ValueListItem{ID: id, Category: cat}, h.Store.GetEnum)
-	if err != nil {
+	if errors.Is(err, model.ErrNotFound) {
+		NotFound(w, r, err)
+		return
+	} else if err != nil {
 		Err(w, r, err)
 		return
 	}
@@ -34,7 +38,7 @@ func (h *Handler) ValueListSave(w http.ResponseWriter, r *http.Request) {
 		Render(w, r, http.StatusUnprocessableEntity, views.SettingsValueListsOne(h.Env(r), dto, vr), nil)
 		return
 	} else if err != nil {
-		Err(w, r, err)
+		Warn(w, r, err)
 		return
 	}
 

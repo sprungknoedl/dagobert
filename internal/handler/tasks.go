@@ -3,6 +3,7 @@ package handler
 import (
 	"cmp"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -120,7 +121,10 @@ func (h *Handler) TaskEdit(w http.ResponseWriter, r *http.Request) {
 	if id != "new" {
 		var err error
 		obj, err = h.Store.GetTask(cid, id)
-		if err != nil {
+		if errors.Is(err, model.ErrNotFound) {
+			NotFound(w, r, err)
+			return
+		} else if err != nil {
 			Err(w, r, err)
 			return
 		}
