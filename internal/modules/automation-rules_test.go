@@ -90,3 +90,67 @@ func TestTriggerGating(t *testing.T) {
 		assert.Len(t, jobs, 0)
 	})
 }
+
+func TestCompileAutomationRuleCaseTriggers(t *testing.T) {
+	savedModules := Modules
+	defer func() { Modules = savedModules }()
+	Modules = map[string]model.Module{"FakeTI": fakeModule{}}
+
+	for _, trigger := range []string{"OnCaseAdded", "OnCaseUpdated"} {
+		t.Run(trigger, func(t *testing.T) {
+			_, err := CompileAutomationRule(model.AutomationRule{
+				ID:        fp.Random(10),
+				Trigger:   trigger,
+				Name:      "rule",
+				Module:    "FakeTI",
+				Condition: "obj.Name != ''",
+				Enabled:   true,
+			})
+			assert.Nil(t, err) // condition compiles against model.Case
+		})
+	}
+}
+
+func TestTriggerOnCaseSettingsPropagation(t *testing.T) {
+	store := setupWorkerDB(t)
+
+	kase := model.Case{ID: fp.Random(10), Name: "Test Case"}
+	assert.Nil(t, store.SaveCase(kase))
+
+	savedModules, savedHooks := Modules, rules
+	defer func() { Modules, rules = savedModules, savedHooks }()
+	Modules = map[string]model.Module{"Webhook": webhookModule{}}
+
+	rule, err := CompileAutomationRule(model.AutomationRule{
+		ID:        fp.Random(10),
+		Trigger:   "OnCaseAdded",
+		Name:      "notify",
+		Module:    "Webhook",
+		Condition: "true",
+		Enabled:   true,
+		URL:       "https://example.test/hook",
+	})
+	assert.Nil(t, err)
+	rules.Store([]AutomationRule{rule})
+
+	TriggerOnCaseAdded(store, kase)
+
+	jobs, err := store.GetJobs(kase.ID)
+	assert.Nil(t, err)
+	assert.Len(t, jobs, 1)
+	assert.Equal(t, "case.added", jobs[0].Settings["event"])
+	assert.Equal(t, "https://example.test/hook", jobs[0].Settings["url"])
+	assert.Equal(t, "notify", jobs[0].Settings["rule"])
+}
+
+// webhookModule is a minimal stand-in for the real Webhook module, avoiding an
+// import of internal/modules/webhook (which would create an import cycle back
+// into this package via automation-rules.go's rule compilation).
+type webhookModule struct{}
+
+func (webhookModule) Name() string                                       { return "Webhook" }
+func (webhookModule) Description() string                                { return "" }
+func (webhookModule) Validate() (model.Module, error)                    { return webhookModule{}, nil }
+func (webhookModule) Run(context.Context, *model.Store, model.Job) error { return nil }
+func (webhookModule) RenderSettings() templ.Component                    { return templ.NopComponent }
+func (webhookModule) Supports(obj any) bool                              { return true }

@@ -33,6 +33,8 @@ type ValueListItem struct {
 var automationRuleTriggers = []ValueListItem{
 	{Name: "OnEvidenceAdded"},
 	{Name: "OnIndicatorAdded"},
+	{Name: "OnCaseAdded"},
+	{Name: "OnCaseUpdated"},
 }
 
 var userRoles = []ValueListItem{

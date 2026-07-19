@@ -1,0 +1,1 @@
+ALTER TABLE automation_rules ADD COLUMN url TEXT NOT NULL DEFAULT '';

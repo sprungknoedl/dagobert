@@ -53,6 +53,7 @@ type AutomationRule struct {
 	Module    string
 	Condition string
 	Enabled   bool
+	URL       string
 }
 
 type envelope struct {
@@ -98,6 +99,12 @@ func (o *Object) UnmarshalJSON(data []byte) error {
 	switch env.Kind {
 	case "":
 		// no type given -> empty payload
+	case "case":
+		var dst Case
+		if err := dec.Decode(&dst); err != nil {
+			return err
+		}
+		o.Payload = dst
 	case "evidence":
 		var dst Evidence
 		if err := dec.Decode(&dst); err != nil {
@@ -138,6 +145,11 @@ func (o Object) MarshalJSON() ([]byte, error) {
 	enc := json.NewEncoder(&buf)
 
 	switch v := o.Payload.(type) {
+	case Case:
+		kind = "case"
+		if err := enc.Encode(v); err != nil {
+			return nil, err
+		}
 	case Evidence:
 		kind = "evidence"
 		if err := enc.Encode(v); err != nil {
