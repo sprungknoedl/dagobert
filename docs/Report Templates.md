@@ -166,6 +166,6 @@ day-first dates, `15:04` for time only, and so on.
 ## A working starting point
 
 Rather than starting from a blank document, copy one of the demo templates shipped
-with Dagobert — for example `templates/Demo Writer Report.odt` — open it in
+with Dagobert — for example `docs/examples/Demo Writer Report.odt` — open it in
 LibreOffice or Word, and adapt it. It already wires up the data references,
 loops, and styling described above.
