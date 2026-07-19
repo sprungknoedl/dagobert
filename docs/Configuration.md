@@ -34,6 +34,18 @@ built-in local login form.
 Sessions are stored server-side in the database, so there is no cookie-encryption
 secret to configure.
 
+## Case archive import limits
+
+Bounds on `POST /cases/import/archive`, in bytes. A full case with many evidence
+files and malware samples is legitimately large, so the content limit defaults
+high; `MAX_ARCHIVE_CONTENT_SIZE` bounds the total decompressed size written to
+disk (zip-bomb protection).
+
+| Variable | Required | Description | Default |
+| --- | --- | --- | --- |
+| `MAX_ARCHIVE_SIZE` | No | Max size of the compressed upload, in bytes. | `10737418240` (10 GiB) |
+| `MAX_ARCHIVE_CONTENT_SIZE` | No | Max total decompressed size written to disk, in bytes. | `10737418240` (10 GiB) |
+
 ## Users and API keys
 
 There are no environment variables for seeding administrators or API keys. Create them
@@ -58,6 +70,27 @@ importer job module. Leave `TIMESKETCH_URL` unset to disable the integration.
 | `TIMESKETCH_USER` | No | Timesketch username. | `dagobert-user` |
 | `TIMESKETCH_PASS` | No | Timesketch password. | `timesketch-password` |
 | `TIMESKETCH_SKIP_VERIFY_TLS` | No | Skip TLS verification (default `false`). | `true` |
+
+## Threat-intel enrichment
+
+Each module is a job that runs against indicators (never `TLP:RED` ones) and writes a
+verdict/summary/link, shown in a threat-intel panel on the indicator edit page. The API
+key is the sole "configured" signal for each — leave it unset to disable the module.
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `VIRUSTOTAL_APIKEY` | No | Enables the VirusTotal module (IP, Domain, Hash, URL indicators). |
+| `ABUSEIPDB_APIKEY` | No | Enables the AbuseIPDB module (IP indicators). |
+| `HYBRIDANALYSIS_APIKEY` | No | Enables the Hybrid Analysis (Falcon Sandbox) module (Hash indicators). |
+
+## Webhook automation
+
+Lets automation rules (Settings → Automation rules) POST a JSON event to a per-rule URL
+when a case/evidence/indicator is created or updated.
+
+| Variable | Required | Description |
+| --- | --- | --- |
+| `MODULE_WEBHOOK_SECRET` | No | Shared secret used to sign deliveries with an `X-Dagobert-Signature` header. Leave unset to send deliveries unsigned. |
 
 ## Evidence processing
 
