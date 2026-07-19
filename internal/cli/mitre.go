@@ -13,7 +13,7 @@ import (
 
 // AttckRelease pins the MITRE ATT&CK STIX bundle version downloaded by
 // `dagobert update`. This is the single source of truth for the pinned release.
-const AttckRelease = "18.1"
+const AttckRelease = "19.1"
 
 const (
 	mitreDir      = "mitre"
