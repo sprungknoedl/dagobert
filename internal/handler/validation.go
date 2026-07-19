@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"net/url"
 	"path/filepath"
 	"regexp"
 	"slices"
@@ -141,11 +142,17 @@ func ValidateAutomationRule(dto *model.AutomationRule, valueLists model.ValueLis
 		msg = err.Error()
 	}
 
+	// URL is only meaningful for the Webhook module
+	requireURL := dto.Module == "Webhook"
+	u, uerr := url.Parse(dto.URL)
+	validURL := uerr == nil && (u.Scheme == "http" || u.Scheme == "https")
+
 	return valid.Check([]valid.Condition{
 		{Name: "ID", Missing: dto.ID == ""},
 		{Name: "Trigger", Message: "Invalid trigger", Invalid: !inValueList(valueLists.AutomationRuleTriggers, dto.Trigger)},
 		{Name: "Module", Message: "Invalid module", Invalid: !slices.Contains(fp.Keys(modules.Modules), dto.Module)},
 		{Name: "Condition", Message: msg, Invalid: err != nil},
+		{Name: "URL", Message: "URL must be a valid http/https URL", Missing: requireURL && dto.URL == "", Invalid: requireURL && dto.URL != "" && !validURL},
 	})
 }
 

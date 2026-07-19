@@ -60,15 +60,36 @@ func TriggerOnIndicatorAdded(store *model.Store, obj model.Indicator) {
 	triggerAutomationRules(store, obj, obj.CaseID, obj.ID)
 }
 
+func TriggerOnCaseAdded(store *model.Store, obj model.Case) {
+	triggerAutomationRules(store, obj, obj.ID, obj.ID)
+}
+
+func TriggerOnCaseUpdated(store *model.Store, obj model.Case) {
+	triggerAutomationRules(store, obj, obj.ID, obj.ID)
+}
+
+// ruleEvents maps an automation-rule trigger to the dotted event name sent to
+// webhooks, e.g. "OnEvidenceAdded" -> "evidence.added".
+var ruleEvents = map[string]string{
+	"OnEvidenceAdded":  "evidence.added",
+	"OnIndicatorAdded": "indicator.added",
+	"OnCaseAdded":      "case.added",
+	"OnCaseUpdated":    "case.updated",
+}
+
 // triggerAutomationRules evaluates every enabled rule against obj and schedules a job for
 // each match. Beyond the rule's expr condition it gates on the module's
 // Supports(obj): a job is never scheduled for an object the module can not (or
 // must not, e.g. TLP:RED) process, so the trigger and the UI stay honest.
 func triggerAutomationRules(store *model.Store, obj any, caseID, objID string) {
-	kase, err := store.GetCase(caseID)
-	if err != nil {
-		slog.Error("error loading case for automation rules", "case", caseID, "err", err)
-		return
+	kase, ok := obj.(model.Case)
+	if !ok {
+		var err error
+		kase, err = store.GetCase(caseID)
+		if err != nil {
+			slog.Error("error loading case for automation rules", "case", caseID, "err", err)
+			return
+		}
 	}
 
 	list, _ := rules.Load().([]AutomationRule)
@@ -86,6 +107,7 @@ func triggerAutomationRules(store *model.Store, obj any, caseID, objID string) {
 				Case:     kase,
 				ObjectID: objID,
 				Object:   model.Object{Payload: obj},
+				Settings: map[string]string{"event": ruleEvents[rule.Trigger], "url": rule.URL, "rule": rule.Name},
 			}); err != nil {
 				return err
 			}
@@ -131,6 +153,8 @@ func CompileAutomationRule(rule model.AutomationRule) (AutomationRule, error) {
 		obj = model.Evidence{}
 	case "OnIndicatorAdded":
 		obj = model.Indicator{}
+	case "OnCaseAdded", "OnCaseUpdated":
+		obj = model.Case{}
 	}
 
 	program, err := expr.Compile(compiled.Condition,

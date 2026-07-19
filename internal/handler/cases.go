@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/modules"
 	"github.com/sprungknoedl/dagobert/internal/views"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
@@ -305,6 +306,13 @@ func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
 	if err := h.Store.SaveCase(dto); err != nil {
 		Err(w, r, err)
 		return
+	}
+
+	// trigger registered automation rules
+	if new {
+		modules.TriggerOnCaseAdded(h.Store, dto)
+	} else {
+		modules.TriggerOnCaseUpdated(h.Store, dto)
 	}
 
 	// instantiate from a template: copy its tasks and notes into the new case.

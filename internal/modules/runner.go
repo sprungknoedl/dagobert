@@ -20,6 +20,7 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/modules/plaso"
 	"github.com/sprungknoedl/dagobert/internal/modules/timesketch"
 	"github.com/sprungknoedl/dagobert/internal/modules/virustotal"
+	"github.com/sprungknoedl/dagobert/internal/modules/webhook"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	tsclient "github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"gorm.io/gorm"
@@ -27,8 +28,12 @@ import (
 
 var Modules = map[string]model.Module{}
 
+// Supported lists the modules offered for manual "Run module" scheduling on
+// obj. Webhook is excluded: its Run() only works with the url/event/rule
+// pulled from Job.Settings, which the automation-rules engine populates —
+// a manually scheduled job would have none of those and fail immediately.
 func Supported(obj any) []model.Module {
-	return fp.ToList(fp.FilterM(Modules, func(p model.Module) bool { return p.Supports(obj) }))
+	return fp.ToList(fp.FilterM(Modules, func(p model.Module) bool { return p.Name() != "Webhook" && p.Supports(obj) }))
 }
 
 // Register populates the global Modules map. It must be called synchronously
@@ -43,6 +48,7 @@ func Register(ts *tsclient.Client) {
 		plaso.NewModule(),
 		timesketch.NewModule(ts),
 		virustotal.NewModule(),
+		webhook.NewModule(),
 	} {
 		Modules[m.Name()] = m
 	}
