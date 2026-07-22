@@ -137,9 +137,14 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 		return err
 	}
 	dump.Stdin = stdout
-	query.Stderr = os.Stderr
-	dump.Stdout = os.Stdout
-	dump.Stderr = os.Stderr
+
+	// TODO: output is discarded on success; to persist it, capture it here and store it
+	// somewhere on Job (no field for this today - would need a new column/migration or a
+	// log file under files/) instead of dropping it.
+	var queryStderr, dumpCombined bytes.Buffer
+	query.Stderr = &queryStderr
+	dump.Stdout = &dumpCombined
+	dump.Stderr = &dumpCombined
 
 	slog.Debug("running command", "module", "dissect", "args", query.Args)
 	if err := query.Start(); err != nil {
@@ -159,6 +164,8 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 	dumpErr := dump.Wait()
 	queryErr := query.Wait()
 	if err := cmp.Or(queryErr, dumpErr); err != nil {
+		_, _ = os.Stderr.Write(queryStderr.Bytes())  //nolint:errcheck // best-effort diagnostic dump; err is already captured and returned
+		_, _ = os.Stderr.Write(dumpCombined.Bytes()) //nolint:errcheck // best-effort diagnostic dump; err is already captured and returned
 		// try to clean up
 		if rerr := os.Remove(raw); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
 			slog.Warn("failed to remove partial output file", "module", "dissect", "err", rerr, "path", raw)
