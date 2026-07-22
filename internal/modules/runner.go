@@ -22,6 +22,7 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/modules/timesketch"
 	"github.com/sprungknoedl/dagobert/internal/modules/virustotal"
 	"github.com/sprungknoedl/dagobert/internal/modules/webhook"
+	"github.com/sprungknoedl/dagobert/internal/modules/zircolite"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	tsclient "github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"gorm.io/gorm"
@@ -51,6 +52,7 @@ func Register(ts *tsclient.Client) {
 		timesketch.NewModule(ts),
 		virustotal.NewModule(),
 		webhook.NewModule(),
+		zircolite.NewModule(),
 	} {
 		Modules[m.Name()] = m
 	}
