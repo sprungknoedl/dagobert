@@ -90,11 +90,13 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 		"--output", dst,
 	)...)
 
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
 	slog.Debug("running command", "module", "hayabusa", "args", cmd.Args)
-	if err := cmd.Run(); err != nil {
+	// TODO: output is discarded on success; to persist it, capture it here and store it
+	// somewhere on Job (no field for this today - would need a new column/migration or a
+	// log file under files/) instead of dropping it.
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		_, _ = os.Stderr.Write(out) //nolint:errcheck // best-effort diagnostic dump; err is already captured and returned
 		// try to clean up
 		if rerr := os.Remove(dst); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
 			slog.Warn("failed to remove partial output file", "module", "hayabusa", "err", rerr, "path", dst)
