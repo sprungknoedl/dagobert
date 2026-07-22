@@ -182,7 +182,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 		Name:   filepath.Base(dst),
 		Source: evidence.Source,
 		Notes:  "module-dissect",
-	})
+	}, m.Name())
 }
 
 // rewrite reads target-query/rdump's raw jsonlines output at src, skipping

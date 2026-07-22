@@ -108,7 +108,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 		Name:   filepath.Base(dst),
 		Source: evidence.Source,
 		Notes:  "module-hayabusa",
-	}); err != nil {
+	}, m.Name()); err != nil {
 		return err
 	}
 

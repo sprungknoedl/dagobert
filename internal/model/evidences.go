@@ -93,12 +93,13 @@ func (store *Store) DeleteEvidence(cid string, id string, actor string) error {
 
 // EvidenceLog event constants — fixed, not a customizable value list.
 const (
-	EvidenceLogUploaded   = "uploaded"
-	EvidenceLogDownloaded = "downloaded"
-	EvidenceLogEdited     = "edited"
-	EvidenceLogModuleRun  = "module run"
-	EvidenceLogDeleted    = "deleted"
-	EvidenceLogAttached   = "attached"
+	EvidenceLogUploaded     = "uploaded"
+	EvidenceLogDownloaded   = "downloaded"
+	EvidenceLogEdited       = "edited"
+	EvidenceLogModuleRun    = "module run"
+	EvidenceLogModuleOutput = "module output"
+	EvidenceLogDeleted      = "deleted"
+	EvidenceLogAttached     = "attached"
 )
 
 // EvidenceLog is an append-only, self-contained record of an access-relevant

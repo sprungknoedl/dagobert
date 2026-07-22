@@ -28,7 +28,12 @@ func Filepath(obj model.Evidence) string {
 	return filepath.Join("files", "evidences", obj.CaseID, obj.Name)
 }
 
-func AddFromFS(store *model.Store, obj model.Evidence) error {
+// AddFromFS registers a module's output file as a new Evidence row and writes the
+// corresponding "module output" Evidence Log entry, so the new evidence's chain of
+// custody starts at creation instead of being blank until its first human interaction.
+// module is the producing module's name (Module.Name()), recorded as the log's actor
+// since no human user is involved.
+func AddFromFS(store *model.Store, obj model.Evidence, module string) error {
 	fr, err := os.Open(Filepath(obj))
 	if err != nil {
 		return err
@@ -53,6 +58,15 @@ func AddFromFS(store *model.Store, obj model.Evidence) error {
 	obj.Size = stat.Size()
 	obj.Hash = fmt.Sprintf("%x", hasher.Sum(nil))
 	if err := store.SaveEvidence(obj.CaseID, obj); err != nil {
+		return err
+	}
+
+	if err := store.SaveEvidenceLog(obj.CaseID, model.EvidenceLog{
+		EvidenceID: obj.ID,
+		Name:       obj.Name,
+		User:       module,
+		Event:      model.EvidenceLogModuleOutput,
+	}); err != nil {
 		return err
 	}
 

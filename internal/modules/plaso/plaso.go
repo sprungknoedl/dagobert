@@ -116,7 +116,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 			Name:   filepath.Base(dst),
 			Source: evidence.Source,
 			Notes:  "module-plaso",
-		}); err != nil {
+		}, m.Name()); err != nil {
 			return err
 		}
 
@@ -126,7 +126,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 			Name:   filepath.Base(dst) + ".csv",
 			Source: evidence.Source,
 			Notes:  "module-plaso",
-		}); err != nil {
+		}, m.Name()); err != nil {
 			return err
 		}
 		return nil
