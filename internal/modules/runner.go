@@ -15,6 +15,7 @@ import (
 
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/internal/modules/abuseipdb"
+	"github.com/sprungknoedl/dagobert/internal/modules/dissect"
 	"github.com/sprungknoedl/dagobert/internal/modules/hayabusa"
 	"github.com/sprungknoedl/dagobert/internal/modules/hybridanalysis"
 	"github.com/sprungknoedl/dagobert/internal/modules/plaso"
@@ -43,6 +44,7 @@ func Supported(obj any) []model.Module {
 func Register(ts *tsclient.Client) {
 	for _, m := range []model.Module{
 		abuseipdb.NewModule(),
+		dissect.NewModule(),
 		hayabusa.NewModule(),
 		hybridanalysis.NewModule(),
 		plaso.NewModule(),

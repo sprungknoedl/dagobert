@@ -1,0 +1,17 @@
+package dissect
+
+templ (m *Module) RenderResults() {
+}
+
+templ (m *Module) RenderSettings() {
+	<div class="form-control mb-2">
+		<label class="label justify-start gap-2">
+			Profile
+		</label>
+		<select name="Settings[profile]" class="select w-full">
+			<option>mft</option>
+			<option>evtx</option>
+			<option>artifacts</option>
+		</select>
+	</div>
+}
