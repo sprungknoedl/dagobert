@@ -102,6 +102,7 @@ of concurrent jobs through `DAGOBERT_WORKERS`.
 | --- | --- | --- | --- |
 | `MODULE_HAYABUSA` | No | Command that runs Hayabusa (EVTX triage). Unset disables the module. | `hayabusa` |
 | `MODULE_PLASO` | No | Command that runs Plaso's `psteal`. Unset disables the module. | `psteal.py` |
+| `MODULE_ZIRCOLITE` | No | Command that runs Zircolite (EVTX Sigma detection). Unset disables the module. | `zircolite` |
 | `DAGOBERT_WORKERS` | No | Number of concurrent job runners. | `3` (default) |
 
 The `sprungknoedl/dagobert-full` image presets the `MODULE_*` variables to its bundled

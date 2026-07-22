@@ -5,6 +5,7 @@ Dagobert can run external forensic tools against uploaded evidence:
 - **[Hayabusa](https://github.com/Yamato-Security/hayabusa)** for EVTX triage
 - **[Plaso](https://github.com/log2timeline/plaso)** for timeline generation
 - **[Dissect](https://github.com/fox-it/dissect)** for fast, low-noise triage timelines
+- **[Zircolite](https://github.com/wagga40/Zircolite)** for EVTX Sigma detection
 - A built-in **[Timesketch](https://github.com/google/timesketch)** importer
 
 These run as jobs in an in-process worker pool — part of the main `dagobert server`
@@ -20,6 +21,7 @@ Each external tool is invoked through a command held in an environment variable:
 - `MODULE_DISSECT` — command that runs Dissect's `target-query`
 - `MODULE_DISSECT_RDUMP` — command that runs Dissect's `rdump`, its companion tool for
   converting `target-query`'s output into Timesketch-ready JSONL
+- `MODULE_ZIRCOLITE` — command that runs Zircolite
 
 Dagobert pipes `target-query`'s output into `rdump` (`target-query | rdump`) to build a
 timeline; `MODULE_DISSECT` and `MODULE_DISSECT_RDUMP` configure the two commands
@@ -92,6 +94,7 @@ MODULE_PLASO=docker run -v $PWD/files:/home/plaso/files log2timeline/plaso pstea
 MODULE_HAYABUSA=docker run -v $PWD/files:/home/sprungknoedl/files sprungknoedl/hayabusa
 MODULE_DISSECT=docker run -v $PWD/files:/home/dissect/files sprungknoedl/dissect target-query
 MODULE_DISSECT_RDUMP=docker run -i -v $PWD/files:/home/dissect/files sprungknoedl/dissect rdump
+MODULE_ZIRCOLITE=docker run -v $PWD/files:/opt/zircolite/files wagga40/zircolite
 ```
 
 The shared `files` directory must be mounted into each container at the path that tool

@@ -1,5 +1,5 @@
-// Package hayabusa implements the Hayabusa evidence-processing module.
-package hayabusa
+// Package zircolite implements the Zircolite evidence-processing module.
+package zircolite
 
 import (
 	"context"
@@ -27,11 +27,11 @@ func NewModule() *Module {
 }
 
 func (m *Module) Name() string {
-	return "Hayabusa"
+	return "Zircolite"
 }
 
 func (m *Module) Description() string {
-	return "Hayabusa (隼) is a sigma-based threat hunting and fast forensics timeline generator for Windows event logs."
+	return "Zircolite is a standalone sigma-based detection tool for EVTX, Auditd, and Sysmon for Linux logs."
 }
 
 func (m *Module) Supports(obj any) bool {
@@ -43,25 +43,25 @@ func (m *Module) Supports(obj any) bool {
 
 func (m *Module) Validate() (model.Module, error) {
 	var err error
-	_, m.args, err = shellwords.ParseWithEnvs(os.Getenv("MODULE_HAYABUSA"))
+	_, m.args, err = shellwords.ParseWithEnvs(os.Getenv("MODULE_ZIRCOLITE"))
 	if err != nil {
-		err = fmt.Errorf("invalid command in MODULE_HAYABUSA: %w", err)
-		slog.Warn("validating module prerequisites failed", "module", "hayabusa", "err", err)
+		err = fmt.Errorf("invalid command in MODULE_ZIRCOLITE: %w", err)
+		slog.Warn("validating module prerequisites failed", "module", "zircolite", "err", err)
 		return nil, err
 	}
 	if len(m.args) < 1 {
-		slog.Info("module disabled, not configured", "module", "hayabusa")
-		return nil, errors.New("MODULE_HAYABUSA is not set, module disabled")
+		slog.Info("module disabled, not configured", "module", "zircolite")
+		return nil, errors.New("MODULE_ZIRCOLITE is not set, module disabled")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	slog.Info("validating module prerequisites", "module", "hayabusa")
-	cmd := exec.CommandContext(ctx, m.args[0], append(m.args[1:], "help")...)
+	slog.Info("validating module prerequisites", "module", "zircolite")
+	cmd := exec.CommandContext(ctx, m.args[0], append(m.args[1:], "--version")...)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		err = fmt.Errorf("command %q is not runnable: %w", m.args[0], err)
-		slog.Warn("validating module prerequisites failed", "module", "hayabusa", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", "zircolite", "err", err)
 		_, _ = os.Stderr.Write(out) //nolint:errcheck // best-effort diagnostic dump; err is already captured and returned
 		return nil, err
 	}
@@ -76,30 +76,34 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 	}
 
 	src := utils.Filepath(evidence)
-	dst := src + ".hayabusa.jsonl"
+	raw := src + ".zircolite.raw.json"
+	dst := src + ".zircolite.jsonl"
 
 	cmd := exec.CommandContext(ctx, m.args[0], append(m.args[1:],
-		"json-timeline",
-		"--JSONL-output",
-		"--RFC-3339",
-		"--UTC",
-		"--no-wizard",
-		"--min-level", "informational",
-		"--profile", "timesketch-verbose",
-		"--file", src,
-		"--output", dst,
+		"--evtx", src,
+		"-o", raw,
+		"-t", "templates/exportForTimesketch.tmpl",
+		"-T", dst,
 	)...)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	slog.Debug("running command", "module", "hayabusa", "args", cmd.Args)
+	slog.Debug("running command", "module", "zircolite", "args", cmd.Args)
 	if err := cmd.Run(); err != nil {
 		// try to clean up
-		if rerr := os.Remove(dst); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
-			slog.Warn("failed to remove partial output file", "module", "hayabusa", "err", rerr, "path", dst)
+		for _, f := range []string{dst, raw} {
+			if rerr := os.Remove(f); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
+				slog.Warn("failed to remove partial output file", "module", "zircolite", "err", rerr, "path", f)
+			}
 		}
 		return err
+	}
+
+	// raw is Zircolite's mandatory -o output; it is pure clutter once the
+	// templated -T output exists, so it's discarded unconditionally.
+	if rerr := os.Remove(raw); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
+		slog.Warn("failed to remove raw output file", "module", "zircolite", "err", rerr, "path", raw)
 	}
 
 	if err := utils.AddFromFS(store, model.Evidence{
@@ -107,7 +111,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 		Type:   "Logs",
 		Name:   filepath.Base(dst),
 		Source: evidence.Source,
-		Notes:  "module-hayabusa",
+		Notes:  "module-zircolite",
 	}, m.Name()); err != nil {
 		return err
 	}
