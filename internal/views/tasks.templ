@@ -26,7 +26,7 @@ templ TasksMany(env Env, rows []model.Task, comments map[string]int) {
 						@emptyTable(env, "No open tasks.", "Create a task for each action item the team needs to work on. Assign an owner, set a due date, and track progress as the investigation moves forward.")
 					} else {
 						for _, row := range rows {
-							<tr class="hover">
+							<tr class="row-hover">
 								<td class={ "value-0 truncate " + fp.If(!row.Done && time.Now().After(time.Time(row.DateDue)), "text-error", "") } data-search={ row.DateDue.Format("2006-01-02") }>
 									{ row.DateDue.Format("2006-01-02") }
 								</td>

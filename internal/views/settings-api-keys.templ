@@ -24,7 +24,7 @@ templ SettingsAPIKeysMany(env Env, keys []model.APIKey) {
 						@emptyTable(env, "No keys issued.", "Generate a key to authenticate an external integration. Give each key a descriptive name so you can revoke specific ones later.")
 					} else {
 						for _, row := range keys {
-							<tr class="hover">
+							<tr class="row-hover">
 								<td class="value-0 truncate" data-search={ row.Type }>
 									@valueBadge(env.ValueLists.APIKeyTypes, row.Type)
 								</td>

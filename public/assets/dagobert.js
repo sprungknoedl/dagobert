@@ -198,6 +198,30 @@ up.compiler('[data-toggle-category]', (el) => {
     });
 });
 
+// Cycles Light -> Dark -> Auto -> Light. Current state is the data-theme
+// attribute already on <html> (server-rendered, see sidebar() in layout.templ).
+// No server round-trip: sets/removes data-theme and the theme cookie directly
+// and swaps its own icon to match. Auto is "no cookie", not a literal value.
+up.compiler('[data-theme-toggle]', (btn) => {
+    const icon = btn.querySelector('i');
+    btn.addEventListener('click', () => {
+        const current = document.documentElement.dataset.theme;
+        const next = current === 'dagobert' ? 'dagobert-dark' : current === 'dagobert-dark' ? '' : 'dagobert';
+
+        if (next === '') {
+            delete document.documentElement.dataset.theme;
+            document.cookie = 'theme=; path=/; max-age=0; SameSite=Lax';
+        } else {
+            document.documentElement.dataset.theme = next;
+            document.cookie = `theme=${next === 'dagobert-dark' ? 'dark' : 'light'}; path=/; max-age=31536000; SameSite=Lax`;
+        }
+
+        icon.className = 'ph ph-6 ' +
+            (next === 'dagobert' ? 'ph-sun' : next === 'dagobert-dark' ? 'ph-moon' : 'ph-circle-half') +
+            ' hue-slate';
+    });
+});
+
 up.compiler('[data-remove-self]', (el) => {
     el.addEventListener('click', () => el.remove());
 });
@@ -361,15 +385,29 @@ up.compiler('.markdown-preview', (elem) => {
 // this page.
 up.compiler('#mynetwork', (elem, data) => {
     loadScript('/public/assets/vis-network-10.1.0.min.js', () => window.vis && window.vis.Network).then(() => {
+        // Read live theme colors rather than hardcoding light-theme values —
+        // vis-network draws to canvas, which accepts any CSS color string
+        // (including var()/color-mix()), so this stays correct across themes
+        // and across the light/dark toggle without a page reload.
+        const style = getComputedStyle(document.documentElement);
+        const color = (name) => style.getPropertyValue(name).trim();
+
+        // Server sends icon code/size per group but no color (see
+        // networkGroups in vis-network.templ) — assign it here from the live
+        // theme so asset/indicator icons stay visible across both themes.
+        for (const [name, group] of Object.entries(data.groups)) {
+            group.icon.color = name.startsWith('Indicator') ? color('--color-accent') : color('--color-neutral');
+        }
+
         const options = {
             edges: {
-                color: { color: "oklch(72% 0.13 80)", highlight: "oklch(70% 0.15 70)" },
+                color: { color: color('--color-primary'), highlight: color('--color-warning') },
                 smooth: { forceDirection: "vertical" },
             },
             nodes: {
                 shape: "icon",
                 margin: 10,
-                font: { color: "oklch(25% 0.02 60)", background: "oklch(97.5% 0.01 90)" },
+                font: { color: color('--color-neutral'), background: color('--color-neutral-content') },
                 icon: { face: "'Phosphor'" },
             },
             groups: data.groups,

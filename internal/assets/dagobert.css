@@ -40,6 +40,40 @@
     --noise: 0;
 }
 
+@plugin "./daisyui-theme.js" {
+    name: "dagobert-dark";
+    prefersdark: true;
+    color-scheme: dark;
+    --color-base-100: oklch(24% 0.006 250);
+    --color-base-200: oklch(21% 0.006 250);
+    --color-base-300: oklch(19% 0.006 250);
+    --color-base-content: oklch(92% 0.008 250);
+    --color-primary: oklch(72% 0.13 80);
+    --color-primary-content: oklch(20% 0.05 70);
+    --color-secondary: oklch(65% 0.1 150);
+    --color-secondary-content: oklch(15% 0.03 150);
+    --color-accent: oklch(65% 0.15 38);
+    --color-accent-content: oklch(15% 0.03 38);
+    --color-neutral: oklch(92% 0.008 250);
+    --color-neutral-content: oklch(18% 0.006 250);
+    --color-info: oklch(70% 0.08 250);
+    --color-info-content: oklch(18% 0.03 250);
+    --color-success: oklch(65% 0.1 150);
+    --color-success-content: oklch(15% 0.03 150);
+    --color-warning: oklch(75% 0.15 70);
+    --color-warning-content: oklch(20% 0.05 70);
+    --color-error: oklch(62% 0.17 27);
+    --color-error-content: oklch(97% 0.01 25);
+    --radius-selector: 2rem;
+    --radius-field: 0.5rem;
+    --radius-box: 0.5rem;
+    --size-selector: 0.25rem;
+    --size-field: 0.25rem;
+    --border: 1px;
+    --depth: 0;
+    --noise: 0;
+}
+
 @font-face {
     font-family: 'Fraunces Variable';
     font-style: normal;
@@ -100,10 +134,15 @@ html {
 
 /*
 HAIRLINES
+A raw --color-base-300 swatch is an absolute palette color: on the dark theme
+it's simply a dark color, so it reads as a near-black line no matter how
+close it sits to the surrounding surface tones. Hairlines instead mix a slice
+of --color-base-content into transparency (as .divider already did) so they
+read as "light gray line" the same way in both themes.
 */
 
 .navbar {
-    border-bottom: 1px solid var(--color-base-300);
+    border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) 15%, transparent);
     margin-bottom: 1rem;
 }
 
@@ -115,21 +154,21 @@ HAIRLINES
     border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) 25%, transparent);
 }
 .table :where(tbody tr) {
-    border-bottom: 1px solid var(--color-base-300);
+    border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) 15%, transparent);
 }
 
 .stats {
-    border: 1px solid var(--color-base-300);
+    border: 1px solid color-mix(in oklab, var(--color-base-content) 15%, transparent);
     /* subpixel grid overflow otherwise summons a scrollbar that shades the tiles unevenly */
     scrollbar-width: none;
 }
 .stats::-webkit-scrollbar {
     display: none;
 }
-/* .stats .stat {
-    border-style: solid;
-    border-color: var(--color-base-300);
-} */
+
+.hairline {
+    border-color: color-mix(in oklab, var(--color-base-content) 15%, transparent);
+}
 
 /*
 BUTTONS
@@ -138,6 +177,18 @@ pill-shaped buttons without affecting inputs/selects/tabs, which share --radius-
 
 .btn {
     --radius-field: 2rem;
+}
+
+/*
+DaisyUI's default hover/active button shading mixes toward a fixed #000,
+which reads fine on light surfaces but is nearly invisible once the surface
+itself is already dark. Mix toward base-content instead — dark in the light
+theme, light in the dark theme — so the shading direction always contrasts
+with the surface.
+*/
+.btn {
+    --btn-hover-bg: color-mix(in oklab, var(--btn-color, var(--color-base-200)), var(--color-base-content) 12%);
+    --btn-active-bg: color-mix(in oklab, var(--btn-color, var(--color-base-200)), var(--color-base-content) 16%);
 }
 
 /*
@@ -250,9 +301,21 @@ up-drawer[size=xlarge] up-drawer-box {
     width: 90% !important;
 }
 
+up-popup, up-modal-box, up-cover-box {
+    @apply bg-base-200 text-neutral;
+}
+
 up-popup {
     border-radius: var(--radius-box);
     margin-top: 0.5rem;
+}
+
+up-progress-bar {
+    @apply bg-primary;
+}
+
+up-popup-dismiss, up-cover-dismiss, up-drawer-dismiss, up-modal-dismiss {
+    @apply text-base-content/50;
 }
 
 /*

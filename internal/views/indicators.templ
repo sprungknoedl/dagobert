@@ -38,7 +38,7 @@ templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]m
 					} else {
 						for _, row := range rows {
 							{{ worst, worstSeverity, results := summarizeEnrichment(enrichments[row.ID]) }}
-							<tr class={ fp.If(row.Flagged, "hover bg-flagged", "hover") }>
+							<tr class={ fp.If(row.Flagged, "row-hover bg-flagged", "row-hover") }>
 								<td class="value-0 truncate" data-search={ row.Status }>
 									@valueBadge(env.ValueLists.IndicatorStatus, row.Status)
 								</td>

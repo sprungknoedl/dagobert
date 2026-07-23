@@ -1,12 +1,15 @@
 package handler
 
 import (
+	"context"
 	"log/slog"
 	"net/http"
 	"os"
 	"runtime/debug"
 	"strconv"
 	"time"
+
+	"github.com/sprungknoedl/dagobert/internal/views"
 )
 
 // contentSecurityPolicy is a strict policy for an app that renders attacker-
@@ -62,6 +65,27 @@ func SecurityHeaders(next http.Handler) http.Handler {
 			h.Set("Strict-Transport-Security", "max-age=31536000")
 		}
 		next.ServeHTTP(w, r)
+	})
+}
+
+// ThemeMiddleware resolves the theme cookie once per request and stores the
+// server-rendered data-theme value in context: "dagobert" (light),
+// "dagobert-dark" (dark), or "" when the cookie is absent (Auto — layout()
+// omits data-theme so DaisyUI's prefersdark theme follows the OS preference).
+func ThemeMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		theme := ""
+		if c, err := r.Cookie("theme"); err == nil {
+			switch c.Value {
+			case "light":
+				theme = "dagobert"
+			case "dark":
+				theme = "dagobert-dark"
+			}
+		}
+
+		ctx := context.WithValue(r.Context(), views.ThemeCtxKey, theme)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 

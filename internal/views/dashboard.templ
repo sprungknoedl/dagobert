@@ -99,7 +99,7 @@ templ Dashboard(env Env, from time.Time, to time.Time, matrixKey string, matrix 
 							</div>
 						</div>
 					</div>
-					<div class="overflow-x-auto border border-base-300 rounded-box">
+					<div class="overflow-x-auto border hairline rounded-box">
 						<table class="table table-default">
 							<thead>
 								<tr>
@@ -155,7 +155,7 @@ templ dashboardDateExtra(from time.Time, to time.Time) {
 // its own component since it's used three times (Classification, Severity,
 // Outcome) with different data and bar colors.
 templ dashboardBreakdownCard(title string, barClass string, rows []DashboardBreakdownRow, total int) {
-	<div class="border border-base-300 rounded-box p-5 bg-base-100">
+	<div class="border hairline rounded-box p-5 bg-base-100">
 		<h2 class="text-xl font-serif mb-3">{ title }</h2>
 		if len(rows) == 0 {
 			<p class="font-serif italic text-base-content/60">No cases in scope.</p>
