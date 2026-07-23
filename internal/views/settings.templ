@@ -27,7 +27,7 @@ templ SettingsOverview(env Env) {
 }
 
 templ settingsOverviewRow(route string, icon string, title string, description string, groupEnd bool) {
-	<tr class={ "cursor-pointer hover:bg-base-200", templ.KV("[&>td]:border-b-0", groupEnd) } data-href={ route }>
+	<tr class={ "cursor-pointer row-hover", templ.KV("[&>td]:border-b-0", groupEnd) } data-href={ route }>
 		<td>
 			<a href={ templ.SafeURL(route) } class="flex items-center gap-3 font-semibold">
 				<i class={ "ph ph-6 ph-" + icon }></i> { title }

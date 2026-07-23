@@ -25,7 +25,7 @@ templ SettingsAutomationRulesMany(env Env, rows []model.AutomationRule) {
 						@emptyTable(env, "No automation rules yet.", "Create a rule to automate an action when a case object is created or updated. Write a condition expression to filter when it fires, then select the module to run.")
 					} else {
 						for _, row := range rows {
-							<tr class="hover">
+							<tr class="row-hover">
 								<td class="value-0" data-search={ fp.If(row.Enabled, "Enabled", "Disabled") }>
 									if row.Enabled {
 										<div class="text-success"><i class="ph ph-5 ph-check inline-block"></i> Enabled</div>

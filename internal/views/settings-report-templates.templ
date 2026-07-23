@@ -22,7 +22,7 @@ templ SettingsReportTemplatesMany(env Env, rows []model.ReportTemplate) {
 						@emptyTable(env, "No templates installed.", "Upload a .docx, .odt, or .ods file with template placeholders to generate formatted investigation reports. Download the default templates from the project repository to get started.")
 					}
 					for _, row := range rows {
-						<tr class="hover">
+						<tr class="row-hover">
 							<td class="value-0" data-search={ row.Name }>{ row.Name } </td>
 							<td class="value-1" data-search={ row.Notes }>{ row.Notes } </td>
 							<td class="text-right">

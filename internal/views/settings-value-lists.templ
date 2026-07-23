@@ -71,7 +71,7 @@ templ valueList(env Env, title string, rows []model.ValueListItem) {
 			@emptyTable(env, "No values defined.", "Each category lists the values available in a drop-down elsewhere in the app. Add, remove, or reorder entries to match your organisation's taxonomy.")
 		} else {
 			for _, row := range rows {
-				<tr class="hover">
+				<tr class="row-hover">
 					<td>{ row.Rank } </td>
 					<td>
 						if row.Name != "" {

@@ -23,7 +23,7 @@ templ NotesMany(env Env, rows []model.Note) {
 						@emptyTable(env, "No notes on file.", "Add a note to capture a hypothesis, finding, or research thread that doesn't fit neatly into the timeline. Notes are free-form and support markdown.")
 					} else {
 						for _, row := range rows {
-							<tr class="hover">
+							<tr class="row-hover">
 								<td class="value-0 align-top" data-search={ row.Category }>{ row.Category }</td>
 								<td class="value-1 align-top" data-search={ row.Title }>{ row.Title }</td>
 								<td class="value-2 align-top prose" data-search={ row.Description }>

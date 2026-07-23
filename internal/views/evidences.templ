@@ -49,7 +49,7 @@ templ EvidencesMany(env Env, rows []model.Evidence, comments map[string]int) {
 						@emptyTable(env, "Nothing collected yet.", "Upload the first piece of collected evidence — a memory image, disk dump, log archive, or PCAP. Dagobert will calculate the hash automatically on upload.")
 					} else {
 						for _, row := range rows {
-							<tr class="hover">
+							<tr class="row-hover">
 								<td class="value-0 truncate">
 									@valueBadge(env.ValueLists.EvidenceTypes, row.Type)
 								</td>
@@ -227,7 +227,7 @@ templ EvidenceLogsMany(env Env, rows []model.EvidenceLog, live map[string]model.
 						} else {
 							for _, row := range rows {
 								{{ ev, isLive := live[row.EvidenceID] }}
-								<tr class="hover">
+								<tr class="row-hover">
 									<td class="value-0" data-search={ row.Time.Format(time.RFC3339) }>
 										@formatTime(row.Time)
 									</td>

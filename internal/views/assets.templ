@@ -43,7 +43,7 @@ templ AssetsMany(env Env, title string, rows []model.Asset, comments map[string]
 						@emptyTable(env, "No assets identified yet.", "Add the first affected host, account, or service you've identified. Assets become link targets for timeline events and appear in the network visualisation.")
 					} else {
 						for _, row := range rows {
-							<tr class="hover">
+							<tr class="row-hover">
 								<td class="value-0 truncate" data-search={ row.Status }>
 									@valueBadge(env.ValueLists.AssetStatus, row.Status)
 								</td>

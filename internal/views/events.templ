@@ -46,7 +46,7 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 						@emptyTable(env, "The story starts here.", "Start by logging the earliest known attacker action. Work forward from there — each event builds the chain of activity. Link events to assets and indicators as you identify them.")
 					} else {
 						for _, row := range rows {
-							<tr class={ fp.If(row.Flagged, "hover bg-flagged", "hover") }>
+							<tr class={ fp.If(row.Flagged, "row-hover bg-flagged", "row-hover") }>
 								<td class="value-0" data-search={ row.Time.Format(time.RFC3339) }>
 									@formatTime(row.Time)
 								</td>

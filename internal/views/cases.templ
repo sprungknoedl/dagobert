@@ -48,7 +48,7 @@ templ CasesMany(env Env, rows []model.Case) {
 					} else {
 						for _, row := range rows {
 							if url, ok := env.Allowed("GET", env.Route+row.ID+"/summary/"); ok {
-								<tr class="hover">
+								<tr class="row-hover">
 									<td class="value-0" data-search={ row.ID }><a class="link" href={ url }>{ row.ID }</a> </td>
 									<td class="value-1" data-search={ row.Name }><a class="link" href={ url }>{ row.Name }</a> </td>
 									<td class="value-2" data-search={ row.Classification }>{ row.Classification } </td>

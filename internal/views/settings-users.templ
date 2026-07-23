@@ -28,7 +28,7 @@ templ SettingsUsersMany(env Env, rows []model.User) {
 					} else {
 						for _, row := range rows {
 							{{ sortKey := fp.If(row.Builtin(), "1_", "0_") }}
-							<tr class={ "hover" + fp.If(row.Builtin(), " text-base-content/50", "") }>
+							<tr class={ "row-hover" + fp.If(row.Builtin(), " text-base-content/50", "") }>
 								<td class="value-0" data-search={ sortKey + row.Name }>
 									<span class="flex items-center gap-2">
 										{ row.Name }

@@ -23,9 +23,8 @@ type Edge struct {
 }
 
 type icon struct {
-	Code  string `json:"code"`
-	Size  int    `json:"size"`
-	Color string `json:"color"`
+	Code string `json:"code"`
+	Size int    `json:"size"`
 }
 
 type group struct {
@@ -58,12 +57,15 @@ func networkJSON(env Env, nodes []Node, edges []Edge) string {
 
 func networkGroups(assets []model.ValueListItem, indicators []model.ValueListItem) map[string]group {
 	groups := map[string]group{}
+	// Icon color is intentionally omitted here and filled in client-side (see
+	// the #mynetwork compiler in dagobert.js), which reads the live theme's
+	// CSS custom properties — a color baked in at server-render time can't
+	// adapt to the client's light/dark theme.
 	for _, entry := range assets {
 		groups["Asset"+entry.Name] = group{
 			Icon: icon{
-				Code:  string(iconMap[entry.Icon]),
-				Color: "oklch(25% 0.02 60)",
-				Size:  32,
+				Code: string(iconMap[entry.Icon]),
+				Size: 32,
 			},
 		}
 	}
@@ -71,9 +73,8 @@ func networkGroups(assets []model.ValueListItem, indicators []model.ValueListIte
 	for _, entry := range indicators {
 		groups["Indicator"+entry.Name] = group{
 			Icon: icon{
-				Code:  string(iconMap[entry.Icon]),
-				Color: "oklch(45% 0.13 25)",
-				Size:  24,
+				Code: string(iconMap[entry.Icon]),
+				Size: 24,
 			},
 		}
 	}

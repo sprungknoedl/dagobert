@@ -2,11 +2,21 @@
 package views
 
 import (
+	"context"
 	"slices"
 	"strings"
 
 	"github.com/sprungknoedl/dagobert/internal/model"
 )
+
+type ctxKey int
+
+const ThemeCtxKey ctxKey = 0
+
+func themeFromContext(ctx context.Context) string {
+	theme, _ := ctx.Value(ThemeCtxKey).(string)
+	return theme
+}
 
 // switchSections are the list sub-pages that exist on every real case and carry
 // no detail id, so a quick case switch can land on their list page directly.

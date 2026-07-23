@@ -19,7 +19,7 @@ templ SettingsCaseTemplatesMany(env Env, rows []model.Case) {
 						@emptyTable(env, "No case templates yet.", "Create a blank template and fill in its tasks and notes via the case views, or promote an existing case into a reusable template.")
 					}
 					for _, row := range rows {
-						<tr class="hover">
+						<tr class="row-hover">
 							<td class="value-0" data-search={ row.Name }>
 								if url, ok := env.Allowed("GET", "/cases/"+row.ID+"/summary/"); ok {
 									<a class="link" href={ url }>{ row.Name }</a>
