@@ -39,7 +39,8 @@ can work on a case concurrently.
   (`.docx`, `.ods`, `.odt`) from case data; bring your own corporate template.
 - **Evidence processing** — run [Hayabusa](https://github.com/Yamato-Security/hayabusa)
   (EVTX triage), [Zircolite](https://github.com/wagga40/Zircolite) (EVTX Sigma
-  detection), and [Plaso](https://github.com/log2timeline/plaso)
+  detection), [Chainsaw](https://github.com/WithSecureLabs/chainsaw) (EVTX Sigma
+  and native-rule hunting), and [Plaso](https://github.com/log2timeline/plaso)
   (super-timelines) against uploaded evidence as background jobs.
 - **Timesketch integration** — upload timelines to
   [Timesketch](https://github.com/google/timesketch) or import events back for
