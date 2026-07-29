@@ -103,6 +103,7 @@ of concurrent jobs through `DAGOBERT_WORKERS`.
 | `MODULE_HAYABUSA` | No | Command that runs Hayabusa (EVTX triage). Unset disables the module. | `hayabusa` |
 | `MODULE_PLASO` | No | Command that runs Plaso's `psteal`. Unset disables the module. | `psteal.py` |
 | `MODULE_ZIRCOLITE` | No | Command that runs Zircolite (EVTX Sigma detection). Unset disables the module. | `zircolite` |
+| `MODULE_CHAINSAW` | No | Command that runs Chainsaw (EVTX Sigma and native-rule hunting). Unset disables the module. Chainsaw ships no Sigma rules, EVTX field mapping, or native rules of its own — place them at fixed paths (`sigma_rules/`, `mappings/sigma-event-logs-all.yml`, and optionally `rules/`) relative to the working directory; see [Evidence Processing](Evidence%20Processing.md). | `chainsaw` |
 | `DAGOBERT_WORKERS` | No | Number of concurrent job runners. | `3` (default) |
 
 The `sprungknoedl/dagobert-full` image presets the `MODULE_*` variables to its bundled
