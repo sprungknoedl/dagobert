@@ -10,10 +10,9 @@ RUN apt update && apt install -y ca-certificates unzip
 RUN unzip /usr/src/hayabusa.zip -d /opt/hayabusa && \
     mv /opt/hayabusa/hayabusa-3.2.0-lin-x64-musl /opt/hayabusa/hayabusa && \
     chmod +x /opt/hayabusa/hayabusa
-RUN cd /opt/hayabusa && ./hayabusa update-rules
 
 COPY --from=app /home/sprungknoedl/dagobert /home/plaso/dagobert
-COPY --from=app /home/sprungknoedl/mitre /home/plaso/mitre
+COPY --from=app /home/sprungknoedl/external/mitre /home/plaso/external/mitre
 COPY --from=app /home/sprungknoedl/docker-entrypoint.sh /home/plaso/docker-entrypoint.sh
 RUN chmod +x /home/plaso/docker-entrypoint.sh
 
@@ -22,6 +21,12 @@ ENV MODULE_HAYABUSA="/opt/hayabusa/hayabusa"
 ENV PATH="$PATH:/home/plaso"
 
 WORKDIR /home/plaso
+# MITRE data is already baked in (copied above) so this only fetches
+# Hayabusa's rule set via its UpdateAssets hook, now that MODULE_HAYABUSA is
+# set; also creates a throwaway data/dagobert.db here, not copied into the
+# final image.
+RUN dagobert update
+
 # entrypoint bootstraps a fresh data volume (migrate db) before exec-ing dagobert
 ENTRYPOINT ["/home/plaso/docker-entrypoint.sh"]
 CMD ["server"]

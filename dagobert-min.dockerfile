@@ -8,8 +8,8 @@ COPY . .
 RUN make build-web
 RUN make build-go
 # Bake the MITRE ATT&CK data (and its .version sentinel) into the image so the
-# runtime needs no network. `update` also creates a throwaway files/dagobert.db
-# here — it is not copied into the final image (only /src/mitre is).
+# runtime needs no network. `update` also creates a throwaway data/dagobert.db
+# here — it is not copied into the final image (only /src/external/mitre is).
 RUN ./dagobert update
 
 # ---------------------------------
@@ -20,7 +20,7 @@ WORKDIR /home/sprungknoedl
 RUN apt update && apt install -y docker.io
 
 COPY --from=app /src/dagobert /home/sprungknoedl/dagobert
-COPY --from=app /src/mitre /home/sprungknoedl/mitre
+COPY --from=app /src/external/mitre /home/sprungknoedl/external/mitre
 COPY --from=app /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY docker-entrypoint.sh /home/sprungknoedl/docker-entrypoint.sh
 

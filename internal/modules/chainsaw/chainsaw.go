@@ -2,6 +2,7 @@
 package chainsaw
 
 import (
+	"archive/zip"
 	"bufio"
 	"bytes"
 	"context"
@@ -10,9 +11,11 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/a-h/templ"
@@ -22,14 +25,12 @@ import (
 )
 
 // Chainsaw ships no Sigma rules, EVTX field mapping, or native rules of its own, unlike
-// Hayabusa (which bundles both). Rather than a MODULE_CHAINSAW_* env var per path
-// (mirroring how mitre/ and files/ are fixed conventions elsewhere, not configurable), an
-// operator who wants Chainsaw just places these at fixed paths relative to the working
-// directory.
-const (
-	SigmaDir    = "sigma_rules"
-	MappingFile = "mappings/sigma-event-logs-all.yml"
-	RulesDir    = "rules"
+// Hayabusa (which bundles both). UpdateAssets fetches them into external/chainsaw/ via
+// `dagobert update`, mirroring how external/mitre/ is populated.
+var (
+	SigmaDir    = filepath.Join(model.VendorDir, "chainsaw", "sigma_rules")
+	MappingFile = filepath.Join(model.VendorDir, "chainsaw", "mappings", "sigma-event-logs-all.yml")
+	RulesDir    = filepath.Join(model.VendorDir, "chainsaw", "rules")
 )
 
 type Module struct {
@@ -103,6 +104,112 @@ func (m *Module) Validate() (model.Module, error) {
 	return m, nil
 }
 
+// UpdateAssets fetches Chainsaw's pinned external vendor data: SigmaHQ/sigma's
+// rules into SigmaDir, and WithSecureLabs/chainsaw's mappings/rules into
+// MappingFile's directory and RulesDir. Unlike MITRE's pinned release, these
+// always fetch the master branch and overwrite unconditionally — no version
+// pinning, no staleness check, no retries.
+func (m *Module) UpdateAssets(ctx context.Context) error {
+	if os.Getenv("MODULE_CHAINSAW") == "" {
+		slog.Info("module disabled, skipping asset fetch", "module", "chainsaw")
+		return nil
+	}
+
+	sigmaZip, err := downloadZip(ctx, "https://github.com/SigmaHQ/sigma/archive/refs/heads/master.zip")
+	if err != nil {
+		return fmt.Errorf("fetching sigma rules: %w", err)
+	}
+	if err := extractZipSubtree(sigmaZip, "sigma-master/rules/", SigmaDir); err != nil {
+		return fmt.Errorf("extracting sigma rules: %w", err)
+	}
+
+	chainsawZip, err := downloadZip(ctx, "https://github.com/WithSecureLabs/chainsaw/archive/refs/heads/master.zip")
+	if err != nil {
+		return fmt.Errorf("fetching chainsaw mappings/rules: %w", err)
+	}
+	if err := extractZipSubtree(chainsawZip, "chainsaw-master/mappings/", filepath.Dir(MappingFile)); err != nil {
+		return fmt.Errorf("extracting chainsaw mappings: %w", err)
+	}
+	if err := extractZipSubtree(chainsawZip, "chainsaw-master/rules/", RulesDir); err != nil {
+		return fmt.Errorf("extracting chainsaw rules: %w", err)
+	}
+
+	return nil
+}
+
+// downloadZip fetches url's full body into memory so it can be opened as a
+// zip.Reader, which needs random access (io.ReaderAt).
+func downloadZip(ctx context.Context, url string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected status %s", resp.Status)
+	}
+	return io.ReadAll(resp.Body)
+}
+
+// extractZipSubtree writes every entry of body under prefix to dst, discarding
+// the rest of the archive. dst is removed first so a re-fetch is a clean
+// overwrite rather than a merge with files from a previous version.
+func extractZipSubtree(body []byte, prefix, dst string) error {
+	zr, err := zip.NewReader(bytes.NewReader(body), int64(len(body)))
+	if err != nil {
+		return err
+	}
+
+	if err := os.RemoveAll(dst); err != nil {
+		return err
+	}
+
+	for _, f := range zr.File {
+		rel, ok := strings.CutPrefix(f.Name, prefix)
+		if !ok || rel == "" {
+			continue
+		}
+
+		target := filepath.Join(dst, rel)
+		if f.FileInfo().IsDir() {
+			if err := os.MkdirAll(target, 0755); err != nil {
+				return err
+			}
+			continue
+		}
+
+		if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+			return err
+		}
+		if err := extractZipFile(f, target); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func extractZipFile(f *zip.File, target string) (err error) {
+	fr, err := f.Open()
+	if err != nil {
+		return err
+	}
+	defer fr.Close()
+
+	fw, err := os.OpenFile(target, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		return err
+	}
+	defer func() { err = errors.Join(err, fw.Close()) }()
+
+	_, err = io.Copy(fw, fr)
+	return err
+}
+
 func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) error {
 	evidence, err := utils.GuardEvidenceRun(m, job)
 	if err != nil {
@@ -124,7 +231,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 	slog.Debug("running command", "module", "chainsaw", "args", cmd.Args)
 	// TODO: output is discarded on success; to persist it, capture it here and store it
 	// somewhere on Job (no field for this today - would need a new column/migration or a
-	// log file under files/) instead of dropping it.
+	// log file under data/) instead of dropping it.
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		_, _ = os.Stderr.Write(out) //nolint:errcheck // best-effort diagnostic dump; err is already captured and returned

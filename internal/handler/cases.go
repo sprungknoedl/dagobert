@@ -377,11 +377,11 @@ func (h *Handler) CaseForkSave(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, dir := range []string{"evidences", "malware"} {
-		src := filepath.Join("files", dir, srcID)
+		src := filepath.Join(model.DataDir, dir, srcID)
 		if _, err := os.Stat(src); errors.Is(err, os.ErrNotExist) {
 			continue
 		}
-		if err := os.CopyFS(filepath.Join("files", dir, obj.ID), os.DirFS(src)); err != nil {
+		if err := os.CopyFS(filepath.Join(model.DataDir, dir, obj.ID), os.DirFS(src)); err != nil {
 			slog.Warn("failed to copy files for forked case", "dir", dir, "src", srcID, "dst", obj.ID, "err", err)
 		}
 	}
@@ -424,10 +424,10 @@ func (h *Handler) CaseDelete(w http.ResponseWriter, r *http.Request) {
 	// The case row is already gone; a cleanup failure here would only leave
 	// orphaned files on disk, not corrupt anything, so log rather than fail
 	// a delete that already succeeded.
-	if err := os.RemoveAll(filepath.Join("files", "evidences", cid)); err != nil {
+	if err := os.RemoveAll(filepath.Join(model.DataDir, "evidences", cid)); err != nil {
 		slog.Warn("failed to remove case evidence directory", "err", err, "case", cid)
 	}
-	if err := os.RemoveAll(filepath.Join("files", "malware", cid)); err != nil {
+	if err := os.RemoveAll(filepath.Join(model.DataDir, "malware", cid)); err != nil {
 		slog.Warn("failed to remove case malware directory", "err", err, "case", cid)
 	}
 

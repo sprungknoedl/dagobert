@@ -1,0 +1,364 @@
+@import './phosphor-2.1.2.css';
+@import './unpoly-3.14.3.css';
+@import './vis-timeline-8.5.1.css';
+@import './vditor-3.11.2.css';
+
+@import 'tailwindcss';
+@plugin "@tailwindcss/typography";
+@plugin "./daisyui.js";
+@plugin "./daisyui-theme.js" {
+    name: "dagobert";
+    default: true;
+    color-scheme: light;
+    --color-base-100: oklch(96% 0.022 88);
+    --color-base-200: oklch(93.5% 0.026 87);
+    --color-base-300: oklch(88% 0.032 85);
+    --color-base-content: oklch(25% 0.02 60);
+    --color-primary: oklch(72% 0.13 80);
+    --color-primary-content: oklch(28% 0.06 70);
+    --color-secondary: oklch(45% 0.09 150);
+    --color-secondary-content: oklch(97% 0.01 150);
+    --color-accent: oklch(56% 0.15 38);
+    --color-accent-content: oklch(97.5% 0.01 90);
+    --color-neutral: oklch(25% 0.02 60);
+    --color-neutral-content: oklch(95% 0.012 90);
+    --color-info: oklch(50% 0.06 250);
+    --color-info-content: oklch(97% 0.01 250);
+    --color-success: oklch(45% 0.09 150);
+    --color-success-content: oklch(97% 0.01 150);
+    --color-warning: oklch(70% 0.15 70);
+    --color-warning-content: oklch(25% 0.05 70);
+    --color-error: oklch(54% 0.17 27);
+    --color-error-content: oklch(97% 0.01 25);
+    --radius-selector: 2rem;
+    --radius-field: 0.5rem;
+    --radius-box: 0.5rem;
+    --size-selector: 0.25rem;
+    --size-field: 0.25rem;
+    --border: 1px;
+    --depth: 0;
+    --noise: 0;
+}
+
+@plugin "./daisyui-theme.js" {
+    name: "dagobert-dark";
+    prefersdark: true;
+    color-scheme: dark;
+    --color-base-100: oklch(24% 0.006 250);
+    --color-base-200: oklch(21% 0.006 250);
+    --color-base-300: oklch(19% 0.006 250);
+    --color-base-content: oklch(92% 0.008 250);
+    --color-primary: oklch(72% 0.13 80);
+    --color-primary-content: oklch(20% 0.05 70);
+    --color-secondary: oklch(65% 0.1 150);
+    --color-secondary-content: oklch(15% 0.03 150);
+    --color-accent: oklch(65% 0.15 38);
+    --color-accent-content: oklch(15% 0.03 38);
+    --color-neutral: oklch(92% 0.008 250);
+    --color-neutral-content: oklch(18% 0.006 250);
+    --color-info: oklch(70% 0.08 250);
+    --color-info-content: oklch(18% 0.03 250);
+    --color-success: oklch(65% 0.1 150);
+    --color-success-content: oklch(15% 0.03 150);
+    --color-warning: oklch(75% 0.15 70);
+    --color-warning-content: oklch(20% 0.05 70);
+    --color-error: oklch(62% 0.17 27);
+    --color-error-content: oklch(97% 0.01 25);
+    --radius-selector: 2rem;
+    --radius-field: 0.5rem;
+    --radius-box: 0.5rem;
+    --size-selector: 0.25rem;
+    --size-field: 0.25rem;
+    --border: 1px;
+    --depth: 0;
+    --noise: 0;
+}
+
+@font-face {
+    font-family: 'Fraunces Variable';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('/public/assets/fraunces-latin-opsz-normal.woff2') format('woff2-variations');
+}
+
+@font-face {
+    font-family: 'Fraunces Variable';
+    font-style: italic;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('/public/assets/fraunces-latin-opsz-italic.woff2') format('woff2-variations');
+}
+
+@font-face {
+    font-family: 'JetBrains Mono Variable';
+    font-style: normal;
+    font-weight: 100 800;
+    font-display: swap;
+    src: url('/public/assets/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');
+}
+
+@font-face {
+    font-family: 'Hanken Grotesk Variable';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('/public/assets/hanken-grotesk-latin-wght-normal.woff2') format('woff2-variations');
+}
+
+@theme {
+    --font-sans: 'Hanken Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
+    --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+@import './dagobert-choices.css';
+@import './dagobert-vis.css';
+
+/*
+LEDGER SURFACES
+grid paper on the body; data sits on plain paper
+*/
+
+html {
+    background-image:
+        linear-gradient(color-mix(in oklab, var(--color-base-content) 2%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in oklab, var(--color-base-content) 2%, transparent) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+.table,
+.stats {
+    background-color: var(--color-base-100);
+}
+
+/*
+HAIRLINES
+A raw --color-base-300 swatch is an absolute palette color: on the dark theme
+it's simply a dark color, so it reads as a near-black line no matter how
+close it sits to the surrounding surface tones. Hairlines instead mix a slice
+of --color-base-content into transparency (as .divider already did) so they
+read as "light gray line" the same way in both themes.
+*/
+
+.navbar {
+    border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) 15%, transparent);
+    margin-bottom: 1rem;
+}
+
+.divider::before, .divider::after {
+    height: 1px;
+}
+
+.table :where(thead tr) {
+    border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) 25%, transparent);
+}
+.table :where(tbody tr) {
+    border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) 15%, transparent);
+}
+
+.stats {
+    border: 1px solid color-mix(in oklab, var(--color-base-content) 15%, transparent);
+    /* subpixel grid overflow otherwise summons a scrollbar that shades the tiles unevenly */
+    scrollbar-width: none;
+}
+.stats::-webkit-scrollbar {
+    display: none;
+}
+
+.hairline {
+    border-color: color-mix(in oklab, var(--color-base-content) 15%, transparent);
+}
+
+/*
+BUTTONS
+pill-shaped buttons without affecting inputs/selects/tabs, which share --radius-field
+*/
+
+.btn {
+    --radius-field: 2rem;
+}
+
+/*
+DaisyUI's default hover/active button shading mixes toward a fixed #000,
+which reads fine on light surfaces but is nearly invisible once the surface
+itself is already dark. Mix toward base-content instead — dark in the light
+theme, light in the dark theme — so the shading direction always contrasts
+with the surface.
+*/
+.btn {
+    --btn-hover-bg: color-mix(in oklab, var(--btn-color, var(--color-base-200)), var(--color-base-content) 12%);
+    --btn-active-bg: color-mix(in oklab, var(--btn-color, var(--color-base-200)), var(--color-base-content) 16%);
+}
+
+/*
+daisyUI's join computes its corner radius from --radius-field on the join's
+*direct child*. For a dropdown button that child is the details/div wrapper,
+not the .btn summary inside, so it would resolve the theme radius instead of
+the .btn pill above — give the wrapper the same value.
+*/
+
+.join > .dropdown:has(> .btn) {
+    --radius-field: 2rem;
+}
+
+.menu :where(li:not(.menu-title) > :not(ul, details, .menu-title, .btn)) {
+    --radius-field: 2rem;
+}
+
+/*
+SIDEBAR / MENU
+match the pill-shaped buttons on the active and hovered menu items;
+the radius lives on --radius-field, scoped here so only these states pick it up
+*/
+
+.menu :where(li > *):hover,
+.menu :where(li > .menu-active) {
+    --radius-field: 2rem;
+}
+
+/*
+SEARCH BAR
+the visible rounded border sits on the .input wrapper, not the bare .search field;
+scope here so only the search bar rounds, leaving other inputs untouched
+*/
+
+.input:has(.search) {
+    --radius-field: 2rem;
+}
+
+/*
+JOIN BUTTONS
+a button joined to a form field should read as part of that field: match the input's
+border color and corner radius instead of the standalone .btn pill (2rem) above
+*/
+
+.join:has(.input, .select, .textarea) .btn.join-item {
+    --radius-field: 0.5rem;
+    --btn-border: color-mix(in oklab, var(--color-base-content) 20%, transparent);
+}
+
+/*
+MARKDOWN IN TABLES
+prose defaults to a larger base font than table cells; inherit the cell size so
+markdown scales with the rest of the row. Long notes collapse to a preview —
+the compiler in dagobert.js adds .overflowing and the show more/less toggle.
+*/
+
+.table .prose {
+    font-size: inherit;
+}
+
+/* markdown headings follow the platform's serif headings */
+.prose :where(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--font-serif);
+    font-weight: 600;
+}
+
+.markdown-preview {
+    max-height: 24rem;
+    overflow: hidden;
+}
+.markdown-preview.overflowing:not(.expanded) {
+    mask-image: linear-gradient(to bottom, black 70%, transparent);
+}
+.markdown-preview.expanded {
+    max-height: none;
+}
+
+.bg-flagged {
+    background-color: color-mix(in srgb, var(--color-warning) 10%, transparent) !important;
+}
+.btn-flagged {
+    color: var(--color-warning) !important;
+}
+
+.sort.asc::after {
+  content: "\25B2"; /* \002B06"; */
+  padding-left: 3px;
+  }
+.sort.desc::after {
+  content: "\25BC"; /* "\002B07"; */
+  padding-left: 3px
+  }
+
+/*
+UNPOLY
+*/
+
+up-drawer-box {
+    @apply bg-base-200 text-neutral;
+}
+
+up-drawer[size=large] up-drawer-box {
+    width: 66% !important;
+}
+
+/* extra-wide, fixed-width drawer for wide tables (e.g. the evidence log) —
+deliberately not "full": that's 100vw and removes the dimmed-background edge
+that signals "this is still an overlay" */
+up-drawer[size=xlarge] up-drawer-box {
+    width: 90% !important;
+}
+
+up-popup, up-modal-box, up-cover-box {
+    @apply bg-base-200 text-neutral;
+}
+
+up-popup {
+    border-radius: var(--radius-box);
+    margin-top: 0.5rem;
+}
+
+up-progress-bar {
+    @apply bg-primary;
+}
+
+up-popup-dismiss, up-cover-dismiss, up-drawer-dismiss, up-modal-dismiss {
+    @apply text-base-content/50;
+}
+
+/*
+PHOSPHOR ICONS
+size utilities layered on the .ph base class
+*/
+
+.ph-5 {
+    font-size: 15px;
+    line-height: 15px;
+}
+
+.ph-6 {
+    font-size: 18px;
+    line-height: 18px;
+}
+
+/*
+SIDEBAR HUES
+muted, distinct tint per case section — echoes the Fable feature icons.
+sit ~52-62% lightness so they read gently on the cream paper.
+*/
+
+.hue-gold  { color: oklch(62% 0.11 78); }
+.hue-slate { color: oklch(54% 0.06 245); }
+.hue-teal  { color: oklch(55% 0.08 200); }
+.hue-moss  { color: oklch(52% 0.09 150); }
+.hue-rust  { color: oklch(55% 0.13 38); }
+.hue-plum  { color: oklch(52% 0.10 345); }
+.hue-amber { color: oklch(60% 0.10 65); }
+.hue-green { color: oklch(53% 0.10 160); }
+.hue-peri  { color: oklch(55% 0.08 285); }
+.hue-cyan  { color: oklch(56% 0.09 220); }
+.hue-brick { color: oklch(52% 0.13 28); }
+.hue-olive { color: oklch(54% 0.08 110); }
+
+/*
+BREAKDOWN BAR FILLS
+same muted hue family as above, as background fills for the dashboard's
+proportional bars — deliberately not the semantic success/warning/error
+colors, so a bar's color never implies a status judgement.
+*/
+
+.bg-hue-teal  { background-color: oklch(55% 0.08 200); }
+.bg-hue-plum  { background-color: oklch(52% 0.10 345); }
+.bg-hue-olive { background-color: oklch(54% 0.08 110); }

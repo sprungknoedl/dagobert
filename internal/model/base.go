@@ -21,7 +21,25 @@ import (
 
 //go:embed migrations/*.sql
 var Migrations embed.FS
-var DefaultUrl = "file:files/dagobert.db?_pragma=foreign_keys(ON)&_pragma=journal_mode(WAL)"
+
+// DataDir, ScratchDir and VendorDir are the three top-level runtime
+// directories: DataDir holds persistent, backed-up user data (the database,
+// evidence, malware, report templates); ScratchDir holds ephemeral files safe
+// to wipe (staged archive uploads); VendorDir holds pinned/fetched system data
+// (MITRE ATT&CK, Chainsaw/Hayabusa rule sets) that `dagobert update` populates
+// and that can be baked into a container image. VendorDir is a sibling of
+// DataDir, not nested under it, so a DataDir volume mount at container start
+// can't shadow the image-baked copy. Named "external", not "vendor": a
+// top-level vendor/ directory makes the go command auto-switch to vendor
+// mode, which breaks the build since this repo doesn't maintain a real
+// vendor/modules.txt.
+const (
+	DataDir    = "data"
+	ScratchDir = "scratch"
+	VendorDir  = "external"
+)
+
+var DefaultUrl = "file:" + DataDir + "/dagobert.db?_pragma=foreign_keys(ON)&_pragma=journal_mode(WAL)"
 
 type Store struct {
 	RawConn *sql.DB
@@ -39,7 +57,7 @@ type Store struct {
 }
 
 func Connect(dburl string) (*Store, error) {
-	// a file: URL points at files/dagobert.db by default; SQLite cannot create
+	// a file: URL points at data/dagobert.db by default; SQLite cannot create
 	// the database in a directory that does not exist yet, so on a fresh
 	// checkout/volume the parent must be created first. Without this, every
 	// command (server, update, create-user) fails on first run.

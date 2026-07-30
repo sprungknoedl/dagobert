@@ -117,7 +117,7 @@ func ValidateReportTemplate(dto *model.ReportTemplate, valueLists model.ValueLis
 	return valid.Check([]valid.Condition{
 		{
 			Name: "Name", Missing: dto.Name == "",
-			// dto.Name is written to files/templates/<Name> (O_TRUNC) and later
+			// dto.Name is written to data/templates/<Name> (O_TRUNC) and later
 			// joined again for download/delete, so a traversing name must be
 			// rejected before it ever reaches the disk, not just an extension check.
 			Invalid: !isFlatName(dto.Name) ||

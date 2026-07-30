@@ -18,6 +18,10 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/modules/utils"
 )
 
+// RulesDir holds the Sigma rule set fetched by `hayabusa update-rules`, which
+// UpdateAssets shells out to.
+var RulesDir = filepath.Join(model.VendorDir, "hayabusa", "rules")
+
 type Module struct {
 	args []string
 }
@@ -66,7 +70,38 @@ func (m *Module) Validate() (model.Module, error) {
 		return nil, err
 	}
 
+	if _, err := os.Stat(RulesDir); err != nil {
+		err = fmt.Errorf("rules directory %q: %w", RulesDir, err)
+		slog.Warn("validating module prerequisites failed", "module", "hayabusa", "err", err)
+		return nil, err
+	}
+
 	return m, nil
+}
+
+// UpdateAssets shells out to `hayabusa update-rules` to fetch/refresh the
+// Sigma rule set into RulesDir.
+func (m *Module) UpdateAssets(ctx context.Context) error {
+	args, err := shellwords.Parse(os.Getenv("MODULE_HAYABUSA"))
+	if err != nil {
+		return fmt.Errorf("invalid command in MODULE_HAYABUSA: %w", err)
+	}
+	if len(args) < 1 {
+		slog.Info("module disabled, skipping asset fetch", "module", "hayabusa")
+		return nil
+	}
+
+	if err := os.MkdirAll(filepath.Dir(RulesDir), 0755); err != nil {
+		return err
+	}
+
+	slog.Info("fetching vendor assets", "module", "hayabusa")
+	cmd := exec.CommandContext(ctx, args[0], append(args[1:], "update-rules", "--rules", RulesDir)...)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		_, _ = os.Stderr.Write(out) //nolint:errcheck // best-effort diagnostic dump; err is already captured and returned
+		return fmt.Errorf("command %q failed: %w", args[0], err)
+	}
+	return nil
 }
 
 func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) error {
@@ -86,6 +121,8 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 		"--no-wizard",
 		"--min-level", "informational",
 		"--profile", "timesketch-verbose",
+		"--rules", RulesDir,
+		"--rules-config", filepath.Join(RulesDir, "config"),
 		"--file", src,
 		"--output", dst,
 	)...)
@@ -93,7 +130,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 	slog.Debug("running command", "module", "hayabusa", "args", cmd.Args)
 	// TODO: output is discarded on success; to persist it, capture it here and store it
 	// somewhere on Job (no field for this today - would need a new column/migration or a
-	// log file under files/) instead of dropping it.
+	// log file under data/) instead of dropping it.
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		_, _ = os.Stderr.Write(out) //nolint:errcheck // best-effort diagnostic dump; err is already captured and returned

@@ -104,7 +104,7 @@ func (h *Handler) EvidenceImport(w http.ResponseWriter, r *http.Request) {
 
 			loc := filepath.Base(filepath.Clean(rec[2]))
 			if !fileless {
-				if _, err := os.Stat(filepath.Join("files", "evidences", cid, loc)); errors.Is(err, os.ErrNotExist) {
+				if _, err := os.Stat(filepath.Join(model.DataDir, "evidences", cid, loc)); errors.Is(err, os.ErrNotExist) {
 					Warn(w, r, err)
 					return
 				}
@@ -338,7 +338,7 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 // the attach routine, which may turn them file-backed. attached reports
 // whether attach actually fired, for the caller's separate log entry.
 func resolveEvidenceFile(dto, old model.Evidence, new bool, upload multipart.File, fh *multipart.FileHeader) (result model.Evidence, attached bool, details string, err error) {
-	path := filepath.Join("files", "evidences", dto.CaseID, dto.Name)
+	path := filepath.Join(model.DataDir, "evidences", dto.CaseID, dto.Name)
 
 	if !dto.Fileless {
 		if new {
@@ -389,8 +389,8 @@ func renameEvidenceFile(cid, oldName, newName string) error {
 		return nil
 	}
 
-	src := filepath.Join("files", "evidences", cid, oldName)
-	dst := filepath.Join("files", "evidences", cid, newName)
+	src := filepath.Join(model.DataDir, "evidences", cid, oldName)
+	dst := filepath.Join(model.DataDir, "evidences", cid, newName)
 	if dstStat, err := os.Stat(dst); err == nil {
 		srcStat, err := os.Stat(src)
 		if err != nil || !os.SameFile(dstStat, srcStat) {
@@ -512,7 +512,7 @@ func (h *Handler) EvidenceDownload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path := filepath.Join("files", "evidences", obj.CaseID, obj.Name)
+	path := filepath.Join(model.DataDir, "evidences", obj.CaseID, obj.Name)
 	if _, err := os.Stat(path); errors.Is(err, os.ErrNotExist) {
 		http.Error(w, "file not found", http.StatusNotFound)
 		return
@@ -551,7 +551,7 @@ func (h *Handler) EvidenceDelete(w http.ResponseWriter, r *http.Request) {
 	// on pre-uniqueness data that can still hold duplicate names
 	obj, err := h.Store.GetEvidence(cid, id)
 	if err == nil && !obj.Fileless {
-		if rerr := os.Remove(filepath.Join("files", "evidences", obj.CaseID, obj.Name)); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
+		if rerr := os.Remove(filepath.Join(model.DataDir, "evidences", obj.CaseID, obj.Name)); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
 			slog.Warn("failed to remove evidence file", "err", rerr, "case", obj.CaseID, "evidence", obj.ID)
 		}
 	}

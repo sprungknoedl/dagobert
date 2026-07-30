@@ -11,7 +11,7 @@ import (
 )
 
 func TestLoadTemplateRejectsTraversal(t *testing.T) {
-	// names that escape files/templates/ must be rejected by the path guard,
+	// names that escape data/templates/ must be rejected by the path guard,
 	// before any filesystem access, with the generic "invalid template" error.
 	for _, name := range []string{
 		"../../evidences/case02/secret.odt",
@@ -41,7 +41,7 @@ func TestResolveReportFileRejectsInvalidUpload(t *testing.T) {
 		t.Fatalf("got %v, want templateError", err)
 	}
 	// a rejected brand-new upload must not leave the broken file behind
-	if _, err := os.Stat(filepath.Join("files", "templates", "broken.docx")); !os.IsNotExist(err) {
+	if _, err := os.Stat(filepath.Join(model.DataDir, "templates", "broken.docx")); !os.IsNotExist(err) {
 		t.Error("rejected template was left on disk")
 	}
 }
@@ -53,7 +53,7 @@ func TestResolveReportFileRenamesOnNameChange(t *testing.T) {
 	if err := db.SaveReportTemplate(obj); err != nil {
 		t.Fatal(err)
 	}
-	dir := filepath.Join("files", "templates")
+	dir := filepath.Join(model.DataDir, "templates")
 	os.MkdirAll(dir, 0755)
 	os.WriteFile(filepath.Join(dir, "old.docx"), []byte("tmpl"), 0666)
 

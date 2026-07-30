@@ -25,7 +25,7 @@ const LookupTimeout = 20 * time.Second
 var OnEvidenceAdded func(store *model.Store, obj model.Evidence)
 
 func Filepath(obj model.Evidence) string {
-	return filepath.Join("files", "evidences", obj.CaseID, obj.Name)
+	return filepath.Join(model.DataDir, "evidences", obj.CaseID, obj.Name)
 }
 
 // AddFromFS registers a module's output file as a new Evidence row and writes the

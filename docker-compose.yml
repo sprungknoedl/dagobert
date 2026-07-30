@@ -6,7 +6,7 @@ services:
     image: sprungknoedl/dagobert-full
     restart: unless-stopped
     volumes:
-      - data:/home/plaso/files
+      - data:/home/plaso/data
     env_file: dagobert.env
     ports:
       - 8080:8080

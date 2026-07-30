@@ -32,6 +32,12 @@ type Module interface {
 	RenderSettings() templ.Component
 }
 
+// AssetUpdater is implemented by modules with pinned external vendor data (Sigma
+// rules, mapping files, etc.) that `dagobert update` fetches.
+type AssetUpdater interface {
+	UpdateAssets(ctx context.Context) error
+}
+
 type Job struct {
 	ID       string
 	Name     string
