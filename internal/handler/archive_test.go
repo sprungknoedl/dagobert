@@ -175,10 +175,10 @@ func TestArchiveRoundTripBinaries(t *testing.T) {
 	if err := src.SaveEvidence("case01", model.Evidence{ID: "evi01", CaseID: "case01", Name: "image.dd", Hash: sum, Size: int64(len(content))}); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.MkdirAll(filepath.Join("files", "evidences", "case01"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(model.DataDir, "evidences", "case01"), 0755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join("files", "evidences", "case01", "image.dd"), content, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(model.DataDir, "evidences", "case01", "image.dd"), content, 0644); err != nil {
 		t.Fatal(err)
 	}
 
@@ -205,7 +205,7 @@ func TestArchiveRoundTripBinaries(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	got, err := os.ReadFile(filepath.Join(importDir, "files", "evidences", "case01", "image.dd"))
+	got, err := os.ReadFile(filepath.Join(importDir, model.DataDir, "evidences", "case01", "image.dd"))
 	if err != nil {
 		t.Fatalf("evidence not restored: %v", err)
 	}
@@ -254,7 +254,7 @@ func TestRestoreBinariesEnforcesContentBudget(t *testing.T) {
 		if err := restoreBinaries(zr, "case01", nil); err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
-		got, err := os.ReadFile(filepath.Join("files", "evidences", "case01", "big.bin"))
+		got, err := os.ReadFile(filepath.Join(model.DataDir, "evidences", "case01", "big.bin"))
 		if err != nil {
 			t.Fatalf("evidence not restored: %v", err)
 		}

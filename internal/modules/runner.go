@@ -100,6 +100,24 @@ func Start(ctx context.Context, store *model.Store) {
 	}
 }
 
+// UpdateAssets calls UpdateAssets on every registered module that implements it.
+// Unlike Start's Validate() gate, this does not require Validate() to have passed —
+// a module's vendor data (which Validate() may check for) doesn't exist yet on a
+// fresh install, and UpdateAssets is what creates it.
+func UpdateAssets(ctx context.Context) error {
+	for _, name := range slices.Sorted(maps.Keys(Modules)) {
+		updater, ok := Modules[name].(model.AssetUpdater)
+		if !ok {
+			continue
+		}
+		slog.Info("fetching vendor assets", "module", name)
+		if err := updater.UpdateAssets(ctx); err != nil {
+			return fmt.Errorf("%s: %w", name, err)
+		}
+	}
+	return nil
+}
+
 func runner(ctx context.Context, store *model.Store, modules map[string]model.Module) {
 	t := time.NewTicker(time.Second)
 	defer t.Stop()

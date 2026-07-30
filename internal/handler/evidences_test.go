@@ -13,7 +13,7 @@ const helloHash = "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
 
 func TestResolveEvidenceFileAdoptsFileOnDisk(t *testing.T) {
 	t.Chdir(t.TempDir())
-	dir := filepath.Join("files", "evidences", "case01")
+	dir := filepath.Join(model.DataDir, "evidences", "case01")
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		t.Fatal(err)
 	}

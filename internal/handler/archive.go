@@ -122,7 +122,7 @@ func writeCaseArchive(out io.Writer, store *model.Store, cid, sourceInstance, ex
 			if e.Fileless {
 				continue
 			}
-			disk := filepath.Join("files", "evidences", cid, e.Name)
+			disk := filepath.Join(model.DataDir, "evidences", cid, e.Name)
 			if _, err := os.Stat(disk); err != nil {
 				warnings = append(warnings, fmt.Sprintf("evidence %q: binary missing on disk", e.Name))
 				continue
@@ -130,7 +130,7 @@ func writeCaseArchive(out io.Writer, store *model.Store, cid, sourceInstance, ex
 			bins = append(bins, binEntry{"evidences/" + e.Name, disk})
 		}
 		for _, m := range arch.Malware {
-			disk := filepath.Join("files", "malware", cid, m.Hash+".zip")
+			disk := filepath.Join(model.DataDir, "malware", cid, m.Hash+".zip")
 			if _, err := os.Stat(disk); err != nil {
 				warnings = append(warnings, fmt.Sprintf("malware %q: sample missing on disk", m.Hash))
 				continue
@@ -356,11 +356,11 @@ func (h *Handler) CommitImport(w http.ResponseWriter, r *http.Request, token str
 // stagedArchivePath returns the on-disk location for an upload staged under the
 // given token. filepath.Base defends against a tampered token.
 func stagedArchivePath(token string) string {
-	return filepath.Join("files", "tmp", filepath.Base(token)+".zip")
+	return filepath.Join(model.ScratchDir, filepath.Base(token)+".zip")
 }
 
 // removeStaged best-effort deletes a staged archive upload; a failure just
-// leaves a stray file in files/tmp, so it's logged rather than surfaced.
+// leaves a stray file in scratch/, so it's logged rather than surfaced.
 func removeStaged(staged string) {
 	if err := os.Remove(staged); err != nil && !errors.Is(err, os.ErrNotExist) {
 		slog.Warn("failed to remove staged archive", "err", err, "path", staged)
@@ -395,7 +395,7 @@ func readCaseArchive(zr *zip.Reader) (model.CaseArchive, error) {
 
 	// the case id is user-controlled and used verbatim as a path component in
 	// restoreBinaries; an alphanumeric id (the only form fp.Random ever mints)
-	// cannot contain a separator and so cannot escape the files/ tree
+	// cannot contain a separator and so cannot escape the data/ tree
 	if !reAlnum.MatchString(arch.Case.ID) {
 		return model.CaseArchive{}, fmt.Errorf("illegal case id in archive: %q", arch.Case.ID)
 	}
@@ -465,7 +465,7 @@ func restoreBinaries(zr *zip.Reader, caseID string, evidences []model.Evidence) 
 		if rel, ok, err := archiveBinaryName("evidences/", f.Name); err != nil {
 			return err
 		} else if ok {
-			sum, err := writeZipFile(f, filepath.Join("files", "evidences", caseID, rel), &budget)
+			sum, err := writeZipFile(f, filepath.Join(model.DataDir, "evidences", caseID, rel), &budget)
 			if err != nil {
 				return err
 			}
@@ -478,7 +478,7 @@ func restoreBinaries(zr *zip.Reader, caseID string, evidences []model.Evidence) 
 		if rel, ok, err := archiveBinaryName("malware/", f.Name); err != nil {
 			return err
 		} else if ok {
-			if _, err := writeZipFile(f, filepath.Join("files", "malware", caseID, rel), &budget); err != nil {
+			if _, err := writeZipFile(f, filepath.Join(model.DataDir, "malware", caseID, rel), &budget); err != nil {
 				return err
 			}
 		}

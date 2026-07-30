@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/sprungknoedl/dagobert/internal/model"
 )
 
 func TestCaseDeleteRemovesCaseFiles(t *testing.T) {
@@ -13,8 +15,8 @@ func TestCaseDeleteRemovesCaseFiles(t *testing.T) {
 	seedCase(t, db)
 	t.Chdir(t.TempDir())
 
-	evidenceDir := filepath.Join("files", "evidences", "case01")
-	malwareDir := filepath.Join("files", "malware", "case01")
+	evidenceDir := filepath.Join(model.DataDir, "evidences", "case01")
+	malwareDir := filepath.Join(model.DataDir, "malware", "case01")
 	if err := os.MkdirAll(evidenceDir, 0o755); err != nil {
 		t.Fatal(err)
 	}

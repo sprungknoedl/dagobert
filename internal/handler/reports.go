@@ -11,6 +11,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/internal/views"
 	"github.com/sprungknoedl/dagobert/pkg/doct"
 )
@@ -19,13 +20,13 @@ const BucketReportTemplates = "templates"
 
 func LoadTemplate(name string) (doct.Template, error) {
 	// name is an untrusted form value joined into a filesystem path; require a
-	// single flat element so it cannot traverse out of files/templates/ into
+	// single flat element so it cannot traverse out of data/templates/ into
 	// another case's evidence/malware dirs.
 	if !isFlatName(name) {
 		return nil, errors.New("invalid template")
 	}
 
-	path := filepath.Join("files", "templates", name)
+	path := filepath.Join(model.DataDir, "templates", name)
 	switch filepath.Ext(name) {
 	case ".ods":
 		fallthrough

@@ -1,9 +1,10 @@
-// Package assets embeds static vendor assets (e.g. Phosphor icons CSS) not covered by public/public.go.
+// Package assets embeds the compiled + vendored static files served at
+// /public/assets/ (dagobert.css/js, third-party JS, fonts, images). See
+// internal/frontend for the source inputs that build-web compiles into
+// dagobert.css.
 package assets
 
-import (
-	_ "embed"
-)
+import "embed"
 
-//go:embed phosphor-2.1.2.css
-var PhosphorCSS string
+//go:embed *.css *.js *.woff2 *.ttf *.ico *.svg vditor-3.11.2
+var FS embed.FS

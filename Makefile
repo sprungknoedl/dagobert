@@ -93,14 +93,14 @@ tmp/daisyui-theme-$(DAISYUI_VERSION).js:
 	$(call verify,$@,$(DAISYUI_THEME_SHA))
 
 # Unversioned copies so the @plugin paths in dagobert.css stay version-free.
-internal/assets/daisyui.js: tmp/daisyui-$(DAISYUI_VERSION).js
+internal/frontend/daisyui.js: tmp/daisyui-$(DAISYUI_VERSION).js
 	cp $< $@
 
-internal/assets/daisyui-theme.js: tmp/daisyui-theme-$(DAISYUI_VERSION).js
+internal/frontend/daisyui-theme.js: tmp/daisyui-theme-$(DAISYUI_VERSION).js
 	cp $< $@
 
-build-web: $(TAILWIND_BIN) internal/assets/daisyui.js internal/assets/daisyui-theme.js
-	$(TAILWIND_BIN) -m -i internal/assets/dagobert.css -o public/assets/dagobert.css
+build-web: $(TAILWIND_BIN) internal/frontend/daisyui.js internal/frontend/daisyui-theme.js
+	$(TAILWIND_BIN) -m -i internal/frontend/dagobert.css -o internal/assets/dagobert.css
 
 $(GOLANGCI_LINT_TARBALL):
 	mkdir -p tmp
@@ -114,7 +114,7 @@ $(GOLANGCI_LINT_BIN): $(GOLANGCI_LINT_TARBALL)
 clean:
 	rm -f tmp/tailwindcss-* tmp/daisyui-*.js tmp/golangci-lint-*
 	rm -rf tmp/golangci-lint-*/
-	rm -f internal/assets/daisyui.js internal/assets/daisyui-theme.js
+	rm -f internal/frontend/daisyui.js internal/frontend/daisyui-theme.js
 	rm -rf $(STIX_VENV)
 
 build-go:

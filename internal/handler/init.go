@@ -10,18 +10,19 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
 	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
 	"github.com/spf13/cobra"
+	"github.com/sprungknoedl/dagobert/internal/assets"
 	"github.com/sprungknoedl/dagobert/internal/auth"
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/internal/modules"
 	"github.com/sprungknoedl/dagobert/pkg/attck"
 	"github.com/sprungknoedl/dagobert/pkg/timesketch"
-	"github.com/sprungknoedl/dagobert/public"
 )
 
 func Run(cmd *cobra.Command, args []string) {
@@ -59,15 +60,16 @@ func Run(cmd *cobra.Command, args []string) {
 	// --------------------------------------
 	// MITRE ATT&CK
 	// --------------------------------------
-	// system data lives outside files/, which holds user data only (and is
+	// system data lives outside data/, which holds user data only (and is
 	// shadowed by the volume mount in Docker). Fail fast with a clear pointer
 	// to `dagobert update` when it is missing entirely.
-	guardMitre("mitre/enterprise-attack.json", "mitre/ics-attack.json", "mitre/mobile-attack.json")
-	mitre, err := attck.LoadKB(
-		"mitre/enterprise-attack.json",
-		"mitre/ics-attack.json",
-		"mitre/mobile-attack.json",
-	)
+	mitreDir := filepath.Join(model.VendorDir, "mitre")
+	enterprisePath := filepath.Join(mitreDir, "enterprise-attack.json")
+	icsPath := filepath.Join(mitreDir, "ics-attack.json")
+	mobilePath := filepath.Join(mitreDir, "mobile-attack.json")
+
+	guardMitre(enterprisePath, icsPath, mobilePath)
+	mitre, err := attck.LoadKB(enterprisePath, icsPath, mobilePath)
 	if err != nil {
 		slog.Error("Failed to load MITRE ATT&CK knowledge base", "err", err)
 		return
@@ -288,7 +290,7 @@ func Run(cmd *cobra.Command, args []string) {
 	router.HandleFunc("GET /errors/500", Serve5xx)
 
 	// static assets
-	router.Handle("GET /public/", ServeDir("/public/", public.AssetsFS))
+	router.Handle("GET /public/assets/", ServeDir("/public/assets/", assets.FS))
 
 	// auth routes (unauthenticated)
 	router.HandleFunc("GET /auth/login", a.LoginLocal)
@@ -410,14 +412,14 @@ const schemaBehind = `
       dagobert update
       # docker:  docker compose run --rm app update
 
-  Then start the server again. Tip: back up files/dagobert.db first.
+  Then start the server again. Tip: back up data/dagobert.db first.
 `
 
 const schemaDirty = `
 ✗ Database is in a dirty state — a previous migration failed at version %d.
 
   dagobert will not start until this is resolved, to avoid corrupting case data.
-  Restore your most recent backup of files/dagobert.db, or once you have
+  Restore your most recent backup of data/dagobert.db, or once you have
   confirmed the schema by hand, recover with:
 
       dagobert update --force

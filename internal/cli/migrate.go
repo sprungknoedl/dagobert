@@ -3,6 +3,7 @@ package cli
 
 import (
 	"cmp"
+	"context"
 	"errors"
 	"log/slog"
 	"os"
@@ -10,12 +11,15 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/spf13/cobra"
 	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/modules"
+	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 )
 
 // Update is the canonical "bring this instance current" command. It creates the
-// database if missing, applies any pending migrations, and downloads/refreshes
-// the MITRE ATT&CK data. It is idempotent: re-running it on an up-to-date
-// instance is a no-op.
+// database if missing, applies any pending migrations, downloads/refreshes the
+// MITRE ATT&CK data, and fetches any other registered module's pinned vendor
+// data (Sigma rules, mapping files, etc.) via its AssetUpdater hook. It is
+// idempotent: re-running it on an up-to-date instance is a no-op.
 //
 // --force ignores the skip-guards: it recovers a dirty database (re-running the
 // failed migration) and re-downloads the MITRE data regardless of the sentinel.
@@ -25,7 +29,18 @@ func Update(cmd *cobra.Command, args []string) error {
 	if err := migrateDB(force); err != nil {
 		return err
 	}
-	return updateMitre(force)
+	if err := updateMitre(force); err != nil {
+		return err
+	}
+
+	ts := timesketch.NewClient(timesketch.Config{
+		URL:           os.Getenv("TIMESKETCH_URL"),
+		Username:      os.Getenv("TIMESKETCH_USER"),
+		Password:      os.Getenv("TIMESKETCH_PASS"),
+		SkipVerifyTLS: os.Getenv("TIMESKETCH_SKIP_VERIFY_TLS") == "true",
+	})
+	modules.Register(ts)
+	return modules.UpdateAssets(context.Background())
 }
 
 // migrateDB connects to the database (creating the file + parent dir if needed,

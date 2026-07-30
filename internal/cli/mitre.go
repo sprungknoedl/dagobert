@@ -9,16 +9,20 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/sprungknoedl/dagobert/internal/model"
 )
 
 // AttckRelease pins the MITRE ATT&CK STIX bundle version downloaded by
 // `dagobert update`. This is the single source of truth for the pinned release.
 const AttckRelease = "19.1"
 
-const (
-	mitreDir      = "mitre"
-	mitreSentinel = mitreDir + "/.version"
+var (
+	mitreDir      = filepath.Join(model.VendorDir, "mitre")
+	mitreSentinel = filepath.Join(mitreDir, ".version")
+)
 
+const (
 	mitreBaseURL = "https://github.com/mitre-attack/attack-stix-data/raw/refs/heads/master"
 
 	// The three ATT&CK matrices fetched by `dagobert update`, and their pinned
@@ -32,8 +36,8 @@ const (
 	mobileURL     = mitreBaseURL + "/mobile-attack/mobile-attack-" + AttckRelease + ".json"
 )
 
-// updateMitre downloads the pinned MITRE ATT&CK data into mitre/ when it is
-// missing or stale. A sentinel file (mitre/.version) records the version that
+// updateMitre downloads the pinned MITRE ATT&CK data into external/mitre/ when
+// it is missing or stale. A sentinel file (external/mitre/.version) records the version that
 // was fetched: the download is skipped when every matrix is present and the
 // sentinel already matches AttckRelease. force re-downloads unconditionally.
 func updateMitre(force bool) error {

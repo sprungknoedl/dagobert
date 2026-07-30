@@ -94,7 +94,7 @@ type templateError struct{ error }
 func resolveReportTemplateFile(store *model.Store, dto model.ReportTemplate, isNew bool, upload multipart.File, fh *multipart.FileHeader) error {
 	if fh != nil && fh.Size > 0 {
 		// prepare location for report storage
-		dst := filepath.Join("files", BucketReportTemplates, dto.Name)
+		dst := filepath.Join(model.DataDir, BucketReportTemplates, dto.Name)
 		if err := os.MkdirAll(filepath.Dir(dst), 0755); err != nil {
 			return err
 		}
@@ -131,7 +131,7 @@ func resolveReportTemplateFile(store *model.Store, dto model.ReportTemplate, isN
 				return err
 			}
 			if obj.Name != dto.Name {
-				return os.Remove(filepath.Join("files", BucketReportTemplates, obj.Name))
+				return os.Remove(filepath.Join(model.DataDir, BucketReportTemplates, obj.Name))
 			}
 		}
 		return nil
@@ -144,8 +144,8 @@ func resolveReportTemplateFile(store *model.Store, dto model.ReportTemplate, isN
 			return err
 		}
 		if obj.Name != dto.Name {
-			src := filepath.Join("files", BucketReportTemplates, obj.Name)
-			dst := filepath.Join("files", BucketReportTemplates, dto.Name)
+			src := filepath.Join(model.DataDir, BucketReportTemplates, obj.Name)
+			dst := filepath.Join(model.DataDir, BucketReportTemplates, dto.Name)
 			return os.Rename(src, dst)
 		}
 	}
@@ -163,7 +163,7 @@ func (h *Handler) ReportTemplateDelete(w http.ResponseWriter, r *http.Request) {
 	// try to delete file from disk
 	obj, err := h.Store.GetReportTemplate(id)
 	if err == nil {
-		if rerr := os.Remove(filepath.Join("files", "templates", obj.Name)); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
+		if rerr := os.Remove(filepath.Join(model.DataDir, "templates", obj.Name)); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
 			slog.Warn("failed to remove report template file", "err", rerr, "template", obj.Name)
 		}
 	}

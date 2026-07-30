@@ -87,17 +87,20 @@ MODULE_CHAINSAW=chainsaw
 Use an absolute path if the binary is not on the `PATH`. Start the server as usual with
 `dagobert server`.
 
-Chainsaw ships no Sigma rules, EVTX field mapping, or native rules of its own. Rather than a
-`MODULE_CHAINSAW_*` variable per path, these live at fixed locations relative to the working
-directory, the same convention as `mitre/` for MITRE ATT&CK data:
+Chainsaw ships no Sigma rules, EVTX field mapping, or native rules of its own. `dagobert
+update` fetches them into `external/chainsaw/` (the same convention as `external/mitre/` for
+MITRE ATT&CK data), provided `MODULE_CHAINSAW` is set at the time it runs:
 
-- `sigma_rules/` — a checkout of [SigmaHQ/sigma](https://github.com/SigmaHQ/sigma) or any
-  other Sigma rule set
-- `mappings/sigma-event-logs-all.yml` — the mapping file from
+- `external/chainsaw/sigma_rules/` — the `rules/` tree from
+  [SigmaHQ/sigma](https://github.com/SigmaHQ/sigma)'s `master` branch
+- `external/chainsaw/mappings/sigma-event-logs-all.yml` — the mapping file from
   [Chainsaw's own repo](https://github.com/WithSecureLabs/chainsaw/tree/master/mappings)
-- `rules/` — optional; [Chainsaw's bundled native
+- `external/chainsaw/rules/` — optional; [Chainsaw's bundled native
   rules](https://github.com/WithSecureLabs/chainsaw/tree/master/rules). If missing, Chainsaw
   just runs without its native rule set.
+
+These always fetch the `master` branch and overwrite unconditionally — there is no version
+pinning or staleness check, unlike MITRE's pinned release.
 
 ## Docker-wrapped tools
 
@@ -106,16 +109,16 @@ tools isolated while letting you swap image versions freely. It requires Docker 
 host and permission for the server process to run `docker run`.
 
 ```env
-MODULE_PLASO=docker run -v $PWD/files:/home/plaso/files log2timeline/plaso psteal
-MODULE_HAYABUSA=docker run -v $PWD/files:/home/sprungknoedl/files sprungknoedl/hayabusa
-MODULE_DISSECT=docker run -v $PWD/files:/home/dissect/files sprungknoedl/dissect target-query
-MODULE_DISSECT_RDUMP=docker run -i -v $PWD/files:/home/dissect/files sprungknoedl/dissect rdump
-MODULE_ZIRCOLITE=docker run -v $PWD/files:/opt/zircolite/files wagga40/zircolite
-MODULE_CHAINSAW=docker run -v $PWD/files:/home/chainsaw/files your-registry/chainsaw
+MODULE_PLASO=docker run -v $PWD/data:/home/plaso/data log2timeline/plaso psteal
+MODULE_HAYABUSA=docker run -v $PWD/data:/home/sprungknoedl/data sprungknoedl/hayabusa
+MODULE_DISSECT=docker run -v $PWD/data:/home/dissect/data sprungknoedl/dissect target-query
+MODULE_DISSECT_RDUMP=docker run -i -v $PWD/data:/home/dissect/data sprungknoedl/dissect rdump
+MODULE_ZIRCOLITE=docker run -v $PWD/data:/opt/zircolite/data wagga40/zircolite
+MODULE_CHAINSAW=docker run -v $PWD/data:/home/chainsaw/data -v $PWD/external/chainsaw:/home/chainsaw/external/chainsaw your-registry/chainsaw
 ```
 
-The shared `files` directory must be mounted into each container at the path that tool
-expects relative to its working directory (for example `/home/plaso/files` for Plaso), so
+The shared `data` directory must be mounted into each container at the path that tool
+expects relative to its working directory (for example `/home/plaso/data` for Plaso), so
 the container can read the evidence and write its results back. `MODULE_DISSECT_RDUMP`
 additionally needs `-i`/`--interactive`, since `rdump` reads `target-query`'s output over
 piped stdin and `docker run` closes stdin immediately without it.

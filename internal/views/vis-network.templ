@@ -3,7 +3,7 @@ package views
 import (
 	_ "embed"
 	"encoding/json"
-	"github.com/sprungknoedl/dagobert/internal/assets"
+	"github.com/sprungknoedl/dagobert/internal/frontend"
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"regexp"
 	"strconv"
@@ -31,7 +31,7 @@ type group struct {
 	Icon icon `json:"icon"`
 }
 
-var iconMap = parsePhosphorCSS(assets.PhosphorCSS)
+var iconMap = parsePhosphorCSS(frontend.PhosphorCSS)
 
 templ VisNetwork(env Env, nodes []Node, edges []Edge) {
 	@layout() {
