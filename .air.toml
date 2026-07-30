@@ -12,9 +12,9 @@ root = "."
   full_bin = ""
   include_dir = []
   include_ext = ["go", "html", "templ", "css", "js"]
-  kill_delay = "0s"
+  kill_delay = "500ms"
   log = "build-errors.log"
-  send_interrupt = false
+  send_interrupt = true
   stop_on_error = true
 
 [color]
