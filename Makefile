@@ -166,8 +166,7 @@ $(STIX_READY):
 	touch $@
 
 docker:
-	docker build . -f dagobert-min.dockerfile -t sprungknoedl/dagobert
-	docker build . -f dagobert-full.dockerfile -t sprungknoedl/dagobert-full
+	docker build . -t sprungknoedl/dagobert
 
 run:
 	air

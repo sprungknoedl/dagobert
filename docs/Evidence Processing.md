@@ -46,25 +46,15 @@ There are three ways to provide the Hayabusa, Plaso, and Dissect binaries.
 
 ## Pre-bundled image (recommended)
 
-The `sprungknoedl/dagobert-full` image ships the app together with Plaso and Hayabusa and
-presets the `MODULE_*` variables to the bundled tools. This is the simplest path and what
-the default `docker-compose.yml` uses, so evidence processing works out of the box. Leave
-the `MODULE_*` variables unset in `dagobert.env` — setting them overrides the image's
-defaults and will break them.
+The `sprungknoedl/dagobert` image ships the app together with Plaso and Hayabusa and
+presets the `MODULE_*` variables to the bundled tools. This is the simplest path, so
+evidence processing works out of the box. Leave the `MODULE_*` variables unset in
+`dagobert.env` — setting them overrides the image's defaults and will break them.
 
-```yaml
-volumes:
-  data:
-
-services:
-  app:
-    image: sprungknoedl/dagobert-full
-    restart: unless-stopped
-    volumes:
-      - data:/home/plaso/files
-    env_file: dagobert.env
-    ports:
-      - 8080:8080
+```sh
+docker run -d --name dagobert --restart unless-stopped \
+  --env-file dagobert.env -v data:/home/plaso/data -p 8080:8080 \
+  sprungknoedl/dagobert
 ```
 
 The trade-off is that tool versions are fixed when the image is built. To pin or update a
