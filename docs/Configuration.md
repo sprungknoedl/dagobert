@@ -102,7 +102,9 @@ of concurrent jobs through `DAGOBERT_WORKERS`.
 | --- | --- | --- | --- |
 | `MODULE_HAYABUSA` | No | Command that runs Hayabusa (EVTX triage). Unset disables the module. | `hayabusa` |
 | `MODULE_PLASO` | No | Command that runs Plaso's `psteal`. Unset disables the module. | `psteal.py` |
-| `MODULE_ZIRCOLITE` | No | Command that runs Zircolite (EVTX Sigma detection). Unset disables the module. | `zircolite` |
+| `MODULE_DISSECT` | No | Command that runs Dissect's `target-query`. Unset disables the module. | `target-query` |
+| `MODULE_DISSECT_RDUMP` | No | Command that runs Dissect's `rdump`, piped from `target-query`'s output. Unset disables the module. | `rdump` |
+| `MODULE_ZIRCOLITE` | No | Command that runs Zircolite (EVTX Sigma detection). Unset disables the module. Zircolite needs vendor assets it doesn't ship as a pip-installable package — `dagobert update` fetches them into `external/zircolite/`; see [Evidence Processing](Evidence%20Processing.md). | `zircolite` |
 | `MODULE_CHAINSAW` | No | Command that runs Chainsaw (EVTX Sigma and native-rule hunting). Unset disables the module. Chainsaw ships no Sigma rules, EVTX field mapping, or native rules of its own — `dagobert update` fetches them into `external/chainsaw/`; see [Evidence Processing](Evidence%20Processing.md). | `chainsaw` |
 | `DAGOBERT_WORKERS` | No | Number of concurrent job runners. | `3` (default) |
 

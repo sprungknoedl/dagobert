@@ -42,23 +42,24 @@ configured, the server logs a warning and runs without evidence processing.
 The Timesketch importer is built into the app and needs no `MODULE_*` variable — it is
 enabled by setting `TIMESKETCH_URL` (see [Configuration](Configuration.md)).
 
-There are three ways to provide the Hayabusa, Plaso, and Dissect binaries.
+There are two ways to provide the tool binaries.
 
 ## Pre-bundled image (recommended)
 
-The `sprungknoedl/dagobert` image ships the app together with Plaso and Hayabusa and
-presets the `MODULE_*` variables to the bundled tools. This is the simplest path, so
-evidence processing works out of the box. Leave the `MODULE_*` variables unset in
-`dagobert.env` — setting them overrides the image's defaults and will break them.
+The `sprungknoedl/dagobert` image ships the app together with all five tools — Plaso,
+Hayabusa, Dissect, Zircolite, and Chainsaw — and presets the `MODULE_*` variables to the
+bundled tools. This is the simplest path, so evidence processing works out of the box.
+Leave the `MODULE_*` variables unset in `dagobert.env` — setting them overrides the
+image's defaults and will break them.
 
 ```sh
 docker run -d --name dagobert --restart unless-stopped \
-  --env-file dagobert.env -v data:/home/plaso/data -p 8080:8080 \
+  --env-file dagobert.env -v data:/home/dagobert/data -p 8080:8080 \
   sprungknoedl/dagobert
 ```
 
 The trade-off is that tool versions are fixed when the image is built. To pin or update a
-tool independently, use one of the approaches below.
+tool independently, provide it as a local binary instead.
 
 ## Local binaries
 
@@ -71,6 +72,7 @@ MODULE_PLASO=psteal.py
 MODULE_HAYABUSA=hayabusa
 MODULE_DISSECT=target-query
 MODULE_DISSECT_RDUMP=rdump
+MODULE_ZIRCOLITE=zircolite
 MODULE_CHAINSAW=chainsaw
 ```
 
@@ -92,23 +94,18 @@ MITRE ATT&CK data), provided `MODULE_CHAINSAW` is set at the time it runs:
 These always fetch the `master` branch and overwrite unconditionally — there is no version
 pinning or staleness check, unlike MITRE's pinned release.
 
-## Docker-wrapped tools
+Zircolite likewise needs vendor assets it doesn't ship as a pip-installable package.
+`dagobert update` fetches them into `external/zircolite/` from
+[wagga40/Zircolite](https://github.com/wagga40/Zircolite)'s pinned `v3.7.6` tag, provided
+`MODULE_ZIRCOLITE` is set at the time it runs:
 
-You can also have the server launch each tool in an ephemeral container. This keeps the
-tools isolated while letting you swap image versions freely. It requires Docker on the
-host and permission for the server process to run `docker run`.
+- `external/zircolite/exportForTimesketch.tmpl` — the Timesketch export template
+- `external/zircolite/rules_windows_generic.json` — Zircolite's default EVTX ruleset
+- `external/zircolite/config.yaml` — the EVTX field mapping; mandatory, Zircolite produces
+  no output without it
+- `external/zircolite/transforms/` — referenced by `config.yaml`'s `transforms_dir:`, so it
+  must stay a sibling of `config.yaml`
 
-```env
-MODULE_PLASO=docker run -v $PWD/data:/home/plaso/data log2timeline/plaso psteal
-MODULE_HAYABUSA=docker run -v $PWD/data:/home/sprungknoedl/data sprungknoedl/hayabusa
-MODULE_DISSECT=docker run -v $PWD/data:/home/dissect/data sprungknoedl/dissect target-query
-MODULE_DISSECT_RDUMP=docker run -i -v $PWD/data:/home/dissect/data sprungknoedl/dissect rdump
-MODULE_ZIRCOLITE=docker run -v $PWD/data:/opt/zircolite/data wagga40/zircolite
-MODULE_CHAINSAW=docker run -v $PWD/data:/home/chainsaw/data -v $PWD/external/chainsaw:/home/chainsaw/external/chainsaw your-registry/chainsaw
-```
-
-The shared `data` directory must be mounted into each container at the path that tool
-expects relative to its working directory (for example `/home/plaso/data` for Plaso), so
-the container can read the evidence and write its results back. `MODULE_DISSECT_RDUMP`
-additionally needs `-i`/`--interactive`, since `rdump` reads `target-query`'s output over
-piped stdin and `docker run` closes stdin immediately without it.
+Unlike Chainsaw, this is pinned to a tag rather than tracking `master`: the template reads
+Zircolite's own result structure, so a drifting template against a pinned tool would break
+quietly.
