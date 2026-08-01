@@ -79,7 +79,7 @@ can work on a case concurrently.
 
    ```sh
    docker run -d --name dagobert --restart unless-stopped \
-     --env-file dagobert.env -v data:/home/plaso/data -p 8080:8080 \
+     --env-file dagobert.env -v data:/home/dagobert/data -p 8080:8080 \
      sprungknoedl/dagobert
    ```
 
@@ -101,18 +101,19 @@ Dagobert is now available at <http://localhost:8080>.
 > [!NOTE]
 > The automatic bootstrap only happens on a fresh, empty volume. After pulling a
 > newer image, apply any pending database migrations explicitly with
-> `docker run --rm --env-file dagobert.env -v data:/home/plaso/data
+> `docker run --rm --env-file dagobert.env -v data:/home/dagobert/data
 > sprungknoedl/dagobert update` (the server refuses to start against an
 > out-of-date schema rather than migrating your case data silently). The same
 > command also refreshes the MITRE data when a release bumps it. Then recreate
 > the running container with the new image.
 
-The published `sprungknoedl/dagobert` image bundles Plaso and Hayabusa, so
-evidence processing works out of the box. Jobs run in-process, with the tool
-commands configured via the `MODULE_*` environment variables — the image
-presets these to the bundled tools, so leave them unset in `dagobert.env`
-unless you want to override them. The Timesketch importer is built into the
-app itself and configured solely via the `TIMESKETCH_*` variables.
+The published `sprungknoedl/dagobert` image bundles Plaso, Hayabusa, Dissect,
+Zircolite, and Chainsaw, so evidence processing works out of the box. Jobs run
+in-process, with the tool commands configured via the `MODULE_*` environment
+variables — the image presets these to the bundled tools, so leave them unset
+in `dagobert.env` unless you want to override them. The Timesketch importer is
+built into the app itself and configured solely via the `TIMESKETCH_*`
+variables.
 
 > [!WARNING]
 > Do not expose Dagobert directly to the internet. Always deploy it behind an
