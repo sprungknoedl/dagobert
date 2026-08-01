@@ -6,7 +6,7 @@ set -e
 # volume is empty: there is no case data to corrupt, so it is safe to create and
 # migrate the database automatically (`dagobert update` also verifies the
 # bundled MITRE data, which is already baked into the image). A populated volume
-# is left untouched — upgrades stay explicit via `docker compose run --rm app
+# is left untouched — upgrades stay explicit via `docker run --rm ... sprungknoedl/dagobert
 # update`, guarded by the schema check in `dagobert server`.
 if [ ! -f data/dagobert.db ]; then
     echo "First run: bootstrapping a fresh data volume (creating + migrating the database)..."

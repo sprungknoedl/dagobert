@@ -57,7 +57,7 @@ dagobert create-api-key <NAME>       # creates an API key and prints it
 ```
 
 Run these against a configured database — in a Docker deployment, prefix with
-`docker compose exec app`.
+`docker exec dagobert`.
 
 ## Timesketch
 
@@ -106,7 +106,7 @@ of concurrent jobs through `DAGOBERT_WORKERS`.
 | `MODULE_CHAINSAW` | No | Command that runs Chainsaw (EVTX Sigma and native-rule hunting). Unset disables the module. Chainsaw ships no Sigma rules, EVTX field mapping, or native rules of its own — `dagobert update` fetches them into `external/chainsaw/`; see [Evidence Processing](Evidence%20Processing.md). | `chainsaw` |
 | `DAGOBERT_WORKERS` | No | Number of concurrent job runners. | `3` (default) |
 
-The `sprungknoedl/dagobert-full` image presets the `MODULE_*` variables to its bundled
+The `sprungknoedl/dagobert` image presets the `MODULE_*` variables to its bundled
 tools, so leave them unset when using that image. See
 [Evidence Processing](Evidence%20Processing.md) for the full details, including how to run
 the tools from local binaries or wrapped in Docker.
