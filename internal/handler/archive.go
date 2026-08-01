@@ -356,11 +356,11 @@ func (h *Handler) CommitImport(w http.ResponseWriter, r *http.Request, token str
 // stagedArchivePath returns the on-disk location for an upload staged under the
 // given token. filepath.Base defends against a tampered token.
 func stagedArchivePath(token string) string {
-	return filepath.Join(model.ScratchDir, filepath.Base(token)+".zip")
+	return filepath.Join(model.TmpDir, filepath.Base(token)+".zip")
 }
 
 // removeStaged best-effort deletes a staged archive upload; a failure just
-// leaves a stray file in scratch/, so it's logged rather than surfaced.
+// leaves a stray file in tmp/, so it's logged rather than surfaced.
 func removeStaged(staged string) {
 	if err := os.Remove(staged); err != nil && !errors.Is(err, os.ErrNotExist) {
 		slog.Warn("failed to remove staged archive", "err", err, "path", staged)
