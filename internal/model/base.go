@@ -22,9 +22,9 @@ import (
 //go:embed migrations/*.sql
 var Migrations embed.FS
 
-// DataDir, ScratchDir and VendorDir are the three top-level runtime
+// DataDir, TmpDir and VendorDir are the three top-level runtime
 // directories: DataDir holds persistent, backed-up user data (the database,
-// evidence, malware, report templates); ScratchDir holds ephemeral files safe
+// evidence, malware, report templates); TmpDir holds ephemeral files safe
 // to wipe (staged archive uploads); VendorDir holds pinned/fetched system data
 // (MITRE ATT&CK, Chainsaw/Hayabusa rule sets) that `dagobert update` populates
 // and that can be baked into a container image. VendorDir is a sibling of
@@ -34,9 +34,9 @@ var Migrations embed.FS
 // mode, which breaks the build since this repo doesn't maintain a real
 // vendor/modules.txt.
 const (
-	DataDir    = "data"
-	ScratchDir = "scratch"
-	VendorDir  = "external"
+	DataDir   = "data"
+	TmpDir    = "tmp"
+	VendorDir = "external"
 )
 
 var DefaultUrl = "file:" + DataDir + "/dagobert.db?_pragma=foreign_keys(ON)&_pragma=journal_mode(WAL)"
