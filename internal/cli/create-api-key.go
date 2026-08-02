@@ -14,7 +14,7 @@ func CreateAPIKey(cmd *cobra.Command, args []string) error {
 	name := args[0]
 
 	dburl := cmp.Or(os.Getenv("DB_URL"), model.DefaultUrl)
-	slog.Info("Connecting to database", "url", dburl)
+	slog.Info("connecting to database", "url", dburl)
 	db, err := model.Connect(dburl)
 	if err != nil {
 		return err
@@ -23,7 +23,7 @@ func CreateAPIKey(cmd *cobra.Command, args []string) error {
 	// Mint the key exactly like the UI does: persist only the hash + hint,
 	// reveal the plaintext once. See handler/settings-api-keys.go Save.
 	plaintext, hash, hint := model.GenerateAPIKey()
-	slog.Info("Adding key", "name", name)
+	slog.Info("adding key", "name", name)
 	obj := model.APIKey{
 		Key:  hash,
 		Hint: hint,

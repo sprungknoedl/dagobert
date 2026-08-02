@@ -30,10 +30,10 @@ func Run(cmd *cobra.Command, args []string) {
 	// Database
 	// --------------------------------------
 	dburl := cmp.Or(os.Getenv("DB_URL"), model.DefaultUrl)
-	slog.Debug("Connecting to database", "url", dburl)
+	slog.Debug("connecting to database", "url", dburl)
 	db, err := model.Connect(dburl)
 	if err != nil {
-		slog.Error("Failed to connect to database", "err", err)
+		slog.Error("failed to connect to database", "err", err)
 		return
 	}
 
@@ -44,7 +44,7 @@ func Run(cmd *cobra.Command, args []string) {
 	// --------------------------------------
 	// Authorization
 	// --------------------------------------
-	slog.Debug("Creating casbin acl model")
+	slog.Debug("creating casbin acl model")
 	acl := auth.NewACL(db)
 
 	// --------------------------------------
@@ -53,7 +53,7 @@ func Run(cmd *cobra.Command, args []string) {
 	initSession(db.RawConn)
 	a, err := auth.New(db, Session)
 	if err != nil {
-		slog.Error("Failed to initialize auth", "err", err)
+		slog.Error("failed to initialize auth", "err", err)
 		return
 	}
 
@@ -71,7 +71,7 @@ func Run(cmd *cobra.Command, args []string) {
 	guardMitre(enterprisePath, icsPath, mobilePath)
 	mitre, err := attck.LoadKB(enterprisePath, icsPath, mobilePath)
 	if err != nil {
-		slog.Error("Failed to load MITRE ATT&CK knowledge base", "err", err)
+		slog.Error("failed to load MITRE ATT&CK knowledge base", "err", err)
 		return
 	}
 
@@ -102,7 +102,7 @@ func Run(cmd *cobra.Command, args []string) {
 	// --------------------------------------
 	// Router
 	// --------------------------------------
-	slog.Debug("Creating router and registering handlers")
+	slog.Debug("creating router and registering handlers")
 	router := http.NewServeMux()
 	secured := http.NewServeMux()
 	securedH := a.Require(acl.Protect(secured))
@@ -327,10 +327,10 @@ func Run(cmd *cobra.Command, args []string) {
 		}
 	}()
 
-	slog.Info("Starting web server", "addr", ":8080")
+	slog.Info("starting web server", "addr", ":8080")
 	err = srv.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
-		slog.Error("Failed to start web server", "err", err)
+		slog.Error("failed to start web server", "err", err)
 		return
 	}
 }
@@ -360,7 +360,7 @@ func initSession(db *sql.DB) {
 func guardSchema(db *model.Store) {
 	status, err := db.CheckSchema()
 	if err != nil {
-		slog.Error("Failed to check database schema", "err", err)
+		slog.Error("failed to check database schema", "err", err)
 		os.Exit(1)
 	}
 

@@ -21,7 +21,7 @@ func CreateUser(cmd *cobra.Command, args []string) error {
 
 	// Connect to database
 	dburl := cmp.Or(os.Getenv("DB_URL"), model.DefaultUrl)
-	slog.Info("Connecting to database", "url", dburl)
+	slog.Info("connecting to database", "url", dburl)
 	db, err := model.Connect(dburl)
 	if err != nil {
 		return err
@@ -42,7 +42,7 @@ func CreateUser(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	slog.Info("Adding administrator", "uid", id, "upn", username)
+	slog.Info("adding administrator", "uid", id, "upn", username)
 	user := model.User{
 		ID:       id,
 		UPN:      username,
@@ -69,7 +69,7 @@ func ChangePassword(cmd *cobra.Command, args []string) error {
 
 	// Connect to database
 	dburl := cmp.Or(os.Getenv("DB_URL"), model.DefaultUrl)
-	slog.Info("Connecting to database", "url", dburl)
+	slog.Info("connecting to database", "url", dburl)
 	db, err := model.Connect(dburl)
 	if err != nil {
 		return err
@@ -96,7 +96,7 @@ func ChangePassword(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	slog.Info("Changing password for", "uid", user.ID, "upn", username)
+	slog.Info("changing password", "uid", user.ID, "upn", username)
 	user.Password = string(hash)
 	if err := db.SaveUser(user); err != nil {
 		slog.Error("failed to change password", "err", err)

@@ -64,7 +64,7 @@ func Register(ts *tsclient.Client) {
 // handler.Run after Register; ctx is the server's shutdown context, store
 // the shared DB handle.
 func Start(ctx context.Context, store *model.Store) {
-	slog.Debug("Loading modules")
+	slog.Debug("loading modules")
 	modules := map[string]model.Module{}
 	for _, name := range slices.Sorted(maps.Keys(Modules)) {
 		if _, err := Modules[name].Validate(); err == nil {
@@ -72,9 +72,9 @@ func Start(ctx context.Context, store *model.Store) {
 		}
 	}
 
-	slog.Debug("Loading automation rules")
+	slog.Debug("loading automation rules")
 	if err := LoadAutomationRules(store); err != nil {
-		slog.Error("Failed to load automation rules", "err", err)
+		slog.Error("failed to load automation rules", "err", err)
 	}
 
 	if len(modules) == 0 {
@@ -84,19 +84,19 @@ func Start(ctx context.Context, store *model.Store) {
 
 	num, err := strconv.Atoi(cmp.Or(os.Getenv("DAGOBERT_WORKERS"), "3"))
 	if err != nil || num < 0 || num > 1000 {
-		slog.Warn("Invalid number of workers, falling back to default of 3", "num", num, "err", err)
+		slog.Warn("invalid number of workers, falling back to default of 3", "num", num, "err", err)
 		num = 3
 	}
 
-	slog.Info("Starting job runners", "num", num, "modules", fp.Keys(modules))
+	slog.Info("starting job runners", "num", num, "modules", fp.Keys(modules))
 	for range num {
 		go runner(ctx, store, modules)
 	}
 
-	slog.Debug("Rescheduling stale jobs")
+	slog.Debug("rescheduling stale jobs")
 	err = store.RescheduleStaleJobs()
 	if err != nil {
-		slog.Error("Failed to reschedule state jobs", "err", err)
+		slog.Error("failed to reschedule stale jobs", "err", err)
 	}
 }
 
@@ -110,7 +110,7 @@ func UpdateAssets(ctx context.Context) error {
 		if !ok {
 			continue
 		}
-		slog.Info("Fetching vendor assets", "module", name)
+		slog.Info("fetching vendor assets", "module", name)
 		if err := updater.UpdateAssets(ctx); err != nil {
 			return fmt.Errorf("%s: %w", name, err)
 		}

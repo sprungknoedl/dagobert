@@ -49,13 +49,13 @@ func Update(cmd *cobra.Command, args []string) error {
 // it — the operator asserts they have fixed whatever caused the failure.
 func migrateDB(force bool) error {
 	dburl := cmp.Or(os.Getenv("DB_URL"), model.DefaultUrl)
-	slog.Info("Connecting to database", "url", dburl)
+	slog.Info("connecting to database", "url", dburl)
 	store, err := model.Connect(dburl)
 	if err != nil {
 		return err
 	}
 
-	slog.Info("Loading database migrations")
+	slog.Info("loading database migrations")
 	m, err := store.NewMigrate()
 	if err != nil {
 		return err
@@ -72,7 +72,7 @@ func migrateDB(force bool) error {
 
 		switch {
 		case !dirty:
-			slog.Info("Database is not dirty, --force has no effect on migrations")
+			slog.Info("database is not dirty, --force has no effect on migrations")
 		default:
 			// Roll the recorded version back past the failed migration so that
 			// Up re-runs it. By passing --force the operator asserts they have
@@ -81,14 +81,14 @@ func migrateDB(force bool) error {
 			if reset < 1 {
 				reset = -1 // migrate.NilVersion: re-run from the first migration
 			}
-			slog.Warn("Forcing dirty database to re-run failed migration", "dirty_version", version, "reset_to", reset)
+			slog.Warn("forcing dirty database to re-run failed migration", "dirty_version", version, "reset_to", reset)
 			if err := m.Force(reset); err != nil {
 				return err
 			}
 		}
 	}
 
-	slog.Info("Applying database migrations")
+	slog.Info("applying database migrations")
 	err = m.Up()
 	if err != nil && err != migrate.ErrNoChange {
 		return err
@@ -100,9 +100,9 @@ func migrateDB(force bool) error {
 	}
 
 	if dirty {
-		slog.Warn("Database model dirty", "version", v)
+		slog.Warn("database model dirty", "version", v)
 	} else {
-		slog.Info("Database model current", "version", v)
+		slog.Info("database model current", "version", v)
 	}
 	return nil
 }

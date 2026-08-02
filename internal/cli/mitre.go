@@ -42,7 +42,7 @@ const (
 // sentinel already matches AttckRelease. force re-downloads unconditionally.
 func updateMitre(force bool) error {
 	if !force && mitreCurrent() {
-		slog.Info("MITRE ATT&CK data current", "version", AttckRelease)
+		slog.Info("MITRE ATT&CK data is current", "version", AttckRelease)
 		return nil
 	}
 
@@ -56,7 +56,7 @@ func updateMitre(force bool) error {
 		{mobileFile, mobileURL},
 	} {
 		dst := filepath.Join(mitreDir, f.name)
-		slog.Info("Downloading MITRE ATT&CK data", "file", dst, "version", AttckRelease)
+		slog.Info("downloading MITRE ATT&CK data", "file", dst, "version", AttckRelease)
 		if err := download(f.url, dst); err != nil {
 			return fmt.Errorf("downloading %s: %w", f.name, err)
 		}

@@ -27,7 +27,7 @@ func NewACL(db *model.Store) *ACL {
 
 	enforcer, err := casbin.NewEnforcer(m, db)
 	if err != nil {
-		slog.Error("Failed to init casbin enforcer", "err", err)
+		slog.Error("failed to init casbin enforcer", "err", err)
 		os.Exit(1)
 	}
 
