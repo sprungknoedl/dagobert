@@ -73,34 +73,34 @@ func (m *Module) Validate() (model.Module, error) {
 	_, m.args, err = shellwords.ParseWithEnvs(os.Getenv("MODULE_DISSECT"))
 	if err != nil {
 		err = fmt.Errorf("invalid command in MODULE_DISSECT: %w", err)
-		slog.Warn("validating module prerequisites failed", "module", "dissect", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", m.Name(), "err", err)
 		return nil, err
 	}
 	if len(m.args) < 1 {
-		slog.Info("module disabled, not configured", "module", "dissect")
+		slog.Info("module disabled, not configured", "module", m.Name())
 		return nil, errors.New("MODULE_DISSECT is not set, module disabled")
 	}
 
 	_, m.rdumpArgs, err = shellwords.ParseWithEnvs(os.Getenv("MODULE_DISSECT_RDUMP"))
 	if err != nil {
 		err = fmt.Errorf("invalid command in MODULE_DISSECT_RDUMP: %w", err)
-		slog.Warn("validating module prerequisites failed", "module", "dissect", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", m.Name(), "err", err)
 		return nil, err
 	}
 	if len(m.rdumpArgs) < 1 {
-		slog.Info("module disabled, not configured", "module", "dissect")
+		slog.Info("module disabled, not configured", "module", m.Name())
 		return nil, errors.New("MODULE_DISSECT_RDUMP is not set, module disabled")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	slog.Info("validating module prerequisites", "module", "dissect")
+	slog.Info("validating module prerequisites", "module", m.Name())
 	for _, args := range [][]string{m.args, m.rdumpArgs} {
 		cmd := exec.CommandContext(ctx, args[0], append(args[1:], "--version")...)
 		if out, err := cmd.CombinedOutput(); err != nil {
 			err = fmt.Errorf("command %q is not runnable: %w", args[0], err)
-			slog.Warn("validating module prerequisites failed", "module", "dissect", "err", err)
+			slog.Warn("validating module prerequisites failed", "module", m.Name(), "err", err)
 			_, _ = os.Stderr.Write(out) //nolint:errcheck // best-effort diagnostic dump; err is already captured and returned
 			return nil, err
 		}
@@ -146,12 +146,12 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 	dump.Stdout = &dumpCombined
 	dump.Stderr = &dumpCombined
 
-	slog.Debug("running command", "module", "dissect", "args", query.Args)
+	slog.Debug("running command", "module", m.Name(), "args", query.Args)
 	if err := query.Start(); err != nil {
 		return err
 	}
 
-	slog.Debug("running command", "module", "dissect", "args", dump.Args)
+	slog.Debug("running command", "module", m.Name(), "args", dump.Args)
 	if err := dump.Start(); err != nil {
 		// unblock and reap the already-started producer before returning
 		_ = query.Process.Kill()
@@ -168,19 +168,19 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 		_, _ = os.Stderr.Write(dumpCombined.Bytes()) //nolint:errcheck // best-effort diagnostic dump; err is already captured and returned
 		// try to clean up
 		if rerr := os.Remove(raw); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
-			slog.Warn("failed to remove partial output file", "module", "dissect", "err", rerr, "path", raw)
+			slog.Warn("failed to remove partial output file", "module", m.Name(), "err", rerr, "path", raw)
 		}
 		return err
 	}
 
 	if err := rewrite(raw, dst); err != nil {
 		if rerr := os.Remove(dst); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
-			slog.Warn("failed to remove partial output file", "module", "dissect", "err", rerr, "path", dst)
+			slog.Warn("failed to remove partial output file", "module", m.Name(), "err", rerr, "path", dst)
 		}
 		return err
 	}
 	if rerr := os.Remove(raw); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
-		slog.Warn("failed to remove intermediate output file", "module", "dissect", "err", rerr, "path", raw)
+		slog.Warn("failed to remove intermediate output file", "module", m.Name(), "err", rerr, "path", raw)
 	}
 
 	return utils.AddFromFS(store, model.Evidence{
@@ -205,7 +205,7 @@ func rewrite(src, dst string) error {
 	}
 	defer func() {
 		if cerr := fr.Close(); cerr != nil {
-			slog.Warn("failed to close raw dissect output", "module", "dissect", "err", cerr, "path", src)
+			slog.Warn("failed to close raw dissect output", "module", "Dissect", "err", cerr, "path", src)
 		}
 	}()
 
@@ -215,7 +215,7 @@ func rewrite(src, dst string) error {
 	}
 	defer func() {
 		if cerr := fw.Close(); cerr != nil {
-			slog.Warn("failed to close rewritten dissect output", "module", "dissect", "err", cerr, "path", dst)
+			slog.Warn("failed to close rewritten dissect output", "module", "Dissect", "err", cerr, "path", dst)
 		}
 	}()
 

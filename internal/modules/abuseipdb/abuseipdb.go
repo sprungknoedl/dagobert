@@ -42,16 +42,16 @@ func (m *Module) Supports(obj any) bool {
 
 func (m *Module) Validate() (model.Module, error) {
 	if !m.client.Configured() {
-		slog.Info("module disabled, not configured", "module", "abuseipdb")
+		slog.Info("module disabled, not configured", "module", m.Name())
 		return nil, errors.New("ABUSEIPDB_APIKEY is not set, module disabled")
 	}
 
-	slog.Info("validating module prerequisites", "module", "abuseipdb")
+	slog.Info("validating module prerequisites", "module", m.Name())
 	ctx, cancel := context.WithTimeout(context.Background(), utils.LookupTimeout)
 	defer cancel()
 	if err := m.client.Verify(ctx); err != nil {
 		err = fmt.Errorf("connectivity check failed: %w", err)
-		slog.Warn("validating module prerequisites failed", "module", "abuseipdb", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", m.Name(), "err", err)
 		return nil, err
 	}
 

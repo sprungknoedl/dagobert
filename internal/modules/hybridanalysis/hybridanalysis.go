@@ -42,16 +42,16 @@ func (m *Module) Supports(obj any) bool {
 
 func (m *Module) Validate() (model.Module, error) {
 	if !m.client.Configured() {
-		slog.Info("module disabled, not configured", "module", "hybridanalysis")
+		slog.Info("module disabled, not configured", "module", m.Name())
 		return nil, errors.New("HYBRIDANALYSIS_APIKEY is not set, module disabled")
 	}
 
-	slog.Info("validating module prerequisites", "module", "hybridanalysis")
+	slog.Info("validating module prerequisites", "module", m.Name())
 	ctx, cancel := context.WithTimeout(context.Background(), utils.LookupTimeout)
 	defer cancel()
 	if err := m.client.Verify(ctx); err != nil {
 		err = fmt.Errorf("connectivity check failed: %w", err)
-		slog.Warn("validating module prerequisites failed", "module", "hybridanalysis", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", m.Name(), "err", err)
 		return nil, err
 	}
 

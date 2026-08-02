@@ -49,22 +49,22 @@ func (m *Module) Validate() (model.Module, error) {
 	_, m.args, err = shellwords.ParseWithEnvs(os.Getenv("MODULE_PLASO"))
 	if err != nil {
 		err = fmt.Errorf("invalid command in MODULE_PLASO: %w", err)
-		slog.Warn("validating module prerequisites failed", "module", "plaso", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", m.Name(), "err", err)
 		return nil, err
 	}
 	if len(m.args) < 1 {
-		slog.Info("module disabled, not configured", "module", "plaso")
+		slog.Info("module disabled, not configured", "module", m.Name())
 		return nil, errors.New("MODULE_PLASO is not set, module disabled")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	slog.Info("validating module prerequisites", "module", "plaso")
+	slog.Info("validating module prerequisites", "module", m.Name())
 	cmd := exec.CommandContext(ctx, m.args[0], append(m.args[1:], "-V")...)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		err = fmt.Errorf("command %q is not runnable: %w", m.args[0], err)
-		slog.Warn("validating module prerequisites failed", "module", "plaso", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", m.Name(), "err", err)
 		_, _ = os.Stderr.Write(out) //nolint:errcheck // best-effort diagnostic dump; err is already captured and returned
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 		"--write", dst+".csv",
 	)...)
 
-	slog.Debug("running command", "module", "plaso", "args", cmd.Args)
+	slog.Debug("running command", "module", m.Name(), "args", cmd.Args)
 	// TODO: output is discarded on success; to persist it, capture it here and store it
 	// somewhere on Job (no field for this today - would need a new column/migration or a
 	// log file under files/) instead of dropping it.
@@ -105,7 +105,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 		// try to clean up
 		for _, f := range []string{dst, dst + ".csv"} {
 			if rerr := os.Remove(f); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
-				slog.Warn("failed to remove partial output file", "module", "plaso", "err", rerr, "path", f)
+				slog.Warn("failed to remove partial output file", "module", m.Name(), "err", rerr, "path", f)
 			}
 		}
 		return err

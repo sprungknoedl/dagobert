@@ -40,16 +40,16 @@ func (m *Module) Supports(obj any) bool {
 
 func (m *Module) Validate() (model.Module, error) {
 	if !m.client.Configured() {
-		slog.Info("module disabled, not configured", "module", "timesketch")
+		slog.Info("module disabled, not configured", "module", m.Name())
 		return nil, errors.New("TIMESKETCH_URL is not set, module disabled")
 	}
 
-	slog.Info("validating module prerequisites", "module", "timesketch")
+	slog.Info("validating module prerequisites", "module", m.Name())
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	if err := m.client.Login(ctx); err != nil {
 		err = fmt.Errorf("login failed: %w", err)
-		slog.Warn("validating module prerequisites failed", "module", "timesketch", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", m.Name(), "err", err)
 		return nil, err
 	}
 

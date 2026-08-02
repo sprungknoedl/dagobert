@@ -110,7 +110,7 @@ func UpdateAssets(ctx context.Context) error {
 		if !ok {
 			continue
 		}
-		slog.Info("fetching vendor assets", "module", name)
+		slog.Info("Fetching vendor assets", "module", name)
 		if err := updater.UpdateAssets(ctx); err != nil {
 			return fmt.Errorf("%s: %w", name, err)
 		}

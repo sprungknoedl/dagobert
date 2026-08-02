@@ -57,22 +57,22 @@ func (m *Module) Validate() (model.Module, error) {
 	_, m.args, err = shellwords.ParseWithEnvs(os.Getenv("MODULE_ZIRCOLITE"))
 	if err != nil {
 		err = fmt.Errorf("invalid command in MODULE_ZIRCOLITE: %w", err)
-		slog.Warn("validating module prerequisites failed", "module", "zircolite", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", m.Name(), "err", err)
 		return nil, err
 	}
 	if len(m.args) < 1 {
-		slog.Info("module disabled, not configured", "module", "zircolite")
+		slog.Info("module disabled, not configured", "module", m.Name())
 		return nil, errors.New("MODULE_ZIRCOLITE is not set, module disabled")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	slog.Info("validating module prerequisites", "module", "zircolite")
+	slog.Info("validating module prerequisites", "module", m.Name())
 	cmd := exec.CommandContext(ctx, m.args[0], append(m.args[1:], "--version")...)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		err = fmt.Errorf("command %q is not runnable: %w", m.args[0], err)
-		slog.Warn("validating module prerequisites failed", "module", "zircolite", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", m.Name(), "err", err)
 		_, _ = os.Stderr.Write(out) //nolint:errcheck // best-effort diagnostic dump; err is already captured and returned
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (m *Module) Validate() (model.Module, error) {
 	} {
 		if _, err := os.Stat(asset.path); err != nil {
 			err = fmt.Errorf("%s %q: %w", asset.label, asset.path, err)
-			slog.Warn("validating module prerequisites failed", "module", "zircolite", "err", err)
+			slog.Warn("validating module prerequisites failed", "module", m.Name(), "err", err)
 			return nil, err
 		}
 	}
@@ -102,7 +102,7 @@ func (m *Module) Validate() (model.Module, error) {
 // result structure, so a drifting template against a pinned tool would break quietly.
 func (m *Module) UpdateAssets(ctx context.Context) error {
 	if os.Getenv("MODULE_ZIRCOLITE") == "" {
-		slog.Info("module disabled, skipping asset fetch", "module", "zircolite")
+		slog.Info("module disabled, skipping asset fetch", "module", m.Name())
 		return nil
 	}
 
@@ -155,7 +155,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 		"--logfile", logfile,
 	)...)
 
-	slog.Debug("running command", "module", "zircolite", "args", cmd.Args)
+	slog.Debug("running command", "module", m.Name(), "args", cmd.Args)
 	// TODO: output is discarded on success; to persist it, capture it here and store it
 	// somewhere on Job (no field for this today - would need a new column/migration or a
 	// log file under files/) instead of dropping it.
@@ -165,7 +165,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 		// try to clean up
 		for _, f := range []string{dst, raw} {
 			if rerr := os.Remove(f); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
-				slog.Warn("failed to remove partial output file", "module", "zircolite", "err", rerr, "path", f)
+				slog.Warn("failed to remove partial output file", "module", m.Name(), "err", rerr, "path", f)
 			}
 		}
 		return err
@@ -174,7 +174,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 	// raw is Zircolite's mandatory -o output; it is pure clutter once the
 	// templated -T output exists, so it's discarded unconditionally.
 	if rerr := os.Remove(raw); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
-		slog.Warn("failed to remove raw output file", "module", "zircolite", "err", rerr, "path", raw)
+		slog.Warn("failed to remove raw output file", "module", m.Name(), "err", rerr, "path", raw)
 	}
 
 	if err := utils.AddFromFS(store, model.Evidence{

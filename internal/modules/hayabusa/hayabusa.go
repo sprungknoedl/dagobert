@@ -50,29 +50,29 @@ func (m *Module) Validate() (model.Module, error) {
 	_, m.args, err = shellwords.ParseWithEnvs(os.Getenv("MODULE_HAYABUSA"))
 	if err != nil {
 		err = fmt.Errorf("invalid command in MODULE_HAYABUSA: %w", err)
-		slog.Warn("validating module prerequisites failed", "module", "hayabusa", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", m.Name(), "err", err)
 		return nil, err
 	}
 	if len(m.args) < 1 {
-		slog.Info("module disabled, not configured", "module", "hayabusa")
+		slog.Info("module disabled, not configured", "module", m.Name())
 		return nil, errors.New("MODULE_HAYABUSA is not set, module disabled")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	slog.Info("validating module prerequisites", "module", "hayabusa")
+	slog.Info("validating module prerequisites", "module", m.Name())
 	cmd := exec.CommandContext(ctx, m.args[0], append(m.args[1:], "help")...)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		err = fmt.Errorf("command %q is not runnable: %w", m.args[0], err)
-		slog.Warn("validating module prerequisites failed", "module", "hayabusa", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", m.Name(), "err", err)
 		_, _ = os.Stderr.Write(out) //nolint:errcheck // best-effort diagnostic dump; err is already captured and returned
 		return nil, err
 	}
 
 	if _, err := os.Stat(RulesDir); err != nil {
 		err = fmt.Errorf("rules directory %q: %w", RulesDir, err)
-		slog.Warn("validating module prerequisites failed", "module", "hayabusa", "err", err)
+		slog.Warn("validating module prerequisites failed", "module", m.Name(), "err", err)
 		return nil, err
 	}
 
@@ -87,7 +87,7 @@ func (m *Module) UpdateAssets(ctx context.Context) error {
 		return fmt.Errorf("invalid command in MODULE_HAYABUSA: %w", err)
 	}
 	if len(args) < 1 {
-		slog.Info("module disabled, skipping asset fetch", "module", "hayabusa")
+		slog.Info("module disabled, skipping asset fetch", "module", m.Name())
 		return nil
 	}
 
@@ -126,7 +126,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 		"--output", dst,
 	)...)
 
-	slog.Debug("running command", "module", "hayabusa", "args", cmd.Args)
+	slog.Debug("running command", "module", m.Name(), "args", cmd.Args)
 	// TODO: output is discarded on success; to persist it, capture it here and store it
 	// somewhere on Job (no field for this today - would need a new column/migration or a
 	// log file under data/) instead of dropping it.
@@ -135,7 +135,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) err
 		_, _ = os.Stderr.Write(out) //nolint:errcheck // best-effort diagnostic dump; err is already captured and returned
 		// try to clean up
 		if rerr := os.Remove(dst); rerr != nil && !errors.Is(rerr, os.ErrNotExist) {
-			slog.Warn("failed to remove partial output file", "module", "hayabusa", "err", rerr, "path", dst)
+			slog.Warn("failed to remove partial output file", "module", m.Name(), "err", rerr, "path", dst)
 		}
 		return err
 	}
