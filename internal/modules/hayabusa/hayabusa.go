@@ -95,7 +95,6 @@ func (m *Module) UpdateAssets(ctx context.Context) error {
 		return err
 	}
 
-	slog.Info("fetching vendor assets", "module", "hayabusa")
 	cmd := exec.CommandContext(ctx, args[0], append(args[1:], "update-rules", "--rules", RulesDir)...)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		_, _ = os.Stderr.Write(out) //nolint:errcheck // best-effort diagnostic dump; err is already captured and returned
