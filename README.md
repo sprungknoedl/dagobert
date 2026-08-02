@@ -61,21 +61,14 @@ can work on a case concurrently.
 
 ### Installation
 
-1. Clone the repository:
+1. Configure the environment:
 
    ```sh
-   git clone https://github.com/sprungknoedl/dagobert
-   cd dagobert
-   ```
-
-2. Configure the environment:
-
-   ```sh
-   cp dagobert.env.example dagobert.env
+   curl -o dagobert.env https://raw.githubusercontent.com/sprungknoedl/dagobert/main/dagobert.env.example
    $EDITOR dagobert.env
    ```
 
-3. Start the container:
+2. Start the container:
 
    ```sh
    docker run -d --name dagobert --restart unless-stopped \
