@@ -6,6 +6,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"log/slog"
@@ -71,6 +72,7 @@ func ImportCSV(store *model.Store, w http.ResponseWriter, r *http.Request, redir
 
 	var rowErrors []views.ImportRowError
 	serverErr := false
+	imported := 0
 	errRowsFailed := errors.New("import has row errors")
 
 	txErr := store.Transaction(func(tx *model.Store) error {
@@ -89,6 +91,7 @@ func ImportCSV(store *model.Store, w http.ResponseWriter, r *http.Request, redir
 				rowErr = cb(tx, rec)
 			}
 			if rowErr == nil {
+				imported++
 				continue
 			}
 
@@ -122,6 +125,7 @@ func ImportCSV(store *model.Store, w http.ResponseWriter, r *http.Request, redir
 		return
 	}
 
+	SetFlashToast(w, fmt.Sprintf("Imported %d record%s.", imported, fp.If(imported == 1, "", "s")))
 	http.Redirect(w, r, redirectURI, http.StatusSeeOther)
 }
 
@@ -490,6 +494,12 @@ func Render(w http.ResponseWriter, r *http.Request, status int, c templ.Componen
 // record. API clients follow 3xx redirects automatically; bouncing them to an
 // HTML list page they may not be permitted to read (e.g. a create-only Donald
 // key) would turn a successful write into a spurious 403.
+//
+// SetFlashToast stages a success toast for the page this redirect lands on
+// (see its doc comment for why it can't just be a header on this response),
+// closing the overlay the save form opened in and showing the toast
+// client-side (dagobert.js); harmless when there is no overlay to accept (a
+// directly-navigated root-layer save just redirects).
 func RedirectAfterSave(w http.ResponseWriter, r *http.Request, url string, record any) {
 	if wantsJSON(r) {
 		w.Header().Set("Content-Type", "application/json")
@@ -499,5 +509,6 @@ func RedirectAfterSave(w http.ResponseWriter, r *http.Request, url string, recor
 		}
 		return
 	}
+	SetFlashToast(w, "Saved.")
 	http.Redirect(w, r, url, http.StatusSeeOther)
 }

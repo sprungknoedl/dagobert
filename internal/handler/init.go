@@ -309,6 +309,7 @@ func Run(cmd *cobra.Command, args []string) {
 	// sets is found by LoadUser's context check.
 	var chain http.Handler = router
 	chain = a.LoadUser(chain)
+	chain = FlashToast(chain)
 	chain = ThemeMiddleware(chain)
 	chain = Session.LoadAndSave(chain)
 	chain = auth.ApiKeyMiddleware(db)(chain) // strips browser credentials before session state is loaded

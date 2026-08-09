@@ -2,8 +2,10 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"runtime/debug"
 	"strconv"
@@ -88,6 +90,42 @@ func ThemeMiddleware(next http.Handler) http.Handler {
 
 		ctx := context.WithValue(r.Context(), views.ThemeCtxKey, theme)
 		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+// flashToastCookie carries a one-shot success-toast message across a
+// redirect. RedirectAfterSave/ImportCSV can't set X-Up-Accept-Layer directly
+// on their 303 response: the browser follows it internally and only ever
+// hands Unpoly the *final* response's headers, so a header set on the
+// redirect itself never reaches the client. A cookie survives the hop;
+// FlashToast reads it on the next request (the redirect's target) and
+// translates it into the header there.
+const flashToastCookie = "flash_toast"
+
+// SetFlashToast stages message to show as a success toast after the
+// in-flight redirect completes. Call it right before http.Redirect.
+func SetFlashToast(w http.ResponseWriter, message string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     flashToastCookie,
+		Value:    url.QueryEscape(message),
+		Path:     "/",
+		MaxAge:   10,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
+// FlashToast turns a pending SetFlashToast cookie into the X-Up-Accept-Layer
+// header on this response, then clears the cookie so it fires once.
+func FlashToast(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if c, err := r.Cookie(flashToastCookie); err == nil && c.Value != "" {
+			http.SetCookie(w, &http.Cookie{Name: flashToastCookie, Value: "", Path: "/", MaxAge: -1})
+			if msg, err := url.QueryUnescape(c.Value); err == nil {
+				w.Header().Set("X-Up-Accept-Layer", fmt.Sprintf(`{"toast":%q}`, msg))
+			}
+		}
+		next.ServeHTTP(w, r)
 	})
 }
 
