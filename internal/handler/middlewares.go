@@ -16,11 +16,13 @@ import (
 // influenced strings (case notes, indicator values, evidence metadata) back
 // into the page: no 'unsafe-inline'/'unsafe-eval' for scripts. Inline styles
 // are allowed since they're presentational-only and not a script-injection
-// vector.
+// vector. img-src allows data: for daisyUI's compiled checkbox/radio/range
+// icons, which are inline SVGs baked into dagobert.css at build time — never
+// attacker-influenced, since the app has no user-controlled <img> src.
 const contentSecurityPolicy = "default-src 'self'; " +
 	"script-src 'self'; " +
 	"style-src 'self' 'unsafe-inline'; " +
-	"img-src 'self'; " +
+	"img-src 'self' data:; " +
 	"font-src 'self'; " +
 	"connect-src 'self'; " +
 	"object-src 'none'; " +
