@@ -700,7 +700,7 @@ Icon-only navigation is rejected: it fails keyboard and screen-reader users.
 }
 
 .menu :where(li > .menu-active),
-.menu :where(li > .menu-active:hover) {
+.menu :where(li > .menu-active):hover {
     background-color: var(--color-base-content);
     color: var(--color-base-100);
 }
