@@ -7,9 +7,9 @@ templ ReportsDialog(env Env, rows []model.ReportTemplate) {
 		<main>
 			<form method="post" action={ "/cases/" + env.Case.ID + "/render" }>
 				<!-- Modal header -->
-				<h3 class="font-bold text-lg mb-4">
+				<h1 class="font-serif text-2xl font-semibold mb-4">
 					Select report template
-				</h3>
+				</h1>
 				<!-- Modal body -->
 				<div class="mb-4">
 					@hiddenField("CaseID", env.Case.ID)

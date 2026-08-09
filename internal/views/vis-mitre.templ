@@ -6,21 +6,34 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/attck"
 )
 
-templ VisMitreAttack(env Env, counts map[string]int, maxCount int, matrix *attck.Matrix, hide bool) {
+// MitreCoverage is the readout above the matrix: how much of the framework the
+// case has touched, and how much of the timeline is behind it.
+type MitreCoverage struct {
+	Tactics    int
+	Techniques int
+	Events     int
+}
+
+templ VisMitreAttack(env Env, counts map[string]int, maxCount int, matrix *attck.Matrix, hide bool, matrixKey string, stats MitreCoverage) {
 	@layout() {
 		<section id="errors"></section>
 		@sidebar(env, "MITRE ATT&CK® Matrix")
-		<main class="pl-20 p-4 grow max-w-full flex flex-col h-screen">
+		<main class="pl-48 p-4 grow max-w-full flex flex-col h-screen">
 			<form method="get" up-autosubmit up-target="#list" up-history="true">
-				@navbar(env, "ATT&CK Navigator", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navPreJoin(mitreLegend()), navPreButtons(mitreExtra(env, hide)), navSubtitle("Map observed techniques to the MITRE ATT&CK framework"))
+				@navbar(env, "ATT&CK Navigator", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navHideRefresh(), navPreJoin(mitreLegend()), navPreButtons(mitreExtra(env, hide, matrixKey)), navSubtitle("Map observed techniques to the MITRE ATT&CK framework"))
 			</form>
 			<div id="list">
+				<div class="stats w-full mb-4">
+					@stat("Tactics", stats.Tactics, false)
+					@stat("Techniques", stats.Techniques, false)
+					@stat("Events mapped", stats.Events, true)
+				</div>
 				<div class="overflow-x-auto">
 					<table class="table table-default">
 						<thead>
 							<tr>
 								for tactic := range matrix.Tactics.Values() {
-									<th class="px-3 py-4 text-left"><a target="_blank" href={ tactic.URL }>{ tactic.Name }</a></th>
+									<th class="text-left"><a target="_blank" href={ tactic.URL }>{ tactic.Name }</a></th>
 								}
 							</tr>
 						</thead>
@@ -98,21 +111,33 @@ templ mitreLegend() {
 	</div>
 }
 
-templ mitreExtra(env Env, hide bool) {
+// The radios bind to the matrix the server actually rendered rather than
+// hardcoding Enterprise as checked: the page header is outside the swapped
+// #list, so the checked state only ever came from the user's own click, and a
+// reload or a shared link landed on the Enterprise button with the Mobile
+// matrix drawn under it.
+templ mitreExtra(env Env, hide bool, matrixKey string) {
 	<label class="join-item btn pr-4">
-		<input type="radio" name="matrix" value="enterprise" class="radio" checked="checked"/>
+		<input type="radio" name="matrix" value="enterprise" class="radio" checked?={ matrixKey == "enterprise" }/>
 		Enterprise
 	</label>
 	<label class="join-item btn pr-4">
-		<input type="radio" name="matrix" value="mobile" class="radio"/>
+		<input type="radio" name="matrix" value="mobile" class="radio" checked?={ matrixKey == "mobile" }/>
 		Mobile
 	</label>
 	<label class="join-item btn pr-4">
-		<input type="radio" name="matrix" value="ics" class="radio"/>
+		<input type="radio" name="matrix" value="ics" class="radio" checked?={ matrixKey == "ics" }/>
 		ICS
 	</label>
 	<label class="join-item btn pr-4">
-		<input type="checkbox" name="hide" class="toggle toggle-info" checked?={ hide }/>
+		<input type="checkbox" name="hide" class="toggle" checked?={ hide }/>
 		Hide missing
 	</label>
+	// Refresh submits this form rather than linking to the route, which is why
+	// the shared one is switched off: the page header sits outside the swapped
+	// #list, so a link's href freezes at the state the page first rendered in
+	// and a reload would quietly drop the matrix and the hide toggle.
+	<button type="submit" class="join-item btn" title="Reload the observed techniques">
+		<i class="ph ph-5 ph-arrows-clockwise inline-block mr-1"></i> Refresh
+	</button>
 }

@@ -1,3 +1,194 @@
+/*
+THE LATERAL-MOVEMENT SHEET
+A drawing on a sheet rather than a viewport onto a canvas: the plot area is
+panel paper, and the key to reading it runs along the bottom edge like the key
+on a plan.
+
+The graph is drawn to canvas, so its colours cannot be inherited — the compiler
+in dagobert.js resolves each of these custom properties through a probe element
+and hands vis-network the resulting strings. They are declared here, with every
+other themed value, rather than as literals in the script.
+
+An asset and an indicator are separated by weight, not by hue: both are ink, and
+the only colour on the sheet is the severe state and the accent on whatever is
+selected.
+*/
+
+.graph-frame {
+    position: relative;
+    --graph-node: var(--color-base-content);
+    --graph-node-dim: color-mix(in oklab, var(--color-base-content) 45%, transparent);
+    --graph-severe: var(--color-error);
+    --graph-edge: color-mix(in oklab, var(--color-base-content) 32%, transparent);
+    --graph-edge-dim: color-mix(in oklab, var(--color-base-content) 16%, transparent);
+    --graph-signal: var(--color-accent);
+    --graph-label: color-mix(in oklab, var(--color-base-content) 80%, transparent);
+    --graph-halo: var(--color-base-100);
+    /* the token: sheet paper, a hairline ring, and — for a severe record — the
+       struck-stamp construction the confirm dialog uses (a 45% ring over a 6%
+       wash), so the one coloured mark on the sheet is built the same way it is
+       everywhere else */
+    --graph-paper: var(--color-base-100);
+    --graph-ring: color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);
+    --graph-severe-ring: color-mix(in oklab, var(--color-error) 45%, transparent);
+    --graph-severe-wash: color-mix(in oklab, var(--color-error) 6%, transparent);
+}
+
+.graph-canvas {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 240ms ease;
+}
+
+.graph-canvas.is-drawn {
+    opacity: 1;
+}
+
+/* The plot area is focusable so arrow keys pan it, and it fills the panel edge
+   to edge — so its focus ring is drawn inside, where the panel's own clip
+   cannot cut three sides of it off and leave a stray line across the key. */
+.graph-canvas:focus-visible {
+    outline-offset: -2px;
+}
+
+/* the caption held while the bundle loads and the layout settles; it sits over
+   the plot area and is removed once the sheet is drawn */
+.graph-status {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+}
+
+/* The key: the same label voice as a column header, on the sheet it explains. */
+.graph-key {
+    flex: none;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.375rem 1.25rem;
+    padding: 0.5rem 0.75rem;
+    border-top: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
+}
+
+.graph-key-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+/* the key draws the same struck token the sheet does, at key scale, so the
+   sample and the thing it names are recognisably one mark */
+.graph-key-token {
+    display: inline-grid;
+    place-items: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    font-size: 11px;
+    line-height: 1;
+    color: var(--color-base-content);
+    background-color: var(--color-base-100);
+    border: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);
+    border-radius: 999px;
+}
+
+.graph-key-token-sm {
+    width: 0.875rem;
+    height: 0.875rem;
+    font-size: 9px;
+    color: color-mix(in oklab, var(--color-base-content) 45%, transparent);
+}
+
+.graph-key-token-severe {
+    color: var(--color-error);
+    background-color: color-mix(in oklab, var(--color-error) 6%, var(--color-base-100));
+    border-color: color-mix(in oklab, var(--color-error) 45%, transparent);
+}
+
+.graph-key-line {
+    display: inline-block;
+    width: 1.25rem;
+    border-top: 1.5px solid color-mix(in oklab, var(--color-base-content) 32%, transparent);
+}
+
+.graph-key-line-dashed {
+    border-top-style: dashed;
+    border-top-width: 1px;
+    border-top-color: color-mix(in oklab, var(--color-base-content) 45%, transparent);
+}
+
+/* the operating hints are the least of the key, so they sit at the far end */
+.graph-key-hint {
+    margin-inline-start: auto;
+    opacity: 0.7;
+}
+
+/*
+THE HOVER CARD
+vis-network positions its own tooltip element and leaves the rest to us, so it
+takes the raised engraved edge every other thing sitting above the page does.
+*/
+
+.vis-tooltip {
+    position: absolute;
+    z-index: 5;
+    padding: 0.5rem 0.625rem;
+    background-color: var(--color-base-100);
+    border: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
+    border-radius: var(--radius-box);
+    box-shadow:
+        0 0 0 1px var(--color-base-100),
+        0 0 0 2px color-mix(in oklab, var(--color-primary) var(--ring-raised), transparent);
+    pointer-events: none;
+}
+
+.graph-tip-head {
+    font-family: var(--font-mono);
+    font-size: var(--data-size);
+    font-weight: 600;
+    color: var(--color-base-content);
+    padding-bottom: 0.375rem;
+    margin-bottom: 0.375rem;
+    border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);
+}
+
+.graph-tip-severe .graph-tip-head {
+    color: var(--color-error);
+}
+
+.graph-tip-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    font-size: var(--data-size);
+    line-height: 1.5;
+}
+
+.graph-tip-label {
+    flex: none;
+    min-width: 4.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--color-base-content) var(--ink-label), transparent);
+}
+
+.graph-tip-hint {
+    margin-top: 0.5rem;
+    padding-top: 0.375rem;
+    border-top: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--color-base-content) var(--ink-label), transparent);
+}
+
 /* vis.js Graph2d histogram on the events page, restyled for the ledger theme */
 
 .vis-timeline {

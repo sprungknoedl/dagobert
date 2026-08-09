@@ -14,11 +14,11 @@ templ SettingsUsersMany(env Env, rows []model.User) {
 			<table class="table table-default" data-default-sort="value-0">
 				<thead>
 					<tr>
-						<th data-sort="value-0" class="sort px-3 py-4 text-left">Name</th>
-						<th data-sort="value-1" class="sort px-3 py-4 text-left">UPN</th>
-						<th data-sort="value-2" class="sort px-3 py-4 text-left">Email</th>
-						<th data-sort="value-3" class="sort px-3 py-4 text-left">Role</th>
-						<th data-sort="value-4" class="sort px-3 py-4 text-left">Last login</th>
+						<th data-sort="value-0" class="sort">Name</th>
+						<th data-sort="value-1" class="sort">UPN</th>
+						<th data-sort="value-2" class="sort">Email</th>
+						<th data-sort="value-3" class="sort">Role</th>
+						<th data-sort="value-4" class="sort">Last login</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
@@ -72,7 +72,7 @@ templ SettingsUsersMany(env Env, rows []model.User) {
 templ SettingsUsersOne(env Env, obj model.User, vr valid.ValidationError) {
 	{{ uri := "/settings/users/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add user", "Edit user") }}
-	@form(env, uri, title) {
+	@form(env, uri, title, withSerial(obj.ID)) {
 		@stringField("ID", obj.ID, required(), withLabel("ID"), withError(vr["ID"]))
 		@selectField("Role", obj.Role, env.ValueLists.UserRoles, required(), withLabel("Role"), withError(vr["Role"]))
 		@stringField("Name", obj.Name, withLabel("Name"), withError(vr["Name"]))

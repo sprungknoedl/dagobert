@@ -3,32 +3,30 @@ package views
 templ SettingsOverview(env Env) {
 	@layout() {
 		@list(env, "Settings", navTitleIcon("gear-six"), navHideSearch(), navHideRefresh(), navHideAdd(), navHideExport(), navHideImport(), navSubtitle("Configure automation, integrations, and account access")) {
+			// No column headers: this is a menu of destinations, not a data grid,
+			// and "Name / Description" over named groups is two kinds of heading
+			// doing one job.
 			<table class="table table-default">
-				<thead>
-					<tr>
-						<th class="px-3 py-4 text-left" style="width: 16rem">Name</th>
-						<th class="px-3 py-4 text-left">Description</th>
-					</tr>
-				</thead>
 				<tbody>
-					@settingsOverviewRow("/settings/value-lists/", "briefcase", "Value Lists", "Customisable value lists used across the app", false)
-					@settingsOverviewRow("/settings/custom-attributes/", "stack", "Custom Attributes", "Extra fields captured on case objects", true)
-					@settingsOverviewDivider()
-					@settingsOverviewRow("/settings/case-templates/", "copy", "Case Templates", "Reusable checklists of tasks and notes for new cases", false)
-					@settingsOverviewRow("/settings/report-templates/", "file-arrow-down", "Report Templates", "DOCX/ODT documents used to generate investigation reports", true)
-					@settingsOverviewDivider()
-					@settingsOverviewRow("/settings/automation-rules/", "engine", "Automation Rules", "Run modules automatically when case objects change", false)
-					@settingsOverviewRow("/settings/users/", "users", "Users", "Manage user accounts and role assignments", false)
-					@settingsOverviewRow("/settings/api-keys/", "key", "API Keys", "Long-lived keys for external integrations", false)
+					@settingsOverviewGroup("Vocabulary")
+					@settingsOverviewRow("/settings/value-lists/", "briefcase", "Value Lists", "Customisable value lists used across the app")
+					@settingsOverviewRow("/settings/custom-attributes/", "stack", "Custom Attributes", "Extra fields captured on case objects")
+					@settingsOverviewGroup("Templates")
+					@settingsOverviewRow("/settings/case-templates/", "copy", "Case Templates", "Reusable checklists of tasks and notes for new cases")
+					@settingsOverviewRow("/settings/report-templates/", "file-arrow-down", "Report Templates", "DOCX/ODT documents used to generate investigation reports")
+					@settingsOverviewGroup("Administration")
+					@settingsOverviewRow("/settings/automation-rules/", "engine", "Automation Rules", "Run modules automatically when case objects change")
+					@settingsOverviewRow("/settings/users/", "users", "Users", "Manage user accounts and role assignments")
+					@settingsOverviewRow("/settings/api-keys/", "key", "API Keys", "Long-lived keys for external integrations")
 				</tbody>
 			</table>
 		}
 	}
 }
 
-templ settingsOverviewRow(route string, icon string, title string, description string, groupEnd bool) {
-	<tr class={ "cursor-pointer row-hover", templ.KV("[&>td]:border-b-0", groupEnd) } data-href={ route }>
-		<td>
+templ settingsOverviewRow(route string, icon string, title string, description string) {
+	<tr class="cursor-pointer row-hover" data-href={ route }>
+		<td style="width: 16rem">
 			<a href={ templ.SafeURL(route) } class="flex items-center gap-3 font-semibold">
 				<i class={ "ph ph-6 ph-" + icon }></i> { title }
 			</a>
@@ -37,10 +35,11 @@ templ settingsOverviewRow(route string, icon string, title string, description s
 	</tr>
 }
 
-templ settingsOverviewDivider() {
-	<tr class="[&>td]:border-b-0">
-		<td colspan="2" class="py-2">
-			@fleuron("")
-		</td>
+// settingsOverviewGroup names a run of related settings, replacing the empty
+// spacer row that used to separate them. The heading row's own bottom border
+// is the rule, so a break costs one line instead of three.
+templ settingsOverviewGroup(title string) {
+	<tr class="row-group">
+		<td colspan="2" class="label-micro">{ title }</td>
 	</tr>
 }

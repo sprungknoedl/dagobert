@@ -1,42 +1,27 @@
 package views
 
-// Decorative "duck pond" kit. The ducks are anthropomorphic Victorian
-// gentlemen — top hat, monocle, tweed three-piece — a nod to Dagobert Duck.
-// Used as portraits: login hero and empty-state art. The fleuron below
-// stays hand-drawn line-art.
+// The brand mark: an engraved portrait of an anthropomorphic Victorian duck
+// gentleman (top hat, monocle, tweed three-piece), a nod to Dagobert Duck.
+// Used in the rail at 32px, in empty states at 96-112px, and on the sign-in
+// page, which has no rail for it to sit in.
 
-// duckMask renders single-color duck line-art as a CSS mask filled with
-// the current text color, rather than an <img>, so it recolors along with
-// whatever text-* class (and opacity) the caller already set — the same
-// way it'd behave in light or dark mode without a separate dark asset.
-templ duckMask(src string, ratio string, class string) {
-	<div
-		class={ "bg-current " + class }
-		style={ "aspect-ratio:" + ratio + ";mask:url(" + src + ") center / contain no-repeat;-webkit-mask:url(" + src + ") center / contain no-repeat" }
-		aria-hidden="true"
-	></div>
+// medallion sets the portrait in a circular disc with a seal-green ring. The
+// artwork is framed so the head and collar fill the disc and the body falls
+// outside it; a full-length figure shrinks to an illegible speck at 32px.
+//
+// mark.webp has its cream paper composited in rather than relying on
+// mix-blend-mode over whatever sits behind it, so it renders identically on
+// both themes — inverting an engraving turns the top hat white, at which point
+// it stops being a portrait.
+//
+// Raster, not vector: the engraving has no vector original, and its hatching
+// would trace to something far larger than these 18 kB. Stored at 320px for a
+// mark shown at 32px and 96-112px.
+templ medallion(class string) {
+	<img src="/public/assets/mark.webp" alt="" width="320" height="320" class={ "medallion " + class }/>
 }
 
-// plateGentleman — top-hatted duck gentleman, bust portrait with boutonnière.
-templ plateGentleman(class string) {
-	@duckMask("/public/assets/duck-gentleman.svg", "170.27805/203.31607", class)
-}
-
-// plateStroller — top-hatted duck gentleman, full-length with walking cane.
-templ plateStroller(class string) {
-	@duckMask("/public/assets/duck-stroller.svg", "170.33675/356.50619", class)
-}
-
-// fleuron — a hairline rule with a small diamond ornament at its centre,
-// a warmer alternative to the plain divider.
-templ fleuron(class string) {
-	<div class={ "flex items-center gap-3 text-base-content/30 " + class }>
-		<span class="h-px flex-1 bg-current"></span>
-		<svg viewBox="0 0 24 12" class="h-2 w-6 text-accent/70" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true">
-			<path d="M2,6 L9,6"></path>
-			<path d="M12,2 L16,6 L12,10 L8,6 Z" fill="currentColor" stroke="none"></path>
-			<path d="M16,6 L22,6"></path>
-		</svg>
-		<span class="h-px flex-1 bg-current"></span>
-	</div>
+// rule — a plain hairline separator.
+templ rule(class string) {
+	<hr class={ "border-0 border-t hairline " + class }/>
 }

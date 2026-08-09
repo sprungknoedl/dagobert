@@ -1,10 +1,13 @@
+.env
 .claude
+.impeccable
 .DS_Store
 *_templ.go
 internal/frontend/daisyui*.js
 CLAUDE.md
+PRODUCT.md
+DESIGN.md
 dagobert
-.env
 docs/specs
 data
 external

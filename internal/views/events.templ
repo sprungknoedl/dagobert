@@ -33,11 +33,11 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 			<table class="table table-default" data-default-sort="value-0">
 				<thead>
 					<tr>
-						<th data-sort="value-0" class="sort px-3 py-4 text-left">Time</th>
-						<th data-sort="value-1" class="sort px-3 py-4 text-left">Type</th>
-						<th data-sort="value-2" class="sort px-3 py-4 text-left">Event</th>
-						<th data-sort="value-3" class="sort px-3 py-4 text-left">Assets</th>
-						<th data-sort="value-4" class="sort px-3 py-4 text-left">Indicators</th>
+						<th data-sort="value-0" class="sort">Time</th>
+						<th data-sort="value-1" class="sort">Type</th>
+						<th data-sort="value-2" class="sort">Event</th>
+						<th data-sort="value-3" class="sort">Assets</th>
+						<th data-sort="value-4" class="sort">Indicators</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
@@ -114,38 +114,45 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 templ EventsOne(env Env, obj model.Event, assets []model.Asset, indicators []model.Indicator, mitre *attck.KB, vr valid.ValidationError) {
 	{{ uri := "/cases/" + obj.CaseID + "/events/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add event", "Edit event") }}
-	@form(env, uri, title) {
+	@form(env, uri, title, withSerial(obj.ID)) {
 		@hiddenField("ID", obj.ID)
 		@hiddenField("CaseID", obj.CaseID)
-		<div class="form-control mb-2">
-			<label class="label justify-start gap-2">
-				Time
-				@requiredLabel()
-				@validationError(vr["Time"])
-			</label>
-			<div class="join w-full">
-				<input name="Time" type="text" class="join-item input w-full" value={ obj.Time.Format("2006-01-02T15:04:05Z07:00") }/>
-				<a class="join-item btn" data-set-now>Now</a>
+		// What happened, then what it was, then what it touched.
+		@fieldset("Occurrence") {
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">
+					Time
+					@requiredLabel()
+					@validationError(vr["Time"])
+				</label>
+				<div class="join w-full">
+					<input name="Time" type="text" class="join-item input w-full" value={ obj.Time.Format("2006-01-02T15:04:05Z07:00") }/>
+					<a class="join-item btn" data-set-now>Now</a>
+				</div>
 			</div>
-		</div>
-		@selectField("Type", obj.Type, env.ValueLists.EventTypes, required(), withLabel("Type"), withError(vr["Type"]))
-		@choicesField("Techniques", withLabel("Techniques"), withError(vr["Techniques"])) {
-			for x := range mitre.Techniques() {
-				<option value={ x.ID } selected?={ obj.HasTechnique(x.ID) }>{ x.ID + " - " + x.Name }</option>
+			@selectField("Type", obj.Type, env.ValueLists.EventTypes, required(), withLabel("Type"), withError(vr["Type"]))
+			@choicesField("Techniques", withLabel("Techniques"), withError(vr["Techniques"])) {
+				for x := range mitre.Techniques() {
+					<option value={ x.ID } selected?={ obj.HasTechnique(x.ID) }>{ x.ID + " - " + x.Name }</option>
+				}
 			}
 		}
-		@textareaField("Event", obj.Event, required(), withLabel("Event"), withError(vr["Event"]))
-		@textareaField("Raw", obj.Raw, withLabel("Raw"), withError(vr["Raw"]))
-		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]))
-		@booleanField("Flagged", obj.Flagged, withLabel("Flagged"), withHint("Mark an event as significant or requiring follow-up. Flagged events are highlighted in the timeline."))
-		@choicesField("Assets", withLabel("Assets"), withError(vr["Assets"])) {
-			for _, x := range assets {
-				<option value={ x.Name } selected?={ obj.HasAsset(x.ID) }>{ x.Name }</option>
-			}
+		@fieldset("Description") {
+			@textareaField("Event", obj.Event, required(), withLabel("Event"), withError(vr["Event"]))
+			@textareaField("Raw", obj.Raw, withLabel("Raw"), withError(vr["Raw"]))
+			@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]))
+			@booleanField("Flagged", obj.Flagged, withLabel("Flagged"), withHint("Mark an event as significant or requiring follow-up. Flagged events are highlighted in the timeline."))
 		}
-		@choicesField("Indicators", withLabel("Indicators"), withError(vr["Indicators"])) {
-			for _, x := range indicators {
-				<option value={ x.Value } selected?={ obj.HasIndicator(x.ID) }>{ x.Value }</option>
+		@fieldset("Involved records") {
+			@choicesField("Assets", withLabel("Assets"), withError(vr["Assets"])) {
+				for _, x := range assets {
+					<option value={ x.Name } selected?={ obj.HasAsset(x.ID) }>{ x.Name }</option>
+				}
+			}
+			@choicesField("Indicators", withLabel("Indicators"), withError(vr["Indicators"])) {
+				for _, x := range indicators {
+					<option value={ x.Value } selected?={ obj.HasIndicator(x.ID) }>{ x.Value }</option>
+				}
 			}
 		}
 		@customAttributes(env, "Event", obj.Custom)
@@ -186,7 +193,7 @@ templ eventsManyExtra(env Env) {
 			<summary class="btn join-item">
 				<i class="ph ph-6 ph-sort-ascending inline-block mr-1"></i> Import
 			</summary>
-			<ul style="position: absolute" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow">
+			<ul style="position: absolute" class="menu dropdown-content z-[1] w-52 p-2">
 				<li><a href={ url + "/csv" } up-layer="new drawer" up-accept-location={ env.Route }>from CSV</a></li>
 				<li><a href={ url + "/timesketch" } up-follow up-method="post">from Timesketch</a></li>
 			</ul>

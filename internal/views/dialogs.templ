@@ -6,46 +6,88 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/model"
 )
 
-templ ConfirmDialog(dst string) {
+// ConfirmDialog is the form sheet with nothing between its head and foot: the
+// question above the rule, the two answers below it. It reuses .form-head and
+// .form-foot so the confirm and the forms can't drift apart.
+//
+// It opens in a modal rather than a drawer — two lines of text in a
+// full-height drawer is mostly empty column.
+templ ConfirmDialog(dst string, opts ...ConfirmOption) {
+	{{ cfg := applyConfirmOptions(opts) }}
 	@layout() {
-		<main>
-			<!-- Modal body -->
-			<div class="mb-6 text-center">
-				<div class="mb-6"><i class="ph ph-warning-circle text-error text-8xl"></i></div>
-				<h3 class="text-lg font-normal">Are you sure you want to delete this item? This action is permanent and can not be undone.</h3>
-			</div>
-			<!-- Modal footer -->
-			<div class="flex gap-2 items-center justify-center">
-				<a href={ dst } class="btn btn-error" up-follow up-method="delete">Yes, I am sure </a>
-				<a class="btn" up-dismiss>Cancel </a>
-			</div>
+		<main class="notice-sheet">
+			<header class="form-head">
+				<span class="notice-mark" aria-hidden="true"><i class="ph ph-trash"></i></span>
+				<div class="grow min-w-0">
+					<h1 class="font-serif text-xl font-semibold leading-tight">Delete this record?</h1>
+					<p class="text-sm text-base-content/70 mt-1.5">This is permanent and cannot be undone.</p>
+				</div>
+			</header>
+			<footer class="form-foot">
+				if cfg.commitInParent {
+					<a href={ dst } class="btn btn-error" up-follow up-method="delete" up-layer="parent" up-target="main">Delete</a>
+				} else {
+					<a href={ dst } class="btn btn-error" up-follow up-method="delete">Delete</a>
+				}
+				<a class="btn btn-ghost" up-dismiss>Cancel</a>
+			</footer>
 		</main>
 	}
 }
 
+type confirmConfig struct {
+	commitInParent bool
+}
+
+type ConfirmOption func(*confirmConfig)
+
+func applyConfirmOptions(opts []ConfirmOption) confirmConfig {
+	cfg := confirmConfig{}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+	return cfg
+}
+
+// CommitInParent renders the delete's response into the layer beneath the
+// confirm instead of the confirm's own, which peels the confirm away as the view
+// underneath refreshes.
+//
+// It is for confirms opened from inside another overlay — the comment delete
+// sits above the comments drawer, and its response is that drawer's refreshed
+// list. Grid deletes don't need it: their redirect matches the opening link's
+// up-accept-location, and #list refreshes itself through up-hungry.
+func CommitInParent() ConfirmOption {
+	return func(cfg *confirmConfig) { cfg.commitInParent = true }
+}
+
+// The import dialogs stay drawers — a file to choose and, for an archive, a
+// manifest to read — and take the same fixed head and foot as every other form.
 templ ImportDialog() {
 	@layout() {
-		<main>
+		<main class="form-sheet">
 			<form method="post" up-submit enctype="multipart/form-data">
-				<!-- Modal header -->
-				<h3 class="font-bold text-lg mb-4">
-					Import from CSV
-				</h3>
-				<!-- Modal body -->
-				<div class="mb-4">
-					<p class="flex items-center gap-2 mb-2">
+				<header class="form-head">
+					<div class="grow min-w-0">
+						<h1 class="font-serif text-2xl font-semibold leading-none">Import from CSV</h1>
+					</div>
+					<a class="btn btn-ghost btn-square" up-dismiss aria-label="Close">
+						<i class="ph ph-6 ph-x"></i>
+					</a>
+				</header>
+				<div class="form-body">
+					<p class="flex items-center gap-2 mb-4 text-sm text-base-content/70">
 						<i class="ph ph-5 ph-info inline-block"></i>
 						Please note, that dagobert will attempt to deduplicate entries.
 					</p>
-					<div class="form-control mb-2">
+					<div class="form-control">
 						<input name="file" class="file-input w-full" type="file"/>
 					</div>
 				</div>
-				<!-- Modal footer -->
-				<div class="flex gap-2 items-center">
-					<button type="submit" class="btn btn-neutral">Save </button>
-					<a class="btn" up-dismiss>Cancel </a>
-				</div>
+				<footer class="form-foot">
+					<button type="submit" class="btn btn-neutral">Save</button>
+					<a class="btn btn-ghost" up-dismiss>Cancel</a>
+				</footer>
 			</form>
 		</main>
 	}
@@ -53,27 +95,29 @@ templ ImportDialog() {
 
 templ ImportArchiveDialog() {
 	@layout() {
-		<main>
+		<main class="form-sheet">
 			<form method="post" up-submit enctype="multipart/form-data">
-				<!-- Modal header -->
-				<h3 class="font-bold text-lg mb-4">
-					Import case from archive
-				</h3>
-				<!-- Modal body -->
-				<div class="mb-4">
-					<p class="flex items-center gap-2 mb-2">
-						<i class="ph ph-5 ph-info inline-block"></i>
-						Select a <span class="font-mono">.dagobert.zip</span> archive. The case is recreated with its original IDs — importing a case that already exists will fail.
+				<header class="form-head">
+					<div class="grow min-w-0">
+						<h1 class="font-serif text-2xl font-semibold leading-none">Import case from archive</h1>
+					</div>
+					<a class="btn btn-ghost btn-square" up-dismiss aria-label="Close">
+						<i class="ph ph-6 ph-x"></i>
+					</a>
+				</header>
+				<div class="form-body">
+					<p class="flex items-start gap-2 mb-4 text-sm text-base-content/70">
+						<i class="ph ph-5 ph-info inline-block mt-0.5"></i>
+						<span>Select a <span class="font-mono">.dagobert.zip</span> archive. The case is recreated with its original IDs — importing a case that already exists will fail.</span>
 					</p>
-					<div class="form-control mb-2">
+					<div class="form-control">
 						<input name="file" class="file-input w-full" type="file" accept=".zip"/>
 					</div>
 				</div>
-				<!-- Modal footer -->
-				<div class="flex gap-2 items-center">
-					<button type="submit" class="btn btn-neutral">Continue </button>
-					<a class="btn" up-dismiss>Cancel </a>
-				</div>
+				<footer class="form-foot">
+					<button type="submit" class="btn btn-neutral">Continue</button>
+					<a class="btn btn-ghost" up-dismiss>Cancel</a>
+				</footer>
 			</form>
 		</main>
 	}
@@ -81,42 +125,50 @@ templ ImportArchiveDialog() {
 
 templ ImportArchiveConfirm(m model.Manifest, token string) {
 	@layout() {
-		<main>
+		<main class="form-sheet">
 			// On commit the server redirects to the new case summary; render it on
 			// the root layer (closing this drawer) instead of inside the overlay.
 			<form method="post" up-submit up-layer="root" up-target="main">
 				<input type="hidden" name="token" value={ token }/>
 				<input type="hidden" name="confirm" value="yes"/>
-				<!-- Modal header -->
-				<h3 class="font-bold text-lg mb-4">
-					Import case { m.OriginalCaseID }?
-				</h3>
-				<!-- Modal body -->
-				<div class="mb-4 text-sm">
-					<dl class="grid grid-cols-[8rem_1fr] gap-x-4 gap-y-1 mb-4">
-						<dt class="text-base-content/60">Source instance</dt>
-						<dd>{ m.SourceInstance }</dd>
-						<dt class="text-base-content/60">Exported by</dt>
-						<dd>{ m.ExportedBy }</dd>
-						<dt class="text-base-content/60">Exported at</dt>
-						<dd>{ m.ExportedAt.Format("2006-01-02 15:04 MST") }</dd>
-						<dt class="text-base-content/60">Includes files</dt>
-						<dd>{ strconv.FormatBool(m.IncludesBinaries) }</dd>
-					</dl>
-					<table class="table table-sm w-full mb-4">
-						<tbody>
-							for _, key := range []string{"assets", "events", "indicators", "malware", "evidences", "notes", "tasks", "comments"} {
-								<tr>
-									<td class="text-base-content/60 capitalize">{ key }</td>
-									<td class="text-right font-mono">{ strconv.Itoa(m.Counts[key]) }</td>
-								</tr>
-							}
-						</tbody>
-					</table>
+				<header class="form-head">
+					<div class="grow min-w-0">
+						<h1 class="font-serif text-2xl font-semibold leading-none truncate">Import this case?</h1>
+						<div class="serial text-[0.625rem] mt-2">{ "№ " + m.OriginalCaseID }</div>
+					</div>
+					<a class="btn btn-ghost btn-square" up-dismiss aria-label="Close">
+						<i class="ph ph-6 ph-x"></i>
+					</a>
+				</header>
+				<div class="form-body">
+					@fieldset("Provenance") {
+						<dl class="grid grid-cols-[9rem_1fr] gap-x-4 gap-y-1.5 text-sm">
+							<dt class="label-micro self-center">Source instance</dt>
+							<dd>{ m.SourceInstance }</dd>
+							<dt class="label-micro self-center">Exported by</dt>
+							<dd>{ m.ExportedBy }</dd>
+							<dt class="label-micro self-center">Exported at</dt>
+							<dd class="font-mono text-xs">{ m.ExportedAt.Format("2006-01-02 15:04 MST") }</dd>
+							<dt class="label-micro self-center">Includes files</dt>
+							<dd>{ strconv.FormatBool(m.IncludesBinaries) }</dd>
+						</dl>
+					}
+					@fieldset("Contents") {
+						<table class="table">
+							<tbody>
+								for _, key := range []string{"assets", "events", "indicators", "malware", "evidences", "notes", "tasks", "comments"} {
+									<tr>
+										<td class="capitalize">{ key }</td>
+										<td class="text-right num">{ strconv.Itoa(m.Counts[key]) }</td>
+									</tr>
+								}
+							</tbody>
+						</table>
+					}
 					if len(m.Warnings) > 0 {
-						<div class="alert alert-warning alert-soft mb-2" role="alert">
+						<div class="alert alert-warning alert-soft mb-4 text-sm" role="alert">
 							<div>
-								<p class="font-bold">Export warnings:</p>
+								<p class="label-micro mb-1">Export warnings</p>
 								<ul class="list-disc ml-4">
 									for _, warn := range m.Warnings {
 										<li>{ warn }</li>
@@ -125,29 +177,30 @@ templ ImportArchiveConfirm(m model.Manifest, token string) {
 							</div>
 						</div>
 					}
-					<p class="flex items-start gap-2 text-base-content/60">
+					<p class="flex items-start gap-2 text-sm text-base-content/60">
 						<i class="ph ph-5 ph-info inline-block mt-0.5"></i>
-						Record values referencing customizable valueLists (classifications, types, TLP, …) are imported as-is. Values this instance does not define will show as uncustomized — reconcile your valueLists if needed.
+						<span>Record values referencing customizable valueLists (classifications, types, TLP, …) are imported as-is. Values this instance does not define will show as uncustomized — reconcile your valueLists if needed.</span>
 					</p>
 				</div>
-				<!-- Modal footer -->
-				<div class="flex gap-2 items-center">
-					<button type="submit" class="btn btn-neutral">Import case </button>
-					<a class="btn" up-dismiss>Cancel </a>
-				</div>
+				<footer class="form-foot">
+					<button type="submit" class="btn btn-neutral">Import case</button>
+					<a class="btn btn-ghost" up-dismiss>Cancel</a>
+				</footer>
 			</form>
 		</main>
 	}
 }
 
+// Toasts: same markup as showToast in dagobert.js, which renders the success
+// case client-side. Failure is the one message that takes the severe hue.
 templ ToastError(err error) {
 	@layout() {
-		<section id="errors" class="toast toast-top toast-center z-20">
-			<div class="alert alert-error w-[42rem] m-4" role="alert" data-remove-self>
-				<i class="ph ph-x-circle text-3xl"></i>
-				<div>
-					<h3 class="font-bold">Unrecoverable error encountered!</h3>
-					<div class="text-xs">{ err.Error() }</div>
+		<section id="errors" class="toast toast-end toast-bottom z-20">
+			<div class="seal seal-severe" role="alert" data-remove-self>
+				<span class="seal-mark" aria-hidden="true"><i class="ph ph-x-circle"></i></span>
+				<div class="seal-body">
+					<div class="label-micro">Failed</div>
+					<div class="seal-msg">{ err.Error() }</div>
 				</div>
 			</div>
 		</section>
@@ -156,12 +209,12 @@ templ ToastError(err error) {
 
 templ ToastWarning(err error) {
 	@layout() {
-		<section id="errors" class="toast toast-top toast-center z-20">
-			<div class="alert alert-warning w-[42rem] m-4" role="alert" data-remove-self>
-				<i class="ph ph-warning-circle text-3xl"></i>
-				<div>
-					<h3 class="font-bold">Bad request.</h3>
-					<div class="text-cs">{ err.Error() }</div>
+		<section id="errors" class="toast toast-end toast-bottom z-20">
+			<div class="seal" role="alert" data-remove-self>
+				<span class="seal-mark" aria-hidden="true"><i class="ph ph-warning-circle"></i></span>
+				<div class="seal-body">
+					<div class="label-micro">Not recorded</div>
+					<div class="seal-msg">{ err.Error() }</div>
 				</div>
 			</div>
 		</section>

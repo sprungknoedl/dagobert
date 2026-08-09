@@ -33,14 +33,14 @@ templ EvidencesMany(env Env, rows []model.Evidence, comments map[string]int) {
 			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>
-						<th data-sort="value-0" class="sort px-3 py-4 text-left">Type</th>
-						<th data-sort="value-1" class="sort px-3 py-4 text-left">Name</th>
-						<th data-sort="value-2" class="sort px-3 py-4 text-left">Hash</th>
-						<th data-sort="value-3" class="sort px-3 py-4 text-left">Size</th>
-						<th data-sort="value-4" class="sort px-3 py-4 text-left">Starts at</th>
-						<th data-sort="value-5" class="sort px-3 py-4 text-left">Ends at</th>
-						<th data-sort="value-6" class="sort px-3 py-4 text-left">Source</th>
-						<th data-sort="value-7" class="sort px-3 py-4 text-left">Notes</th>
+						<th data-sort="value-0" class="sort">Type</th>
+						<th data-sort="value-1" class="sort">Name</th>
+						<th data-sort="value-2" class="sort">Hash</th>
+						<th data-sort="value-3" class="sort">Size</th>
+						<th data-sort="value-4" class="sort">Starts at</th>
+						<th data-sort="value-5" class="sort">Ends at</th>
+						<th data-sort="value-6" class="sort">Source</th>
+						<th data-sort="value-7" class="sort">Notes</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
@@ -98,55 +98,63 @@ templ EvidencesMany(env Env, rows []model.Evidence, comments map[string]int) {
 templ EvidencesOne(env Env, obj model.Evidence, vr valid.ValidationError) {
 	{{ uri := "/cases/" + obj.CaseID + "/evidences/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add evidence", "Edit evidence") }}
-	@form(env, uri, title, enctype("multipart/form-data")) {
+	@form(env, uri, title, enctype("multipart/form-data"), withSerial(obj.ID)) {
 		@hiddenField("ID", obj.ID)
 		@hiddenField("CaseID", obj.CaseID)
-		@selectField("Type", obj.Type, env.ValueLists.EvidenceTypes, required(), withLabel("Type"), withError(vr["Type"]))
-		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
-		if obj.ID == "new" || obj.Fileless || vr["File"].Invalid {
+		// The artefact, then the integrity record the chain of custody rests on,
+		// then the window it covers and where it came from.
+		@fieldset("Artefact") {
+			@selectField("Type", obj.Type, env.ValueLists.EvidenceTypes, required(), withLabel("Type"), withError(vr["Type"]))
+			@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))
+			if obj.ID == "new" || obj.Fileless || vr["File"].Invalid {
+				<div class="form-control mb-2">
+					<label class="label justify-start gap-2">
+						File
+						@validationError(vr["File"])
+					</label>
+					if obj.ID == "new" || obj.Fileless {
+						<input name="File" type="file" class="file-input w-full" data-fill="Name" data-hash="true"/>
+					}
+				</div>
+			}
+		}
+		@fieldset("Integrity") {
 			<div class="form-control mb-2">
 				<label class="label justify-start gap-2">
-					File
-					@validationError(vr["File"])
+					Hash
+					if obj.Fileless {
+						<span class="text-xs">(manual — recalculated automatically once a file is attached)</span>
+					}
 				</label>
-				if obj.ID == "new" || obj.Fileless {
-					<input name="File" type="file" class="file-input w-full" data-fill="Name" data-hash="true"/>
-				}
+				<input disabled?={ !obj.Fileless } name="Hash" type="text" class="input w-full" value={ obj.Hash }/>
 			</div>
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">
+					Size
+				</label>
+				<input disabled?={ !obj.Fileless } name="Size" type="text" class="input w-full" value={ strconv.FormatInt(obj.Size, 10) }/>
+			</div>
+			@passwordField("Password", obj.Password, withLabel("File password"),
+				withHint("Remembers the file password for analysts."))
 		}
-		<div class="form-control mb-2">
-			<label class="label justify-start gap-2">
-				Hash
-				if obj.Fileless {
-					<span class="text-xs">(manual — recalculated automatically once a file is attached)</span>
-				}
-			</label>
-			<input disabled?={ !obj.Fileless } name="Hash" type="text" class="input w-full" value={ obj.Hash }/>
-		</div>
-		<div class="form-control mb-2">
-			<label class="label justify-start gap-2">
-				Size
-			</label>
-			<input disabled?={ !obj.Fileless } name="Size" type="text" class="input w-full" value={ strconv.FormatInt(obj.Size, 10) }/>
-		</div>
-		@passwordField("Password", obj.Password, withLabel("File password"),
-			withHint("Remembers the file password for analysts."))
-		<div class="form-control mb-2">
-			<label class="label justify-start gap-2">
-				Starts at
-				@validationError(vr["StartsAt"])
-			</label>
-			<input name="StartsAt" type="datetime-local" class="input w-full" value={ fp.If(obj.StartsAt.IsZero(), "", obj.StartsAt.Format("2006-01-02T15:04")) }/>
-		</div>
-		<div class="form-control mb-2">
-			<label class="label justify-start gap-2">
-				Ends at
-				@validationError(vr["EndsAt"])
-			</label>
-			<input name="EndsAt" type="datetime-local" class="input w-full" value={ fp.If(obj.EndsAt.IsZero(), "", obj.EndsAt.Format("2006-01-02T15:04")) }/>
-		</div>
-		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]), withHint("Where this evidence came from — system name, custodian, or acquisition tool used."))
-		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
+		@fieldset("Coverage") {
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">
+					Starts at
+					@validationError(vr["StartsAt"])
+				</label>
+				<input name="StartsAt" type="datetime-local" class="input w-full" value={ fp.If(obj.StartsAt.IsZero(), "", obj.StartsAt.Format("2006-01-02T15:04")) }/>
+			</div>
+			<div class="form-control mb-2">
+				<label class="label justify-start gap-2">
+					Ends at
+					@validationError(vr["EndsAt"])
+				</label>
+				<input name="EndsAt" type="datetime-local" class="input w-full" value={ fp.If(obj.EndsAt.IsZero(), "", obj.EndsAt.Format("2006-01-02T15:04")) }/>
+			</div>
+			@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]), withHint("Where this evidence came from — system name, custodian, or acquisition tool used."))
+			@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
+		}
 		@customAttributes(env, "Evidence", obj.Custom)
 		@requiredFootnote()
 	}
@@ -171,17 +179,17 @@ templ evidenceLogExportBtn(env Env) {
 templ evidenceLogBadge(event string) {
 	switch event {
 		case model.EvidenceLogUploaded:
-			<span class="badge badge-lg badge-outline badge-info">Uploaded</span>
+			<span class="badge badge-outline">Uploaded</span>
 		case model.EvidenceLogDownloaded:
-			<span class="badge badge-lg badge-outline badge-accent">Downloaded</span>
+			<span class="badge badge-outline">Downloaded</span>
 		case model.EvidenceLogEdited:
-			<span class="badge badge-lg badge-outline badge-warning">Edited</span>
+			<span class="badge badge-outline">Edited</span>
 		case model.EvidenceLogModuleRun:
-			<span class="badge badge-lg badge-outline badge-secondary">Module run</span>
+			<span class="badge badge-outline">Module run</span>
 		case model.EvidenceLogDeleted:
-			<span class="badge badge-lg badge-outline badge-error">Deleted</span>
+			<span class="badge badge-outline badge-error">Deleted</span>
 		case model.EvidenceLogAttached:
-			<span class="badge badge-lg badge-outline badge-success">Attached</span>
+			<span class="badge badge-outline">Attached</span>
 	}
 }
 
@@ -208,20 +216,20 @@ templ EvidenceLogsMany(env Env, rows []model.EvidenceLog, live map[string]model.
 				<table class="table table-default">
 					<thead>
 						<tr>
-							<th data-sort="value-0" class="sort px-3 py-4 text-left">Time</th>
-							<th data-sort="value-1" class="sort px-3 py-4 text-left">Evidence</th>
-							<th data-sort="value-2" class="sort px-3 py-4 text-left">Event</th>
-							<th data-sort="value-3" class="sort px-3 py-4 text-left">User</th>
-							<th data-sort="value-4" class="sort px-3 py-4 text-left">Details</th>
+							<th data-sort="value-0" class="sort">Time</th>
+							<th data-sort="value-1" class="sort">Evidence</th>
+							<th data-sort="value-2" class="sort">Event</th>
+							<th data-sort="value-3" class="sort">User</th>
+							<th data-sort="value-4" class="sort">Details</th>
 							<th style="width: 7rem"></th>
 						</tr>
 					</thead>
 					<tbody class="values">
 						if len(rows) == 0 {
 							<tr>
-								<td colspan="100" class="py-8 text-center text-base-content/50">
-									@plateStroller("w-36 max-w-full mx-auto mb-4")
-									<p class="font-serif italic text-lg text-base-content/60 mb-2">No access recorded yet.</p>
+								<td colspan="100" class="empty-cell">
+									@medallion("medallion-lg w-24 h-24 mx-auto mb-6")
+									<p class="font-serif text-lg text-base-content/75">No access recorded yet.</p>
 								</td>
 							</tr>
 						} else {
@@ -256,7 +264,7 @@ templ EvidenceLogsMany(env Env, rows []model.EvidenceLog, live map[string]model.
 												drawer's own URL and misfire dagobert.js's root-navigation
 												handler, which sends the drawer's document to the root layer). -->
 												<div class="join">
-													<a class="join-item btn btn-sm text-nowrap" href={ purgeURL } up-method="DELETE" up-layer="new drawer">
+													<a class="join-item btn btn-xs btn-ghost text-nowrap" href={ purgeURL } up-method="DELETE" up-layer="new modal">
 														<i class="ph ph-5 ph-trash"></i> Purge history
 													</a>
 												</div>

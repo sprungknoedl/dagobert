@@ -141,8 +141,11 @@ func (h *Handler) CommentDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.URL.Query().Get("confirm") != "yes" && !wantsJSON(r) {
+		// The confirm opens as a modal above the comments drawer, so the
+		// post-delete list below has to be rendered into that drawer rather than
+		// into the modal being answered.
 		uri := fmt.Sprintf("/cases/%s/comments/%s/%s/%s?confirm=yes", cid, kind, oid, id)
-		Render(w, r, http.StatusOK, views.ConfirmDialog(uri), nil)
+		Render(w, r, http.StatusOK, views.ConfirmDialog(uri, views.CommitInParent()), nil)
 		return
 	}
 

@@ -16,19 +16,22 @@ templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]m
 	@layout() {
 		@list(env, "Indicators", navHideImport(), navHideExport(), navPreButtons(indicatorsManyExtra(env)), navSubtitle("Atomic artefacts for detection and threat hunting")) {
 			<div class="stats w-full mb-4">
-				for _, status := range env.ValueLists.IndicatorStatus {
-					@stat(status.State, status.Icon, status.Name, summary[status.Name])
+				@statTotal(len(rows))
+				for i, status := range env.ValueLists.IndicatorStatus {
+					@stat(status.Name, summary[status.Name], i == 0)
 				}
 			</div>
-			<table class="table table-default" data-default-sort="value-1">
+			<table class="table table-default" data-default-sort="value-2">
 				<thead>
 					<tr>
-						<th data-sort="value-0" class="sort px-3 py-4 text-left">Status</th>
-						<th data-sort="value-1" class="sort px-3 py-4 text-left">Type</th>
-						<th data-sort="value-2" class="sort px-3 py-4 text-left">Value</th>
-						<th data-sort="value-3" class="sort px-3 py-4 text-left">Source</th>
-						<th data-sort="value-4" class="sort px-3 py-4 text-left">Seen</th>
-						<th data-sort="value-5" class="sort px-3 py-4 text-left">Enrichment</th>
+						<th data-sort="value-0" class="sort">Status</th>
+						<th data-sort="value-1" class="sort">Type</th>
+						<th data-sort="value-2" class="sort">Value</th>
+						<th data-sort="value-3" class="sort">TLP</th>
+						<th data-sort="value-4" class="sort">Source</th>
+						<th data-sort="value-5" class="sort">Last seen</th>
+						<th data-sort="value-6" class="sort text-right">Ev</th>
+						<th data-sort="value-7" class="sort">Enrichment</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
@@ -40,35 +43,36 @@ templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]m
 							{{ worst, worstSeverity, results := summarizeEnrichment(enrichments[row.ID]) }}
 							<tr class={ fp.If(row.Flagged, "row-hover bg-flagged", "row-hover") }>
 								<td class="value-0 truncate" data-search={ row.Status }>
-									@valueBadge(env.ValueLists.IndicatorStatus, row.Status)
+									@statusDot(env.ValueLists.IndicatorStatus, row.Status)
 								</td>
-								<td class="value-1 truncate" data-search={ row.Type }>
+								<td class="value-1 truncate opacity-65" data-search={ row.Type }>
 									@valueBadge(env.ValueLists.IndicatorTypes, row.Type)
 								</td>
-								<td class="value-2 font-mono text-xs" data-search={ row.Value }>
-									{ row.Value }
-									<br/>
-									<span class="text-xs opacity-50">{ row.TLP }</span>
+								<td class="value-2 font-mono" data-search={ row.Value }>{ row.Value }</td>
+								<td class="value-3" data-search={ row.TLP }>
+									@valueMono(env.ValueLists.IndicatorTLPs, row.TLP)
 								</td>
-								<td class="value-3" data-search={ row.Source }>{ row.Source }</td>
+								<td class="value-4 opacity-65" data-search={ row.Source }>{ row.Source }</td>
 								<td
-									class="value-4 truncate"
+									class="value-5 truncate"
 									data-search={ row.LastSeen.Format(time.RFC3339) }
 									title={ "first seen: " + row.FirstSeen.Format("2006-01-02 15:04:05 Z07:00") + "\nlast seen: " + row.LastSeen.Format("2006-01-02 15:04:05 Z07:00") }
 								>
 									if time.Time(row.LastSeen).IsZero() {
-										<span>—</span>
+										<span class="opacity-25">—</span>
 									} else {
 										@formatTime(row.LastSeen)
 									}
-									<br/>
-									{{ seen := fmt.Sprintf("%d events", row.Events) }}
-									if row.OtherCases > 0 {
-										{{ seen += fmt.Sprintf(", %d other cases", row.OtherCases) }}
-									}
-									<span class="text-xs opacity-50">{ seen }</span>
 								</td>
-								<td class="value-5" data-search={ strconv.Itoa(worstSeverity) }>
+								// events, with cross-case overlap as a suffix rather than a
+								// second line: a wrapped cell costs every row in the grid
+								<td class="value-6 text-right font-mono whitespace-nowrap" data-search={ strconv.Itoa(row.Events) }>
+									<span class={ templ.KV("opacity-35", row.Events == 0) }>{ strconv.Itoa(row.Events) }</span>
+									if row.OtherCases > 0 {
+										<span class="label-micro ml-1" title={ fmt.Sprintf("also recorded in %d other case(s)", row.OtherCases) }>{ fmt.Sprintf("+%d", row.OtherCases) }</span>
+									}
+								</td>
+								<td class="value-7" data-search={ strconv.Itoa(worstSeverity) }>
 									if len(results) == 0 {
 										<span class="opacity-50">—</span>
 									} else {
@@ -83,7 +87,7 @@ templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]m
 										</div>
 									}
 								</td>
-								<td class="text-right value-6" data-search={ fp.If(row.Flagged, "flagged:true", "") }>
+								<td class="text-right value-8" data-search={ fp.If(row.Flagged, "flagged:true", "") }>
 									<div class="join">
 										if row.Flagged {
 											@actionBtn(env, "GET", env.Route+row.ID) {
@@ -119,16 +123,25 @@ type IndicatorOverlap struct {
 templ IndicatorsOne(env Env, obj model.Indicator, overlap IndicatorOverlap, enrichments []model.Enrichment, vr valid.ValidationError) {
 	{{ uri := "/cases/" + obj.CaseID + "/indicators/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add indicator", "Edit indicator") }}
-	@form(env, uri, title) {
+	@form(env, uri, title, withSerial(obj.ID)) {
 		@hiddenField("ID", obj.ID)
 		@hiddenField("CaseID", obj.CaseID)
-		@selectField("Status", obj.Status, env.ValueLists.IndicatorStatus, required(), withLabel("Status"), withError(vr["Status"]))
-		@selectField("Type", obj.Type, env.ValueLists.IndicatorTypes, required(), withLabel("Type"), withError(vr["Type"]))
-		@stringField("Value", obj.Value, required(), withLabel("Value"), withError(vr["Value"]))
-		@selectField("TLP", obj.TLP, env.ValueLists.IndicatorTLPs, required(), withLabel("TLP"), withError(vr["TLP"]), withHint("Traffic Light Protocol: controls how widely this indicator can be shared. TLP:RED = named recipients only; TLP:GREEN = community; TLP:WHITE = public."))
-		@booleanField("Flagged", obj.Flagged, withLabel("Flagged"), withHint("Mark this indicator as significant. Flagged indicators are highlighted in the list and appear on the case summary page."))
-		@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]), withHint("Where this indicator was found or provided by (e.g. \"VirusTotal\", \"customer firewall logs\", analyst name)."))
-		@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
+		// Grouped as the observable itself, the judgement made about it, and
+		// where that judgement came from — the three questions a reviewer asks
+		// of an indicator, in that order.
+		@fieldset("Observable") {
+			@selectField("Type", obj.Type, env.ValueLists.IndicatorTypes, required(), withLabel("Type"), withError(vr["Type"]))
+			@stringField("Value", obj.Value, required(), withLabel("Value"), withError(vr["Value"]))
+		}
+		@fieldset("Assessment") {
+			@selectField("Status", obj.Status, env.ValueLists.IndicatorStatus, required(), withLabel("Status"), withError(vr["Status"]))
+			@selectField("TLP", obj.TLP, env.ValueLists.IndicatorTLPs, required(), withLabel("TLP"), withError(vr["TLP"]), withHint("Traffic Light Protocol: controls how widely this indicator can be shared. TLP:RED = named recipients only; TLP:GREEN = community; TLP:WHITE = public."))
+			@booleanField("Flagged", obj.Flagged, withLabel("Flagged"), withHint("Mark this indicator as significant. Flagged indicators are highlighted in the list and appear on the case summary page."))
+		}
+		@fieldset("Provenance") {
+			@stringField("Source", obj.Source, withLabel("Source"), withError(vr["Source"]), withHint("Where this indicator was found or provided by (e.g. \"VirusTotal\", \"customer firewall logs\", analyst name)."))
+			@textareaField("Notes", obj.Notes, withLabel("Notes"), withError(vr["Notes"]))
+		}
 		@requiredFootnote()
 		@customAttributes(env, "Indicator", obj.Custom)
 		@threatIntel(env, enrichments)
@@ -200,7 +213,7 @@ templ indicatorsManyExtra(env Env) {
 			<summary class="btn join-item">
 				<i class="ph ph-6 ph-sort-ascending inline-block mr-1"></i> Import
 			</summary>
-			<ul style="position: absolute" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow">
+			<ul style="position: absolute" class="menu dropdown-content z-[1] w-52 p-2">
 				<li><a href={ url + "/csv" } up-layer="new drawer" up-accept-location={ env.Route }>from CSV</a></li>
 				<li><a href={ url + "/timesketch" } up-follow up-method="post">from Timesketch</a></li>
 			</ul>
@@ -211,7 +224,7 @@ templ indicatorsManyExtra(env Env) {
 			<summary class="btn join-item">
 				<i class="ph ph-6 ph-sort-descending inline-block mr-1"></i> Export
 			</summary>
-			<ul style="position: absolute" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow">
+			<ul style="position: absolute" class="menu dropdown-content z-[1] w-52 p-2">
 				<li><a href={ url + "/csv" }>as CSV</a></li>
 				<li><a href={ url + "/ioc" }>as OpenIOC</a></li>
 				<li><a href={ url + "/stix" }>as STIX</a></li>

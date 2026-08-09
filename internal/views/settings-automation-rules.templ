@@ -12,11 +12,11 @@ templ SettingsAutomationRulesMany(env Env, rows []model.AutomationRule) {
 			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>
-						<th data-sort="value-0" class="sort px-3 py-4 text-left">Enabled</th>
-						<th data-sort="value-1" class="sort px-3 py-4 text-left">Trigger</th>
-						<th data-sort="value-2" class="sort px-3 py-4 text-left">Name</th>
-						<th data-sort="value-3" class="sort px-3 py-4 text-left">Condition</th>
-						<th data-sort="value-4" class="sort px-3 py-4 text-left">Module</th>
+						<th data-sort="value-0" class="sort">Enabled</th>
+						<th data-sort="value-1" class="sort">Trigger</th>
+						<th data-sort="value-2" class="sort">Name</th>
+						<th data-sort="value-3" class="sort">Condition</th>
+						<th data-sort="value-4" class="sort">Module</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
@@ -28,9 +28,9 @@ templ SettingsAutomationRulesMany(env Env, rows []model.AutomationRule) {
 							<tr class="row-hover">
 								<td class="value-0" data-search={ fp.If(row.Enabled, "Enabled", "Disabled") }>
 									if row.Enabled {
-										<div class="text-success"><i class="ph ph-5 ph-check inline-block"></i> Enabled</div>
+										<div class="inline-flex items-center gap-1.5 label-micro"><span class="dot bg-success"></span>Enabled</div>
 									} else {
-										<div class="text-error"><i class="ph ph-5 ph-x inline-block"></i> Disabled</div>
+										<div class="inline-flex items-center gap-1.5 label-micro"><span class="dot dot-ink"></span>Disabled</div>
 									}
 								</td>
 								<td class="value-1" data-search={ row.Trigger }>{ row.Trigger } </td>
@@ -54,7 +54,7 @@ templ SettingsAutomationRulesMany(env Env, rows []model.AutomationRule) {
 templ SettingsAutomationRulesOne(env Env, obj model.AutomationRule, item []model.ValueListItem, vr valid.ValidationError) {
 	{{ uri := "/settings/automation-rules/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add automation rule", "Edit automation rule") }}
-	@form(env, uri, title) {
+	@form(env, uri, title, withSerial(obj.ID)) {
 		@hiddenField("ID", obj.ID)
 		@selectField("Trigger", obj.Trigger, env.ValueLists.AutomationRuleTriggers, required(), withLabel("Trigger"), withError(vr["Trigger"]), withHint("The event that activates this rule. \"object.created\" fires when a new case object is saved; \"object.updated\" fires on every edit."))
 		@stringField("Name", obj.Name, required(), withLabel("Name"), withError(vr["Name"]))

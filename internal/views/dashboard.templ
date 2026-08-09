@@ -35,48 +35,48 @@ templ Dashboard(env Env, from time.Time, to time.Time, matrixKey string, matrix 
 	@layout() {
 		<section id="errors"></section>
 		@sidebar(env, "Dashboard")
-		<main class="pl-20 p-4 grow max-w-full flex flex-col h-screen">
+		<main class="pl-48 p-4 grow max-w-full flex flex-col h-screen">
 			<form method="get" up-autosubmit up-target="#list" up-history="true">
 				@navbar(env, "Dashboard", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navHideRefresh(), navTitleIcon("chart-bar"), navSubtitle("Cross-case retrospective across every investigation you can access"), navPreButtons(dashboardDateExtra(from, to)))
 				<div id="list">
 					<div class="stats w-full mb-6">
 						<div class="stat">
 							<div class="stat-title">Cases in scope</div>
-							<div class="stat-value text-2xl">{ stats.Total }</div>
+							<div class="stat-value">{ stats.Total }</div>
 							<div class="stat-desc">accessible to you</div>
 						</div>
 						<div class="stat">
 							<div class="stat-title">Open</div>
-							<div class="stat-value text-2xl">{ stats.Open }</div>
+							<div class="stat-value">{ stats.Open }</div>
 							<div class="stat-desc">still under investigation</div>
 						</div>
 						<div class="stat">
 							<div class="stat-title">Closed</div>
-							<div class="stat-value text-2xl">{ stats.Closed }</div>
+							<div class="stat-value">{ stats.Closed }</div>
 							<div class="stat-desc">resolved in scope</div>
 						</div>
 						<div class="stat">
 							<div class="stat-title">Median time-to-close</div>
 							if stats.HasMedian {
-								<div class="stat-value text-2xl">{ fmt.Sprintf("%.1f", stats.MedianCloseDays) } <span class="text-base font-normal text-base-content/50">days</span></div>
+								<div class="stat-value">{ fmt.Sprintf("%.1f", stats.MedianCloseDays) } <span class="text-base font-normal text-base-content/50">days</span></div>
 							} else {
-								<div class="stat-value text-2xl">—</div>
+								<div class="stat-value">—</div>
 							}
 							<div class="stat-desc">closed cases with both dates set</div>
 						</div>
 					</div>
 					<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-						@dashboardBreakdownCard("Classification", "bg-hue-teal", stats.Classification, stats.Total)
-						@dashboardBreakdownCard("Severity", "bg-hue-plum", stats.Severity, stats.Total)
-						@dashboardBreakdownCard("Outcome", "bg-hue-olive", stats.Outcome, stats.Total)
+						@dashboardBreakdownCard("Classification", stats.Classification, stats.Total)
+						@dashboardBreakdownCard("Severity", stats.Severity, stats.Total)
+						@dashboardBreakdownCard("Outcome", stats.Outcome, stats.Total)
 					</div>
 					<div class="flex items-end justify-between gap-4 mb-3">
 						<div>
-							<h2 class="text-xl font-serif">MITRE ATT&CK® Heatmap</h2>
-							<p class="text-sm text-base-content/60">Number of distinct cases each technique appears in, across the cases in scope</p>
+							<h2 class="text-xl font-serif font-semibold">MITRE ATT&CK® Heatmap</h2>
+							<p class="text-xs text-base-content/55 mt-0.5">Number of distinct cases each technique appears in, across the cases in scope</p>
 						</div>
 						<div class="flex items-center gap-4">
-							<div class="flex items-center gap-1.5 text-xs text-base-content/60">
+							<div class="flex items-center gap-1.5 label-micro">
 								@heatmapLegend("cases")
 							</div>
 							<div class="join" role="group" up-autosubmit>
@@ -93,18 +93,18 @@ templ Dashboard(env Env, from time.Time, to time.Time, matrixKey string, matrix 
 									ICS
 								</label>
 								<label class="join-item btn pr-4">
-									<input type="checkbox" name="hide" value="on" class="toggle toggle-info" checked?={ hide }/>
+									<input type="checkbox" name="hide" value="on" class="toggle" checked?={ hide }/>
 									Hide missing
 								</label>
 							</div>
 						</div>
 					</div>
-					<div class="overflow-x-auto border hairline rounded-box">
+					<div class="overflow-x-auto">
 						<table class="table table-default">
 							<thead>
 								<tr>
 									for tactic := range matrix.Tactics.Values() {
-										<th class="px-3 py-4 text-left"><a target="_blank" href={ tactic.URL }>{ tactic.Name }</a></th>
+										<th class="text-left"><a target="_blank" href={ tactic.URL }>{ tactic.Name }</a></th>
 									}
 								</tr>
 							</thead>
@@ -153,26 +153,28 @@ templ dashboardDateExtra(from time.Time, to time.Time) {
 
 // dashboardBreakdownCard renders one of the three value->count cards; kept as
 // its own component since it's used three times (Classification, Severity,
-// Outcome) with different data and bar colors.
-templ dashboardBreakdownCard(title string, barClass string, rows []DashboardBreakdownRow, total int) {
-	<div class="border hairline rounded-box p-5 bg-base-100">
-		<h2 class="text-xl font-serif mb-3">{ title }</h2>
+// Outcome) with different data. The three used to be told apart by a tint
+// each — a bar's colour must never imply a status judgement, so they are told
+// apart by heading and position now, and every bar is the same ink.
+templ dashboardBreakdownCard(title string, rows []DashboardBreakdownRow, total int) {
+	<div class="panel p-5">
+		<div class="label-micro pb-1.5 mb-3 border-b hair2">{ title }</div>
 		if len(rows) == 0 {
-			<p class="font-serif italic text-base-content/60">No cases in scope.</p>
+			<p class="font-serif text-base-content/55">No cases in scope.</p>
 		}
 		for _, row := range rows {
 			{{ pct := 0 }}
 			if total > 0 {
 				{{ pct = row.Count * 100 / total }}
 			}
-			{{ bar := fp.If(row.Value == "Unset", "bg-base-content/25", barClass) }}
+			{{ bar := fp.If(row.Value == "Unset", "bar-inert", "bar-ink") }}
 			<div class="mb-3">
 				<div class={ "flex justify-between text-sm mb-1", templ.KV("italic text-base-content/50", row.Value == "Unset") }>
 					<span>{ row.Value }</span>
 					<span class="font-mono text-base-content/60">{ row.Count }</span>
 				</div>
-				<div class="h-2 rounded bg-base-200 overflow-hidden">
-					<div class={ "h-full rounded", bar } style={ fmt.Sprintf("width: %d%%", pct) }></div>
+				<div class="h-1.5 bg-base-200 overflow-hidden rounded-xs">
+					<div class={ "h-full", bar } style={ fmt.Sprintf("width: %d%%", pct) }></div>
 				</div>
 			</div>
 		}

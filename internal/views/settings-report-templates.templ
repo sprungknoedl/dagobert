@@ -12,8 +12,8 @@ templ SettingsReportTemplatesMany(env Env, rows []model.ReportTemplate) {
 			<table class="table table-default" data-default-sort="value-0">
 				<thead>
 					<tr>
-						<th data-sort="value-0" class="sort px-3 py-4 text-left">Name</th>
-						<th data-sort="value-1" class="sort px-3 py-4 text-left">Notes</th>
+						<th data-sort="value-0" class="sort">Name</th>
+						<th data-sort="value-1" class="sort">Notes</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
@@ -46,7 +46,7 @@ templ SettingsReportTemplatesMany(env Env, rows []model.ReportTemplate) {
 templ SettingsReportTemplatesOne(env Env, obj model.ReportTemplate, vr valid.ValidationError) {
 	{{ uri := "/settings/report-templates/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add report template", "Edit report template") }}
-	@form(env, uri, title, enctype("multipart/form-data")) {
+	@form(env, uri, title, enctype("multipart/form-data"), withSerial(obj.ID)) {
 		@hiddenField("ID", obj.ID)
 		<div class="form-control mb-2">
 			<label class="label justify-start gap-2">

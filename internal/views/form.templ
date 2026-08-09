@@ -7,33 +7,58 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
+// form is the drawer sheet: a fixed head naming the record, a scrolling body of
+// fields, and a fixed foot carrying the commit. The head and foot stay put
+// because a long form (evidence, case) otherwise pushes Save below the fold and
+// takes the title with it — you end up scrolling to find out what you are
+// editing and scrolling again to save it.
+//
+// The regions are flex, not sticky: Unpoly's up-drawer-box sets
+// `overflow-x: hidden`, which makes it a scroll container in both axes, so a
+// sticky child would anchor to a box that never scrolls and simply sit still.
 templ form(env Env, uri string, title string, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
 	@layout() {
-		<main>
+		<main class="form-sheet">
 			<form method="post" action={ uri } enctype={ cfg.enctype } up-submit>
-				<!-- Modal header -->
-				<h1 class="font-serif text-2xl mb-4">{ title }</h1>
-				<!-- Modal body -->
-				<div class="mb-4">
-					{ children... }
-				</div>
-				<!-- Modal footer -->
-				if cfg.footer != nil {
-					@cfg.footer
-				} else {
-					<div class="flex gap-2 items-center">
-						if _, ok := env.Allowed("POST", uri); ok {
-							<button type="submit" class="btn btn-neutral">Save </button>
-							<a class="btn" up-dismiss>Cancel </a>
-						} else {
-							<a class="btn" up-dismiss>Close </a>
+				<header class="form-head">
+					<div class="grow min-w-0">
+						<h1 class="font-serif text-2xl font-semibold leading-none truncate">{ title }</h1>
+						if cfg.serial != "" {
+							<div class="serial text-[0.625rem] mt-2">{ "№ " + cfg.serial }</div>
 						}
 					</div>
-				}
+					<a class="btn btn-ghost btn-square" up-dismiss aria-label="Close">
+						<i class="ph ph-6 ph-x"></i>
+					</a>
+				</header>
+				<div class="form-body">
+					{ children... }
+				</div>
+				<footer class="form-foot">
+					if cfg.footer != nil {
+						@cfg.footer
+					} else {
+						if _, ok := env.Allowed("POST", uri); ok {
+							<button type="submit" class="btn btn-neutral">Save</button>
+							<a class="btn btn-ghost" up-dismiss>Cancel</a>
+						} else {
+							<a class="btn btn-ghost" up-dismiss>Close</a>
+						}
+					}
+				</footer>
 			</form>
 		</main>
 	}
+}
+
+// fieldset groups related fields under a heading and a hairline. Worth it from
+// roughly five fields up; shorter forms stay flat.
+templ fieldset(legend string) {
+	<fieldset class="form-group">
+		<legend class="label-micro">{ legend }</legend>
+		{ children... }
+	</fieldset>
 }
 
 type formConfig struct {
@@ -43,6 +68,7 @@ type formConfig struct {
 	hint       string
 	enctype    string
 	footer     templ.Component
+	serial     string
 }
 
 type formOption func(*formConfig)
@@ -85,12 +111,22 @@ func replaceFooter(footer templ.Component) formOption {
 	return func(fc *formConfig) { fc.footer = footer }
 }
 
+// withSerial prints the record's own identifier in the drawer head — the thing
+// an analyst quotes into a report. Passed explicitly rather than parsed out of
+// the URL, because not every form's last path segment is a record id. A record
+// being created has nothing to identify yet.
+func withSerial(id string) formOption {
+	return func(fc *formConfig) {
+		if id != "" && id != "new" {
+			fc.serial = id
+		}
+	}
+}
+
 // closeOnlyFooter takes over the form's Save/Cancel spot with a Close
 // button, for forms with nothing to submit (e.g. an empty ACL list).
 templ closeOnlyFooter() {
-	<div class="flex gap-2 items-center">
-		<a class="btn" up-dismiss>Close </a>
-	</div>
+	<a class="btn btn-ghost" up-dismiss>Close</a>
 }
 
 templ requiredLabel() {
@@ -117,7 +153,7 @@ templ fieldLabel(cfg formConfig) {
 }
 
 templ requiredFootnote() {
-	<p class="text-sm hue-gold mt-2 mb-4">
+	<p class="label-micro mt-3 mb-4">
 		Fields marked with &nbsp;
 		@requiredLabel()
 		&nbsp;

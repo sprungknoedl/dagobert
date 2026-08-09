@@ -29,10 +29,10 @@ templ SettingsCustomAttributesMany(env Env) {
 			<table class="table table-default">
 				<thead>
 					<tr>
-						<th class="px-3 py-4 text-left">Rank</th>
-						<th class="px-3 py-4 text-left">Label</th>
-						<th class="px-3 py-4 text-left">Type</th>
-						<th class="px-3 py-4 text-left">Options</th>
+						<th class="text-left">Rank</th>
+						<th class="text-left">Label</th>
+						<th class="text-left">Type</th>
+						<th class="text-left">Options</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
@@ -47,7 +47,7 @@ templ SettingsCustomAttributesMany(env Env) {
 templ SettingsCustomAttributesOne(env Env, obj model.CustomAttribute, vr valid.ValidationError) {
 	{{ uri := "/settings/custom-attributes/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add custom attribute", "Edit custom attribute") }}
-	@form(env, uri, title) {
+	@form(env, uri, title, withSerial(obj.ID)) {
 		@hiddenField("ID", obj.ID)
 		@hiddenField("Entity", obj.Entity)
 		@numberField("Rank", obj.Rank, withLabel("Rank"), withError(vr["Rank"]))
@@ -99,7 +99,9 @@ templ customAttributeTable(env Env, entity string) {
 				<tr class="row-hover">
 					<td>{ row.Rank } </td>
 					<td>{ row.Label } </td>
-					<td>@customType(row.Type)</td>
+					<td>
+						@customType(row.Type)
+					</td>
 					<td>{ strings.Join(row.Options, ", ") } </td>
 					<td class="text-right">
 						<div class="join">

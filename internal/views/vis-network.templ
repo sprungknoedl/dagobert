@@ -3,6 +3,7 @@ package views
 import (
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"github.com/sprungknoedl/dagobert/internal/frontend"
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"regexp"
@@ -10,76 +11,243 @@ import (
 	"strings"
 )
 
+// Node is one plotted record. Kind splits the two populations the sheet draws —
+// assets carry the movement, indicators hang off it — and drives size, weight
+// and which value list resolves the icon and the severe state.
+//
+// Type and Status arrive raw and are resolved at serialization time (see
+// networkJSON): the icon glyph and the severe flag both come from the
+// user-editable value lists, which the handler has no business reading.
 type Node struct {
-	ID    string `json:"id"`
-	Label string `json:"label"`
-	Group string `json:"group"`
+	ID     string `json:"id"`
+	Label  string `json:"label"`
+	Kind   string `json:"kind"`
+	Type   string `json:"-"`
+	Status string `json:"-"`
+	Icon   string `json:"icon"`
+	Severe bool   `json:"severe"`
+	Tip    Tip    `json:"tip"`
+	URL    string `json:"url,omitempty"`
 }
 
+// Tip is the hover card for a node: the record's own value, then the handful of
+// attributes that identify it. Built as DOM client-side rather than as markup,
+// because vis-network writes a string title straight into innerHTML.
+type Tip struct {
+	Head string      `json:"head"`
+	Rows [][2]string `json:"rows"`
+}
+
+// Edge kinds: "movement" ties two assets named by the same event, "observation"
+// ties an indicator to an asset it was seen with. Neither carries a direction —
+// see the pairing loop in handler.Network.
 type Edge struct {
-	From   string `json:"from"`
-	To     string `json:"to"`
-	Dashes bool   `json:"dashes"`
-}
-
-type icon struct {
-	Code string `json:"code"`
-	Size int    `json:"size"`
-}
-
-type group struct {
-	Icon icon `json:"icon"`
+	From string `json:"from"`
+	To   string `json:"to"`
+	Kind string `json:"kind"`
 }
 
 var iconMap = parsePhosphorCSS(frontend.PhosphorCSS)
 
-templ VisNetwork(env Env, nodes []Node, edges []Edge) {
+templ VisNetwork(env Env, nodes []Node, edges []Edge, hideIndicators bool) {
+	{{ c := networkCounts(nodes, edges) }}
 	@layout() {
 		<section id="errors"></section>
 		@sidebar(env, "Lateral Movement")
-		<main class="pl-20 p-4 grow max-w-full flex flex-col h-screen">
-			@navbar(env, "Lateral Movement", navHideSearch(), navHideRefresh(), navHideAdd(), navHideImport(), navHideExport(), navSubtitle("Network relationships between assets"))
-			<div id="mynetwork" class="h-full" up-data={ networkJSON(env, nodes, edges) }></div>
+		<main class="pl-48 p-4 grow max-w-full flex flex-col h-screen">
+			<form method="get" up-autosubmit up-target="#graph" up-history="true">
+				@navbar(env, "Lateral Movement", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navHideRefresh(),
+					navSubtitle("Assets named together in one event, and the indicators observed with them"),
+					navPreButtons(networkControls(hideIndicators)))
+			</form>
+			// #graph, deliberately not #list: the shared #list is up-hungry, so
+			// when the drawer over this page saves an indicator and the server
+			// redirects to the indicators list, that page's grid would be
+			// vacuumed straight into this container and replace the drawing.
+			<div id="graph" class="flex flex-col grow min-h-0">
+				if len(nodes) == 0 {
+					@networkEmpty(env, hideIndicators)
+				} else {
+					<div class="stats w-full mb-4 flex-none">
+						@stat("Assets", c.Assets, false)
+						@stat("Links", c.Movements, false)
+						if !hideIndicators {
+							@stat("Indicators", c.Indicators, true)
+							@stat("Observations", c.Observations, false)
+						} else {
+							// a dimmed "0 indicators" would read as "this case has
+							// none", which is a different fact from "not drawn"
+							<div class="stat stat-group">
+								<div class="stat-title">Indicators</div>
+								<div class="stat-value opacity-30">—</div>
+							</div>
+						}
+					</div>
+					<div class="panel grow min-h-0 flex flex-col overflow-hidden">
+						<div class="graph-frame grow min-h-0">
+							<div
+								id="mynetwork"
+								class="graph-canvas"
+								tabindex="0"
+								role="img"
+								aria-label={ networkSummary(c) }
+								up-data={ networkJSON(env, nodes, edges) }
+							></div>
+							<p class="graph-status label-micro" data-graph-status>Plotting graph …</p>
+						</div>
+						@networkKey(hideIndicators)
+					</div>
+				}
+			</div>
 		</main>
 	}
 }
 
+// networkControls: the view's own switches. Fit and Freeze act on the drawn
+// network client-side; hiding indicators drops them server-side, because a
+// hundred observation nodes are a rendering cost, not just a visual one.
+templ networkControls(hideIndicators bool) {
+	<button type="button" class="join-item btn" data-graph-action="fit" title="Frame the whole graph">
+		<i class="ph ph-5 ph-frame-corners inline-block mr-1"></i> Fit
+	</button>
+	<button type="button" class="join-item btn" data-graph-action="freeze" aria-pressed="false" title="Stop the layout moving, so nodes stay where you drag them">
+		<i class="ph ph-5 ph-lock-simple-open inline-block mr-1"></i>
+		<span data-graph-label>Freeze</span>
+	</button>
+	<label class="join-item btn pr-4">
+		<input type="checkbox" name="hide" value="indicators" class="toggle" checked?={ hideIndicators }/>
+		Hide indicators
+	</label>
+	// Refresh submits this form rather than linking to the route, which is why
+	// the shared one is switched off above: the page header sits outside the
+	// swapped #list, so a link's href freezes at the state the page first
+	// rendered in and a reload would quietly drop whatever is toggled here.
+	<button type="submit" class="join-item btn" title="Redraw from the current timeline">
+		<i class="ph ph-5 ph-arrows-clockwise inline-block mr-1"></i> Refresh
+	</button>
+}
+
+// networkKey is the sheet's own key, along its bottom edge, rather than a
+// legend in the page header: the drawing and the key to reading it belong to
+// the same piece of paper.
+templ networkKey(hideIndicators bool) {
+	<div class="graph-key label-micro">
+		<span class="graph-key-item"><span class="graph-key-token"><i class="ph ph-desktop"></i></span> Asset</span>
+		<span class="graph-key-item"><span class="graph-key-line"></span> Shared event</span>
+		if !hideIndicators {
+			<span class="graph-key-item"><span class="graph-key-token graph-key-token-sm"><i class="ph ph-fingerprint"></i></span> Indicator</span>
+			<span class="graph-key-item"><span class="graph-key-line graph-key-line-dashed"></span> Observed with</span>
+		}
+		<span class="graph-key-item text-error"><span class="graph-key-token graph-key-token-severe"><i class="ph ph-warning"></i></span> Severe</span>
+		<span class="graph-key-hint">Drag to arrange · scroll to zoom · double-click to open</span>
+	</div>
+}
+
+// networkEmpty. The graph is derived rather than recorded — it has nothing to
+// draw until timeline events name assets — so the empty state points at the
+// timeline instead of offering to add a node here.
+templ networkEmpty(env Env, hideIndicators bool) {
+	<div class="panel grow min-h-0 flex flex-col items-center justify-center text-center px-8 py-14">
+		@medallion("medallion-lg w-24 h-24 mb-6")
+		<p class="font-serif text-lg text-base-content/75 mb-2">Nothing has moved yet.</p>
+		<p class="text-sm text-base-content/55 max-w-md leading-relaxed">
+			This sheet is drawn from the timeline: record an event that names two or more
+			assets and the link between them appears here. Indicators attached to the same
+			event hang off the assets they were seen with.
+		</p>
+		<div class="flex gap-2 justify-center mt-6">
+			if uri, ok := env.Allowed("POST", "/cases/" + env.Case.ID + "/events/new"); ok {
+				<a class="btn btn-sm btn-neutral" href={ uri } up-layer="new drawer" up-accept-location={ env.Route }>
+					<i class="ph ph-5 ph-plus"></i> Add event
+				</a>
+			}
+			<a class="btn btn-sm btn-ghost" href={ "/cases/" + env.Case.ID + "/events/" }>
+				<i class="ph ph-5 ph-clock"></i> Open timeline
+			</a>
+		</div>
+		if hideIndicators {
+			<p class="label-micro mt-8">Indicators are hidden</p>
+		}
+	</div>
+}
+
+// networkCount holds the readout figures: the two node populations and the two
+// edge kinds, counted after any server-side filtering so the strip describes
+// the sheet actually drawn.
+type networkCount struct {
+	Assets       int
+	Indicators   int
+	Movements    int
+	Observations int
+}
+
+func networkCounts(nodes []Node, edges []Edge) networkCount {
+	c := networkCount{}
+	for _, n := range nodes {
+		if n.Kind == "indicator" {
+			c.Indicators++
+		} else {
+			c.Assets++
+		}
+	}
+	for _, e := range edges {
+		if e.Kind == "observation" {
+			c.Observations++
+		} else {
+			c.Movements++
+		}
+	}
+	return c
+}
+
+// networkSummary is the canvas's accessible name. A force-directed drawing has
+// no reading order to expose, so it names its contents and hands off to the
+// grids that hold the same records as text.
+func networkSummary(c networkCount) string {
+	return fmt.Sprintf("Lateral movement graph: %d assets and %d indicators, with %d links between assets and %d observations. "+
+		"The same records are listed as text in the assets and indicators tables.",
+		c.Assets, c.Indicators, c.Movements, c.Observations)
+}
+
 // networkJSON serializes the graph for the #mynetwork compiler's [up-data]
 // attribute (see dagobert.js).
+//
+// The icon glyph and the severe flag are resolved here rather than in the
+// handler: both come from the user-editable value lists, and the glyph in
+// particular is a Phosphor code point this package already parses out of the
+// stylesheet. Colour is deliberately left out — the compiler reads the live
+// theme's custom properties, and a colour baked in at render time cannot follow
+// the light/dark toggle.
 func networkJSON(env Env, nodes []Node, edges []Edge) string {
+	out := make([]Node, len(nodes))
+	for i, n := range nodes {
+		types, status := env.ValueLists.AssetTypes, env.ValueLists.AssetStatus
+		if n.Kind == "indicator" {
+			types, status = env.ValueLists.IndicatorTypes, env.ValueLists.IndicatorStatus
+		}
+
+		n.Icon = iconGlyph(types, n.Type)
+		n.Severe = findValue(status, n.Status).State == "error"
+		out[i] = n
+	}
+
 	b, _ := json.Marshal(map[string]any{
-		"nodes":  nodes,
-		"edges":  edges,
-		"groups": networkGroups(env.ValueLists.AssetTypes, env.ValueLists.IndicatorTypes),
+		"nodes": out,
+		"edges": edges,
 	})
 	return string(b)
 }
 
-func networkGroups(assets []model.ValueListItem, indicators []model.ValueListItem) map[string]group {
-	groups := map[string]group{}
-	// Icon color is intentionally omitted here and filled in client-side (see
-	// the #mynetwork compiler in dagobert.js), which reads the live theme's
-	// CSS custom properties — a color baked in at server-render time can't
-	// adapt to the client's light/dark theme.
-	for _, entry := range assets {
-		groups["Asset"+entry.Name] = group{
-			Icon: icon{
-				Code: string(iconMap[entry.Icon]),
-				Size: 32,
-			},
-		}
+// iconGlyph resolves a value-list entry's Phosphor class to the code point the
+// canvas draws — vis-network renders an icon as text in the icon font, not as
+// an element. An unmapped or icon-less type returns "", which the compiler
+// draws as a plain disc rather than as a missing-glyph box.
+func iconGlyph(list []model.ValueListItem, value string) string {
+	code, ok := iconMap[findValue(list, value).Icon]
+	if !ok {
+		return ""
 	}
-
-	for _, entry := range indicators {
-		groups["Indicator"+entry.Name] = group{
-			Icon: icon{
-				Code: string(iconMap[entry.Icon]),
-				Size: 24,
-			},
-		}
-	}
-
-	return groups
+	return string(code)
 }
 
 // parsePhosphorCSS parses the CSS content and returns a map of icon class to unicode symbol.

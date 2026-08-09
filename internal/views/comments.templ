@@ -27,12 +27,18 @@ templ CommentsDialog(env Env, kind string, oid string, rows []model.Comment, edi
 							<div class="grow"></div>
 							if canWrite && row.ID != edit.ID && (row.Author == env.User.UPN || env.User.Role == "Administrator") {
 								<div class="join">
-									<a class="join-item btn btn-sm" href={ uri + "?edit=" + row.ID } up-target="main">
+									<a class="join-item btn btn-xs btn-ghost" href={ uri + "?edit=" + row.ID } up-target="main">
 										<i class="ph ph-5 ph-pencil-simple"></i>
 									</a>
-									// stay in the drawer: the confirm dialog and the post-delete
-									// re-render both replace this layer's main, never the page
-									<a class="join-item btn btn-sm" href={ uri + row.ID } up-method="DELETE" up-target="main">
+									// The confirm floats above this drawer like every other delete
+									// confirm floats above its grid. Rendering it into the
+									// drawer's own main instead put the question where the
+									// comments were and made Cancel — an up-dismiss on the only
+									// layer in play — close the drawer itself.
+									//
+									// It commits into this layer (views.CommitInParent), so the
+									// refreshed list lands here and peels the modal away.
+									<a class="join-item btn btn-xs btn-ghost" href={ uri + row.ID } up-method="DELETE" up-layer="new modal">
 										<i class="ph ph-5 ph-trash"></i>
 									</a>
 								</div>

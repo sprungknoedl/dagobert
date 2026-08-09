@@ -32,13 +32,13 @@ templ CasesMany(env Env, rows []model.Case) {
 			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>
-						<th data-sort="value-0" class="sort px-3 py-4 text-left">ID</th>
-						<th data-sort="value-1" class="sort px-3 py-4 text-left">Name</th>
-						<th data-sort="value-2" class="sort px-3 py-4 text-left">Classification</th>
-						<th data-sort="value-3" class="sort px-3 py-4 text-left">Severity</th>
-						<th data-sort="value-4" class="sort px-3 py-4 text-left">Outcome</th>
-						<th data-sort="value-5" class="sort px-3 py-4 text-left">Status</th>
-						<th data-sort="value-6" class="sort px-3 py-4 text-left">Opened</th>
+						<th data-sort="value-0" class="sort">ID</th>
+						<th data-sort="value-1" class="sort">Name</th>
+						<th data-sort="value-2" class="sort">Classification</th>
+						<th data-sort="value-3" class="sort">Severity</th>
+						<th data-sort="value-4" class="sort">Outcome</th>
+						<th data-sort="value-5" class="sort">Status</th>
+						<th data-sort="value-6" class="sort">Opened</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
@@ -141,7 +141,10 @@ templ CasesOne(env Env, obj model.Case, vr valid.ValidationError, opts ...CasesO
 	{{ uri := env.Route }}
 	{{ noun := fp.If(obj.IsTemplate, "case template", "case") }}
 	{{ title := fp.If(cfg.fork, "Fork "+noun, fp.If(obj.ID == "new", "Add "+noun, "Edit "+noun)) }}
-	{{ formOpts := fp.If(len(cfg.outstanding) > 0, []formOption{replaceFooter(closeConfirmFooterOrNil(cfg.outstanding))}, nil) }}
+	{{ formOpts := []formOption{withSerial(obj.ID)} }}
+	if len(cfg.outstanding) > 0 {
+		{{ formOpts = append(formOpts, replaceFooter(closeConfirmFooter(cfg.outstanding))) }}
+	}
 	@form(env, uri, title, formOpts...) {
 		@hiddenField("ID", obj.ID)
 		@hiddenField("IsTemplate", strconv.FormatBool(obj.IsTemplate))
@@ -195,32 +198,23 @@ templ CasesOne(env Env, obj model.Case, vr valid.ValidationError, opts ...CasesO
 	}
 }
 
-// closeConfirmFooterOrNil returns nil (falling back to the form's default
-// Save/Cancel footer) when there is nothing outstanding, so withFooter only
-// takes over the footer in confirm mode.
-func closeConfirmFooterOrNil(outstanding []string) templ.Component {
-	if len(outstanding) == 0 {
-		return nil
-	}
-	return closeConfirmFooter(outstanding)
-}
-
 // closeConfirmFooter takes over the form's Save/Cancel spot with a "close
 // anyway?" prompt, so the confirmation appears exactly where the user just
 // clicked Save rather than somewhere else on the form.
 templ closeConfirmFooter(outstanding []string) {
-	<div class="text-warning mb-4">
-		<h3 class="font-bold">This case still has outstanding items</h3>
-		<ul class="list-disc list-inside text-sm">
+	// The prompt lives in the footer, beside the button that acts on it, rather
+	// than at the end of the form the user has already scrolled past.
+	<div class="min-w-0">
+		<div class="label-micro mb-1">This case still has outstanding items</div>
+		<ul class="text-xs text-base-content/70 list-disc list-inside">
 			for _, msg := range outstanding {
 				<li>{ msg }</li>
 			}
 		</ul>
 	</div>
-	<div class="flex gap-2">
-		<button type="submit" name="Confirm" value="yes" class="btn btn-warning">Close anyway</button>
-		<a class="btn" up-dismiss>Cancel </a>
-	</div>
+	<span class="grow"></span>
+	<button type="submit" name="Confirm" value="yes" class="btn btn-neutral">Close anyway</button>
+	<a class="btn btn-ghost" up-dismiss>Cancel</a>
 }
 
 templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model.Asset, indicators []model.Indicator) {
@@ -229,127 +223,111 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 	{{ flaggedIndicators := fp.Filter(indicators, func(i model.Indicator) bool { return i.Flagged }) }}
 	@layout() {
 		@list(env, "Summary", navHideSearch(), navHideAdd(), navHideExport(), navHideImport(), navPreButtons(caseSummaryExtra(env)), navSubtitle("One-page overview of the current investigation status")) {
-			<!-- Case metadata bar (stats style) -->
+			<!-- Case readout: numbers and facts only, separated by hairlines -->
 			<div class="stats w-full">
-				<div class="stat">
-					<div class="stat-title">Case ID</div>
-					<div class="stat-value text-2xl">{ "#" + obj.ID }</div>
-				</div>
+				// no case serial: the page header already carries it
 				<div class="stat">
 					<div class="stat-title">Name</div>
-					<div class="stat-value text-2xl">{ obj.Name }</div>
+					<div class="stat-value">{ obj.Name }</div>
 				</div>
-				<div class="stat">
+				<div class="stat stat-group">
 					<div class="stat-title">Severity</div>
-					<div class="stat-value text-2xl">{ obj.Severity }</div>
+					<div class="stat-value">{ obj.Severity }</div>
 				</div>
 				<div class="stat">
 					<div class="stat-title">Classification</div>
-					<div class="stat-value text-2xl">{ fp.If(obj.Classification != "", obj.Classification, "—") }</div>
+					<div class="stat-value">{ fp.If(obj.Classification != "", obj.Classification, "\u2014") }</div>
 				</div>
 				<div class="stat">
 					<div class="stat-title">Outcome</div>
-					<div class="stat-value text-2xl">{ obj.Outcome }</div>
+					<div class="stat-value">{ obj.Outcome }</div>
 				</div>
+				<div class="stat stat-group">
+					<div class="stat-title">Opened</div>
+					<div class="stat-value stat-mono">{ dateOrDash(obj.OpenedAt) }</div>
+				</div>
+				if !obj.ClosedAt.IsZero() {
+					<div class="stat">
+						<div class="stat-title">Closed</div>
+						<div class="stat-value stat-mono">{ dateOrDash(obj.ClosedAt) }</div>
+					</div>
+				}
 				<div class="stat">
 					<div class="stat-title">Status</div>
-					<div class="stat-value text-2xl">
+					<div class="stat-value">
 						@caseStatusPill(obj.Closed)
 					</div>
 				</div>
 			</div>
-			<!-- Opened/closed dates -->
-			<dl class="grid grid-cols-[8rem_1fr] gap-x-4 gap-y-1 mt-4">
-				<dt class="text-base-content/60">Opened</dt>
-				<dd>{ dateOrDash(obj.OpenedAt) }</dd>
-				if !obj.ClosedAt.IsZero() {
-					<dt class="text-base-content/60">Closed</dt>
-					<dd>{ dateOrDash(obj.ClosedAt) }</dd>
-				}
-			</dl>
-			<!-- Executive summary -->
-			<h2 class="text-xl font-serif mt-6 mb-4">Executive Summary</h2>
-			<div>
+			<!-- Executive summary, and the three readouts drawn from it -->
+			<section class="panel p-6 mt-4">
+				<div class="label-micro mb-3">Executive summary</div>
 				if obj.Summary == "" {
-					<p class="font-serif italic text-lg text-base-content/60 mb-1">Nothing on record yet.</p>
-					<p class="text-base-content/50">Use the Edit button to add a narrative describing what happened, the scope of impact, and how it was resolved.</p>
+					<p class="font-serif text-lg text-base-content/75 mb-1">Nothing on record yet.</p>
+					<p class="text-sm text-base-content/55">Use the Edit button to add a narrative describing what happened, the scope of impact, and how it was resolved.</p>
 				} else {
 					<article class="prose max-w-none">
 						@markdown(obj.Summary)
 					</article>
 				}
-			</div>
-			<!-- Key items: 3-column grid -->
-			<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-				<!-- Flagged events -->
-				<div>
-					<h2 class="text-xl font-serif mb-3">Key Events</h2>
-					if len(keyEvents) == 0 {
-						<p class="font-serif italic text-base-content/60">No events flagged — yet.</p>
-					} else {
-						<table class="table table-sm w-full">
-							<tbody>
+				<div class="grid grid-cols-1 md:grid-cols-[1.6fr_1fr_1fr] gap-8 mt-7">
+					// The date is condensed to MM-DD hh:mm (the full timestamp is the
+					// title attribute, and the timeline has it in full), and the record
+					// type is carried by its icon alone, to leave the width for findings.
+					<!-- Flagged events -->
+					<div>
+						<div class="label-micro pb-1.5 mb-2 border-b hair2">Key Events</div>
+						if len(keyEvents) == 0 {
+							<p class="font-serif text-base-content/55">No events flagged — yet.</p>
+						} else {
+							<ul class="space-y-2 text-xs">
 								for _, ev := range keyEvents {
-									<tr>
-										<td class="w-1/3 text-base-content/60 align-top">
-											@valueIcon(env.ValueLists.EventTypes, ev.Type) {
-												@formatTime(ev.Time)
-											}
-										</td>
-										<td class="text-sm">
+									<li class="flex gap-2.5">
+										<span class="font-mono opacity-45 shrink-0" title={ ev.Time.Format("2006-01-02 15:04:05 Z07:00") }>
+											{ ev.Time.Format("01-02 15:04") }
+										</span>
+										<span>
 											@highlightEvent(ev, assets, indicators)
-										</td>
-									</tr>
+										</span>
+									</li>
 								}
-							</tbody>
-						</table>
-					}
-				</div>
-				<!-- Compromised assets -->
-				<div>
-					<h2 class="text-xl font-serif mb-3">Compromised Assets</h2>
-					if len(compromisedAssets) == 0 {
-						<p class="font-serif italic text-base-content/60">No assets marked as compromised.</p>
-					} else {
-						<table class="table table-sm w-full">
-							<tbody>
+							</ul>
+						}
+					</div>
+					<!-- Compromised assets -->
+					<div>
+						<div class="label-micro pb-1.5 mb-2 border-b hair2">Compromised Assets</div>
+						if len(compromisedAssets) == 0 {
+							<p class="font-serif text-base-content/55">No assets marked as compromised.</p>
+						} else {
+							<ul class="space-y-2 text-xs font-mono">
 								for _, a := range compromisedAssets {
-									<tr>
-										<td class="w-1/3 text-base-content/60">
-											@valueIcon(env.ValueLists.AssetTypes, a.Type) {
-												{ a.Type }
-											}
-										</td>
-										<td>{ a.Name }</td>
-									</tr>
+									<li class="flex gap-2.5 items-center">
+										@typeIcon(env.ValueLists.AssetTypes, a.Type)
+										<span class="truncate">{ a.Name }</span>
+									</li>
 								}
-							</tbody>
-						</table>
-					}
-				</div>
-				<!-- Flagged indicators -->
-				<div>
-					<h2 class="text-xl font-serif mb-3">Key Indicators</h2>
-					if len(flaggedIndicators) == 0 {
-						<p class="font-serif italic text-base-content/60">No indicators flagged — yet.</p>
-					} else {
-						<table class="table table-sm w-full">
-							<tbody>
+							</ul>
+						}
+					</div>
+					<!-- Flagged indicators -->
+					<div>
+						<div class="label-micro pb-1.5 mb-2 border-b hair2">Key Indicators</div>
+						if len(flaggedIndicators) == 0 {
+							<p class="font-serif text-base-content/55">No indicators flagged — yet.</p>
+						} else {
+							<ul class="space-y-2 text-xs font-mono">
 								for _, i := range flaggedIndicators {
-									<tr>
-										<td class="w-1/3 text-base-content/60">
-											@valueIcon(env.ValueLists.IndicatorTypes, i.Type) {
-												{ i.Type }
-											}
-										</td>
-										<td class="font-mono text-sm">{ i.Value }</td>
-									</tr>
+									<li class="flex gap-2.5 items-center">
+										@typeIcon(env.ValueLists.IndicatorTypes, i.Type)
+										<span class="truncate">{ i.Value }</span>
+									</li>
 								}
-							</tbody>
-						</table>
-					}
+							</ul>
+						}
+					</div>
 				</div>
-			</div>
+			</section>
 		}
 	}
 }
@@ -365,15 +343,13 @@ templ CaseSwitcher(env Env, cases []model.Case, from string, to string) {
 				<input type="hidden" name="from" value={ from }/>
 				<input type="hidden" name="to" value={ to }/>
 				<label class="w-full input flex items-center gap-2 mb-3">
+					<i class="ph ph-magnifying-glass opacity-45"></i>
 					<input type="text" name="search" class="search grow" placeholder="Switch to case ..." autofocus autocomplete="off"/>
-					<svg class="w-6 h-6 opacity-70" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-						<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"></path>
-					</svg>
 				</label>
 			</form>
 			<ul id="switch-results" class="menu w-full gap-1 flex-nowrap max-h-96 overflow-y-auto">
 				if len(cases) == 0 {
-					<li class="p-2 text-center font-serif italic text-base-content/50">No matching cases.</li>
+					<li class="p-2 text-center font-serif text-base-content/55">No matching cases.</li>
 				} else {
 					for _, c := range cases {
 						<li>
@@ -390,20 +366,36 @@ templ CaseSwitcher(env Env, cases []model.Case, from string, to string) {
 	}
 }
 
+// A dot plus the word, like every other status. An open case is not an alarm,
+// so neither state takes a hue; the green marks the one that is finished.
 templ caseStatusPill(closed bool) {
-	if closed {
-		<span class="badge badge-lg badge-outline badge-success">Closed</span>
-	} else {
-		<span class="badge badge-lg badge-outline badge-error">Open</span>
-	}
+	<span class="inline-flex items-center gap-1.5 label-micro">
+		if closed {
+			<span class="dot bg-success"></span>
+			Closed
+		} else {
+			<span class="dot dot-ink"></span>
+			Open
+		}
+	</span>
 }
 
-templ stat(status, icon, title string, value int) {
-	<div class="stat">
-		<div class={ "stat-figure " + fp.If(status != "", " text-"+status, "") }><i class={ "ph " + icon } style="font-size: 2rem;"></i></div>
+// stat is one column of the readout strip: a caption over a figure. A zero is
+// dimmed rather than hidden, so the shape of the row stays comparable between
+// cases. group draws the hairline separating this figure from the one before.
+templ stat(title string, value int, group bool) {
+	<div class={ "stat", templ.KV("stat-group", group) }>
 		<div class="stat-title">{ title }</div>
-		<div class="stat-value">{ value }</div>
-		<div class="stat-desc">&nbsp;</div>
+		<div class={ "stat-value", templ.KV("opacity-30", value == 0) }>{ value }</div>
+	</div>
+}
+
+// statTotal leads a readout with the count of everything in it, so the
+// per-status breakdown that follows has something to be a breakdown of.
+templ statTotal(value int) {
+	<div class="stat">
+		<div class="stat-title">Total</div>
+		<div class={ "stat-value", templ.KV("opacity-30", value == 0) }>{ value }</div>
 	</div>
 }
 
@@ -413,7 +405,7 @@ templ caseSummaryExtra(env Env) {
 			<summary class="btn join-item">
 				<i class="ph ph-6 ph-archive inline-block mr-1"></i> Export
 			</summary>
-			<ul style="position: absolute" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-60 p-2 shadow">
+			<ul style="position: absolute" class="menu dropdown-content z-[1] w-60 p-2">
 				<li><a href={ url + "?binaries=false" }>Metadata only</a></li>
 				<li><a href={ url + "?binaries=true" }>Include evidence &amp; malware</a></li>
 			</ul>
@@ -441,10 +433,10 @@ templ caseSummaryExtra(env Env) {
 		</a>
 	}
 	if url, ok := env.Allowed("DELETE", "/cases/" + env.Case.ID); ok {
-		// Same confirm-dialog drawer as the case list. The post-delete redirect
+		// Same confirm-dialog modal as the case list. The post-delete redirect
 		// ("/" -> "/cases/") accepts the layer; the summary underneath is gone
 		// with the case, so navigate to the case list on acceptance.
-		<a class="join-item btn" href={ url } up-method="DELETE" up-layer="new drawer" up-accept-location="/cases/" data-on-accepted="goto-cases">
+		<a class="join-item btn" href={ url } up-method="DELETE" up-layer="new modal" up-accept-location="/cases/" data-on-accepted="goto-cases">
 			<i class="ph ph-6 ph-trash inline-block mr-1"></i> Delete
 		</a>
 	}
@@ -456,7 +448,7 @@ templ casesImport(env Env) {
 			<summary class="btn join-item">
 				<i class="ph ph-6 ph-sort-ascending inline-block mr-1"></i> Import
 			</summary>
-			<ul style="position: absolute" class="menu dropdown-content bg-base-200 rounded-box z-[1] w-52 p-2 shadow">
+			<ul style="position: absolute" class="menu dropdown-content z-[1] w-52 p-2">
 				<li><a href="/cases/import/csv" up-layer="new drawer" up-accept-location={ env.Route }>List via CSV</a></li>
 				<li><a href="/cases/import/archive" up-layer="new drawer" up-accept-location={ env.Route }>Single via Archive</a></li>
 			</ul>

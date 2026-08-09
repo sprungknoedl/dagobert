@@ -6,5 +6,5 @@ package assets
 
 import "embed"
 
-//go:embed *.css *.js *.woff2 *.ttf *.ico *.svg vditor-3.11.2
+//go:embed *.css *.js *.woff2 *.ttf *.ico *.svg *.webp vditor-3.11.2
 var FS embed.FS

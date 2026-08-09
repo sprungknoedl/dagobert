@@ -13,9 +13,9 @@ templ SettingsAPIKeysMany(env Env, keys []model.APIKey) {
 			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>
-						<th data-sort="value-0" class="sort px-3 py-4 text-left">Type</th>
-						<th data-sort="value-1" class="sort px-3 py-4 text-left">Name</th>
-						<th data-sort="value-2" class="sort px-3 py-4 text-left">Key</th>
+						<th data-sort="value-0" class="sort">Type</th>
+						<th data-sort="value-1" class="sort">Name</th>
+						<th data-sort="value-2" class="sort">Key</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
@@ -67,6 +67,9 @@ templ SettingsAPIKeysReveal(env Env, plaintext string) {
 templ SettingsAPIKeysOne(env Env, obj model.APIKey, vr valid.ValidationError) {
 	{{ uri := "/settings/api-keys/" + obj.Key }}
 	{{ title := fp.If(obj.Key == "new", "Add API key", "Edit API key") }}
+	// No serial: an API key's primary key is the SHA-256 hash of the credential,
+	// not an identifier a person quotes. The record's human identity is its Name,
+	// which is the first field below, and Hint is the non-secret display value.
 	@form(env, uri, title) {
 		@hiddenField("Key", obj.Key)
 		@selectField("Type", obj.Type, env.ValueLists.APIKeyTypes, required(), withLabel("Type"), withError(vr["Type"]))

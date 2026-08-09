@@ -14,10 +14,10 @@ templ SettingsValueListsMany(env Env) {
 			<table class="table table-default">
 				<thead>
 					<tr>
-						<th class="px-3 py-4 text-left">Rank</th>
-						<th class="px-3 py-4 text-left">Name</th>
-						<th class="px-3 py-4 text-left">Icon</th>
-						<th class="px-3 py-4 text-left">State</th>
+						<th class="text-left">Rank</th>
+						<th class="text-left">Name</th>
+						<th class="text-left">Icon</th>
+						<th class="text-left">State</th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
@@ -39,7 +39,7 @@ templ SettingsValueListsMany(env Env) {
 templ SettingsValueListsOne(env Env, obj model.ValueListItem, vr valid.ValidationError) {
 	{{ uri := "/settings/value-lists/" + obj.ID }}
 	{{ title := fp.If(obj.ID == "new", "Add value", "Edit value") }}
-	@form(env, uri, title) {
+	@form(env, uri, title, withSerial(obj.ID)) {
 		@hiddenField("ID", obj.ID)
 		@hiddenField("Category", obj.Category)
 		@numberField("Rank", obj.Rank, withLabel("Rank"), withError(vr["Rank"]))
@@ -93,9 +93,9 @@ templ valueList(env Env, title string, rows []model.ValueListItem) {
 	</tbody>
 }
 
-// settingsCategoryBand is a fleuron divider that doubles as a collapsible
-// category heading: chevron + title + Add button, with a trailing fleuron rule.
-// Clicking the band toggles the following <tbody> (see toggleCategory in dagobert.js).
+// settingsCategoryBand is a divider that doubles as a collapsible category
+// heading: chevron + title + Add button, with a trailing rule. Clicking the
+// band toggles the following <tbody> (see toggleCategory in dagobert.js).
 templ settingsCategoryBand(env Env, title string, addRoute string, addQuery string) {
 	<tbody>
 		<tr class="cursor-pointer select-none [&>td]:border-b-0" data-toggle-category>
@@ -103,7 +103,7 @@ templ settingsCategoryBand(env Env, title string, addRoute string, addQuery stri
 				<div class="flex items-center gap-3 text-base-content/30">
 					<i class="ph ph-5 ph-caret-right chevron rotate-90 transition-transform text-base-content/60 inline-block"></i>
 					<span class="text-lg font-serif text-base-content whitespace-nowrap">{ title }</span>
-					@fleuron("flex-1")
+					@rule("flex-1")
 					if url, ok := env.Allowed("POST", addRoute); ok {
 						<a class="btn btn-sm btn-neutral" href={ url + addQuery } up-layer="new drawer" up-accept-location={ env.Route } data-stop-propagation>
 							<i class="ph ph-5 ph-plus inline-block"></i> Add
