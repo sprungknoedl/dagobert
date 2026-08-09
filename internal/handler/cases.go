@@ -83,70 +83,57 @@ func (h *Handler) CaseExport(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) CaseImport(w http.ResponseWriter, r *http.Request) {
 	uri := "/"
-	if err := h.Store.Transaction(func(tx *model.Store) error {
-		return ImportCSV(w, r, uri, 10, func(rec []string) {
-			closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
+	ImportCSV(h.Store, w, r, uri, 10, func(tx *model.Store, rec []string) error {
+		closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
+		if err != nil {
+			return valid.ValidationError{"Closed": valid.Condition{Name: "Closed", Invalid: true, Message: err.Error()}}
+		}
+
+		var custom model.Custom
+		if err = custom.Scan(rec[9]); err != nil {
+			return valid.ValidationError{"Custom": valid.Condition{Name: "Custom", Invalid: true, Message: err.Error()}}
+		}
+
+		var openedAt, closedAt model.Date
+		if rec[7] != "" {
+			t, err := time.Parse("2006-01-02", rec[7])
 			if err != nil {
-				Warn(w, r, err)
-				return
+				return valid.ValidationError{"OpenedAt": valid.Condition{Name: "OpenedAt", Invalid: true, Message: err.Error()}}
 			}
+			openedAt = model.Date(t)
+		}
+		if rec[8] != "" {
+			t, err := time.Parse("2006-01-02", rec[8])
+			if err != nil {
+				return valid.ValidationError{"ClosedAt": valid.Condition{Name: "ClosedAt", Invalid: true, Message: err.Error()}}
+			}
+			closedAt = model.Date(t)
+		}
 
-			var custom model.Custom
-			if err = custom.Scan(rec[9]); err != nil {
-				Warn(w, r, err)
-				return
-			}
+		if openedAt.IsZero() {
+			openedAt = model.Date(time.Now())
+		}
+		if closed && closedAt.IsZero() {
+			closedAt = model.Date(time.Now())
+		} else if !closed {
+			closedAt = model.Date{}
+		}
 
-			var openedAt, closedAt model.Date
-			if rec[7] != "" {
-				t, err := time.Parse("2006-01-02", rec[7])
-				if err != nil {
-					Warn(w, r, err)
-					return
-				}
-				openedAt = model.Date(t)
-			}
-			if rec[8] != "" {
-				t, err := time.Parse("2006-01-02", rec[8])
-				if err != nil {
-					Warn(w, r, err)
-					return
-				}
-				closedAt = model.Date(t)
-			}
+		obj := model.Case{
+			ID:             fp.If(rec[0] == "", fp.Random(10), rec[0]),
+			Name:           rec[1],
+			Severity:       rec[2],
+			Classification: rec[3],
+			Closed:         closed,
+			Outcome:        rec[5],
+			Summary:        rec[6],
+			Custom:         custom,
+			OpenedAt:       openedAt,
+			ClosedAt:       closedAt,
+		}
 
-			if openedAt.IsZero() {
-				openedAt = model.Date(time.Now())
-			}
-			if closed && closedAt.IsZero() {
-				closedAt = model.Date(time.Now())
-			} else if !closed {
-				closedAt = model.Date{}
-			}
-
-			obj := model.Case{
-				ID:             fp.If(rec[0] == "", fp.Random(10), rec[0]),
-				Name:           rec[1],
-				Severity:       rec[2],
-				Classification: rec[3],
-				Closed:         closed,
-				Outcome:        rec[5],
-				Summary:        rec[6],
-				Custom:         custom,
-				OpenedAt:       openedAt,
-				ClosedAt:       closedAt,
-			}
-
-			if err = tx.SaveCase(obj); err != nil {
-				Err(w, r, err)
-				return
-			}
-		})
-	}); err != nil {
-		// ImportCSV already wrote the HTTP response before Transaction() returns,
-		// so a commit failure here can only be surfaced via logging.
-		slog.Error("case import transaction failed to commit", "err", err)
-	}
+		return tx.SaveCase(obj)
+	})
 }
 
 func (h *Handler) CaseEdit(w http.ResponseWriter, r *http.Request) {

@@ -87,59 +87,46 @@ func (h *Handler) EventImportCSV(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/events/", cid)
 
-	if err := h.Store.Transaction(func(tx *model.Store) error {
-		return ImportCSV(w, r, uri, 9, func(rec []string) {
-			t, err := time.Parse(time.RFC3339, rec[1])
-			if err != nil {
-				Warn(w, r, err)
-				return
-			}
+	ImportCSV(h.Store, w, r, uri, 9, func(tx *model.Store, rec []string) error {
+		t, err := time.Parse(time.RFC3339, rec[1])
+		if err != nil {
+			return valid.ValidationError{"Time": valid.Condition{Name: "Time", Invalid: true, Message: err.Error()}}
+		}
 
-			// import assets (creates new one if they don't exist)
-			assets, err := getOrCreateAssets(tx, cid, strings.Split(rec[3], " "))
-			if err != nil {
-				Err(w, r, err)
-				return
-			}
+		// import assets (creates new one if they don't exist)
+		assets, err := getOrCreateAssets(tx, cid, strings.Split(rec[3], " "))
+		if err != nil {
+			return err
+		}
 
-			// import indicators (creates new one if they don't exist)
-			indicators, err := getOrCreateIndicators(tx, cid, strings.Split(rec[4], " "))
-			if err != nil {
-				Err(w, r, err)
-				return
-			}
+		// import indicators (creates new one if they don't exist)
+		indicators, err := getOrCreateIndicators(tx, cid, strings.Split(rec[4], " "))
+		if err != nil {
+			return err
+		}
 
-			var custom model.Custom
-			if len(rec) > 8 {
-				if err := custom.Scan(rec[8]); err != nil {
-					Warn(w, r, err)
-					return
-				}
+		var custom model.Custom
+		if len(rec) > 8 {
+			if err := custom.Scan(rec[8]); err != nil {
+				return valid.ValidationError{"Custom": valid.Condition{Name: "Custom", Invalid: true, Message: err.Error()}}
 			}
+		}
 
-			obj := model.Event{
-				ID:         fp.If(rec[0] == "", fp.Random(10), rec[0]),
-				CaseID:     cid,
-				Time:       model.Time(t),
-				Type:       rec[2],
-				Assets:     assets,
-				Indicators: indicators,
-				Event:      rec[5],
-				Raw:        rec[6],
-				Source:     rec[7],
-				Custom:     custom,
-			}
+		obj := model.Event{
+			ID:         fp.If(rec[0] == "", fp.Random(10), rec[0]),
+			CaseID:     cid,
+			Time:       model.Time(t),
+			Type:       rec[2],
+			Assets:     assets,
+			Indicators: indicators,
+			Event:      rec[5],
+			Raw:        rec[6],
+			Source:     rec[7],
+			Custom:     custom,
+		}
 
-			if err = tx.SaveEvent(cid, obj, true); err != nil {
-				Err(w, r, err)
-			}
-		})
-
-	}); err != nil {
-		// ImportCSV already wrote the HTTP response before Transaction() returns,
-		// so a commit failure here can only be surfaced via logging.
-		slog.Error("event import transaction failed to commit", "err", err, "case", cid)
-	}
+		return tx.SaveEvent(cid, obj, true)
+	})
 }
 
 func (h *Handler) EventImportTimesketch(w http.ResponseWriter, r *http.Request) {

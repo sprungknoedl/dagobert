@@ -197,38 +197,28 @@ func buildStixBundle(list []model.Indicator, now time.Time) *stix.Bundle {
 func (h *Handler) IndicatorImportCSV(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/indicators/", cid)
-	if err := h.Store.Transaction(func(tx *model.Store) error {
-		return ImportCSV(w, r, uri, 8, func(rec []string) {
-			var custom model.Custom
-			if len(rec) > 7 {
-				if err := custom.Scan(rec[7]); err != nil {
-					Warn(w, r, err)
-					return
-				}
+	ImportCSV(h.Store, w, r, uri, 8, func(tx *model.Store, rec []string) error {
+		var custom model.Custom
+		if len(rec) > 7 {
+			if err := custom.Scan(rec[7]); err != nil {
+				return valid.ValidationError{"Custom": valid.Condition{Name: "Custom", Invalid: true, Message: err.Error()}}
 			}
+		}
 
-			obj := model.Indicator{
-				ID:     fp.If(rec[0] == "", fp.Random(10), rec[0]),
-				Status: rec[1],
-				Type:   rec[2],
-				Value:  refang(rec[3]),
-				TLP:    rec[4],
-				Source: rec[5],
-				Notes:  rec[6],
-				CaseID: cid,
-				Custom: custom,
-			}
+		obj := model.Indicator{
+			ID:     fp.If(rec[0] == "", fp.Random(10), rec[0]),
+			Status: rec[1],
+			Type:   rec[2],
+			Value:  refang(rec[3]),
+			TLP:    rec[4],
+			Source: rec[5],
+			Notes:  rec[6],
+			CaseID: cid,
+			Custom: custom,
+		}
 
-			if err := tx.SaveIndicator(cid, obj, true); err != nil {
-				Err(w, r, err)
-				return
-			}
-		})
-	}); err != nil {
-		// ImportCSV already wrote the HTTP response before Transaction() returns,
-		// so a commit failure here can only be surfaced via logging.
-		slog.Error("indicator import transaction failed to commit", "err", err, "case", cid)
-	}
+		return tx.SaveIndicator(cid, obj, true)
+	})
 }
 
 func (h *Handler) IndicatorImportTimesketch(w http.ResponseWriter, r *http.Request) {

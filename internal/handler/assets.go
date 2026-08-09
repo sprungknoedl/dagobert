@@ -67,37 +67,27 @@ func (h *Handler) AssetExport(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) AssetImport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/assets/", cid)
-	if err := h.Store.Transaction(func(tx *model.Store) error {
-		return ImportCSV(w, r, uri, 7, func(rec []string) {
-			var custom model.Custom
-			if len(rec) > 6 {
-				if err := custom.Scan(rec[6]); err != nil {
-					Warn(w, r, err)
-					return
-				}
+	ImportCSV(h.Store, w, r, uri, 7, func(tx *model.Store, rec []string) error {
+		var custom model.Custom
+		if len(rec) > 6 {
+			if err := custom.Scan(rec[6]); err != nil {
+				return valid.ValidationError{"Custom": valid.Condition{Name: "Custom", Invalid: true, Message: err.Error()}}
 			}
+		}
 
-			obj := model.Asset{
-				ID:     fp.If(rec[0] == "", fp.Random(10), rec[0]),
-				CaseID: cid,
-				Status: rec[1],
-				Type:   rec[2],
-				Name:   rec[3],
-				Addr:   rec[4],
-				Notes:  rec[5],
-				Custom: custom,
-			}
+		obj := model.Asset{
+			ID:     fp.If(rec[0] == "", fp.Random(10), rec[0]),
+			CaseID: cid,
+			Status: rec[1],
+			Type:   rec[2],
+			Name:   rec[3],
+			Addr:   rec[4],
+			Notes:  rec[5],
+			Custom: custom,
+		}
 
-			if err := tx.SaveAsset(cid, obj); err != nil {
-				Err(w, r, err)
-				return
-			}
-		})
-	}); err != nil {
-		// ImportCSV already wrote the HTTP response before Transaction() returns,
-		// so a commit failure here can only be surfaced via logging.
-		slog.Error("asset import transaction failed to commit", "err", err, "case", cid)
-	}
+		return tx.SaveAsset(cid, obj)
+	})
 }
 
 func (h *Handler) AssetEdit(w http.ResponseWriter, r *http.Request) {

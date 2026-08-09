@@ -69,49 +69,37 @@ func (h *Handler) TaskExport(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) TaskImport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/tasks/", cid)
-	if err := h.Store.Transaction(func(tx *model.Store) error {
-		return ImportCSV(w, r, uri, 7, func(rec []string) {
-			done, err := strconv.ParseBool(cmp.Or(rec[3], "false"))
-			if err != nil {
-				Warn(w, r, err)
-				return
-			}
+	ImportCSV(h.Store, w, r, uri, 7, func(tx *model.Store, rec []string) error {
+		done, err := strconv.ParseBool(cmp.Or(rec[3], "false"))
+		if err != nil {
+			return valid.ValidationError{"Done": valid.Condition{Name: "Done", Invalid: true, Message: err.Error()}}
+		}
 
-			datedue, err := time.Parse(time.RFC3339, cmp.Or(rec[5], time.Time{}.Format(time.RFC3339)))
-			if err != nil {
-				Warn(w, r, err)
-				return
-			}
+		datedue, err := time.Parse(time.RFC3339, cmp.Or(rec[5], time.Time{}.Format(time.RFC3339)))
+		if err != nil {
+			return valid.ValidationError{"DateDue": valid.Condition{Name: "DateDue", Invalid: true, Message: err.Error()}}
+		}
 
-			var custom model.Custom
-			if len(rec) > 6 {
-				if err := custom.Scan(rec[6]); err != nil {
-					Warn(w, r, err)
-					return
-				}
+		var custom model.Custom
+		if len(rec) > 6 {
+			if err := custom.Scan(rec[6]); err != nil {
+				return valid.ValidationError{"Custom": valid.Condition{Name: "Custom", Invalid: true, Message: err.Error()}}
 			}
+		}
 
-			obj := model.Task{
-				ID:      fp.If(rec[0] == "", fp.Random(10), rec[0]),
-				Type:    rec[1],
-				Task:    rec[2],
-				Done:    done, // 3
-				Owner:   rec[4],
-				DateDue: model.Time(datedue), // 5
-				CaseID:  cid,
-				Custom:  custom,
-			}
+		obj := model.Task{
+			ID:      fp.If(rec[0] == "", fp.Random(10), rec[0]),
+			Type:    rec[1],
+			Task:    rec[2],
+			Done:    done, // 3
+			Owner:   rec[4],
+			DateDue: model.Time(datedue), // 5
+			CaseID:  cid,
+			Custom:  custom,
+		}
 
-			if err := tx.SaveTask(cid, obj); err != nil {
-				Err(w, r, err)
-				return
-			}
-		})
-	}); err != nil {
-		// ImportCSV already wrote the HTTP response before Transaction() returns,
-		// so a commit failure here can only be surfaced via logging.
-		slog.Error("task import transaction failed to commit", "err", err, "case", cid)
-	}
+		return tx.SaveTask(cid, obj)
+	})
 }
 
 func (h *Handler) TaskEdit(w http.ResponseWriter, r *http.Request) {

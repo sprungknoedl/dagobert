@@ -59,35 +59,25 @@ func (h *Handler) NoteExport(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) NoteImport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/notes/", cid)
-	if err := h.Store.Transaction(func(tx *model.Store) error {
-		return ImportCSV(w, r, uri, 5, func(rec []string) {
-			var custom model.Custom
-			if len(rec) > 4 {
-				if err := custom.Scan(rec[4]); err != nil {
-					Warn(w, r, err)
-					return
-				}
+	ImportCSV(h.Store, w, r, uri, 5, func(tx *model.Store, rec []string) error {
+		var custom model.Custom
+		if len(rec) > 4 {
+			if err := custom.Scan(rec[4]); err != nil {
+				return valid.ValidationError{"Custom": valid.Condition{Name: "Custom", Invalid: true, Message: err.Error()}}
 			}
+		}
 
-			obj := model.Note{
-				ID:          fp.If(rec[0] == "", fp.Random(10), rec[0]),
-				Title:       rec[1],
-				Category:    rec[2],
-				Description: rec[3],
-				CaseID:      cid,
-				Custom:      custom,
-			}
+		obj := model.Note{
+			ID:          fp.If(rec[0] == "", fp.Random(10), rec[0]),
+			Title:       rec[1],
+			Category:    rec[2],
+			Description: rec[3],
+			CaseID:      cid,
+			Custom:      custom,
+		}
 
-			if err := tx.SaveNote(cid, obj); err != nil {
-				Err(w, r, err)
-				return
-			}
-		})
-	}); err != nil {
-		// ImportCSV already wrote the HTTP response before Transaction() returns,
-		// so a commit failure here can only be surfaced via logging.
-		slog.Error("note import transaction failed to commit", "err", err, "case", cid)
-	}
+		return tx.SaveNote(cid, obj)
+	})
 }
 
 func (h *Handler) NoteEdit(w http.ResponseWriter, r *http.Request) {

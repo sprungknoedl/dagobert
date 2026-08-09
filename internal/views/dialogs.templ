@@ -1,6 +1,7 @@
 package views
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/sprungknoedl/dagobert/internal/model"
@@ -89,6 +90,40 @@ templ ImportDialog() {
 					<a class="btn btn-ghost" up-dismiss>Cancel</a>
 				</footer>
 			</form>
+		</main>
+	}
+}
+
+// ImportRowError is one collected row failure from ImportCSV, keyed by the
+// CSV's actual line number (row 1 is the header, so the first data row is 2).
+type ImportRowError struct {
+	Row     int
+	Message string
+}
+
+// ImportErrors reports every row that failed an atomic CSV import in one
+// screen — nothing committed, so there is no form to redisplay inline the
+// way a regular 422 does.
+templ ImportErrors(errs []ImportRowError) {
+	@layout() {
+		<main class="notice-sheet">
+			<header class="form-head">
+				<span class="notice-mark" aria-hidden="true"><i class="ph ph-warning-circle"></i></span>
+				<div class="grow min-w-0">
+					<h1 class="font-serif text-xl font-semibold leading-tight">Import failed</h1>
+					<p class="text-sm text-base-content/70 mt-1.5">Nothing was imported. Fix the rows below and re-upload.</p>
+				</div>
+			</header>
+			<div class="form-body">
+				<ul class="list-disc ml-4 text-sm">
+					for _, e := range errs {
+						<li>{ fmt.Sprintf("Row %d: %s", e.Row, e.Message) }</li>
+					}
+				</ul>
+			</div>
+			<footer class="form-foot">
+				<a class="btn btn-ghost" up-dismiss>Close</a>
+			</footer>
 		</main>
 	}
 }

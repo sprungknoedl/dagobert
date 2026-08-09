@@ -26,49 +26,103 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
-func ImportCSV(w http.ResponseWriter, r *http.Request, uri string, numFields int, cb func(rec []string)) error {
+// ImportCSV drives a CSV import inside a single transaction: every row's
+// callback error is collected instead of failing fast, and nothing commits
+// unless every row succeeds. This makes a partial (fixed-up) re-upload of the
+// same file always safe, regardless of whether the CSV carries IDs.
+//
+// A row's error buckets by type, mirroring the Decode/Render convention used
+// for regular form saves: a valid.ValidationError is a 400/Warn-severity
+// failure, anything else is 500/Err-severity. CSV structural errors (e.g. a
+// line with the wrong field count) are wrapped as a ValidationError, since
+// encoding/csv keeps reading past them — they are collected like any other
+// row failure, not treated as fatal.
+func ImportCSV(store *model.Store, w http.ResponseWriter, r *http.Request, redirectURI string, numFields int, cb func(tx *model.Store, rec []string) error) {
 	if r.Method == http.MethodGet {
 		if err := views.ImportDialog().Render(r.Context(), w); err != nil {
 			slog.Error("failed to render template", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
 		}
-		return nil
+		return
 	}
 
 	fr, _, err := r.FormFile("file")
 	if err != nil {
 		Warn(w, r, err)
-		return err
+		return
 	}
 
 	cr := csv.NewReader(fr)
 	cr.FieldsPerRecord = numFields
 	_, err = cr.Read()                                                          // skip header
 	if perr, ok := err.(*csv.ParseError); ok && perr.Err == csv.ErrFieldCount { // try semicolon instead, Excel often exports CSVs with ;
-		if _, err := fr.Seek(0, 0); err != nil {
-			Warn(w, r, err)
-			return err
+		if _, serr := fr.Seek(0, 0); serr != nil {
+			Warn(w, r, serr)
+			return
 		}
 		cr = csv.NewReader(fr)
 		cr.Comma = ';'
 		cr.FieldsPerRecord = numFields
-		_, _ = cr.Read() //nolint:errcheck // skip header; any read error recurs on the next Read() in the loop below, where it is handled
+		_, err = cr.Read() // skip header
+	}
+	if err != nil {
+		Warn(w, r, err)
+		return
 	}
 
-	for {
-		rec, err := cr.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			Warn(w, r, err)
-			return err
+	var rowErrors []views.ImportRowError
+	serverErr := false
+	errRowsFailed := errors.New("import has row errors")
+
+	txErr := store.Transaction(func(tx *model.Store) error {
+		line := 1
+		for {
+			line++
+			rec, err := cr.Read()
+			if err == io.EOF {
+				break
+			}
+
+			var rowErr error
+			if err != nil {
+				rowErr = valid.ValidationError{"Row": valid.Condition{Name: "Row", Invalid: true, Message: err.Error()}}
+			} else {
+				rowErr = cb(tx, rec)
+			}
+			if rowErr == nil {
+				continue
+			}
+
+			if vr, ok := rowErr.(valid.ValidationError); ok {
+				slog.Warn("csv row import failed", "err", vr, "row", line, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
+				rowErrors = append(rowErrors, views.ImportRowError{Row: line, Message: vr.Error()})
+			} else {
+				slog.Error("csv row import failed", "err", rowErr, "row", line, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
+				rowErrors = append(rowErrors, views.ImportRowError{Row: line, Message: rowErr.Error()})
+				serverErr = true
+			}
 		}
 
-		cb(rec)
+		if len(rowErrors) > 0 {
+			return errRowsFailed
+		}
+		return nil
+	})
+
+	if txErr != nil && !errors.Is(txErr, errRowsFailed) {
+		Err(w, r, txErr)
+		return
 	}
 
-	http.Redirect(w, r, uri, http.StatusSeeOther)
-	return nil
+	if len(rowErrors) > 0 {
+		status := http.StatusUnprocessableEntity
+		if serverErr {
+			status = http.StatusInternalServerError
+		}
+		Render(w, r, status, views.ImportErrors(rowErrors), rowErrors)
+		return
+	}
+
+	http.Redirect(w, r, redirectURI, http.StatusSeeOther)
 }
 
 func ListModules[T any](h *Handler, w http.ResponseWriter, r *http.Request, fn func(cid string, oid string) (T, error)) {

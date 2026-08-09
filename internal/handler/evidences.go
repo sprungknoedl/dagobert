@@ -88,91 +88,73 @@ func (h *Handler) EvidenceImport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/evidences/", cid)
 	user := GetUser(r)
-	if err := h.Store.Transaction(func(tx *model.Store) error {
-		return ImportCSV(w, r, uri, 10, func(rec []string) {
-			size, err := strconv.ParseInt(rec[4], 10, 64)
+	ImportCSV(h.Store, w, r, uri, 10, func(tx *model.Store, rec []string) error {
+		size, err := strconv.ParseInt(rec[4], 10, 64)
+		if err != nil {
+			return valid.ValidationError{"Size": valid.Condition{Name: "Size", Invalid: true, Message: err.Error()}}
+		}
+
+		fileless, err := strconv.ParseBool(rec[9])
+		if err != nil {
+			return valid.ValidationError{"Fileless": valid.Condition{Name: "Fileless", Invalid: true, Message: err.Error()}}
+		}
+
+		loc := filepath.Base(filepath.Clean(rec[2]))
+		if !fileless {
+			if _, err := os.Stat(filepath.Join(model.DataDir, "evidences", cid, loc)); errors.Is(err, os.ErrNotExist) {
+				return valid.ValidationError{"Name": valid.Condition{Name: "Name", Invalid: true, Message: err.Error()}}
+			}
+		}
+
+		var startsAt model.Time
+		if rec[6] != "" {
+			t, err := time.Parse(time.RFC3339, rec[6])
 			if err != nil {
-				Warn(w, r, err)
-				return
+				return valid.ValidationError{"StartsAt": valid.Condition{Name: "StartsAt", Invalid: true, Message: err.Error()}}
 			}
+			startsAt = model.Time(t)
+		}
 
-			fileless, err := strconv.ParseBool(rec[9])
+		var endsAt model.Time
+		if rec[7] != "" {
+			t, err := time.Parse(time.RFC3339, rec[7])
 			if err != nil {
-				Warn(w, r, err)
-				return
+				return valid.ValidationError{"EndsAt": valid.Condition{Name: "EndsAt", Invalid: true, Message: err.Error()}}
 			}
+			endsAt = model.Time(t)
+		}
 
-			loc := filepath.Base(filepath.Clean(rec[2]))
-			if !fileless {
-				if _, err := os.Stat(filepath.Join(model.DataDir, "evidences", cid, loc)); errors.Is(err, os.ErrNotExist) {
-					Warn(w, r, err)
-					return
-				}
-			}
+		var custom model.Custom
+		if err = custom.Scan(rec[8]); err != nil {
+			return valid.ValidationError{"Custom": valid.Condition{Name: "Custom", Invalid: true, Message: err.Error()}}
+		}
 
-			var startsAt model.Time
-			if rec[6] != "" {
-				t, err := time.Parse(time.RFC3339, rec[6])
-				if err != nil {
-					Warn(w, r, err)
-					return
-				} else {
-					startsAt = model.Time(t)
-				}
-			}
+		obj := model.Evidence{
+			ID:       fp.If(rec[0] == "", fp.Random(10), rec[0]),
+			CaseID:   cid,
+			Type:     rec[1],
+			Name:     loc,
+			Hash:     rec[3],
+			Size:     size, // rec[4]
+			Fileless: fileless,
+			Notes:    rec[5],
+			StartsAt: startsAt,
+			EndsAt:   endsAt,
+			Custom:   custom,
+		}
 
-			var endsAt model.Time
-			if rec[7] != "" {
-				t, err := time.Parse(time.RFC3339, rec[7])
-				if err != nil {
-					Warn(w, r, err)
-					return
-				} else {
-					endsAt = model.Time(t)
-				}
-			}
+		if err := tx.SaveEvidence(cid, obj); err != nil {
+			return err
+		}
 
-			var custom model.Custom
-			if err = custom.Scan(rec[8]); err != nil {
-				Warn(w, r, err)
-				return
-			}
-
-			obj := model.Evidence{
-				ID:       fp.If(rec[0] == "", fp.Random(10), rec[0]),
-				CaseID:   cid,
-				Type:     rec[1],
-				Name:     loc,
-				Hash:     rec[3],
-				Size:     size, // rec[4]
-				Fileless: fileless,
-				Notes:    rec[5],
-				StartsAt: startsAt,
-				EndsAt:   endsAt,
-				Custom:   custom,
-			}
-
-			if err := tx.SaveEvidence(cid, obj); err != nil {
-				Err(w, r, err)
-				return
-			}
-
-			if err := tx.SaveEvidenceLog(cid, model.EvidenceLog{
-				EvidenceID: obj.ID,
-				Name:       obj.Name,
-				User:       user.String(),
-				Event:      model.EvidenceLogUploaded,
-				Details:    "imported via CSV",
-			}); err != nil {
-				Err(w, r, err)
-				return
-			}
+		return tx.SaveEvidenceLog(cid, model.EvidenceLog{
+			EvidenceID: obj.ID,
+			Name:       obj.Name,
+			User:       user.String(),
+			Event:      model.EvidenceLogUploaded,
+			Details:    "imported via CSV",
 		})
-	}); err != nil {
-		// ImportCSV already wrote the HTTP response before Transaction() returns,
-		// so a commit failure here can only be surfaced via logging.
-		slog.Error("evidence import transaction failed to commit", "err", err, "case", cid)
-	}
+	})
 }
 
 func (h *Handler) EvidenceEdit(w http.ResponseWriter, r *http.Request) {
