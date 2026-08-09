@@ -294,7 +294,7 @@ up.compiler('table:has([data-href])', (table) => {
 function showToast(message) {
     const container = document.querySelector('#errors');
     if (!container) { return; }
-    container.className = 'toast toast-end toast-bottom z-20';
+    container.className = 'toast toast-top toast-center z-20';
 
     const seal = document.createElement('div');
     seal.className = 'seal';

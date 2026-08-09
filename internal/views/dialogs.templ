@@ -230,7 +230,7 @@ templ ImportArchiveConfirm(m model.Manifest, token string) {
 // case client-side. Failure is the one message that takes the severe hue.
 templ ToastError(err error) {
 	@layout() {
-		<section id="errors" class="toast toast-end toast-bottom z-20">
+		<section id="errors" class="toast toast-top toast-center z-20">
 			<div class="seal seal-severe" role="alert" data-remove-self>
 				<span class="seal-mark" aria-hidden="true"><i class="ph ph-x-circle"></i></span>
 				<div class="seal-body">
@@ -244,7 +244,7 @@ templ ToastError(err error) {
 
 templ ToastWarning(err error) {
 	@layout() {
-		<section id="errors" class="toast toast-end toast-bottom z-20">
+		<section id="errors" class="toast toast-top toast-center z-20">
 			<div class="seal" role="alert" data-remove-self>
 				<span class="seal-mark" aria-hidden="true"><i class="ph ph-warning-circle"></i></span>
 				<div class="seal-body">
