@@ -1,4 +1,8 @@
-# Dagobert
+<div align="center">
+<img src="docs/medallion.png" width="120" height="120" alt="Dagobert">
+
+# [dagobert]
+</div>
 
 **A collaborative platform for incident response**
 
@@ -35,21 +39,25 @@ can work on a case concurrently.
   compromised hosts, accounts, and indicators as the attack unfolds.
 - **Tasks** — assign work to team members with owners and due dates.
 - **Notes & comments** — document findings as you go, visible to the whole team.
-- **Report generation** — render Word, Excel/Calc, and Writer templates
-  (`.docx`, `.ods`, `.odt`) from case data; bring your own corporate template.
+- **Report generation** — render Word, Excel/Calc, Writer, and Impress templates
+  (`.docx`, `.ods`, `.odt`, `.odp`) from case data; bring your own corporate template.
 - **Evidence processing** — run [Hayabusa](https://github.com/Yamato-Security/hayabusa)
   (EVTX triage), [Zircolite](https://github.com/wagga40/Zircolite) (EVTX Sigma
   detection), [Chainsaw](https://github.com/WithSecureLabs/chainsaw) (EVTX Sigma
-  and native-rule hunting), and [Plaso](https://github.com/log2timeline/plaso)
-  (super-timelines) against uploaded evidence as background jobs.
+  and native-rule hunting), [Plaso](https://github.com/log2timeline/plaso)
+  (super-timelines), and [Dissect](https://github.com/fox-it/dissect) (disk & VM
+  image triage) against uploaded evidence as background jobs.
+- **Indicator enrichment** — look up hashes, IPs, and domains against
+  [VirusTotal](https://www.virustotal.com/), [AbuseIPDB](https://www.abuseipdb.com/),
+  and [Hybrid Analysis](https://www.hybrid-analysis.com/) directly from an indicator.
 - **Timesketch integration** — upload timelines to
   [Timesketch](https://github.com/google/timesketch) or import events back for
   analysis.
 - **Hooks** — trigger automations when records are created or updated,
   with conditions written as [expr](https://expr-lang.org/) expressions.
 - **MCP server** — expose case data (cases, timeline, assets, indicators,
-  malware, notes, tasks) read-only to MCP clients over an authenticated
-  HTTP endpoint.
+  malware, evidences, notes, tasks) read-only to MCP clients over an
+  authenticated HTTP endpoint.
 - **Authentication** — local users or any OIDC provider (tested with
   Azure AD), with optional auto-provisioning.
 
