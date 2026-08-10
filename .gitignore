@@ -4,10 +4,8 @@
 .DS_Store
 *_templ.go
 internal/frontend/daisyui*.js
-CLAUDE.md
-PRODUCT.md
-DESIGN.md
 dagobert
+docs/adr
 docs/specs
 data
 external
