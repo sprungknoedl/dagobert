@@ -440,6 +440,12 @@ the current two.
 - **Active:** Engraving Ink fill with Sheet Cream text and a filled-weight icon.
 - Icon-only navigation was rejected: it doesn't work well for keyboard and screen-reader users.
 
+### Page Header
+The breadcrumb trail *is* the page title: `Case Name / Section`, one line, one Display size.
+Ancestors take `--ink-form-label` and regular weight; the current page stays full ink and 600
+weight — told apart by weight and ink, not by size. Shares the rail's Sheet Cream ground and heavy
+hairline, edge to edge with the rail and the viewport, so the two read as one frame.
+
 ### Panels / Containers
 Sheet Cream ground, 1px hairline at 12% ink plus the engraved ring, 0.75rem/1rem internal padding.
 

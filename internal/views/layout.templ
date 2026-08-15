@@ -10,7 +10,6 @@ type navbarConfig struct {
 	preJoin     templ.Component
 	preButtons  templ.Component
 	titleIcon   string
-	subtitle    string
 	hideImport  bool
 	hideExport  bool
 	hideRefresh bool
@@ -42,9 +41,6 @@ func navPreJoin(c templ.Component) navbarOption {
 	return func(nc *navbarConfig) { nc.preJoin = c }
 }
 
-func navSubtitle(subtitle string) navbarOption {
-	return func(nc *navbarConfig) { nc.subtitle = subtitle }
-}
 func navTitleIcon(icon string) navbarOption {
 	return func(nc *navbarConfig) { nc.titleIcon = icon }
 }
@@ -57,55 +53,47 @@ func navHideSearch() navbarOption  { return func(nc *navbarConfig) { nc.hideSear
 func navSettings() navbarOption { return navPreTitle(navSettingsTitle()) }
 
 templ navSettingsTitle() {
-	<a href="/settings" class="inline-flex gap-1.5 items-center hover:text-base-content transition-colors">
-		<i class="ph ph-gear-six inline-block"></i>
+	<a href="/settings" class="crumb-ancestor inline-flex gap-1.5 items-center hover:text-base-content transition-colors">
+		<i class="ph ph-6 ph-gear-six inline-block"></i>
 		Settings
 	</a>
 	<span class="opacity-45">/</span>
 }
 
-// navbar is the page header: a breadcrumb trail, the title, and the section's
-// controls. The trail carries the case switcher, so the one control that
-// changes context sits at the top of every page.
+// navbar is the page header: a breadcrumb trail that doubles as the page
+// title, and the section's controls. The trail carries the case switcher, so
+// the one control that changes context sits at the top of every page. It's
+// one text size throughout (Display) — ancestors and the current page are
+// told apart by weight and ink (see .crumb-ancestor), not by size.
 templ navbar(env Env, title string, opts ...navbarOption) {
 	{{ cfg := applynavOptions(opts) }}
-	<nav class="pagehead -mt-4 pt-4 pb-5 flex items-end gap-4 flex-wrap">
-		<div class="grow min-w-0">
-			<div class="label-micro mb-2 flex items-center gap-1.5 flex-wrap">
-				if cfg.preTitle != nil {
-					@cfg.preTitle
-				}
-				if env.Case.ID != "" {
-					<a
-						href={ "/cases/switch?from=" + env.Case.ID + "&to=" + SectionSuffix(env.Route, env.Case.ID) }
-						up-layer="new popup"
-						up-size="grow"
-						up-history="false"
-						title="Switch to another case"
-						class="inline-flex gap-1.5 items-center hover:text-base-content transition-colors"
-					>
-						<i class="ph ph-briefcase inline-block"></i>
-						{ env.Case.Name }
-					</a>
-					<span class="opacity-45">/</span>
-				}
-				if cfg.titleIcon != "" {
-					<i class={ "ph ph-" + cfg.titleIcon + " inline-block" }></i>
-				}
-				{ title }
-				if env.Case.ID != "" {
-					// the case serial: what an analyst quotes into a report
-					<span class="serial text-[0.625rem] ml-2">{ "№ " + env.Case.ID }</span>
-				}
-				if env.Case.IsTemplate {
-					<a href="/settings/case-templates/" class="badge badge-outline badge-sm ml-1" title="Manage case templates">Template</a>
-				}
-			</div>
-			<h1 class="font-serif text-2xl font-semibold leading-none">{ title }</h1>
-			if cfg.subtitle != "" {
-				<p class="text-xs text-base-content/55 mt-2">{ cfg.subtitle }</p>
+	<nav class="pagehead -mt-4 -mx-4 pt-4 px-4 pb-4 flex items-center gap-4 flex-wrap">
+		<h1 class="grow min-w-0 font-serif text-2xl flex items-center gap-1.5 flex-wrap">
+			if cfg.preTitle != nil {
+				@cfg.preTitle
 			}
-		</div>
+			if env.Case.ID != "" {
+				<a
+					href={ "/cases/switch?from=" + env.Case.ID + "&to=" + SectionSuffix(env.Route, env.Case.ID) }
+					up-layer="new popup"
+					up-size="grow"
+					up-history="false"
+					title="Switch to another case"
+					class="crumb-ancestor inline-flex gap-1.5 items-center hover:text-base-content transition-colors"
+				>
+					<i class="ph ph-6 ph-briefcase inline-block"></i>
+					{ env.Case.Name }
+				</a>
+				<span class="opacity-45">/</span>
+			}
+			if cfg.titleIcon != "" {
+				<i class={ "ph ph-6 ph-" + cfg.titleIcon + " inline-block" }></i>
+			}
+			{ title }
+			if env.Case.IsTemplate {
+				<a href="/settings/case-templates/" class="badge badge-outline badge-sm ml-1" title="Manage case templates">Template</a>
+			}
+		</h1>
 		<div class="flex-none flex items-center gap-2">
 			if !cfg.hideSearch {
 				<!-- search input -->

@@ -25,7 +25,7 @@ var customTypeInfo = map[string]struct{ Icon, Label string }{
 
 templ SettingsCustomAttributesMany(env Env) {
 	@layout() {
-		@list(env, "Custom Attributes", navSettings(), navHideAdd(), navHideExport(), navHideImport(), navHideSearch(), navSubtitle("Extra fields captured on case objects")) {
+		@list(env, "Custom Attributes", navSettings(), navHideAdd(), navHideExport(), navHideImport(), navHideSearch()) {
 			<table class="table table-default">
 				<thead>
 					<tr>

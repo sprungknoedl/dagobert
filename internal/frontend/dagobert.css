@@ -167,7 +167,7 @@ loses.
 
 /* theme-invariant; kept apart so the themed blocks below hold only what varies */
 :root {
-    --nav-h: 7rem;          /* the page header's declared height; see .pagehead */
+    --nav-h: 6rem;          /* the page header's declared height; see .pagehead */
     --sidebar-w: 11rem;     /* the rail's width; every page offsetting its main
                                column reads this instead of restating 176px, so
                                the rail and the offset cannot drift apart */
@@ -362,7 +362,6 @@ a caption does (see .form-control > .label), and a badge takes its own.
 .form-control > .label > :where(span, .label-text) {
     font-family: var(--font-mono);
     font-size: var(--text-label);
-    font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;
 }
@@ -502,19 +501,20 @@ up-cover-box .table :where(thead th),
     top: 0;
 }
 
-/* The page header: the monospace trail, the display title, and the section's
-   controls, sticky over the ledger ground. Its height is declared rather than
-   measured so the sticky column headers below it know where to stop. */
+/* sticky over the ledger ground; height declared so sticky column headers know where to stop */
 .pagehead {
     position: sticky;
     top: 0;
     z-index: 10;
     min-height: var(--nav-h);
-    background-color: var(--color-base-200);
-    /* The engraved ring is a 2px box-shadow outside the border box, so a panel
-       whose border box starts exactly at the header's bottom edge loses its top
-       ring under the header's opaque ground. Clear it. */
-    margin-bottom: 0.5rem;
+    background-color: var(--color-base-100);
+    border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
+    margin-bottom: 1rem;
+}
+
+.crumb-ancestor {
+    font-weight: 400;
+    color: color-mix(in oklab, var(--color-base-content) var(--ink-form-label), transparent);
 }
 
 .sort.asc::after {
@@ -565,7 +565,7 @@ shadowed, generously padded tile instead.
 }
 
 .stat-title {
-    margin-bottom: 0.125rem;
+    margin-bottom: calc(var(--spacing) * 3);
 }
 
 .stat-value {

@@ -28,7 +28,7 @@ func dateOrDash(d model.Date) string {
 
 templ CasesMany(env Env, rows []model.Case) {
 	@layout() {
-		@list(env, "Cases", navTitleIcon("briefcase"), navHideImport(), navPreButtons(casesImport(env)), navSubtitle("Manage your incident response investigations")) {
+		@list(env, "Cases", navTitleIcon("briefcase"), navHideImport(), navPreButtons(casesImport(env))) {
 			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>
@@ -223,10 +223,9 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 	{{ flaggedIndicators := fp.Filter(indicators, func(i model.Indicator) bool { return i.Flagged }) }}
 	@layout() {
 		@list(env, "Summary", navHideSearch(), navHideAdd(), navHideExport(), navHideImport(), navHideRefresh(),
-			navPreButtons(caseSummaryExtra(env)), navSubtitle("One-page overview of the current investigation status")) {
+			navPreButtons(caseSummaryExtra(env))) {
 			<!-- Case readout: numbers and facts only, separated by hairlines -->
 			<div class="stats w-full">
-				// no case serial: the page header already carries it
 				<div class="stat">
 					<div class="stat-title">Name</div>
 					<div class="stat-value">{ obj.Name }</div>

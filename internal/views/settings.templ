@@ -2,7 +2,7 @@ package views
 
 templ SettingsOverview(env Env) {
 	@layout() {
-		@list(env, "Settings", navTitleIcon("gear-six"), navHideSearch(), navHideRefresh(), navHideAdd(), navHideExport(), navHideImport(), navSubtitle("Configure automation, integrations, and account access")) {
+		@list(env, "Settings", navTitleIcon("gear-six"), navHideSearch(), navHideRefresh(), navHideAdd(), navHideExport(), navHideImport()) {
 			// No column headers: this is a menu of destinations, not a data grid,
 			// and "Name / Description" over named groups is two kinds of heading
 			// doing one job.

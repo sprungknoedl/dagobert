@@ -14,7 +14,7 @@ import (
 templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]model.Enrichment, comments map[string]int) {
 	{{ summary := summarizeIndicators(rows) }}
 	@layout() {
-		@list(env, "Indicators", navHideImport(), navHideExport(), navPreButtons(indicatorsManyExtra(env)), navSubtitle("Atomic artefacts for detection and threat hunting")) {
+		@list(env, "Indicators", navHideImport(), navHideExport(), navPreButtons(indicatorsManyExtra(env))) {
 			<div class="stats w-full mb-4">
 				@statTotal(len(rows))
 				for i, status := range env.ValueLists.IndicatorStatus {

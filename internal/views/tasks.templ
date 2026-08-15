@@ -9,7 +9,7 @@ import (
 
 templ TasksMany(env Env, rows []model.Task, comments map[string]int) {
 	@layout() {
-		@list(env, "Tasks", navSubtitle("Work items tracked across the investigation team")) {
+		@list(env, "Tasks") {
 			<table class="table table-default" data-default-sort="value-0">
 				<thead>
 					<tr>

@@ -8,7 +8,7 @@ import (
 
 templ SettingsReportTemplatesMany(env Env, rows []model.ReportTemplate) {
 	@layout() {
-		@list(env, "Report Templates", navSettings(), navHideExport(), navHideImport(), navSubtitle("DOCX/ODT documents used to generate investigation reports")) {
+		@list(env, "Report Templates", navSettings(), navHideExport(), navHideImport()) {
 			<table class="table table-default" data-default-sort="value-0">
 				<thead>
 					<tr>

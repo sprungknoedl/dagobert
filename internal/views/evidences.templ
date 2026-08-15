@@ -29,7 +29,7 @@ func humanizeSize(s int64) string {
 
 templ EvidencesMany(env Env, rows []model.Evidence, comments map[string]int) {
 	@layout() {
-		@list(env, "Evidences", navPreButtons(evidenceLogLink(env)), navSubtitle("Files and artefacts collected for forensic analysis")) {
+		@list(env, "Evidences", navPreButtons(evidenceLogLink(env))) {
 			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>

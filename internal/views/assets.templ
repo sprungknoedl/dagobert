@@ -20,7 +20,7 @@ func summarizeAssets(rows []model.Asset) map[string]int {
 templ AssetsMany(env Env, title string, rows []model.Asset, comments map[string]int) {
 	{{ summary := summarizeAssets(rows) }}
 	@layout() {
-		@list(env, title, navSubtitle("Hosts, accounts, and services involved in the incident")) {
+		@list(env, title) {
 			<div class="stats w-full mb-4">
 				@statTotal(len(rows))
 				for i, status := range env.ValueLists.AssetStatus {

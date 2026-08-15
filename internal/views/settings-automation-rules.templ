@@ -8,7 +8,7 @@ import (
 
 templ SettingsAutomationRulesMany(env Env, rows []model.AutomationRule) {
 	@layout() {
-		@list(env, "Automation Rules", navSettings(), navHideExport(), navHideImport(), navSubtitle("Run modules automatically when case objects change")) {
+		@list(env, "Automation Rules", navSettings(), navHideExport(), navHideImport()) {
 			<table class="table table-default" data-default-sort="value-1">
 				<thead>
 					<tr>
