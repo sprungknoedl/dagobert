@@ -167,7 +167,7 @@ loses.
 
 /* theme-invariant; kept apart so the themed blocks below hold only what varies */
 :root {
-    --nav-h: 6rem;          /* the page header's declared height; see .pagehead */
+    --nav-h: 4.5rem;        /* the page header's declared height; see .pagehead */
     --sidebar-w: 11rem;     /* the rail's width; every page offsetting its main
                                column reads this instead of restating 176px, so
                                the rail and the offset cannot drift apart */
