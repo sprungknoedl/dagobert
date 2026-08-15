@@ -136,6 +136,17 @@ becomes the line. The greens hold their chroma across the two.
     --font-serif: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
     /* per-glyph fallback: JetBrains Mono has no ⌘ / ⏎ / ⎋, so system-ui supplies them */
     --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    /* The type scale has four sizes, not six: Body and Display already land
+       exactly on Tailwind's own text-sm (14px) and text-2xl (24px), so they
+       need no token here. Only Label and Data fall outside Tailwind's native
+       steps (nothing at 10px or 13px), so only those two get one. A
+       columnHeader (9px) and timestamp (11px) size used to be documented
+       separately; neither was ever wired up, and 9px sat below a readable
+       floor, so both were folded into Label — one mono voice, one size,
+       everywhere it's used. */
+    --text-label: 0.625rem; /* 10px — the mono label voice: headers, captions, identifiers, hints */
+    --text-data: 0.8125rem; /* 13px — grid and table cell type */
 }
 
 @import './dagobert-choices.css';
@@ -177,7 +188,6 @@ loses.
     --row-h: 2.5rem;        /* grid row height: 40px + the 1px row rule */
     --cell-y: 0.5rem;       /* cell padding, block */
     --cell-x: 0.75rem;      /* cell padding, inline */
-    --data-size: 0.8125rem; /* grid type: 13px */
 }
 
 /* Every page's main column sits next to the rail rather than under it, so its
@@ -351,7 +361,7 @@ a caption does (see .form-control > .label), and a badge takes its own.
 .form-control > .label,
 .form-control > .label > :where(span, .label-text) {
     font-family: var(--font-mono);
-    font-size: 0.625rem;
+    font-size: var(--text-label);
     font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -391,7 +401,7 @@ Wrapping costs every row in the grid; a column costs width once.
 
 .table {
     border-collapse: collapse;
-    font-size: var(--data-size);
+    font-size: var(--text-data);
     line-height: 1.45;
     /* the grid is a panel: hairline edge plus the engraved ring, no shadow */
     background-color: var(--color-base-100);
@@ -661,7 +671,7 @@ Hairline border, sheet ground, near-square, 12px type, a leading icon at 45%.
     --input-color: var(--color-base-100);
     background-color: var(--color-base-100);
     border-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
-    font-size: var(--data-size);
+    font-size: var(--text-data);
 }
 
 .input:focus-within,
@@ -693,7 +703,7 @@ Hairline border, sheet ground, near-square, 12px type, a leading icon at 45%.
     text-transform: none;
     letter-spacing: 0.01em;
     font-family: var(--font-sans);
-    font-size: var(--data-size);
+    font-size: var(--text-data);
     font-weight: 400;
 }
 
@@ -1193,7 +1203,7 @@ the one thing here that means "look here," so it gets the signal colour.
 
 #histogram .vis-time-axis .vis-text {
     font-family: var(--font-mono);
-    font-size: 0.625rem;
+    font-size: var(--text-label);
     font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;

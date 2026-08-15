@@ -42,17 +42,6 @@ typography:
     fontWeight: 600
     lineHeight: 1.2
     letterSpacing: "0.14em"
-  columnHeader:
-    fontFamily: "JetBrains Mono Variable, ui-monospace, Menlo, monospace"
-    fontSize: "0.5625rem"
-    fontWeight: 600
-    lineHeight: 1.2
-    letterSpacing: "0.14em"
-  timestamp:
-    fontFamily: "JetBrains Mono Variable, ui-monospace, Menlo, monospace"
-    fontSize: "0.6875rem"
-    fontWeight: 400
-    lineHeight: 1.3
 rounded:
   hint: "0.125rem"
   field: "0.1875rem"
@@ -123,7 +112,7 @@ components:
   key-hint:
     backgroundColor: "transparent"
     textColor: "{colors.engraving-ink}"
-    typography: "{typography.columnHeader}"
+    typography: "{typography.label}"
     rounded: "{rounded.hint}"
     padding: "0.0625rem 0.25rem"
 ---
@@ -284,22 +273,30 @@ self-hosted (`.woff2` files) and are a long-term brand commitment.
 
 ### Hierarchy
 
-The exact sizes and weights are set in the frontmatter above. Here's what each style is for:
+The exact sizes and weights are set in the frontmatter above. Four sizes, not six — here's what
+each is for and where it comes from:
 
-- **Display**: page titles, and the one large sentence shown on an empty page.
-- **Body**: all regular text, navigation items, button labels, toast messages.
-- **Data**: table cells, indicator values, hashes. Always uses tabular numbers
-  (`font-variant-numeric: tabular-nums`) for anything that can be counted.
-- **Label** (uppercase, 45% ink): section headings in the sidebar, small captions, metadata lines.
-- **Column Header** (uppercase): table headers and keyboard hints only.
-- **Timestamp**: a size between Data and Column Header, used for full date-times in table cells
-  where Data text would be too wide.
+- **Display** (24px): page titles, and the one large sentence shown on an empty page. Lands exactly
+  on Tailwind's own `text-2xl`, so it isn't a custom token — just that utility plus the serif font.
+- **Body** (14px): all regular text, navigation items, button labels, toast messages. Lands exactly
+  on Tailwind's own `text-sm`, same reasoning as Display.
+- **Data** (13px): table cells, indicator values, hashes. Always uses tabular numbers
+  (`font-variant-numeric: tabular-nums`) for anything that can be counted. Falls between Tailwind's
+  own steps (nothing sits at 13px), so it's the custom `--text-data` token.
+- **Label** (10px, uppercase, 45% ink): section headings in the sidebar, small captions, metadata
+  lines, table column headers, and keyboard hints. Also outside Tailwind's native scale, so it's the
+  custom `--text-label` token — the smallest text size anywhere in the product.
+
+A 9px Column Header and an 11px Timestamp size used to be documented as separate tiers here.
+Neither was ever wired to real CSS: table headers already rendered at the Label size, and
+timestamp cells just use Data. Both are gone now rather than fixed forward, so **10px (Label) is
+the floor** — nothing in the app renders smaller.
 
 ### Named Rules
 
-**The Mono Label Rule.** Every label, column header, timestamp, identifier, count, and keyboard
-hint is monospace, uppercase, with 0.14em letter spacing. No exceptions — this one rule is what
-makes the design recognizable even without any color.
+**The Mono Label Rule.** Every label, table header, identifier, count, and keyboard hint is
+monospace, uppercase, with 0.14em letter spacing, all at the one Label size. No exceptions — this
+one rule is what makes the design recognizable even without any color.
 
 **The Tabular Number Rule.** Any number someone might compare down a column uses tabular
 (fixed-width) digits: counts, timestamps, file sizes, evidence totals.
@@ -562,18 +559,18 @@ signal color on the most frequent event would be the fastest way to make it stop
   falls back to a neutral mark instead of bringing back a color.
 
 ### Key Hint
-Monospace Column Header text on an 8% ink background. Falls back to system-ui font per character,
-because JetBrains Mono doesn't have ⌘, ⏎, or ⎋ symbols.
+Monospace Label text on an 8% ink background. Falls back to system-ui font per character, because
+JetBrains Mono doesn't have ⌘, ⏎, or ⎋ symbols.
 
-**The Legible Glyph Rule.** A key hint is only shown if it's readable at Column Header size.
-Letters, digits, and arrows are readable; ⎋ is not — at that size, the broken circle and arrow
-blur into a smudge that looks like a warning sign, so every Escape-key hint was removed. Escape
-still closes every overlay — it's a convention people already know, so it doesn't need a label.
+**The Legible Glyph Rule.** A key hint is only shown if it's readable at Label size. Letters,
+digits, and arrows are readable; ⎋ is not — at that size, the broken circle and arrow blur into a
+smudge that looks like a warning sign, so every Escape-key hint was removed. Escape still closes
+every overlay — it's a convention people already know, so it doesn't need a label.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** render every label, column header, timestamp, and identifier in monospace uppercase at 0.14em tracking.
+- **Do** render every label, table header, and identifier in monospace uppercase at 0.14em tracking.
 - **Do** pair status colour with the status word, always.
 - **Do** keep tabular numerals on anything comparable down a column.
 - **Do** preserve `:focus-visible` as a 2px Banknote Green outline; it is never removed.
