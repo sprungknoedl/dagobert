@@ -380,13 +380,12 @@ templ caseStatusPill(closed bool) {
 	</span>
 }
 
-// stat is one column of the readout strip: a caption over a figure. A zero is
-// dimmed rather than hidden, so the shape of the row stays comparable between
-// cases. group draws the hairline separating this figure from the one before.
+// stat is one column of the readout strip: a caption over a figure. group
+// draws the hairline separating this figure from the one before.
 templ stat(title string, value int, group bool) {
 	<div class={ "stat", templ.KV("stat-group", group) }>
 		<div class="stat-title">{ title }</div>
-		<div class={ "stat-value", templ.KV("opacity-30", value == 0) }>{ value }</div>
+		<div class="stat-value">{ value }</div>
 	</div>
 }
 
@@ -395,7 +394,7 @@ templ stat(title string, value int, group bool) {
 templ statTotal(value int) {
 	<div class="stat">
 		<div class="stat-title">Total</div>
-		<div class={ "stat-value", templ.KV("opacity-30", value == 0) }>{ value }</div>
+		<div class="stat-value">{ value }</div>
 	</div>
 }
 
