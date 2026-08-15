@@ -28,9 +28,9 @@ templ SettingsAutomationRulesMany(env Env, rows []model.AutomationRule) {
 							<tr class="row-hover">
 								<td class="value-0" data-search={ fp.If(row.Enabled, "Enabled", "Disabled") }>
 									if row.Enabled {
-										<div class="inline-flex items-center gap-1.5 label-micro"><span class="dot bg-success"></span>Enabled</div>
+										<div class="inline-flex items-center gap-2 label-micro"><span class="dot bg-success"></span>Enabled</div>
 									} else {
-										<div class="inline-flex items-center gap-1.5 label-micro"><span class="dot dot-ink"></span>Disabled</div>
+										<div class="inline-flex items-center gap-2 label-micro"><span class="dot dot-ink"></span>Disabled</div>
 									}
 								</td>
 								<td class="value-1" data-search={ row.Trigger }>{ row.Trigger } </td>

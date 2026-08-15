@@ -65,7 +65,7 @@ templ Dashboard(env Env, from time.Time, to time.Time, matrixKey string, matrix 
 							<div class="stat-desc">closed cases with both dates set</div>
 						</div>
 					</div>
-					<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+					<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 						@dashboardBreakdownCard("Classification", stats.Classification, stats.Total)
 						@dashboardBreakdownCard("Severity", stats.Severity, stats.Total)
 						@dashboardBreakdownCard("Outcome", stats.Outcome, stats.Total)
@@ -73,10 +73,10 @@ templ Dashboard(env Env, from time.Time, to time.Time, matrixKey string, matrix 
 					<div class="flex items-end justify-between gap-4 mb-3">
 						<div>
 							<h2 class="text-xl font-serif font-semibold">MITRE ATT&CK® Heatmap</h2>
-							<p class="text-xs text-base-content/55 mt-0.5">Number of distinct cases each technique appears in, across the cases in scope</p>
+							<p class="text-xs text-base-content/55 mt-2">Number of distinct cases each technique appears in, across the cases in scope</p>
 						</div>
 						<div class="flex items-center gap-4">
-							<div class="flex items-center gap-1.5 label-micro">
+							<div class="flex items-center gap-2 label-micro">
 								@heatmapLegend("cases")
 							</div>
 							<div class="join" role="group" up-autosubmit>
@@ -158,7 +158,7 @@ templ dashboardDateExtra(from time.Time, to time.Time) {
 // apart by heading and position now, and every bar is the same ink.
 templ dashboardBreakdownCard(title string, rows []DashboardBreakdownRow, total int) {
 	<div class="panel p-4">
-		<div class="label-micro pb-1.5 mb-3 border-b hair2">{ title }</div>
+		<div class="label-micro pb-1.5 mb-2 border-b hair2">{ title }</div>
 		if len(rows) == 0 {
 			<p class="font-serif text-base-content/55">No cases in scope.</p>
 		}

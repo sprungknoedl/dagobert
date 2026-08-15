@@ -883,7 +883,7 @@ picker, the case switcher — keep Unpoly's own padded box.
 .form-head {
     flex: none;
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 1rem;
     padding: 1.25rem 1.5rem;
     border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);

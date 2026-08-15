@@ -37,9 +37,9 @@ templ TasksMany(env Env, rows []model.Task, comments map[string]int) {
 								<td class="value-3" data-search={ row.Owner }>{ row.Owner } </td>
 								<td class="value-4" data-search={ fp.If(row.Done, "Done", "Open") }>
 									if row.Done {
-										<span class="inline-flex items-center gap-1.5 label-micro"><span class="dot bg-success"></span>Done</span>
+										<span class="inline-flex items-center gap-2 label-micro"><span class="dot bg-success"></span>Done</span>
 									} else {
-										<span class="inline-flex items-center gap-1.5 label-micro"><span class="dot dot-ink"></span>Open</span>
+										<span class="inline-flex items-center gap-2 label-micro"><span class="dot dot-ink"></span>Open</span>
 									}
 								</td>
 								<td class="text-right">

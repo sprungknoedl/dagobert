@@ -270,7 +270,7 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 						@markdown(obj.Summary)
 					</article>
 				}
-				<div class="grid grid-cols-1 md:grid-cols-[1.6fr_1fr_1fr] gap-8 mt-7">
+				<div class="grid grid-cols-1 md:grid-cols-[1.6fr_1fr_1fr] gap-8 mt-8">
 					// The date is condensed to MM-DD hh:mm (the full timestamp is the
 					// title attribute, and the timeline has it in full), and the record
 					// type is carried by its icon alone, to leave the width for findings.
@@ -282,7 +282,7 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 						} else {
 							<ul class="space-y-2 text-xs">
 								for _, ev := range keyEvents {
-									<li class="flex gap-2.5">
+									<li class="flex gap-2">
 										<span class="font-mono opacity-45 shrink-0" title={ ev.Time.Format("2006-01-02 15:04:05 Z07:00") }>
 											{ ev.Time.Format("01-02 15:04") }
 										</span>
@@ -302,7 +302,7 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 						} else {
 							<ul class="space-y-2 text-xs font-mono">
 								for _, a := range compromisedAssets {
-									<li class="flex gap-2.5 items-center">
+									<li class="flex gap-2 items-center">
 										@typeIcon(env.ValueLists.AssetTypes, a.Type)
 										<span class="truncate">{ a.Name }</span>
 									</li>
@@ -318,7 +318,7 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 						} else {
 							<ul class="space-y-2 text-xs font-mono">
 								for _, i := range flaggedIndicators {
-									<li class="flex gap-2.5 items-center">
+									<li class="flex gap-2 items-center">
 										@typeIcon(env.ValueLists.IndicatorTypes, i.Type)
 										<span class="truncate">{ i.Value }</span>
 									</li>
@@ -369,7 +369,7 @@ templ CaseSwitcher(env Env, cases []model.Case, from string, to string) {
 // A dot plus the word, like every other status. An open case is not an alarm,
 // so neither state takes a hue; the green marks the one that is finished.
 templ caseStatusPill(closed bool) {
-	<span class="inline-flex items-center gap-1.5 label-micro">
+	<span class="inline-flex items-center gap-2 label-micro">
 		if closed {
 			<span class="dot bg-success"></span>
 			Closed

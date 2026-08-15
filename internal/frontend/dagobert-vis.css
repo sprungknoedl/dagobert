@@ -86,7 +86,7 @@ selected.
     place-items: center;
     width: 1.125rem;
     height: 1.125rem;
-    font-size: 11px;
+    font-size: 10px;
     line-height: 1;
     color: var(--color-base-content);
     background-color: var(--color-base-100);
@@ -97,7 +97,7 @@ selected.
 .graph-key-token-sm {
     width: 0.875rem;
     height: 0.875rem;
-    font-size: 9px;
+    font-size: 10px;
     color: color-mix(in oklab, var(--color-base-content) 45%, transparent);
 }
 
@@ -210,12 +210,6 @@ takes the raised engraved edge every other thing sitting above the page does.
 
 .vis-current-time {
     background-color: var(--color-primary) !important;
-}
-
-.vis-bar {
-    fill: var(--color-primary) !important;
-    fill-opacity: 0.8 !important;
-    stroke-width: 0 !important;
 }
 
 #histogram .vis-horizontal {

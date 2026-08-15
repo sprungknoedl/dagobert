@@ -53,7 +53,7 @@ func navHideSearch() navbarOption  { return func(nc *navbarConfig) { nc.hideSear
 func navSettings() navbarOption { return navPreTitle(navSettingsTitle()) }
 
 templ navSettingsTitle() {
-	<a href="/settings" class="crumb-ancestor inline-flex gap-1.5 items-center hover:text-base-content transition-colors">
+	<a href="/settings" class="crumb-ancestor inline-flex gap-2 items-center hover:text-base-content transition-colors">
 		<i class="ph ph-6 ph-gear-six inline-block"></i>
 		Settings
 	</a>
@@ -68,7 +68,7 @@ templ navSettingsTitle() {
 templ navbar(env Env, title string, opts ...navbarOption) {
 	{{ cfg := applynavOptions(opts) }}
 	<nav class="pagehead -mt-4 -mx-4 pt-4 px-4 pb-4 flex items-center gap-4 flex-wrap">
-		<h1 class="grow min-w-0 font-serif text-2xl flex items-center gap-1.5 flex-wrap">
+		<h1 class="grow min-w-0 font-serif text-2xl flex items-center gap-2 flex-wrap">
 			if cfg.preTitle != nil {
 				@cfg.preTitle
 			}
@@ -79,7 +79,7 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 					up-size="grow"
 					up-history="false"
 					title="Switch to another case"
-					class="crumb-ancestor inline-flex gap-1.5 items-center hover:text-base-content transition-colors"
+					class="crumb-ancestor inline-flex gap-2 items-center hover:text-base-content transition-colors"
 				>
 					<i class="ph ph-6 ph-briefcase inline-block"></i>
 					{ env.Case.Name }
@@ -165,7 +165,7 @@ func themeToggleIcon(theme string) string {
 // previous design was: icons alone fail screen readers and guess at meaning.
 templ sidebar(env Env, title string) {
 	<aside class="w-[var(--sidebar-w)] flex flex-col h-screen fixed z-1 bg-base-100 border-r hairline py-3 overflow-y-auto">
-		<div class="px-3 pb-4 flex items-center justify-center gap-2.5">
+		<div class="px-3 pb-4 flex items-center justify-center">
 			@medallion("w-20 h-20")
 		</div>
 		<ul class="menu w-full gap-px">
@@ -282,7 +282,7 @@ func findValue(list []model.ValueListItem, value string) model.ValueListItem {
 templ statusDot(list []model.ValueListItem, value string) {
 	{{ x := findValue(list, value) }}
 	if x.Name != "" {
-		<span class={ "inline-flex items-center gap-1.5", templ.KV("text-error", x.State == "error") }>
+		<span class={ "inline-flex items-center gap-2", templ.KV("text-error", x.State == "error") }>
 			<span class={ "dot", fp.If(x.State == "error", "bg-error", "dot-ink") }></span>
 			{ x.Name }
 		</span>
