@@ -54,7 +54,7 @@ spacing:
   row-height: "2.5rem"
   row-control: "1.5rem"
   nav-item: "0.375rem 0.5rem"
-  panel-pad: "0.75rem 1rem"
+  panel-pad: "1rem"
   section-gap: "1rem"
   ledger-grid: "28px"
   sidebar-width: "11rem"
@@ -447,7 +447,7 @@ weight — told apart by weight and ink, not by size. Shares the rail's Sheet Cr
 hairline, edge to edge with the rail and the viewport, so the two read as one frame.
 
 ### Panels / Containers
-Sheet Cream ground, 1px hairline at 12% ink plus the engraved ring, 0.75rem/1rem internal padding.
+Sheet Cream ground, 1px hairline at 12% ink plus the engraved ring, 1rem internal padding.
 
 ### Data Grid
 The main component of the design. Collapsed borders, Data text style, 40px rows, sticky monospace
