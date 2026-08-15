@@ -56,7 +56,7 @@ templ VisNetwork(env Env, nodes []Node, edges []Edge, hideIndicators bool) {
 		@sidebar(env, "Lateral Movement")
 		<main class="pl-48 p-4 grow max-w-full flex flex-col h-screen">
 			<form method="get" up-autosubmit up-target="#graph" up-history="true">
-				@navbar(env, "Lateral Movement", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navHideRefresh(),
+				@navbar(env, "Lateral Movement Graph", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navHideRefresh(),
 					navSubtitle("Assets named together in one event, and the indicators observed with them"),
 					navPreButtons(networkControls(hideIndicators)))
 			</form>
