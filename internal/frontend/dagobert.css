@@ -1151,3 +1151,57 @@ where .input is on the control itself: an <input> has no descendants to match.
         animation: none !important;
     }
 }
+
+/*
+THE EVENT HISTOGRAM (vis-timeline)
+vis-timeline ships its own chrome: a grey box, UA-default axis labels, a
+hardcoded blue bar. None of that belongs to a page built from panels and ink
+hairlines, so it is reskinned here rather than patched property by property.
+Selectors are scoped to #histogram and only cover what Graph2d actually
+renders — this app never instantiates vis.Timeline, and the lateral-movement
+graph is the separate vis-network package, so item/tooltip/legend styles are
+left alone.
+
+Bars stay plain ink rather than reaching for a green, matching the dashboard's
+Proportional Bars: a count is not a status judgement. The current-time line is
+the one thing here that means "look here," so it gets the signal colour.
+*/
+
+#histogram .vis-timeline {
+    border: none;
+}
+
+#histogram .vis-panel.vis-center,
+#histogram .vis-panel.vis-top,
+#histogram .vis-panel.vis-bottom,
+#histogram .vis-panel.vis-left,
+#histogram .vis-panel.vis-right {
+    border-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
+}
+
+#histogram .vis-time-axis .vis-text {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--color-base-content) var(--ink-label), transparent);
+}
+
+#histogram .vis-time-axis .vis-grid.vis-minor {
+    border-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
+}
+
+#histogram .vis-time-axis .vis-grid.vis-major {
+    border-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);
+}
+
+#histogram .vis-graph-group0 {
+    fill: color-mix(in oklab, var(--color-base-content) 70%, transparent);
+    fill-opacity: 1;
+    stroke: none;
+}
+
+#histogram .vis-current-time {
+    background-color: var(--color-accent);
+}
