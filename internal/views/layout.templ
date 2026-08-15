@@ -176,7 +176,7 @@ templ sidebar(env Env, title string) {
 		</ul>
 		if env.Case.ID != "" {
 			<ul class="menu w-full gap-px">
-				<li class="menu-title truncate" title={ env.Case.Name }>{ env.Case.Name }</li>
+				<li class="menu-title">Investigation</li>
 				@sidebarLink("/cases/"+env.Case.ID+"/summary/", "Summary", "house", title)
 				if !env.Case.IsTemplate {
 					@sidebarLink("/cases/"+env.Case.ID+"/events/", "Timeline", "clock", title)
