@@ -68,6 +68,7 @@ spacing:
   panel-pad: "0.75rem 1rem"
   section-gap: "1rem"
   ledger-grid: "28px"
+  sidebar-width: "11rem"
 components:
   button-primary:
     backgroundColor: "{colors.engraving-ink}"
@@ -311,9 +312,10 @@ the more readable value.
 
 ## Layout
 
-A fixed 176px sidebar with labels, sticky and full height, next to a flexible main column with
-1rem padding and 1rem gaps between sections. The sidebar is grouped under small monospace
-headings — workspace, the active case, analysis — with live counts right-aligned in each item.
+A fixed 176px (`--sidebar-w`) sidebar with labels, sticky and full height, next to a flexible main
+column with 1rem padding and 1rem gaps between sections. The sidebar is grouped under small
+monospace headings — workspace, the active case, analysis — with live counts right-aligned in each
+item.
 
 The page background has a **28px grid pattern**, made of two 1px lines at 3% ink. It's meant to be
 barely visible — it should look like paper texture, never like a visible table. This is a
@@ -325,6 +327,25 @@ strip above the table shows only numbers, on a panel, with groups of numbers sep
 
 The design targets desktop screens. There's no responsive breakpoint system, and small-screen
 support is intentionally not a priority.
+
+### Spacing
+
+Every padding, margin, and gap in the product is a multiple of Tailwind's own base unit (4px) —
+there's no separate spacing system layered on top of it. Most everyday spacing is picked from a
+small subset of that scale (4/8/12/16/24/32/48/64px); reaching further down the scale is for
+optical corrections, not a default.
+
+A handful of values that get read from more than one place are real CSS custom properties instead
+of restated numbers, so they can't drift apart from each other: `--cell-y`/`--cell-x` (grid cell
+padding), `--row-h` (grid row height), and `--sidebar-w` (the rail's width). Every page's main
+column offsets its content with the `.rail-offset` class — the rail's width plus the same 1rem edge
+padding every other side of the column already has, so content gets a normal margin of breathing
+room next to the rail rather than sitting flush against it. That relationship is a class in
+`dagobert.css`, not a value restated in each page's markup, for the same reason `--sidebar-w` is a
+variable and not five copies of "176px": before this, the rail and the offset were two
+independently hand-picked values that happened to differ by exactly that 1rem. Everything else in
+the spacing frontmatter above documents a value in consistent
+use, not a literal variable.
 
 ### Named Rules
 

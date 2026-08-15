@@ -35,7 +35,7 @@ templ Dashboard(env Env, from time.Time, to time.Time, matrixKey string, matrix 
 	@layout() {
 		<section id="errors"></section>
 		@sidebar(env, "Dashboard")
-		<main class="pl-48 p-4 grow max-w-full flex flex-col h-screen">
+		<main class="rail-offset p-4 grow max-w-full flex flex-col h-screen">
 			<form method="get" up-autosubmit up-target="#list" up-history="true">
 				@navbar(env, "Dashboard", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navHideRefresh(), navTitleIcon("chart-bar"), navSubtitle("Cross-case retrospective across every investigation you can access"), navPreButtons(dashboardDateExtra(from, to)))
 				<div id="list">

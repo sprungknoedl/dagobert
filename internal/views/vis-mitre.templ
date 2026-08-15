@@ -18,7 +18,7 @@ templ VisMitreAttack(env Env, counts map[string]int, maxCount int, matrix *attck
 	@layout() {
 		<section id="errors"></section>
 		@sidebar(env, "MITRE ATT&CK® Matrix")
-		<main class="pl-48 p-4 grow max-w-full flex flex-col h-screen">
+		<main class="rail-offset p-4 grow max-w-full flex flex-col h-screen">
 			<form method="get" up-autosubmit up-target="#list" up-history="true">
 				@navbar(env, "ATT&CK Navigator", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navHideRefresh(), navPreJoin(mitreLegend()), navPreButtons(mitreExtra(env, hide, matrixKey)), navSubtitle("Map observed techniques to the MITRE ATT&CK framework"))
 			</form>

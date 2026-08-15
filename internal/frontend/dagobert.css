@@ -157,6 +157,9 @@ loses.
 /* theme-invariant; kept apart so the themed blocks below hold only what varies */
 :root {
     --nav-h: 7rem;          /* the page header's declared height; see .pagehead */
+    --sidebar-w: 11rem;     /* the rail's width; every page offsetting its main
+                               column reads this instead of restating 176px, so
+                               the rail and the offset cannot drift apart */
 
     /* Row height is derived, not chosen: a row is the TALLEST thing it has to
        hold plus its padding, and in a grid with row actions that is the
@@ -175,6 +178,15 @@ loses.
     --cell-y: 0.5rem;       /* cell padding, block */
     --cell-x: 0.75rem;      /* cell padding, inline */
     --data-size: 0.8125rem; /* grid type: 13px */
+}
+
+/* Every page's main column sits next to the rail rather than under it, so its
+   left padding is the rail's width plus the same 1rem edge padding every
+   other side of the column already has — a normal margin of breathing room,
+   not a flush edge. A class rather than a calc() repeated in each page's
+   markup, so the relationship only has to be correct once. */
+.rail-offset {
+    padding-left: calc(var(--sidebar-w) + 1rem);
 }
 
 :root,
