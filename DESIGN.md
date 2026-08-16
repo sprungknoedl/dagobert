@@ -56,7 +56,6 @@ spacing:
   nav-item: "0.375rem 0.5rem"
   panel-pad: "1rem"
   section-gap: "1rem"
-  ledger-grid: "28px"
   sidebar-width: "11rem"
 components:
   button-primary:
@@ -131,9 +130,9 @@ A counting house is a place where people check numbers and make records add up. 
 with good light and ruled paper — not a trading floor, not a busy operations center. The app
 should feel like that kind of room.
 
-The design looks like engraved paper. A near-white sheet sits on a slightly darker background with
-a faint grid line pattern. Panels look cut from the sheet, with a thin outline. The layout is dense
-on purpose — someone comparing events across many hosts wants to see many rows, not extra padding.
+The design looks like engraved paper. A near-white sheet sits on a slightly darker, plain
+background. Panels look cut from the sheet, with a thin outline. The layout is dense on purpose —
+someone comparing events across many hosts wants to see many rows, not extra padding.
 
 There are two themes. **The Sheet** is the light theme: dark text on cream-colored paper. **The
 Plate** is the dark theme, named after the metal plate used to print an engraving — same drawing,
@@ -188,7 +187,7 @@ ladder, it probably doesn't belong in the system.
 
 ### Neutral
 - **Sheet Cream**: the surface color for panels and sheets — what content sits on.
-- **Deep Cream**: the page background behind the sheets, with the ledger grid on it.
+- **Deep Cream**: the plain page background behind the sheets.
 - **Rule Cream**: heavier dividing lines and plain fills.
 - **Engraving Ink**: all body text, and the fill color for active navigation items and primary
   buttons. A green-black color, never plain black.
@@ -254,9 +253,9 @@ light mark on a dark background reads with more contrast than the same percentag
 light background. So dimmed values go **down** on the dark theme (labels 45% → 40%) to keep the
 same visual hierarchy, while thin structural lines go **up** (12% → 14%, row lines 7% → 8%),
 because a thin light line on near-black is the first thing a screen loses. The engraved ring gets
-brighter for the same reason; the raised ring gets dimmer, since it needs less help. The ledger
-grid is tuned by eye, not by strict measurement (4% on the dark theme vs 3% on the light theme) —
-the standard contrast formula (WCAG) doesn't measure near-black well.
+brighter for the same reason; the raised ring gets dimmer, since it needs less help. These are
+tuned by eye, not by strict measurement — the standard contrast formula (WCAG) doesn't measure
+near-black well.
 
 **What the dark theme is not.** No neon on black, no cyan, no glow, no green-on-black terminal
 look. It's meant to feel like a quiet, warm object. Building the theme around the printing
@@ -317,9 +316,10 @@ column with 1rem padding and 1rem gaps between sections. The sidebar is grouped 
 monospace headings — workspace, the active case, analysis — with live counts right-aligned in each
 item.
 
-The page background has a **28px grid pattern**, made of two 1px lines at 3% ink. It's meant to be
-barely visible — it should look like paper texture, never like a visible table. This is a
-deliberate part of the visual identity, not random decoration.
+The page background is plain — a slightly deeper cream than the panels sitting on it, no pattern.
+A two-axis line grid used to run across it as "paper texture," but that's also the reflexive
+background every AI design tool reaches for, and the app already carries plenty of its own
+texture in table borders, panel rings, and hairlines; it didn't need a second source.
 
 Table rows are 40px tall, with thin 7%-ink dividing lines and sticky column headers. The summary
 strip above the table shows only numbers, on a panel, with groups of numbers separated by thin
@@ -395,8 +395,9 @@ sits on.
 ## Shapes
 
 Corners are almost square everywhere — only status dots and other true circles are fully round.
-Borders are 1px, and there's no texture beyond the ledger grid. Nothing uses a pill shape, and no
-corner radius is large enough to look soft. The overall look is straight-edged and ruled.
+Borders are 1px, and there's no background texture at all — hairlines and panel rings carry it.
+Nothing uses a pill shape, and no corner radius is large enough to look soft. The overall look is
+straight-edged and ruled.
 
 ## Components
 

@@ -31,7 +31,7 @@ becomes the line. The greens hold their chroma across the two.
     default: true;
     color-scheme: light;
     --color-base-100: oklch(98.8% 0.010 92);   /* sheet cream — panel faces */
-    --color-base-200: oklch(95.5% 0.018 92);   /* deep cream — the page ground, carries the grid */
+    --color-base-200: oklch(95.5% 0.018 92);   /* deep cream — the page ground */
     --color-base-300: oklch(90% 0.026 90);     /* rule cream — inert fills, heavier rules */
     --color-base-content: oklch(23% 0.030 165); /* engraving ink, a green-black */
     --color-primary: oklch(38% 0.082 162);     /* seal green — edges, certification, done */
@@ -69,7 +69,7 @@ becomes the line. The greens hold their chroma across the two.
     prefersdark: true;
     color-scheme: dark;
     --color-base-100: oklch(21% 0.012 165);    /* burnished field — panel faces, desaturated most */
-    --color-base-200: oklch(17% 0.015 165);    /* plate ground, carries the grid */
+    --color-base-200: oklch(17% 0.015 165);    /* plate ground */
     --color-base-300: oklch(28% 0.018 165);    /* inert fills, heavier rules */
     --color-base-content: oklch(90% 0.014 92); /* the engraved line — sheet cream, dimmed */
     --color-primary: oklch(78% 0.082 162);     /* verdigris: seal green, chroma held exactly */
@@ -207,7 +207,6 @@ loses.
     --ink-label: 45%;       /* micro-labels and column headers */
     --ink-form-label: 78%;  /* form field labels — see .form-control > .label */
     --ink-hover: 4%;        /* row and ghost-button hover */
-    --ink-grid: 3%;         /* the ledger grid */
     --wash-flag: 8%;        /* the flagged row, in accent */
     --ring-edge: 14%;       /* the engraved panel ring, in primary */
     --ring-raised: 26%;     /* the same ring on things that sit above the page */
@@ -220,10 +219,6 @@ theme — the OS preference with no cookie set, or an explicit choice the server
 writes as data-theme — and CSS cannot put a media query in a selector list, so
 the two rules apply the same set by reference. Add a token here and the two
 mappings pick it up; only the mapping lines are duplicated, never a number.
-
---ink-grid is held to the sheet's apparent weight rather than its percentage:
-at a matched 3% the grid measures the same ratio and reads visibly fainter,
-which is where WCAG's flare term misreports near-black. Judged on screen.
 */
 :root {
     --dark-rule-hair: 14%;
@@ -232,7 +227,6 @@ which is where WCAG's flare term misreports near-black. Judged on screen.
     --dark-ink-label: 40%;
     --dark-ink-form-label: 82%;
     --dark-ink-hover: 5%;
-    --dark-ink-grid: 4%;
     --dark-wash-flag: 10%;
     --dark-ring-edge: 18%;
     --dark-ring-raised: 24%;
@@ -248,7 +242,6 @@ which is where WCAG's flare term misreports near-black. Judged on screen.
         --ink-label: var(--dark-ink-label);
         --ink-form-label: var(--dark-ink-form-label);
         --ink-hover: var(--dark-ink-hover);
-        --ink-grid: var(--dark-ink-grid);
         --wash-flag: var(--dark-wash-flag);
         --ring-edge: var(--dark-ring-edge);
         --ring-raised: var(--dark-ring-raised);
@@ -263,7 +256,6 @@ which is where WCAG's flare term misreports near-black. Judged on screen.
     --ink-label: var(--dark-ink-label);
     --ink-form-label: var(--dark-ink-form-label);
     --ink-hover: var(--dark-ink-hover);
-    --ink-grid: var(--dark-ink-grid);
     --wash-flag: var(--dark-wash-flag);
     --ring-edge: var(--dark-ring-edge);
     --ring-raised: var(--dark-ring-raised);
@@ -273,17 +265,16 @@ which is where WCAG's flare term misreports near-black. Judged on screen.
 
 /*
 LEDGER GROUND
-A near-white sheet on a slightly deeper ground carrying a 28px ledger grid, at
-the edge of perception: it should register as paper texture, never as a visible
-table.
+A near-white sheet on a slightly deeper ground. A 28px two-axis grid used to
+run across this surface as "paper texture," but a uniform line grid is also
+the reflexive background every AI design tool reaches for, and this product
+has exactly one real canvas (the lateral-movement graph) — the rest of the
+app is dense with its own hairlines, panel rings, and table borders, which
+carry enough texture on their own. Plain ground, no pattern.
 */
 
 html {
     background-color: var(--color-base-200);
-    background-image:
-        linear-gradient(color-mix(in oklab, var(--color-base-content) var(--ink-grid), transparent) 1px, transparent 1px),
-        linear-gradient(90deg, color-mix(in oklab, var(--color-base-content) var(--ink-grid), transparent) 1px, transparent 1px);
-    background-size: 28px 28px;
 }
 
 /* the ground and its grid live on <html> so they reach past the end of the
