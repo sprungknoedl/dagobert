@@ -67,7 +67,7 @@ templ navSettingsTitle() {
 // told apart by weight and ink (see .crumb-ancestor), not by size.
 templ navbar(env Env, title string, opts ...navbarOption) {
 	{{ cfg := applynavOptions(opts) }}
-	<nav class="pagehead -mt-4 -mx-4 pt-4 px-4 pb-4 flex items-center gap-4 flex-wrap">
+	<nav class="pagehead -mt-6 -mx-6 pt-4 px-6 pb-4 flex items-center gap-4 flex-wrap">
 		<h1 class="grow min-w-0 font-serif text-2xl flex items-center gap-2 flex-wrap">
 			if cfg.preTitle != nil {
 				@cfg.preTitle
@@ -362,7 +362,7 @@ templ list(env Env, title string, opts ...navbarOption) {
 	<div class="drawer-content flex">
 		<section id="errors"></section>
 		@sidebar(env, title)
-		<main class="rail-offset p-4 grow max-w-full">
+		<main class="rail-offset p-6 grow max-w-full">
 			@navbar(env, title, opts...)
 			<div id="list">
 				{ children... }

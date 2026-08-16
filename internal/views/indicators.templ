@@ -15,7 +15,7 @@ templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]m
 	{{ summary := summarizeIndicators(rows) }}
 	@layout() {
 		@list(env, "Indicators", navHideImport(), navHideExport(), navPreButtons(indicatorsManyExtra(env))) {
-			<div class="stats w-full mb-4">
+			<div class="stats w-full mb-6">
 				@statTotal(len(rows))
 				for i, status := range env.ValueLists.IndicatorStatus {
 					@stat(status.Name, summary[status.Name], i == 0)

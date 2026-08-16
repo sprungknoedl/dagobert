@@ -21,7 +21,7 @@ templ AssetsMany(env Env, title string, rows []model.Asset, comments map[string]
 	{{ summary := summarizeAssets(rows) }}
 	@layout() {
 		@list(env, title) {
-			<div class="stats w-full mb-4">
+			<div class="stats w-full mb-6">
 				@statTotal(len(rows))
 				for i, status := range env.ValueLists.AssetStatus {
 					@stat(status.Name, summary[status.Name], i == 0)

@@ -54,8 +54,8 @@ spacing:
   row-height: "2.5rem"
   row-control: "1.5rem"
   nav-item: "0.375rem 0.5rem"
-  panel-pad: "1rem"
-  section-gap: "1rem"
+  panel-pad: "1.5rem"
+  section-gap: "1.5rem"
   sidebar-width: "11rem"
 components:
   button-primary:
@@ -312,7 +312,7 @@ the more readable value.
 ## Layout
 
 A fixed 176px (`--sidebar-w`) sidebar with labels, sticky and full height, next to a flexible main
-column with 1rem padding and 1rem gaps between sections. The sidebar is grouped under small
+column with 1.5rem padding and 1.5rem gaps between sections. The sidebar is grouped under small
 monospace headings — workspace, the active case, analysis — with live counts right-aligned in each
 item.
 
@@ -338,12 +338,13 @@ optical corrections, not a default.
 A handful of values that get read from more than one place are real CSS custom properties instead
 of restated numbers, so they can't drift apart from each other: `--cell-y`/`--cell-x` (grid cell
 padding), `--row-h` (grid row height), and `--sidebar-w` (the rail's width). Every page's main
-column offsets its content with the `.rail-offset` class — the rail's width plus the same 1rem edge
-padding every other side of the column already has, so content gets a normal margin of breathing
-room next to the rail rather than sitting flush against it. That relationship is a class in
-`dagobert.css`, not a value restated in each page's markup, for the same reason `--sidebar-w` is a
-variable and not five copies of "176px": before this, the rail and the offset were two
-independently hand-picked values that happened to differ by exactly that 1rem. Everything else in
+column offsets its content with the `.rail-offset` class — the rail's width plus the same 1.5rem
+edge padding every other side of the column already has, so content gets a normal margin of
+breathing room next to the rail rather than sitting flush against it. That relationship is a class
+in `dagobert.css`, not a value restated in each page's markup, for the same reason `--sidebar-w` is
+a variable and not five copies of "176px": before this, the rail and the offset were two
+independently hand-picked values that happened to differ by exactly that edge padding. Everything
+else in
 the spacing frontmatter above documents a value in consistent
 use, not a literal variable.
 
@@ -451,7 +452,7 @@ weight — told apart by weight and ink, not by size. Shares the rail's Sheet Cr
 hairline, edge to edge with the rail and the viewport, so the two read as one frame.
 
 ### Panels / Containers
-Sheet Cream ground, 1px hairline at 12% ink plus the engraved ring, 1rem internal padding.
+Sheet Cream ground, 1px hairline at 12% ink plus the engraved ring, 1.5rem internal padding.
 
 ### Data Grid
 The main component of the design. Collapsed borders, Data text style, 40px rows, sticky monospace

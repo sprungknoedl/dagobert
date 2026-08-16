@@ -31,7 +31,7 @@ becomes the line. The greens hold their chroma across the two.
     default: true;
     color-scheme: light;
     --color-base-100: oklch(98.8% 0.010 92);   /* sheet cream — panel faces */
-    --color-base-200: oklch(95.5% 0.018 92);   /* deep cream — the page ground */
+    --color-base-200: oklch(95.5% 0.018 92);   /* deep cream — the page ground, carries the grid */
     --color-base-300: oklch(90% 0.026 90);     /* rule cream — inert fills, heavier rules */
     --color-base-content: oklch(23% 0.030 165); /* engraving ink, a green-black */
     --color-primary: oklch(38% 0.082 162);     /* seal green — edges, certification, done */
@@ -69,7 +69,7 @@ becomes the line. The greens hold their chroma across the two.
     prefersdark: true;
     color-scheme: dark;
     --color-base-100: oklch(21% 0.012 165);    /* burnished field — panel faces, desaturated most */
-    --color-base-200: oklch(17% 0.015 165);    /* plate ground */
+    --color-base-200: oklch(17% 0.015 165);    /* plate ground, carries the grid */
     --color-base-300: oklch(28% 0.018 165);    /* inert fills, heavier rules */
     --color-base-content: oklch(90% 0.014 92); /* the engraved line — sheet cream, dimmed */
     --color-primary: oklch(78% 0.082 162);     /* verdigris: seal green, chroma held exactly */
@@ -191,12 +191,12 @@ loses.
 }
 
 /* Every page's main column sits next to the rail rather than under it, so its
-   left padding is the rail's width plus the same 1rem edge padding every
+   left padding is the rail's width plus the same 1.5rem edge padding every
    other side of the column already has — a normal margin of breathing room,
    not a flush edge. A class rather than a calc() repeated in each page's
    markup, so the relationship only has to be correct once. */
 .rail-offset {
-    padding-left: calc(var(--sidebar-w) + 1rem);
+    padding-left: calc(var(--sidebar-w) + 1.5rem);
 }
 
 :root,
@@ -501,7 +501,7 @@ up-cover-box .table :where(thead th),
     min-height: var(--nav-h);
     background-color: var(--color-base-100);
     border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .crumb-ancestor {
@@ -531,7 +531,7 @@ shadowed, generously padded tile instead.
     align-items: flex-end;
     column-gap: 2.5rem;
     row-gap: 1rem;
-    padding: 1rem;
+    padding: 1.5rem;
     background-color: var(--color-base-100);
     border: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
     border-radius: var(--radius-box);

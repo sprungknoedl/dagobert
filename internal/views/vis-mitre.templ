@@ -18,12 +18,12 @@ templ VisMitreAttack(env Env, counts map[string]int, maxCount int, matrix *attck
 	@layout() {
 		<section id="errors"></section>
 		@sidebar(env, "MITRE ATT&CK® Matrix")
-		<main class="rail-offset p-4 grow max-w-full flex flex-col h-screen">
+		<main class="rail-offset p-6 grow max-w-full flex flex-col h-screen">
 			<form method="get" up-autosubmit up-target="#list" up-history="true">
 				@navbar(env, "ATT&CK Navigator", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navHideRefresh(), navPreJoin(mitreLegend()), navPreButtons(mitreExtra(env, hide, matrixKey)))
 			</form>
 			<div id="list">
-				<div class="stats w-full mb-4">
+				<div class="stats w-full mb-6">
 					@stat("Tactics", stats.Tactics, false)
 					@stat("Techniques", stats.Techniques, false)
 					@stat("Events mapped", stats.Events, true)

@@ -35,7 +35,7 @@ templ Dashboard(env Env, from time.Time, to time.Time, matrixKey string, matrix 
 	@layout() {
 		<section id="errors"></section>
 		@sidebar(env, "Dashboard")
-		<main class="rail-offset p-4 grow max-w-full flex flex-col h-screen">
+		<main class="rail-offset p-6 grow max-w-full flex flex-col h-screen">
 			<form method="get" up-autosubmit up-target="#list" up-history="true">
 				@navbar(env, "Dashboard", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navHideRefresh(), navTitleIcon("chart-bar"), navPreButtons(dashboardDateExtra(from, to)))
 				<div id="list">
@@ -157,7 +157,7 @@ templ dashboardDateExtra(from time.Time, to time.Time) {
 // each — a bar's colour must never imply a status judgement, so they are told
 // apart by heading and position now, and every bar is the same ink.
 templ dashboardBreakdownCard(title string, rows []DashboardBreakdownRow, total int) {
-	<div class="panel p-4">
+	<div class="panel p-6">
 		<div class="label-micro pb-1.5 mb-2 border-b hair2">{ title }</div>
 		if len(rows) == 0 {
 			<p class="font-serif text-base-content/55">No cases in scope.</p>

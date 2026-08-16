@@ -28,7 +28,7 @@ func techniques(mitre attck.KB, e model.Event) iter.Seq[attck.Technique] {
 templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators []model.Indicator, mitre attck.KB, comments map[string]int) {
 	@layout() {
 		@list(env, "Timeline", navHideImport(), navPreButtons(eventsManyExtra(env))) {
-			<div id="histogram" class="panel text-xs my-4 p-4" up-data={ histogramJSON(rows) }></div>
+			<div id="histogram" class="panel text-xs my-6 p-6" up-data={ histogramJSON(rows) }></div>
 			<!-- -->
 			<table class="table table-default" data-default-sort="value-0">
 				<thead>

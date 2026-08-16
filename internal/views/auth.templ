@@ -17,7 +17,7 @@ templ Login(errmsg string) {
 				<div class="text-4xl font-serif font-semibold">[dagobert]</div>
 				<p class="font-serif italic text-base-content/55 mt-1">incident response, documented.</p>
 			</div>
-			<div class="mt-12 sm:mx-auto sm:w-full sm:max-w-sm panel p-4">
+			<div class="mt-12 sm:mx-auto sm:w-full sm:max-w-sm panel p-6">
 				<form action="/auth/login" method="POST" class="space-y-4">
 					if errmsg != "" {
 						<p class="text-error flex items-center gap-2 text-sm"><i class="ph ph-warning-circle"></i> { errmsg }</p>

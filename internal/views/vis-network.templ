@@ -54,7 +54,7 @@ templ VisNetwork(env Env, nodes []Node, edges []Edge, hideIndicators bool) {
 	@layout() {
 		<section id="errors"></section>
 		@sidebar(env, "Lateral Movement")
-		<main class="rail-offset p-4 grow max-w-full flex flex-col h-screen">
+		<main class="rail-offset p-6 grow max-w-full flex flex-col h-screen">
 			<form method="get" up-autosubmit up-target="#graph" up-history="true">
 				@navbar(env, "Lateral Movement Graph", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navHideRefresh(),
 					navPreButtons(networkControls(hideIndicators)))
@@ -67,7 +67,7 @@ templ VisNetwork(env Env, nodes []Node, edges []Edge, hideIndicators bool) {
 				if len(nodes) == 0 {
 					@networkEmpty(env, hideIndicators)
 				} else {
-					<div class="stats w-full mb-4 flex-none">
+					<div class="stats w-full mb-6 flex-none">
 						@stat("Assets", c.Assets, false)
 						@stat("Links", c.Movements, false)
 						if !hideIndicators {
