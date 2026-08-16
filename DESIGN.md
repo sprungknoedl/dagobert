@@ -11,9 +11,9 @@ colors:
   engraving-ink: "oklch(23% 0.030 165)"
   status-severe: "oklch(48% 0.170 25)"
   status-ink: "oklch(23% 0.030 165 / 60%)"
-  plate-ground: "oklch(17% 0.020 165)"
-  plate-field: "oklch(21% 0.022 165)"
-  plate-rule: "oklch(28% 0.024 165)"
+  plate-ground: "oklch(17% 0.015 165)"
+  plate-field: "oklch(21% 0.012 165)"
+  plate-rule: "oklch(28% 0.018 165)"
   burnished-line: "oklch(90% 0.014 92)"
   verdigris: "oklch(78% 0.082 162)"
   signal-bright: "oklch(70% 0.148 158)"
@@ -227,7 +227,10 @@ from one of these rules doesn't belong in the theme.
 
 1. **The ink becomes the background.** The page and panels use Engraving Ink's own hue (165), just
    made darker. No black, no plain grey — the dark theme is built from the same color the light
-   theme writes with.
+   theme writes with. The surfaces carry noticeably less chroma than the ink itself (0.012–0.018
+   against the ink's 0.030) so the background reads as a dark neutral rather than a green room;
+   Panel Field is the most muted of the three; Plate Rule stays the most saturated, since it never
+   fills a large area.
 2. **The sheet becomes the text.** All text uses Sheet Cream's hue (92) at 90% lightness — bright
    enough to read clearly, but dim enough not to glare across a page of small monospace text.
    Full-brightness cream would glare.

@@ -68,27 +68,27 @@ becomes the line. The greens hold their chroma across the two.
     name: "dagobert-dark";
     prefersdark: true;
     color-scheme: dark;
-    --color-base-100: oklch(21% 0.022 165);    /* burnished field — panel faces */
-    --color-base-200: oklch(17% 0.020 165);    /* plate ground, carries the grid */
-    --color-base-300: oklch(28% 0.024 165);    /* inert fills, heavier rules */
+    --color-base-100: oklch(21% 0.012 165);    /* burnished field — panel faces, desaturated most */
+    --color-base-200: oklch(17% 0.015 165);    /* plate ground, carries the grid */
+    --color-base-300: oklch(28% 0.018 165);    /* inert fills, heavier rules */
     --color-base-content: oklch(90% 0.014 92); /* the engraved line — sheet cream, dimmed */
     --color-primary: oklch(78% 0.082 162);     /* verdigris: seal green, chroma held exactly */
-    --color-primary-content: oklch(17% 0.020 165);
+    --color-primary-content: oklch(17% 0.015 165);
     --color-secondary: oklch(64% 0.105 85);    /* brass — gold on metal, still the lowest rung */
     --color-secondary-content: oklch(96% 0.012 92);
     --color-accent: oklch(70% 0.148 158);      /* the one signal; in gamut where the sheet value is not */
-    --color-accent-content: oklch(17% 0.020 165);
+    --color-accent-content: oklch(17% 0.015 165);
     --color-neutral: oklch(86% 0.018 92);
-    --color-neutral-content: oklch(17% 0.020 165);
+    --color-neutral-content: oklch(17% 0.015 165);
     --color-success: oklch(78% 0.082 162);
-    --color-success-content: oklch(17% 0.020 165);
+    --color-success-content: oklch(17% 0.015 165);
     --color-info: oklch(74% 0.016 165);
-    --color-info-content: oklch(17% 0.020 165);
+    --color-info-content: oklch(17% 0.015 165);
     --color-warning: oklch(74% 0.016 165);
-    --color-warning-content: oklch(17% 0.020 165);
+    --color-warning-content: oklch(17% 0.015 165);
     --color-error: oklch(66% 0.172 25);        /* severity rises to stay legible, chroma held so it
                                                   reads as red rather than drifting to salmon */
-    --color-error-content: oklch(17% 0.020 165);
+    --color-error-content: oklch(17% 0.015 165);
     --radius-selector: 0.25rem;
     --radius-field: 0.1875rem;
     --radius-box: 0.25rem;
