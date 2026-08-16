@@ -68,9 +68,9 @@ becomes the line. The greens hold their chroma across the two.
     name: "dagobert-dark";
     prefersdark: true;
     color-scheme: dark;
-    --color-base-100: oklch(21% 0.012 165);    /* burnished field — panel faces, desaturated most */
-    --color-base-200: oklch(17% 0.015 165);    /* plate ground, carries the grid */
-    --color-base-300: oklch(28% 0.018 165);    /* inert fills, heavier rules */
+    --color-base-100: oklch(21% 0.008 165);    /* burnished field — panel faces, desaturated most */
+    --color-base-200: oklch(17% 0.010 165);    /* plate ground, carries the grid */
+    --color-base-300: oklch(28% 0.012 165);    /* inert fills, heavier rules */
     --color-base-content: oklch(90% 0.014 92); /* the engraved line — sheet cream, dimmed */
     --color-primary: oklch(78% 0.082 162);     /* verdigris: seal green, chroma held exactly */
     --color-primary-content: oklch(17% 0.015 165);
@@ -228,9 +228,9 @@ mappings pick it up; only the mapping lines are duplicated, never a number.
     --dark-ink-form-label: 82%;
     --dark-ink-hover: 5%;
     --dark-wash-flag: 10%;
-    --dark-ring-edge: 18%;
-    --dark-ring-raised: 24%;
-    --dark-ring-medallion: 50%;
+    --dark-ring-edge: 10%;
+    --dark-ring-raised: 14%;
+    --dark-ring-medallion: 30%;
 }
 
 /* :not() so an explicit light choice still wins on a dark-preferring OS */
