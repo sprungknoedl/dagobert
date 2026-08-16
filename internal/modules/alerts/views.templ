@@ -1,0 +1,14 @@
+package alerts
+
+templ (m *Module) RenderSettings() {
+	<div class="form-control mb-2">
+		<label class="label justify-start gap-2">
+			Severity
+		</label>
+		<select name="Settings[severity]" class="select w-full">
+			<option>all</option>
+			<option>high</option>
+			<option>critical</option>
+		</select>
+	</div>
+}
