@@ -29,12 +29,12 @@ func setupWorkerDB(t *testing.T) *model.Store {
 // Supports() gate every TI module implements.
 type fakeModule struct{}
 
-func (fakeModule) Name() string                                       { return "FakeTI" }
-func (fakeModule) Description() string                                { return "" }
-func (fakeModule) Validate() (model.Module, error)                    { return fakeModule{}, nil }
-func (fakeModule) Run(context.Context, *model.Store, model.Job) error { return nil }
-func (fakeModule) RenderResults() templ.Component                     { return templ.NopComponent }
-func (fakeModule) RenderSettings() templ.Component                    { return templ.NopComponent }
+func (fakeModule) Name() string                                        { return "FakeTI" }
+func (fakeModule) Description() string                                 { return "" }
+func (fakeModule) Validate() (model.Module, error)                     { return fakeModule{}, nil }
+func (fakeModule) Run(context.Context, *model.Store, *model.Job) error { return nil }
+func (fakeModule) RenderResults() templ.Component                      { return templ.NopComponent }
+func (fakeModule) RenderSettings() templ.Component                     { return templ.NopComponent }
 func (fakeModule) Supports(obj any) bool {
 	ind, ok := obj.(model.Indicator)
 	return ok && ind.TLP != "TLP:RED"
@@ -148,9 +148,9 @@ func TestTriggerOnCaseSettingsPropagation(t *testing.T) {
 // into this package via automation-rules.go's rule compilation).
 type webhookModule struct{}
 
-func (webhookModule) Name() string                                       { return "Webhook" }
-func (webhookModule) Description() string                                { return "" }
-func (webhookModule) Validate() (model.Module, error)                    { return webhookModule{}, nil }
-func (webhookModule) Run(context.Context, *model.Store, model.Job) error { return nil }
-func (webhookModule) RenderSettings() templ.Component                    { return templ.NopComponent }
-func (webhookModule) Supports(obj any) bool                              { return true }
+func (webhookModule) Name() string                                        { return "Webhook" }
+func (webhookModule) Description() string                                 { return "" }
+func (webhookModule) Validate() (model.Module, error)                     { return webhookModule{}, nil }
+func (webhookModule) Run(context.Context, *model.Store, *model.Job) error { return nil }
+func (webhookModule) RenderSettings() templ.Component                     { return templ.NopComponent }
+func (webhookModule) Supports(obj any) bool                               { return true }

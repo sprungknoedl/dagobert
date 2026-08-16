@@ -78,7 +78,7 @@ func AddFromFS(store *model.Store, obj model.Evidence, module string) error {
 	}
 }
 
-func GuardEvidenceRun(m model.Module, job model.Job) (model.Evidence, error) {
+func GuardEvidenceRun(m model.Module, job *model.Job) (model.Evidence, error) {
 	obj, ok := job.Object.Payload.(model.Evidence)
 	if !ok {
 		return model.Evidence{}, fmt.Errorf("%s: unsupported type '%T'", m.Name(), job.Object.Payload)
@@ -91,7 +91,7 @@ func GuardEvidenceRun(m model.Module, job model.Job) (model.Evidence, error) {
 	return obj, nil
 }
 
-func GuardIndicatorRun(m model.Module, job model.Job) (model.Indicator, error) {
+func GuardIndicatorRun(m model.Module, job *model.Job) (model.Indicator, error) {
 	obj, ok := job.Object.Payload.(model.Indicator)
 	if !ok {
 		return model.Indicator{}, fmt.Errorf("%s: unsupported type '%T'", m.Name(), job.Object.Payload)

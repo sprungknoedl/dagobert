@@ -60,7 +60,7 @@ func TestRun(t *testing.T) {
 			},
 		}
 
-		err := m.Run(context.Background(), nil, job)
+		err := m.Run(context.Background(), nil, &job)
 		assert.Nil(t, err)
 		assert.Equal(t, "evidence.added", gotEvent)
 		assert.Equal(t, "", gotSig)
@@ -91,7 +91,7 @@ func TestRun(t *testing.T) {
 			Settings: map[string]string{"url": srv.URL, "event": "case.added", "rule": "r"},
 		}
 
-		assert.Nil(t, m.Run(context.Background(), nil, job))
+		assert.Nil(t, m.Run(context.Background(), nil, &job))
 
 		mac := hmac.New(sha256.New, []byte("s3cr3t"))
 		mac.Write(gotBody)
@@ -110,7 +110,7 @@ func TestRun(t *testing.T) {
 			Settings: map[string]string{"url": srv.URL, "event": "case.added", "rule": "r"},
 		}
 
-		err := m.Run(context.Background(), nil, job)
+		err := m.Run(context.Background(), nil, &job)
 		assert.NotNil(t, err)
 	})
 
@@ -118,7 +118,7 @@ func TestRun(t *testing.T) {
 		m := &Module{}
 		job := model.Job{Settings: map[string]string{"event": "case.added", "rule": "r"}}
 
-		err := m.Run(context.Background(), nil, job)
+		err := m.Run(context.Background(), nil, &job)
 		assert.NotNil(t, err)
 	})
 }

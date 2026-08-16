@@ -155,7 +155,7 @@ func runner(ctx context.Context, store *model.Store, modules map[string]model.Mo
 				}
 
 				job.Case = kase
-				if err := modules[job.Name].Run(ctx, store, job); err != nil {
+				if err := modules[job.Name].Run(ctx, store, &job); err != nil {
 					slog.Warn("failed to process job", "job", job.ID, "module", job.Name, "err", err)
 					return err.Error()
 				}
@@ -163,9 +163,10 @@ func runner(ctx context.Context, store *model.Store, modules map[string]model.Mo
 			}()
 
 			err = store.AckJob(model.Job{
-				ID:     job.ID,
-				Status: fp.If(errmsg != "", "Failed", "Success"),
-				Error:  errmsg,
+				ID:      job.ID,
+				Status:  fp.If(errmsg != "", "Failed", "Success"),
+				Error:   errmsg,
+				Results: job.Results,
 			})
 			if err != nil {
 				slog.Warn("failed to ack job", "job", job.ID, "module", job.Name, "err", err)

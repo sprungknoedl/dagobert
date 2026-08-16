@@ -60,7 +60,7 @@ type envelope struct {
 	Object    any       `json:"object"`
 }
 
-func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) error {
+func (m *Module) Run(ctx context.Context, store *model.Store, job *model.Job) error {
 	url := job.Settings["url"]
 	event := job.Settings["event"]
 	rule := job.Settings["rule"]

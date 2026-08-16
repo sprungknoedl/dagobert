@@ -58,7 +58,7 @@ func (m *Module) Validate() (model.Module, error) {
 	return m, nil
 }
 
-func (m *Module) Run(ctx context.Context, store *model.Store, job model.Job) error {
+func (m *Module) Run(ctx context.Context, store *model.Store, job *model.Job) error {
 	ind, err := utils.GuardIndicatorRun(m, job)
 	if err != nil {
 		return err
