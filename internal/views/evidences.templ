@@ -56,10 +56,10 @@ templ EvidencesMany(env Env, rows []model.Evidence, comments map[string]int) {
 								<td class="value-1" data-search={ row.Name }>
 									{ row.Name }
 									if row.Fileless {
-										<i class="ph ph-4 ph-file-dashed text-base-content/40" title="External evidence — no stored file"></i>
+										<i class="ph ph-4 ph-file-dashed text-muted" title="External evidence — no stored file"></i>
 									}
 									if row.Password != "" {
-										<i class="ph ph-4 ph-lock text-base-content/40" title="Archive password stored"></i>
+										<i class="ph ph-4 ph-lock text-muted" title="Archive password stored"></i>
 									}
 								</td>
 								<td class="value-2 font-mono text-xs" data-search={ row.Hash }>{ row.Hash } </td>
@@ -203,7 +203,7 @@ templ EvidenceLogsMany(env Env, rows []model.EvidenceLog, live map[string]model.
 				<h1 class="font-serif font-semibold text-2xl grow">Evidence Log</h1>
 				<label class="w-96 input flex items-center gap-2">
 					<input type="search" name="search" class="search grow" placeholder="Search ..."/>
-					<svg class="w-6 h-6 opacity-70" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+					<svg class="w-6 h-6 text-muted" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
 						<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"></path>
 					</svg>
 				</label>
@@ -229,7 +229,7 @@ templ EvidenceLogsMany(env Env, rows []model.EvidenceLog, live map[string]model.
 							<tr>
 								<td colspan="100" class="empty-cell">
 									@medallion("medallion-lg w-24 h-24 mx-auto mb-6")
-									<p class="font-serif text-lg text-base-content/75">No access recorded yet.</p>
+									<p class="font-serif text-lg text-muted">No access recorded yet.</p>
 								</td>
 							</tr>
 						} else {
@@ -245,7 +245,7 @@ templ EvidenceLogsMany(env Env, rows []model.EvidenceLog, live map[string]model.
 												{ ev.Name }
 											</a>
 										} else {
-											<span class="line-through text-base-content/50">{ row.Name }</span>
+											<span class="line-through text-muted">{ row.Name }</span>
 											<span class="badge badge-sm badge-ghost ml-2">deleted</span>
 										}
 									</td>

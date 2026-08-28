@@ -172,20 +172,20 @@ loses.
                                column reads this instead of restating 176px, so
                                the rail and the offset cannot drift apart */
 
-    /* Row height is derived, not chosen: a row is the TALLEST thing it has to
-       hold plus its padding, and in a grid with row actions that is the
-       control, not the text.
+    /* Row height is derived, not chosen: a row is the TALLEST thing any grid
+       has to hold plus its padding. That used to be the 24px row-action
+       control; it's now the Indicators grid's enrichment cell, a verdict word
+       over a row of dots — a genuine second text line, not a control.
 
-           text     13px x 1.45 line-height   = 19px
-           control  24px (the WCAG 2.2 floor
-                    for a pointer target)     = 24px  <- governs
-           + 8px padding top + 8px bottom     = 16px
-                                              = 40px
+           line 1   13px x 1.45 line-height     = 19px
+           line 2   8px dot row + 4px gap above = 12px  <- governs
+           + 8px padding top + 8px bottom       = 16px
+                                                = 47px, rounded up to 48px
 
-       --row-h is a min-height, so content taller than it simply wins. Row
-       actions must stay at btn-xs (24px) for this to hold; btn-sm's 32px
-       pushes every row in the product to 48. */
-    --row-h: 2.5rem;        /* grid row height: 40px + the 1px row rule */
+       --row-h is a min-height, so content taller than it simply wins; nothing
+       currently needs more than this. Recalculate whenever a grid grows a
+       taller cell. */
+    --row-h: 3rem;           /* grid row height: 48px + the 1px row rule */
     --cell-y: 0.5rem;       /* cell padding, block */
     --cell-x: 0.75rem;      /* cell padding, inline */
 }
@@ -206,6 +206,7 @@ loses.
     --rule-row: 7%;         /* grid row separators */
     --ink-label: 45%;       /* micro-labels and column headers */
     --ink-form-label: 78%;  /* form field labels — see .form-control > .label */
+    --ink-muted: 60%;       /* de-emphasized value text — see .text-muted */
     --ink-hover: 4%;        /* row and ghost-button hover */
     --wash-flag: 8%;        /* the flagged row, in accent */
     --ring-edge: 14%;       /* the engraved panel ring, in primary */
@@ -226,6 +227,7 @@ mappings pick it up; only the mapping lines are duplicated, never a number.
     --dark-rule-row: 8%;
     --dark-ink-label: 40%;
     --dark-ink-form-label: 82%;
+    --dark-ink-muted: 55%;
     --dark-ink-hover: 5%;
     --dark-wash-flag: 10%;
     --dark-ring-edge: 10%;
@@ -241,6 +243,7 @@ mappings pick it up; only the mapping lines are duplicated, never a number.
         --rule-row: var(--dark-rule-row);
         --ink-label: var(--dark-ink-label);
         --ink-form-label: var(--dark-ink-form-label);
+        --ink-muted: var(--dark-ink-muted);
         --ink-hover: var(--dark-ink-hover);
         --wash-flag: var(--dark-wash-flag);
         --ring-edge: var(--dark-ring-edge);
@@ -371,6 +374,16 @@ a caption does (see .form-control > .label), and a badge takes its own.
     line-height: 1.2;
 }
 
+/* The one way to dim a value that is still live and readable — a secondary
+   count, a built-in/system row, a superseded name — rather than each call
+   site picking its own opacity. Colour-mixed rather than `opacity`, so it
+   dims the text without also fading any icon or background riding along
+   with it. Not for placeholder/absent values (plain ink) or status text
+   (the dot-and-word states already carry their own ink). */
+.text-muted {
+    color: color-mix(in oklab, var(--color-base-content) var(--ink-muted), transparent);
+}
+
 /* tabular figures anywhere a user might compare values down a column */
 .num,
 .font-mono,
@@ -381,7 +394,7 @@ table :where(td, th) {
 
 /*
 THE DATA GRID
-Collapsed borders, 13px type, 40px rows, sticky monospace column headers, and
+Collapsed borders, 13px type, 48px rows, sticky monospace column headers, and
 row separators at 7% ink. The row height is derived from the tallest thing a
 row must hold rather than picked — see --row-h.
 
@@ -602,7 +615,11 @@ something.
 }
 
 .dot-ink {
-    background-color: color-mix(in oklab, var(--color-base-content) 60%, transparent);
+    background-color: var(--color-base-content);
+}
+
+.dot-error {
+    background-color: var(--color-error);
 }
 
 /*

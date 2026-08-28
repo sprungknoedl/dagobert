@@ -27,7 +27,7 @@ templ TasksMany(env Env, rows []model.Task, comments map[string]int) {
 					} else {
 						for _, row := range rows {
 							<tr class="row-hover">
-								<td class={ "value-0 truncate " + fp.If(!row.Done && time.Now().After(time.Time(row.DateDue)), "text-accent", "") } data-search={ row.DateDue.Format("2006-01-02") }>
+								<td class={ "value-0 truncate " + fp.If(!row.Done && time.Now().After(time.Time(row.DateDue)), "text-error", "") } data-search={ row.DateDue.Format("2006-01-02") }>
 									{ row.DateDue.Format("2006-01-02") }
 								</td>
 								<td class="value-1 truncate" data-search={ row.Type }>
@@ -37,9 +37,9 @@ templ TasksMany(env Env, rows []model.Task, comments map[string]int) {
 								<td class="value-3" data-search={ row.Owner }>{ row.Owner } </td>
 								<td class="value-4" data-search={ fp.If(row.Done, "Done", "Open") }>
 									if row.Done {
-										<span class="inline-flex items-center gap-2 label-micro"><span class="dot bg-success"></span>Done</span>
+										<span class="inline-flex items-center gap-2"><span class="dot bg-success"></span>Done</span>
 									} else {
-										<span class="inline-flex items-center gap-2 label-micro"><span class="dot dot-ink"></span>Open</span>
+										<span class="inline-flex items-center gap-2"><span class="dot dot-ink"></span>Open</span>
 									}
 								</td>
 								<td class="text-right">

@@ -28,9 +28,9 @@ templ SettingsAutomationRulesMany(env Env, rows []model.AutomationRule) {
 							<tr class="row-hover">
 								<td class="value-0" data-search={ fp.If(row.Enabled, "Enabled", "Disabled") }>
 									if row.Enabled {
-										<div class="inline-flex items-center gap-2 label-micro"><span class="dot bg-success"></span>Enabled</div>
+										<div class="inline-flex items-center gap-2"><span class="dot bg-success"></span>Enabled</div>
 									} else {
-										<div class="inline-flex items-center gap-2 label-micro"><span class="dot dot-ink"></span>Disabled</div>
+										<div class="inline-flex items-center gap-2"><span class="dot dot-ink"></span>Disabled</div>
 									}
 								</td>
 								<td class="value-1" data-search={ row.Trigger }>{ row.Trigger } </td>
@@ -65,7 +65,7 @@ templ SettingsAutomationRulesOne(env Env, obj model.AutomationRule, item []model
 				@requiredLabel()
 				@validationError(vr["Module"])
 				<span class="tooltip tooltip-right" data-tip="The worker module to run when the condition matches. Modules are registered by the background worker process.">
-					<i class="ph ph-4 ph-question text-base-content/40 cursor-help"></i>
+					<i class="ph ph-4 ph-question text-muted cursor-help"></i>
 				</span>
 			</label>
 			<select name="Module" class="select w-full" up-switch="#webhook-url">

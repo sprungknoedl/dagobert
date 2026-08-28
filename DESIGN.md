@@ -51,7 +51,7 @@ rounded:
 spacing:
   cell-y: "0.5rem"
   cell-x: "0.75rem"
-  row-height: "2.5rem"
+  row-height: "3rem"
   row-control: "1.5rem"
   nav-item: "0.375rem 0.5rem"
   panel-pad: "1.5rem"
@@ -144,7 +144,7 @@ rules that create it.
 - Looks like engraved paper, not glass or a typical dashboard
 - Text style carries meaning: serif for page titles, grotesk (sans-serif) for regular text,
   monospace for every label
-- Dense by design: 40px rows, 13px text size for data — these numbers come from a formula, not
+- Dense by design: 48px rows, 13px text size for data — these numbers come from a formula, not
   personal taste
 - One family of green, in different strengths; red is the only other color used
 - No shadows anywhere; instead of shadows, a thin line marks depth
@@ -321,7 +321,7 @@ A two-axis line grid used to run across it as "paper texture," but that's also t
 background every AI design tool reaches for, and the app already carries plenty of its own
 texture in table borders, panel rings, and hairlines; it didn't need a second source.
 
-Table rows are 40px tall, with thin 7%-ink dividing lines and sticky column headers. The summary
+Table rows are 48px tall, with thin 7%-ink dividing lines and sticky column headers. The summary
 strip above the table shows only numbers, on a panel, with groups of numbers separated by thin
 1px vertical lines at 12% ink.
 
@@ -350,25 +350,24 @@ use, not a literal variable.
 
 ### Named Rules
 
-**The Density Rule.** 40px rows and 13px data text. Density is the goal — anything that shows
+**The Density Rule.** 48px rows and 13px data text. Density is the goal — anything that shows
 fewer rows per screen needs a better reason than "it's more comfortable." But the row height is
-**calculated, not just picked**:
+**calculated, not just picked**: it's the tallest cell any grid has to hold, plus its padding. That
+used to be the 24px row-action control; it's now the Indicators grid's enrichment cell, a verdict
+word over a row of dots — a genuine second text line, not a control:
 
 ```
-row = max(text line box, tallest control) + 2 x cell-y
+row = tallest cell content + 2 x cell-y
 
-     text     13px x 1.45          = 19px
-     control  24px (WCAG 2.2 min
-              pointer target)      = 24px   <- governs
-     padding  8px + 8px            = 16px
-                                   = 40px
+     line 1   13px x 1.45 line-height       = 19px
+     line 2   8px dot row + 4px gap above   = 12px   <- governs
+     padding  8px + 8px                     = 16px
+                                            = 47px, rounded up to 48px
 ```
 
-The control size sets the row height, not the text — this is the part that's easy to get wrong.
 `row-height` is a **minimum** height, so if the content is taller, it simply wins: an earlier
-attempt at 28px actually rendered as 33px. That's why row actions stay at the 24px control size —
-switching to a 32px button would push every row in the app to 48px. Recalculate this whenever text
-size, control size, or cell padding changes.
+attempt at 28px actually rendered as 33px. Recalculate this whenever the tallest cell in any grid
+changes, not just when text size, control size, or cell padding does.
 
 A cell should never wrap text just to save a column — give the value its own column instead. (This
 is why TLP and event counts are columns, not a second line of text.) Wrapping adds height to every
@@ -440,7 +439,7 @@ the current two.
   Banknote Green outline at 2px offset, never removed.
 
 ### Navigation (rail)
-- Labelled text items with a Phosphor icon at 55% opacity, near-square radius, counts
+- Labelled text items with a Phosphor icon in the muted ink, near-square radius, counts
   right-aligned in the label style, grouped under monospace micro-headings.
 - **Active:** Engraving Ink fill with Sheet Cream text and a filled-weight icon.
 - Icon-only navigation was rejected: it doesn't work well for keyboard and screen-reader users.
@@ -455,7 +454,7 @@ hairline, edge to edge with the rail and the viewport, so the two read as one fr
 Sheet Cream ground, 1px hairline at 12% ink plus the engraved ring, 1.5rem internal padding.
 
 ### Data Grid
-The main component of the design. Collapsed borders, Data text style, 40px rows, sticky monospace
+The main component of the design. Collapsed borders, Data text style, 48px rows, sticky monospace
 column headers with a 22% underline, row dividers at 7% ink, and a 120ms background transition on
 hover. The keyboard cursor row looks different from a hover state: an 8% Banknote Green wash plus
 a 2px line on the left edge.
@@ -505,8 +504,8 @@ at. The physics simulation settles before the first paint. The Freeze button sto
 starts already frozen if the user's system has `prefers-reduced-motion` turned on.
 
 ### Inputs
-Hairline border, Sheet Cream ground, near-square radius, Data type, a leading Phosphor icon at 45%
-opacity, and a trailing monospace key hint.
+Hairline border, Sheet Cream ground, near-square radius, Data type, a leading Phosphor icon in the
+muted ink, and a trailing monospace key hint.
 
 ### Form Sheet (drawers)
 

@@ -205,8 +205,8 @@ templ closeConfirmFooter(outstanding []string) {
 	// The prompt lives in the footer, beside the button that acts on it, rather
 	// than at the end of the form the user has already scrolled past.
 	<div class="min-w-0">
-		<div class="label-micro mb-1">This case still has outstanding items</div>
-		<ul class="text-xs text-base-content/70 list-disc list-inside">
+		<div class="mb-1">This case still has outstanding items</div>
+		<ul class="text-xs text-muted list-disc list-inside">
 			for _, msg := range outstanding {
 				<li>{ msg }</li>
 			}
@@ -263,8 +263,8 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 			<section class="panel p-6 mt-6">
 				<div class="label-micro mb-3">Executive summary</div>
 				if obj.Summary == "" {
-					<p class="font-serif text-lg text-base-content/75 mb-1">Nothing on record yet.</p>
-					<p class="text-sm text-base-content/55">Use the Edit button to add a narrative describing what happened, the scope of impact, and how it was resolved.</p>
+					<p class="font-serif text-lg text-muted mb-1">Nothing on record yet.</p>
+					<p class="text-sm text-muted">Use the Edit button to add a narrative describing what happened, the scope of impact, and how it was resolved.</p>
 				} else {
 					<article class="prose max-w-none">
 						@markdown(obj.Summary)
@@ -278,12 +278,12 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 					<div>
 						<div class="label-micro pb-1.5 mb-2 border-b hair2">Key Events</div>
 						if len(keyEvents) == 0 {
-							<p class="font-serif text-base-content/55">No events flagged — yet.</p>
+							<p class="font-serif text-muted">No events flagged — yet.</p>
 						} else {
 							<ul class="space-y-2 text-xs">
 								for _, ev := range keyEvents {
 									<li class="flex gap-2">
-										<span class="font-mono opacity-45 shrink-0" title={ ev.Time.Format("2006-01-02 15:04:05 Z07:00") }>
+										<span class="font-mono text-muted shrink-0" title={ ev.Time.Format("2006-01-02 15:04:05 Z07:00") }>
 											{ ev.Time.Format("01-02 15:04") }
 										</span>
 										<span>
@@ -298,7 +298,7 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 					<div>
 						<div class="label-micro pb-1.5 mb-2 border-b hair2">Compromised Assets</div>
 						if len(compromisedAssets) == 0 {
-							<p class="font-serif text-base-content/55">No assets marked as compromised.</p>
+							<p class="font-serif text-muted">No assets marked as compromised.</p>
 						} else {
 							<ul class="space-y-2 text-xs font-mono">
 								for _, a := range compromisedAssets {
@@ -314,7 +314,7 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 					<div>
 						<div class="label-micro pb-1.5 mb-2 border-b hair2">Key Indicators</div>
 						if len(flaggedIndicators) == 0 {
-							<p class="font-serif text-base-content/55">No indicators flagged — yet.</p>
+							<p class="font-serif text-muted">No indicators flagged — yet.</p>
 						} else {
 							<ul class="space-y-2 text-xs font-mono">
 								for _, i := range flaggedIndicators {
@@ -343,18 +343,18 @@ templ CaseSwitcher(env Env, cases []model.Case, from string, to string) {
 				<input type="hidden" name="from" value={ from }/>
 				<input type="hidden" name="to" value={ to }/>
 				<label class="w-full input flex items-center gap-2 mb-3">
-					<i class="ph ph-magnifying-glass opacity-45"></i>
+					<i class="ph ph-magnifying-glass text-muted"></i>
 					<input type="text" name="search" class="search grow" placeholder="Switch to case ..." autofocus autocomplete="off"/>
 				</label>
 			</form>
 			<ul id="switch-results" class="menu w-full gap-1 flex-nowrap max-h-96 overflow-y-auto">
 				if len(cases) == 0 {
-					<li class="p-2 text-center font-serif text-base-content/55">No matching cases.</li>
+					<li class="p-2 text-center font-serif text-muted">No matching cases.</li>
 				} else {
 					for _, c := range cases {
 						<li>
 							<a href={ "/cases/" + c.ID + "/" + to } class="switch-result flex items-center gap-2">
-								<i class="ph ph-5 ph-briefcase opacity-60"></i>
+								<i class="ph ph-5 ph-briefcase text-muted"></i>
 								<span class="grow truncate">{ c.Name }</span>
 								@caseStatusPill(c.Closed)
 							</a>
@@ -369,12 +369,12 @@ templ CaseSwitcher(env Env, cases []model.Case, from string, to string) {
 // A dot plus the word, like every other status. An open case is not an alarm,
 // so neither state takes a hue; the green marks the one that is finished.
 templ caseStatusPill(closed bool) {
-	<span class="inline-flex items-center gap-2 label-micro">
+	<span class={ "inline-flex items-center gap-2", templ.KV("text-error", !closed) }>
 		if closed {
-			<span class="dot bg-success"></span>
+			<span class="dot dot-ink"></span>
 			Closed
 		} else {
-			<span class="dot dot-ink"></span>
+			<span class="dot dot-error"></span>
 			Open
 		}
 	</span>

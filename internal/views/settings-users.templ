@@ -28,12 +28,12 @@ templ SettingsUsersMany(env Env, rows []model.User) {
 					} else {
 						for _, row := range rows {
 							{{ sortKey := fp.If(row.Builtin(), "1_", "0_") }}
-							<tr class={ "row-hover" + fp.If(row.Builtin(), " text-base-content/50", "") }>
+							<tr class={ "row-hover" + fp.If(row.Builtin(), " text-muted", "") }>
 								<td class="value-0" data-search={ sortKey + row.Name }>
 									<span class="flex items-center gap-2">
 										{ row.Name }
 										if row.Builtin() {
-											<i class="ph ph-4 ph-lock text-base-content/40" title="Built-in account"></i>
+											<i class="ph ph-4 ph-lock text-muted" title="Built-in account"></i>
 										}
 									</span>
 								</td>

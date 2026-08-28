@@ -58,7 +58,7 @@ templ Dashboard(env Env, from time.Time, to time.Time, matrixKey string, matrix 
 						<div class="stat">
 							<div class="stat-title">Median time-to-close</div>
 							if stats.HasMedian {
-								<div class="stat-value">{ fmt.Sprintf("%.1f", stats.MedianCloseDays) } <span class="text-base font-normal text-base-content/50">days</span></div>
+								<div class="stat-value">{ fmt.Sprintf("%.1f", stats.MedianCloseDays) } <span class="text-base font-normal text-muted">days</span></div>
 							} else {
 								<div class="stat-value">—</div>
 							}
@@ -73,10 +73,10 @@ templ Dashboard(env Env, from time.Time, to time.Time, matrixKey string, matrix 
 					<div class="flex items-end justify-between gap-4 mb-3">
 						<div>
 							<h2 class="text-xl font-serif font-semibold">MITRE ATT&CK® Heatmap</h2>
-							<p class="text-xs text-base-content/55 mt-2">Number of distinct cases each technique appears in, across the cases in scope</p>
+							<p class="text-xs text-muted mt-2">Number of distinct cases each technique appears in, across the cases in scope</p>
 						</div>
 						<div class="flex items-center gap-4">
-							<div class="flex items-center gap-2 label-micro">
+							<div class="flex items-center gap-2 text-xs text-muted">
 								@heatmapLegend("cases")
 							</div>
 							<div class="join" role="group" up-autosubmit>
@@ -118,7 +118,7 @@ templ Dashboard(env Env, from time.Time, to time.Time, matrixKey string, matrix 
 												<td class={ templ.KV("bg-base-200", t.IsSubTechnique) } style={ heatmapCellStyle(count, stats.MaxTechniqueCount) }>
 													<a target="_blank" href={ "https://attack.mitre.org/techniques/" + t.ID }>{ t.Name }</a>
 													if count > 0 {
-														<div class="text-xs font-mono opacity-70">
+														<div class="text-xs font-mono text-muted">
 															{ count }
 															if count == 1 {
 																case
@@ -160,7 +160,7 @@ templ dashboardBreakdownCard(title string, rows []DashboardBreakdownRow, total i
 	<div class="panel p-6">
 		<div class="label-micro pb-1.5 mb-2 border-b hair2">{ title }</div>
 		if len(rows) == 0 {
-			<p class="font-serif text-base-content/55">No cases in scope.</p>
+			<p class="font-serif text-muted">No cases in scope.</p>
 		}
 		for _, row := range rows {
 			{{ pct := 0 }}
@@ -169,9 +169,9 @@ templ dashboardBreakdownCard(title string, rows []DashboardBreakdownRow, total i
 			}
 			{{ bar := fp.If(row.Value == "Unset", "bar-inert", "bar-ink") }}
 			<div class="mb-3">
-				<div class={ "flex justify-between text-sm mb-1", templ.KV("italic text-base-content/50", row.Value == "Unset") }>
+				<div class={ "flex justify-between text-sm mb-1", templ.KV("italic text-muted", row.Value == "Unset") }>
 					<span>{ row.Value }</span>
-					<span class="font-mono text-base-content/60">{ row.Count }</span>
+					<span class="font-mono text-muted">{ row.Count }</span>
 				</div>
 				<div class="h-1.5 bg-base-200 overflow-hidden rounded-xs">
 					<div class={ "h-full", bar } style={ fmt.Sprintf("width: %d%%", pct) }></div>

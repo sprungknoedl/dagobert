@@ -78,7 +78,7 @@ templ VisNetwork(env Env, nodes []Node, edges []Edge, hideIndicators bool) {
 							// none", which is a different fact from "not drawn"
 							<div class="stat stat-group">
 								<div class="stat-title">Indicators</div>
-								<div class="stat-value opacity-30">—</div>
+								<div class="stat-value text-muted">—</div>
 							</div>
 						}
 					</div>
@@ -92,7 +92,7 @@ templ VisNetwork(env Env, nodes []Node, edges []Edge, hideIndicators bool) {
 								aria-label={ networkSummary(c) }
 								up-data={ networkJSON(env, nodes, edges) }
 							></div>
-							<p class="graph-status label-micro" data-graph-status>Plotting graph …</p>
+							<p class="graph-status text-sm" data-graph-status>Plotting graph …</p>
 						</div>
 						@networkKey(hideIndicators)
 					</div>
@@ -148,8 +148,8 @@ templ networkKey(hideIndicators bool) {
 templ networkEmpty(env Env, hideIndicators bool) {
 	<div class="panel grow min-h-0 flex flex-col items-center justify-center text-center px-8 py-14">
 		@medallion("medallion-lg w-24 h-24 mb-6")
-		<p class="font-serif text-lg text-base-content/75 mb-2">Nothing has moved yet.</p>
-		<p class="text-sm text-base-content/55 max-w-md leading-relaxed">
+		<p class="font-serif text-lg text-muted mb-2">Nothing has moved yet.</p>
+		<p class="text-sm text-muted max-w-md leading-relaxed">
 			This sheet is drawn from the timeline: record an event that names two or more
 			assets and the link between them appears here. Indicators attached to the same
 			event hang off the assets they were seen with.
@@ -165,7 +165,7 @@ templ networkEmpty(env Env, hideIndicators bool) {
 			</a>
 		</div>
 		if hideIndicators {
-			<p class="label-micro mt-8">Indicators are hidden</p>
+			<p class="text-sm text-muted mt-8">Indicators are hidden</p>
 		}
 	</div>
 }

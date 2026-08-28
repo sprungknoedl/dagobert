@@ -21,7 +21,7 @@ templ ConfirmDialog(dst string, opts ...ConfirmOption) {
 				<span class="notice-mark" aria-hidden="true"><i class="ph ph-trash"></i></span>
 				<div class="grow min-w-0">
 					<h1 class="font-serif text-xl font-semibold leading-tight">Delete this record?</h1>
-					<p class="text-sm text-base-content/70 mt-2">This is permanent and cannot be undone.</p>
+					<p class="text-sm text-muted mt-2">This is permanent and cannot be undone.</p>
 				</div>
 			</header>
 			<footer class="form-foot">
@@ -77,7 +77,7 @@ templ ImportDialog() {
 					</a>
 				</header>
 				<div class="form-body">
-					<p class="flex items-center gap-2 mb-4 text-sm text-base-content/70">
+					<p class="flex items-center gap-2 mb-4 text-sm text-muted">
 						<i class="ph ph-5 ph-info inline-block"></i>
 						Please note, that dagobert will attempt to deduplicate entries.
 					</p>
@@ -111,7 +111,7 @@ templ ImportErrors(errs []ImportRowError) {
 				<span class="notice-mark" aria-hidden="true"><i class="ph ph-warning-circle"></i></span>
 				<div class="grow min-w-0">
 					<h1 class="font-serif text-xl font-semibold leading-tight">Import failed</h1>
-					<p class="text-sm text-base-content/70 mt-2">Nothing was imported. Fix the rows below and re-upload.</p>
+					<p class="text-sm text-muted mt-2">Nothing was imported. Fix the rows below and re-upload.</p>
 				</div>
 			</header>
 			<div class="form-body">
@@ -141,7 +141,7 @@ templ ImportArchiveDialog() {
 					</a>
 				</header>
 				<div class="form-body">
-					<p class="flex items-start gap-2 mb-4 text-sm text-base-content/70">
+					<p class="flex items-start gap-2 mb-4 text-sm text-muted">
 						<i class="ph ph-5 ph-info inline-block"></i>
 						<span>Select a <span class="font-mono">.dagobert.zip</span> archive. The case is recreated with its original IDs — importing a case that already exists will fail.</span>
 					</p>
@@ -203,7 +203,7 @@ templ ImportArchiveConfirm(m model.Manifest, token string) {
 					if len(m.Warnings) > 0 {
 						<div class="alert alert-warning alert-soft mb-4 text-sm" role="alert">
 							<div>
-								<p class="label-micro mb-1">Export warnings</p>
+								<p class="mb-1">Export warnings</p>
 								<ul class="list-disc ml-4">
 									for _, warn := range m.Warnings {
 										<li>{ warn }</li>
@@ -212,7 +212,7 @@ templ ImportArchiveConfirm(m model.Manifest, token string) {
 							</div>
 						</div>
 					}
-					<p class="flex items-start gap-2 text-sm text-base-content/60">
+					<p class="flex items-start gap-2 text-sm text-muted">
 						<i class="ph ph-5 ph-info inline-block"></i>
 						<span>Record values referencing customizable valueLists (classifications, types, TLP, …) are imported as-is. Values this instance does not define will show as uncustomized — reconcile your valueLists if needed.</span>
 					</p>
@@ -234,7 +234,7 @@ templ ToastError(err error) {
 			<div class="seal seal-severe" role="alert" data-remove-self>
 				<span class="seal-mark" aria-hidden="true"><i class="ph ph-x-circle"></i></span>
 				<div class="seal-body">
-					<div class="label-micro">Failed</div>
+					<div>Failed</div>
 					<div class="seal-msg">{ err.Error() }</div>
 				</div>
 			</div>
@@ -248,7 +248,7 @@ templ ToastWarning(err error) {
 			<div class="seal" role="alert" data-remove-self>
 				<span class="seal-mark" aria-hidden="true"><i class="ph ph-warning-circle"></i></span>
 				<div class="seal-body">
-					<div class="label-micro">Not recorded</div>
+					<div>Not recorded</div>
 					<div class="seal-msg">{ err.Error() }</div>
 				</div>
 			</div>

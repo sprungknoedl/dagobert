@@ -221,7 +221,7 @@ up.compiler('[data-theme-toggle]', (btn) => {
         }
 
         // keep in sync with themeToggleIcon + the rail's icon classes in layout.templ
-        icon.className = 'ph ph-6 opacity-55 ' +
+        icon.className = 'ph ph-6 text-muted ' +
             (next === 'dagobert' ? 'ph-sun' : next === 'dagobert-dark' ? 'ph-moon' : 'ph-circle-half');
     });
 });
@@ -289,8 +289,8 @@ up.compiler('table:has([data-href])', (table) => {
 });
 
 // showToast renders a success toast into the root #errors section: a seal
-// glyph, a monospace caption with the time, and the message. Matches the markup
-// of the server-rendered ToastError/ToastWarning.
+// glyph, a caption with the time, and the message. Matches the markup of the
+// server-rendered ToastError/ToastWarning.
 function showToast(message) {
     const container = document.querySelector('#errors');
     if (!container) { return; }
@@ -302,9 +302,9 @@ function showToast(message) {
     seal.setAttribute('aria-live', 'polite');
     seal.onclick = () => seal.remove();
     seal.innerHTML = '<span class="seal-mark" aria-hidden="true"><i class="ph ph-seal-check"></i></span>'
-        + '<div class="seal-body"><div class="label-micro"></div>'
+        + '<div class="seal-body"><div></div>'
         + '<div class="seal-msg"></div></div>';
-    seal.querySelector('.label-micro').textContent =
+    seal.querySelector('.seal-body div').textContent =
         'Recorded · ' + new Date().toLocaleTimeString([], { hour12: false });
     seal.querySelector('.seal-msg').textContent = message;
     container.appendChild(seal);

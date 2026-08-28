@@ -17,7 +17,7 @@ templ CommentsDialog(env Env, kind string, oid string, rows []model.Comment, edi
 			<h1 class="font-serif text-2xl mb-4">Comments</h1>
 			<div class="mb-4">
 				if len(rows) == 0 {
-					<p class="text-base-content/60 mb-4">No comments yet.</p>
+					<p class="text-muted mb-4">No comments yet.</p>
 				}
 				for _, row := range rows {
 					<div class={ "mb-4" + fp.If(row.ID == edit.ID, " p-2 bg-flagged rounded-box", "") }>

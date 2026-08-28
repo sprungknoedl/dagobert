@@ -146,7 +146,7 @@ templ fieldLabel(cfg formConfig) {
 		@cfg.validation
 		if cfg.hint != "" {
 			<span class="tooltip tooltip-right" data-tip={ cfg.hint }>
-				<i class="ph ph-4 ph-question text-base-content/40 cursor-help"></i>
+				<i class="ph ph-4 ph-question text-muted cursor-help"></i>
 			</span>
 		}
 	</label>
@@ -232,7 +232,7 @@ templ booleanField(name string, value bool, opts ...formOption) {
 			@cfg.label
 			if cfg.hint != "" {
 				<span class="tooltip tooltip-right" data-tip={ cfg.hint }>
-					<i class="ph ph-4 ph-question text-base-content/40 cursor-help"></i>
+					<i class="ph ph-4 ph-question text-muted cursor-help"></i>
 				</span>
 			}
 		</label>
@@ -249,7 +249,7 @@ templ textareaField(name string, value string, opts ...formOption) {
 
 templ markdownField(name string, value string, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
-	{{ cfg.label = templ.Join(cfg.label, templ.Raw(`<i class="ph ph-4 ph-markdown-logo text-base-content/40" title="Supports markdown" aria-label="Supports markdown" role="img"></i>`)) }}
+	{{ cfg.label = templ.Join(cfg.label, templ.Raw(`<i class="ph ph-4 ph-markdown-logo text-muted" title="Supports markdown" aria-label="Supports markdown" role="img"></i>`)) }}
 	<div class="form-control mb-2">
 		@fieldLabel(cfg)
 		<textarea name={ name } rows="3" class="textarea w-full" data-markdown>{ value }</textarea>

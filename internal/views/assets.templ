@@ -64,7 +64,7 @@ templ AssetsMany(env Env, title string, rows []model.Asset, comments map[string]
 										@formatTime(row.LastSeen)
 									}
 									<br/>
-									<span class="text-xs opacity-50">{ fmt.Sprintf("%d events", row.Events) }</span>
+									<span class="text-xs text-muted">{ fmt.Sprintf("%d events", row.Events) }</span>
 								</td>
 								<td class="value-5" data-search={ row.Notes }>{ row.Notes } </td>
 								<td class="text-right">

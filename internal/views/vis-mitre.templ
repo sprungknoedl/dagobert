@@ -47,7 +47,7 @@ templ VisMitreAttack(env Env, counts map[string]int, maxCount int, matrix *attck
 											<td class={ templ.KV("bg-base-200", t.IsSubTechnique) } style={ heatmapCellStyle(count, maxCount) }>
 												<a target="_blank" href={ "https://attack.mitre.org/techniques/" + t.ID }>{ t.Name }</a>
 												if count > 0 {
-													<div class="text-xs font-mono opacity-70">
+													<div class="text-xs font-mono text-muted">
 														{ count }
 														if count == 1 {
 															event
@@ -106,7 +106,7 @@ templ heatmapLegend(unit string) {
 // group instead of inside it, where a non-button element would break the
 // group's joined corner styling.
 templ mitreLegend() {
-	<div class="flex items-center gap-2 text-xs text-base-content/60">
+	<div class="flex items-center gap-2 text-xs text-muted">
 		@heatmapLegend("events")
 	</div>
 }

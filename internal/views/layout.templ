@@ -57,7 +57,7 @@ templ navSettingsTitle() {
 		<i class="ph ph-6 ph-gear-six inline-block"></i>
 		Settings
 	</a>
-	<span class="opacity-45">/</span>
+	<span class="text-muted">/</span>
 }
 
 // navbar is the page header: a breadcrumb trail that doubles as the page
@@ -84,7 +84,7 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 					<i class="ph ph-6 ph-briefcase inline-block"></i>
 					{ env.Case.Name }
 				</a>
-				<span class="opacity-45">/</span>
+				<span class="text-muted">/</span>
 			}
 			if cfg.titleIcon != "" {
 				<i class={ "ph ph-6 ph-" + cfg.titleIcon + " inline-block" }></i>
@@ -98,7 +98,7 @@ templ navbar(env Env, title string, opts ...navbarOption) {
 			if !cfg.hideSearch {
 				<!-- search input -->
 				<label class="w-72 input flex items-center gap-2">
-					<i class="ph ph-magnifying-glass opacity-45"></i>
+					<i class="ph ph-magnifying-glass text-muted"></i>
 					<input type="search" name="search" class="search grow" placeholder="Filter rows ..."/>
 				</label>
 			}
@@ -139,7 +139,7 @@ templ sidebarLink(url string, title string, icon string, page string) {
 	{{ active := title == page }}
 	<li>
 		<a href={ url } class={ fp.If(active, "menu-active", "") }>
-			<i class={ "ph ph-6 ph-" + icon, templ.KV("opacity-55", !active) }></i>
+			<i class={ "ph ph-6 ph-" + icon, templ.KV("text-muted", !active) }></i>
 			{ title }
 		</a>
 	</li>
@@ -194,7 +194,7 @@ templ sidebar(env Env, title string) {
 					@sidebarLink("/cases/"+env.Case.ID+"/vis/mitre", "Techniques", "compass", title)
 					<li>
 						<a href={ "/cases/" + env.Case.ID + "/reports" } up-layer="new drawer">
-							<i class="ph ph-6 ph-file-arrow-down opacity-55"></i>
+							<i class="ph ph-6 ph-file-arrow-down text-muted"></i>
 							Report
 						</a>
 					</li>
@@ -208,19 +208,19 @@ templ sidebar(env Env, title string) {
 			}
 			<li>
 				<a data-theme-toggle title="Toggle theme">
-					<i class={ "ph ph-6 opacity-55 " + themeToggleIcon(themeFromContext(ctx)) }></i>
+					<i class={ "ph ph-6 text-muted " + themeToggleIcon(themeFromContext(ctx)) }></i>
 					Theme
 				</a>
 			</li>
 			<li>
 				<a href="/auth/changepassword" up-layer="new drawer">
-					<i class="ph ph-6 ph-key opacity-55"></i>
+					<i class="ph ph-6 ph-key text-muted"></i>
 					Password
 				</a>
 			</li>
 			<li>
 				<a href="/auth/logout">
-					<i class="ph ph-6 ph-sign-out opacity-55"></i>
+					<i class="ph ph-6 ph-sign-out text-muted"></i>
 					Sign out
 				</a>
 			</li>
@@ -232,7 +232,7 @@ templ formatTime(t model.Time) {
 	if t.IsZero() {
 		-
 	} else {
-		<span class="font-mono text-xs">{ t.Format("2006-01-02 15:04:05") } <span class="text-base-content/40">{ t.Format("Z07:00") }</span></span>
+		<span class="font-mono text-xs">{ t.Format("2006-01-02 15:04:05") } <span class="text-muted">{ t.Format("Z07:00") }</span></span>
 	}
 }
 
@@ -283,18 +283,18 @@ templ statusDot(list []model.ValueListItem, value string) {
 	{{ x := findValue(list, value) }}
 	if x.Name != "" {
 		<span class={ "inline-flex items-center gap-2", templ.KV("text-error", x.State == "error") }>
-			<span class={ "dot", fp.If(x.State == "error", "bg-error", "dot-ink") }></span>
+			<span class={ "dot", fp.If(x.State == "error", "dot-error", "dot-ink") }></span>
 			{ x.Name }
 		</span>
 	}
 }
 
-// valueMono renders a classification (TLP and the like) as a monospace mark in
-// the label voice — an identifier to be read rather than a badge.
+// valueMono renders a classification (TLP and the like) as plain ink text,
+// taking the severe colour only when the value list marks it as such.
 templ valueMono(list []model.ValueListItem, value string) {
 	{{ x := findValue(list, value) }}
 	if x.Name != "" {
-		<span class={ "label-micro", templ.KV("text-error", x.State == "error") }>{ x.Name }</span>
+		<span class={ templ.KV("text-error", x.State == "error") }>{ x.Name }</span>
 	}
 }
 
@@ -315,9 +315,9 @@ templ valueBadge(list []model.ValueListItem, value string) {
 templ typeIcon(list []model.ValueListItem, value string) {
 	{{ x := findValue(list, value) }}
 	if x.Icon != "" {
-		<i class={ "ph ph-5 shrink-0 opacity-45 " + x.Icon } title={ x.Name }></i>
+		<i class={ "ph ph-5 shrink-0 text-muted " + x.Icon } title={ x.Name }></i>
 	} else {
-		<i class="ph ph-5 ph-dot-outline shrink-0 opacity-45" title={ x.Name }></i>
+		<i class="ph ph-5 ph-dot-outline shrink-0 text-muted" title={ x.Name }></i>
 	}
 }
 
@@ -395,12 +395,12 @@ templ emptyTable(env Env, voice string, desc string) {
 		<td colspan="100" class="empty-cell">
 			@medallion("medallion-lg w-32 h-32 mx-auto mb-6")
 			if voice != "" {
-				<p class="font-serif text-lg text-base-content/75 mb-2">{ voice }</p>
+				<p class="font-serif text-lg text-muted mb-2">{ voice }</p>
 			}
 			if desc != "" {
-				<p class="text-sm text-base-content/55 max-w-md mx-auto leading-relaxed">{ desc }</p>
+				<p class="text-sm text-muted max-w-md mx-auto leading-relaxed">{ desc }</p>
 			} else {
-				<p class="text-sm text-base-content/55">Nothing recorded yet.</p>
+				<p class="text-sm text-muted">Nothing recorded yet.</p>
 			}
 			@emptyActions(env)
 		</td>
