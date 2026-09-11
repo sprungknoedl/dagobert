@@ -209,8 +209,9 @@ loses.
     --ink-muted: 60%;       /* de-emphasized value text — see .text-muted */
     --ink-hover: 4%;        /* row and ghost-button hover */
     --wash-flag: 8%;        /* the flagged row, in accent */
-    --ring-edge: 14%;       /* the engraved panel ring, in primary */
-    --ring-raised: 26%;     /* the same ring on things that sit above the page */
+    --ring-edge: 26%;       /* the engraved panel ring, in primary — struck deep
+                               enough to actually read as a cut edge on cream */
+    --ring-raised: 40%;     /* the same ring on things that sit above the page */
     --ring-medallion: 45%;
 }
 
@@ -230,8 +231,8 @@ mappings pick it up; only the mapping lines are duplicated, never a number.
     --dark-ink-muted: 55%;
     --dark-ink-hover: 5%;
     --dark-wash-flag: 10%;
-    --dark-ring-edge: 10%;
-    --dark-ring-raised: 14%;
+    --dark-ring-edge: 18%;
+    --dark-ring-raised: 26%;
     --dark-ring-medallion: 30%;
 }
 
@@ -360,12 +361,24 @@ a caption does (see .form-control > .label), and a badge takes its own.
     text-transform: uppercase;
 }
 
+/*
+The mono label voice is drawn in Seal Green — column headers, the rail's
+section headings, readout captions, fieldset legends, form field labels,
+dividers. Seal is the system's structural colour ("edges, certification,
+done"), and a label IS structure; drawn in green it reads as engraved ruling
+rather than grey mush, and every screen gains a spine of colour without a
+single new hue. The mono voice — face, size, tracking, caps — is untouched,
+and the badge keeps its own colour. Seal clears 4.5:1 on both grounds, so a
+form label is more legible here than on the dim ink it used to carry.
+*/
 .label-micro,
 .stat-title,
 .menu-title,
 .divider,
-.table :where(thead th) {
-    color: color-mix(in oklab, var(--color-base-content) var(--ink-label), transparent);
+.table :where(thead th),
+.form-control > .label,
+.form-control > .label > :where(span, .label-text) {
+    color: var(--color-primary);
 }
 
 .label-micro,
@@ -480,8 +493,11 @@ Wrapping costs every row in the grid; a column costs width once.
     transition: background-color 120ms ease;
 }
 
+/* row hover is a faint Seal wash rather than a grey one — the same structural
+   green the headers and rings carry, at a strength you feel more than see. It
+   stays clear of the cursor row, which is the brighter accent plus a left bar. */
 .table :where(tbody tr):hover {
-    background-color: color-mix(in oklab, var(--color-base-content) var(--ink-hover), transparent);
+    background-color: color-mix(in oklab, var(--color-primary) var(--ink-hover), transparent);
 }
 
 /* flagged-for-review is the one row-level mark, and it takes the accent rather
@@ -513,8 +529,18 @@ up-cover-box .table :where(thead th),
     z-index: 10;
     min-height: var(--nav-h);
     background-color: var(--color-base-100);
-    border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
+    /* the masthead rule is drawn in seal green at emphasis weight — the page
+       title sits on a ruled line, the way a ledger page is headed */
+    border-bottom: 1px solid color-mix(in oklab, var(--color-primary) var(--rule-hair2), transparent);
     margin-bottom: 1.5rem;
+}
+
+/* the breadcrumb-title at full display conviction: larger than body Display,
+   tracked in, high optical size for the engraved cut of the serif */
+.pagehead h1 {
+    font-size: 1.75rem;
+    letter-spacing: -0.011em;
+    font-variation-settings: 'opsz' 120, 'WONK' 0;
 }
 
 .crumb-ancestor {
@@ -696,12 +722,10 @@ Hairline border, sheet ground, near-square, 12px type, a leading icon at 45%.
     border-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);
 }
 
-/* Form labels carry the label voice but not the label opacity. A caption
-   sitting beside the figure it describes can afford 45% ink; the only thing
-   naming a form field cannot — it measures 2.8:1 on the light theme, below the
-   4.5:1 floor for text a user has to read to use the form. */
+/* Form labels take the seal-green label voice set above; here they only need
+   their own spacing. Green clears the 4.5:1 floor on both grounds, so the
+   readability carve-out the dim-ink version needed no longer applies. */
 .form-control > .label {
-    color: color-mix(in oklab, var(--color-base-content) var(--ink-form-label), transparent);
     padding-bottom: 0.5rem;
 }
 
@@ -730,10 +754,14 @@ Icon-only navigation is rejected: it fails keyboard and screen-reader users.
     background-color: color-mix(in oklab, var(--color-base-content) var(--ink-hover), transparent);
 }
 
+/* The active rail item fills with Seal Green rather than ink: "where you are"
+   is a certification mark, and it earns the structural colour. It stays a
+   small fill — one item — so it holds on the dark theme too, where primary is
+   the bright verdigris. */
 .menu :where(li > .menu-active),
 .menu :where(li > .menu-active):hover {
-    background-color: var(--color-base-content);
-    color: var(--color-base-100);
+    background-color: var(--color-primary);
+    color: var(--color-primary-content);
 }
 
 .divider::before,

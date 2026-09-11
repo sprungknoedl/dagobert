@@ -20,6 +20,13 @@ colors:
   severe-bright: "oklch(66% 0.172 25)"
   assay-brass: "oklch(64% 0.105 85)"
 typography:
+  title:
+    fontFamily: "Fraunces Variable, Georgia, serif"
+    fontSize: "1.75rem"
+    fontWeight: 600
+    lineHeight: 1.1
+    letterSpacing: "-0.011em"
+    fontVariation: "'opsz' 120, 'WONK' 0"
   display:
     fontFamily: "Fraunces Variable, Georgia, serif"
     fontSize: "1.5rem"
@@ -42,6 +49,7 @@ typography:
     fontWeight: 600
     lineHeight: 1.2
     letterSpacing: "0.14em"
+    color: "{colors.seal-green}"
 rounded:
   hint: "0.125rem"
   field: "0.1875rem"
@@ -83,7 +91,7 @@ components:
     rounded: "{rounded.field}"
     padding: "{spacing.nav-item}"
   nav-item-active:
-    backgroundColor: "{colors.engraving-ink}"
+    backgroundColor: "{colors.seal-green}"
     textColor: "{colors.sheet-cream}"
     typography: "{typography.body}"
     rounded: "{rounded.field}"
@@ -162,7 +170,7 @@ The core color idea. Three greens, all the same hue, but different in lightness 
 | Role | Chroma | On cream |
 |---|---|---|
 | **Ink** — everything you read | .030 | 16.2:1 |
-| **Seal** — edges, certification, done | .082 | 9.3:1 |
+| **Seal** — edges, certification, done, every mono label | .082 | 9.3:1 |
 | **Signal** — look here | .140 | 5.3:1 |
 
 **The Chroma Ladder Rule.** Each step roughly doubles the color intensity; lightness goes up and
@@ -171,8 +179,12 @@ green is used the least, and never for large blocks of text. If a new color does
 ladder, it probably doesn't belong in the system.
 
 ### Primary
-- **Seal Green**: the main structural color. Used for panel edge rings, the medallion ring, and
-  success messages. Almost never fills a whole area — it outlines and marks things as confirmed.
+- **Seal Green**: the main structural color. Used for panel edge rings, the medallion ring, success
+  messages, the mono label voice (column headers, sidebar section headings, readout captions,
+  fieldset legends, form field labels), the page-header masthead rule, and the row-hover wash. Its
+  one filled use is the active navigation item — everywhere else it outlines, rules, or letters.
+  Drawn on every label it is the spine of colour that runs through every screen; because Ink still
+  carries all the body text, a screen of seal-green labels over ink data still reads calm.
 
 ### Secondary
 - **Assay Gold**: used rarely, for emphasis in headings and sample labels. It's the warmest color
@@ -189,8 +201,8 @@ ladder, it probably doesn't belong in the system.
 - **Sheet Cream**: the surface color for panels and sheets — what content sits on.
 - **Deep Cream**: the plain page background behind the sheets.
 - **Rule Cream**: heavier dividing lines and plain fills.
-- **Engraving Ink**: all body text, and the fill color for active navigation items and primary
-  buttons. A green-black color, never plain black.
+- **Engraving Ink**: all body text, and the fill color for primary buttons. A green-black color,
+  never plain black.
 
 ### Status
 
@@ -216,7 +228,10 @@ actually stands out and means something.
 
 **The Scarce Signal Rule.** Banknote Green is the only color allowed to mean "look here." It's
 never used for decoration. If a screen uses it more than three or four times, it stops being a
-signal. Signal (green) and severity (red) do different jobs — never mix them.
+signal. Signal (green) and severity (red) do different jobs — never mix them. Seal Green on the
+labels does not touch this: it is a different rung, darker and duller, and it letters the
+*structure* of a screen, never a value inside it — the eye still goes to the one bright signal
+because nothing else on the page is that light or that saturated.
 
 ### The Plate (dark theme)
 
@@ -245,13 +260,15 @@ on which theme is active.
 **The Small Fill Rule.** An inverted fill on the light theme is dark ink on a bright page — it
 reads like a printed header. On the dark theme, that same inversion becomes cream-colored, and a
 full-width band of that would glare — defeating the whole point of choosing a dark theme. So
-inverted fills stay small on the dark theme: primary buttons, the active sidebar item. Anything
-full-width sinks into the background instead.
+inverted fills stay small on the dark theme: primary buttons. The active sidebar item fills with
+Seal Green — bright verdigris on the dark theme — and holds to the same size limit: one rail item,
+never a full-width band. Anything full-width sinks into the background instead.
 
 **The Asymmetric Dim Rule.** Opacity percentages don't carry over directly between themes — a
 light mark on a dark background reads with more contrast than the same percentage looks like on a
-light background. So dimmed values go **down** on the dark theme (labels 45% → 40%) to keep the
-same visual hierarchy, while thin structural lines go **up** (12% → 14%, row lines 7% → 8%),
+light background. So dimmed values go **down** on the dark theme (muted value text 60% → 55%,
+micro-captions 45% → 40%) to keep the same visual hierarchy, while thin structural lines go **up**
+(12% → 14%, row lines 7% → 8%),
 because a thin light line on near-black is the first thing a screen loses. The engraved ring gets
 brighter for the same reason; the raised ring gets dimmer, since it needs less help. These are
 tuned by eye, not by strict measurement — the standard contrast formula (WCAG) doesn't measure
@@ -275,19 +292,24 @@ self-hosted (`.woff2` files) and are a long-term brand commitment.
 
 ### Hierarchy
 
-The exact sizes and weights are set in the frontmatter above. Four sizes, not six — here's what
+The exact sizes and weights are set in the frontmatter above. Five sizes, not six — here's what
 each is for and where it comes from:
 
-- **Display** (24px): page titles, and the one large sentence shown on an empty page. Lands exactly
-  on Tailwind's own `text-2xl`, so it isn't a custom token — just that utility plus the serif font.
+- **Title** (28px): the breadcrumb-title in the page header, at high optical size (`opsz 120`) and
+  tightened tracking. The one place the serif is allowed to carry real weight — a working document
+  with a confident masthead, still not a magazine spread. Off Tailwind's native scale, so it's the
+  `.pagehead h1` rule rather than a utility.
+- **Display** (24px): the one large sentence shown on an empty page, and any secondary serif
+  heading. Lands exactly on Tailwind's own `text-2xl`, so it isn't a custom token — just that
+  utility plus the serif font.
 - **Body** (14px): all regular text, navigation items, button labels, toast messages. Lands exactly
   on Tailwind's own `text-sm`, same reasoning as Display.
 - **Data** (13px): table cells, indicator values, hashes. Always uses tabular numbers
   (`font-variant-numeric: tabular-nums`) for anything that can be counted. Falls between Tailwind's
   own steps (nothing sits at 13px), so it's the custom `--text-data` token.
-- **Label** (10px, uppercase, 45% ink): section headings in the sidebar, small captions, metadata
-  lines, table column headers, and keyboard hints. Also outside Tailwind's native scale, so it's the
-  custom `--text-label` token — the smallest text size anywhere in the product.
+- **Label** (10px, uppercase, seal green): section headings in the sidebar, small captions, metadata
+  lines, table column headers, form field labels, and keyboard hints. Also outside Tailwind's native
+  scale, so it's the custom `--text-label` token — the smallest text size anywhere in the product.
 
 A 9px Column Header and an 11px Timestamp size used to be documented as separate tiers here.
 Neither was ever wired to real CSS: table headers already rendered at the Label size, and
@@ -297,17 +319,19 @@ the floor** — nothing in the app renders smaller.
 ### Named Rules
 
 **The Mono Label Rule.** Every label, table header, identifier, count, and keyboard hint is
-monospace, uppercase, with 0.14em letter spacing, all at the one Label size. No exceptions — this
-one rule is what makes the design recognizable even without any color.
+monospace, uppercase, with 0.14em letter spacing, all at the one Label size, and — apart from the
+badge, which takes its own — drawn in Seal Green. No exceptions on the voice: the shape of it is
+what makes the design recognizable in one glance, and the green is what makes a screen of it read
+as a ruled form rather than grey noise.
 
 **The Tabular Number Rule.** Any number someone might compare down a column uses tabular
 (fixed-width) digits: counts, timestamps, file sizes, evidence totals.
 
-**The Label Opacity Exception.** The normal label style is 45% ink, with a contrast ratio of
-2.8:1. That's fine for a caption next to the number it describes, but not fine when it's the only
-text naming a form field. Form labels keep the same monospace style but use 78% ink instead (82%
-on the dark theme). Anywhere a label is the only name for a control someone has to use, it gets
-the more readable value.
+**The Full-Strength Colour Rule.** The label voice is drawn in Seal Green at full strength, not a
+dimmed mix — 9.3:1 on cream, and its own bright value on the plate. That clears the 4.5:1 floor
+for the one place it matters most, a form label that is the only name for a control someone has to
+fill. So there is no separate readability carve-out for form labels any more: they are the same
+green as every other label, and legible because the colour was chosen to be.
 
 ## Layout
 
@@ -381,16 +405,20 @@ separated by ruled edges and a double-line "engraved" ring — the way a printed
 depth, which a drop shadow would work against.
 
 - **Hairline** (`1px` at 12% ink): default panel and divider separation.
-- **Heavy hairline** (`1px` at 22% ink): column-header underline, emphasis rules.
-- **Engraved edge** (`0 0 0 1px sheet-cream, 0 0 0 2px seal-green/14%`): the panel outline.
-- **Raised engraved edge** (same, at 26%): elements sitting above the page — toasts, overlays,
+- **Heavy hairline** (`1px` at 22% ink): column-header underline, emphasis rules. Also the
+  page-header masthead rule, but drawn in Seal Green rather than ink — the title sits on a ruled
+  line the way a ledger page is headed.
+- **Engraved edge** (`0 0 0 1px sheet-cream, 0 0 0 2px seal-green/26%`): the panel outline. Struck
+  deep enough to actually read as a cut edge on cream — the design's one depth device, so it earns
+  being seen.
+- **Raised engraved edge** (same, at 40%): elements sitting above the page — toasts, overlays,
   popovers.
 - **Cursor rule** (`inset 2px 0 0 banknote-green`): the keyboard cursor row's left edge.
 
-On the dark theme these become 14%, 24%, 8%, 18%, and 24%, following The Asymmetric Dim Rule.
-Having no shadows is what makes switching themes work well: a shadow system built for a bright
-page doesn't translate to a dark one, but a thin line just changes which side of the background it
-sits on.
+On the dark theme the ring percentages become 18% (engraved) and 26% (raised), the row lines 8%,
+following The Asymmetric Dim Rule. Having no shadows is what makes switching themes work well: a
+shadow system built for a bright page doesn't translate to a dark one, but a thin line just
+changes which side of the background it sits on.
 
 ## Shapes
 
@@ -440,24 +468,29 @@ the current two.
 
 ### Navigation (rail)
 - Labelled text items with a Phosphor icon in the muted ink, near-square radius, counts
-  right-aligned in the label style, grouped under monospace micro-headings.
-- **Active:** Engraving Ink fill with Sheet Cream text and a filled-weight icon.
+  right-aligned in the label style, grouped under seal-green monospace micro-headings.
+- **Active:** Seal Green fill with Sheet Cream text and a filled-weight icon — one item, the rail's
+  only filled element, so it holds The Small Fill Rule even as bright verdigris on the plate. Marks
+  where you are, which is a certification, which is Seal's job.
 - Icon-only navigation was rejected: it doesn't work well for keyboard and screen-reader users.
 
 ### Page Header
-The breadcrumb trail *is* the page title: `Case Name / Section`, one line, one Display size.
-Ancestors take `--ink-form-label` and regular weight; the current page stays full ink and 600
-weight — told apart by weight and ink, not by size. Shares the rail's Sheet Cream ground and heavy
-hairline, edge to edge with the rail and the viewport, so the two read as one frame.
+The breadcrumb trail *is* the page title: `Case Name / Section`, one line, at the Title size
+(28px) — the one place the serif carries full weight. Ancestors take `--ink-form-label` and
+regular weight; the current page stays full ink and 600 weight — told apart by weight and ink, not
+by size. Shares the rail's Sheet Cream ground, sits on a seal-green masthead rule at emphasis
+weight, edge to edge with the rail and the viewport, so the two read as one frame.
 
 ### Panels / Containers
 Sheet Cream ground, 1px hairline at 12% ink plus the engraved ring, 1.5rem internal padding.
 
 ### Data Grid
-The main component of the design. Collapsed borders, Data text style, 48px rows, sticky monospace
-column headers with a 22% underline, row dividers at 7% ink, and a 120ms background transition on
-hover. The keyboard cursor row looks different from a hover state: an 8% Banknote Green wash plus
-a 2px line on the left edge.
+The main component of the design. Collapsed borders, Data text style, 48px rows, sticky
+seal-green monospace column headers with a 22% underline, row dividers at 7% ink, and a 120ms
+background transition on hover. Row hover is a faint Seal wash (4% / 5% on the dark theme) — the
+same structural green the headers and rings carry, felt more than seen. The keyboard cursor row
+still looks different from a hover: a heavier 8% Banknote Green wash plus a 2px line on the left
+edge — brighter hue, plus the bar.
 
 ### Relationship Sheet (the lateral-movement graph)
 
@@ -580,7 +613,7 @@ every overlay — it's a convention people already know, so it doesn't need a la
 ## Do's and Don'ts
 
 ### Do:
-- **Do** render every label, table header, and identifier in monospace uppercase at 0.14em tracking.
+- **Do** render every label, table header, and identifier in monospace uppercase at 0.14em tracking, in Seal Green.
 - **Do** pair status colour with the status word, always.
 - **Do** keep tabular numerals on anything comparable down a column.
 - **Do** preserve `:focus-visible` as a 2px Banknote Green outline; it is never removed.
@@ -589,7 +622,9 @@ every overlay — it's a convention people already know, so it doesn't need a la
 - **Do** place any new colour on the Green Ladder, or explain why it is a second exception alongside red.
 
 ### Don't:
-- **Don't** use filled status pills or coloured row backgrounds.
+- **Don't** use filled status pills, or a row background that encodes a status or a value — the
+  only row washes are the faint Seal hover and the Banknote cursor/flag marks, and neither means
+  "this row is bad".
 - **Don't** add shadows. Depth is a second hairline.
 - **Don't** introduce pill radii or soft corners; nothing exceeds 0.25rem except true circles.
 - **Don't** ship icon-only navigation without real labels.
