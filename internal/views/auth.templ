@@ -13,32 +13,28 @@ templ Login(errmsg string) {
 			// The sign-in page has no rail, so the mark takes the rail's place here
 			// rather than adding a third home for it.
 			<div class="sm:mx-auto sm:w-full sm:max-w-sm text-center">
-				@medallion("medallion-lg w-28 h-28 mx-auto mb-6")
-				<div class="text-4xl font-serif font-semibold">[dagobert]</div>
-				<p class="font-serif italic text-muted mt-1">incident response, documented.</p>
+				@medallion("medallion w-28 h-28 mx-auto")
+				<div class="text-4xl font-semibold">[dagobert]</div>
+				<p class="italic text-muted mt-1">incident response, documented.</p>
 			</div>
-			<div class="mt-12 sm:mx-auto sm:w-full sm:max-w-sm panel p-6">
-				<form action="/auth/login" method="POST" class="space-y-4">
+			<div class="mt-12 sm:mx-auto sm:w-full sm:max-w-sm card card-border bg-base-100">
+				<form action="/auth/login" method="POST" class="card-body">
 					if errmsg != "" {
 						<p class="text-error flex items-center gap-2 text-sm"><i class="ph ph-warning-circle"></i> { errmsg }</p>
 					}
-					<div class="form-control">
-						<label class="label justify-start gap-2">E-Mail</label>
+					<div class="fieldset">
+						<label class="label">E-Mail</label>
 						<input name="email" required type="email" autocomplete="email" class="input w-full"/>
 					</div>
-					<div class="form-control">
-						<label class="label justify-start gap-2">Password</label>
+					<div class="fieldset">
+						<label class="label">Password</label>
 						<input name="password" required type="password" autocomplete="current-password" class="input w-full"/>
 					</div>
-					<div class="flex gap-2 items-center">
-						<button type="submit" class="btn btn-neutral w-full">Sign in</button>
-					</div>
+					<button type="submit" class="btn btn-neutral w-full">Sign in</button>
 					if os.Getenv("OIDC_ENABLED") == "true" {
-						@rule("mt-6 mb-6")
-						<div class="flex gap-2 items-center">
-							// one ink fill per form: SSO is the alternate route, not a second primary
-							<a href="/auth/oidc" class="btn w-full"><i class="ph ph-key"></i> Sign in with SSO</a>
-						</div>
+						<div class="divider"></div>
+						// one ink fill per form: SSO is the alternate route, not a second primary
+						<a href="/auth/oidc" class="btn w-full"><i class="ph ph-key"></i> Sign in with SSO</a>
 					}
 				</form>
 			</div>
@@ -50,43 +46,30 @@ templ ChangePassword(user *model.User, vr valid.ValidationError) {
 	@layout() {
 		<main>
 			<form method="post" action="/auth/changepassword" up-submit>
-				<!-- Modal header -->
-				<h1 class="font-serif text-2xl font-semibold mb-4">
-					Change password
-				</h1>
-				<!-- Modal body -->
-				<div class="mb-4">
-					<input name="ID" type="hidden" value={ user.ID }/>
-					<div class="form-control mb-4">
-						<label class="label justify-start gap-2">User</label>
-						<input disabled type="text" class="input w-full" value={ user.String() }/>
-					</div>
-					<div class="form-control mb-4">
-						<label class="label justify-start gap-2">
-							Current password
-							@validationError(vr["currentPassword"])
-						</label>
-						<input name="currentPassword" required type="password" autocomplete="current-password" class="input w-full"/>
-					</div>
-					<div class="form-control mb-4">
-						<label class="label justify-start gap-2">
-							New password
-							@validationError(vr["newPassword"])
-						</label>
-						<input name="newPassword" required type="password" autocomplete="new-password" class="input w-full"/>
-					</div>
-					<div class="form-control mb-4">
-						<label class="label justify-start gap-2">
-							Confirm password
-							@validationError(vr["confirmPassword"])
-						</label>
-						<input name="confirmPassword" required type="password" autocomplete="new-password" class="input w-full"/>
-					</div>
-				</div>
-				<!-- Modal footer -->
-				<div class="flex gap-2 items-center">
+				<h3 class="text-lg font-bold">Change password</h3>
+				<input name="ID" type="hidden" value={ user.ID }/>
+				<fieldset class="fieldset">
+					<label class="label">User</label>
+					<input disabled type="text" class="input w-full" value={ user.String() }/>
+					<label class="label">
+						Current password
+						@validationError(vr["currentPassword"])
+					</label>
+					<input name="currentPassword" required type="password" autocomplete="current-password" class="input w-full"/>
+					<label class="label">
+						New password
+						@validationError(vr["newPassword"])
+					</label>
+					<input name="newPassword" required type="password" autocomplete="new-password" class="input w-full"/>
+					<label class="label">
+						Confirm password
+						@validationError(vr["confirmPassword"])
+					</label>
+					<input name="confirmPassword" required type="password" autocomplete="new-password" class="input w-full"/>
+				</fieldset>
+				<div class="modal-action">
 					<button type="submit" class="btn btn-neutral"><i class="ph ph-key"></i> Change</button>
-					<a class="btn" up-dismiss>Cancel </a>
+					<a class="btn" up-dismiss>Cancel</a>
 				</div>
 			</form>
 		</main>

@@ -288,28 +288,29 @@ up.compiler('table:has([data-href])', (table) => {
     });
 });
 
-// showToast renders a success toast into the root #errors section: a seal
+// showToast renders a success toast into the root #errors section: a check
 // glyph, a caption with the time, and the message. Matches the markup of the
-// server-rendered ToastError/ToastWarning.
+// server-rendered ToastError/ToastWarning (alert-success rather than
+// alert-error/-warning).
 function showToast(message) {
     const container = document.querySelector('#errors');
     if (!container) { return; }
     container.className = 'toast toast-top toast-center z-20';
 
-    const seal = document.createElement('div');
-    seal.className = 'seal';
-    seal.setAttribute('role', 'status');
-    seal.setAttribute('aria-live', 'polite');
-    seal.onclick = () => seal.remove();
-    seal.innerHTML = '<span class="seal-mark" aria-hidden="true"><i class="ph ph-seal-check"></i></span>'
-        + '<div class="seal-body"><div></div>'
-        + '<div class="seal-msg"></div></div>';
-    seal.querySelector('.seal-body div').textContent =
+    const toast = document.createElement('div');
+    toast.className = 'alert alert-success';
+    toast.setAttribute('role', 'status');
+    toast.setAttribute('aria-live', 'polite');
+    toast.onclick = () => toast.remove();
+    toast.innerHTML = '<i class="ph ph-seal-check text-xl"></i>'
+        + '<div><div class="font-semibold"></div>'
+        + '<div class="text-sm"></div></div>';
+    toast.querySelector('.font-semibold').textContent =
         'Recorded · ' + new Date().toLocaleTimeString([], { hour12: false });
-    seal.querySelector('.seal-msg').textContent = message;
-    container.appendChild(seal);
+    toast.querySelector('.text-sm').textContent = message;
+    container.appendChild(toast);
 
-    setTimeout(() => seal.remove(), 4000);
+    setTimeout(() => toast.remove(), 4000);
 }
 
 // --- Fragment compilers ---------------------------------------------------

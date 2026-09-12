@@ -38,7 +38,7 @@ templ customAttributes(env Env, entity string, custom model.Custom) {
 	{{ defs := customDefs(env, entity) }}
 	{{ orphans := customOrphans(defs, custom) }}
 	if len(defs) > 0 || len(custom) > 0 {
-		<h2 class="text-lg font-serif mb-2 mt-4">Custom attributes</h2>
+		<h2 class="text-lg font-semibold">Custom attributes</h2>
 		for _, def := range defs {
 			@customInput(def, custom[def.Label])
 		}
@@ -52,30 +52,30 @@ templ customInput(def model.CustomAttribute, value string) {
 	{{ name := "cattr_" + def.Label }}
 	switch def.Type {
 		case "textfield":
-			<div class="form-control mb-2">
-				<label class="label justify-start gap-2">{ def.Label }</label>
+			<div class="fieldset">
+				<label class="label">{ def.Label }</label>
 				<textarea name={ name } rows="3" class="textarea w-full">{ value }</textarea>
 			</div>
 		case "checkbox":
-			<div class="form-control mb-2">
-				<label class="label cursor-pointer justify-start gap-2">
+			<div class="fieldset">
+				<label class="label">
 					<input name={ name } value="true" type="checkbox" class="checkbox" checked?={ value == "true" }/>
 					{ def.Label }
 				</label>
 			</div>
 		case "date":
-			<div class="form-control mb-2">
-				<label class="label justify-start gap-2">{ def.Label }</label>
+			<div class="fieldset">
+				<label class="label">{ def.Label }</label>
 				<input name={ name } type="date" class="input w-full" value={ value }/>
 			</div>
 		case "datetime":
-			<div class="form-control mb-2">
-				<label class="label justify-start gap-2">{ def.Label }</label>
+			<div class="fieldset">
+				<label class="label">{ def.Label }</label>
 				<input name={ name } type="datetime-local" class="input w-full" value={ value }/>
 			</div>
 		case "select":
-			<div class="form-control mb-2">
-				<label class="label justify-start gap-2">{ def.Label }</label>
+			<div class="fieldset">
+				<label class="label">{ def.Label }</label>
 				<select name={ name } class="select w-full">
 					<option value="" selected?={ value == "" }>-</option>
 					for _, opt := range def.Options {
@@ -86,8 +86,8 @@ templ customInput(def model.CustomAttribute, value string) {
 				</select>
 			</div>
 		default:
-			<div class="form-control mb-2">
-				<label class="label justify-start gap-2">{ def.Label }</label>
+			<div class="fieldset">
+				<label class="label">{ def.Label }</label>
 				<input name={ name } type="text" class="input w-full" value={ value }/>
 			</div>
 	}
@@ -97,8 +97,8 @@ templ customInput(def model.CustomAttribute, value string) {
 // editable so analysts can preserve or clear it, behind a clear warning.
 templ customOrphan(label string, value string) {
 	{{ name := "cattr_" + label }}
-	<div class="form-control mb-2">
-		<label class="label justify-start gap-2">
+	<div class="fieldset">
+		<label class="label">
 			{ label }
 			<span class="ml-2 text-sm text-warning">No matching definition — value preserved. Clear to remove.</span>
 		</label>

@@ -33,13 +33,11 @@ type DashboardBreakdownRow struct {
 
 templ Dashboard(env Env, from time.Time, to time.Time, matrixKey string, matrix *attck.Matrix, hide bool, stats DashboardStats) {
 	@layout() {
-		<section id="errors"></section>
-		@sidebar(env, "Dashboard")
-		<main class="rail-offset p-6 grow max-w-full flex flex-col h-screen">
+		@fullscreen(env, "Dashboard") {
 			<form method="get" up-autosubmit up-target="#list" up-history="true">
 				@navbar(env, "Dashboard", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navHideRefresh(), navTitleIcon("chart-bar"), navPreButtons(dashboardDateExtra(from, to)))
 				<div id="list">
-					<div class="stats w-full mb-6">
+					<section class="stats w-full">
 						<div class="stat">
 							<div class="stat-title">Cases in scope</div>
 							<div class="stat-value">{ stats.Total }</div>
@@ -64,82 +62,86 @@ templ Dashboard(env Env, from time.Time, to time.Time, matrixKey string, matrix 
 							}
 							<div class="stat-desc">closed cases with both dates set</div>
 						</div>
-					</div>
-					<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-						@dashboardBreakdownCard("Classification", stats.Classification, stats.Total)
-						@dashboardBreakdownCard("Severity", stats.Severity, stats.Total)
-						@dashboardBreakdownCard("Outcome", stats.Outcome, stats.Total)
-					</div>
-					<div class="flex items-end justify-between gap-4 mb-3">
-						<div>
-							<h2 class="text-xl font-serif font-semibold">MITRE ATT&CK® Heatmap</h2>
-							<p class="text-xs text-muted mt-2">Number of distinct cases each technique appears in, across the cases in scope</p>
+					</section>
+					<section>
+						<div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+							@dashboardBreakdownCard("Classification", stats.Classification, stats.Total)
+							@dashboardBreakdownCard("Severity", stats.Severity, stats.Total)
+							@dashboardBreakdownCard("Outcome", stats.Outcome, stats.Total)
 						</div>
-						<div class="flex items-center gap-4">
-							<div class="flex items-center gap-2 text-xs text-muted">
-								@heatmapLegend("cases")
+					</section>
+					<section>
+						<div class="flex items-end justify-between gap-2">
+							<div>
+								<h2 class="text-xl font-semibold">MITRE ATT&CK® Heatmap</h2>
+								<p class="text-xs text-muted">Number of distinct cases each technique appears in, across the cases in scope</p>
 							</div>
-							<div class="join" role="group" up-autosubmit>
-								<label class="join-item btn pr-4">
-									<input type="radio" name="matrix" value="enterprise" class="radio" checked?={ matrixKey == "enterprise" }/>
-									Enterprise
-								</label>
-								<label class="join-item btn pr-4">
-									<input type="radio" name="matrix" value="mobile" class="radio" checked?={ matrixKey == "mobile" }/>
-									Mobile
-								</label>
-								<label class="join-item btn pr-4">
-									<input type="radio" name="matrix" value="ics" class="radio" checked?={ matrixKey == "ics" }/>
-									ICS
-								</label>
-								<label class="join-item btn pr-4">
-									<input type="checkbox" name="hide" value="on" class="toggle" checked?={ hide }/>
-									Hide missing
-								</label>
+							<div class="flex items-center gap-4">
+								<div class="flex items-center gap-2 text-xs text-muted">
+									@heatmapLegend("cases")
+								</div>
+								<div class="join" role="group" up-autosubmit>
+									<label class="join-item btn pr-4">
+										<input type="radio" name="matrix" value="enterprise" class="radio" checked?={ matrixKey == "enterprise" }/>
+										Enterprise
+									</label>
+									<label class="join-item btn pr-4">
+										<input type="radio" name="matrix" value="mobile" class="radio" checked?={ matrixKey == "mobile" }/>
+										Mobile
+									</label>
+									<label class="join-item btn pr-4">
+										<input type="radio" name="matrix" value="ics" class="radio" checked?={ matrixKey == "ics" }/>
+										ICS
+									</label>
+									<label class="join-item btn pr-4">
+										<input type="checkbox" name="hide" value="on" class="toggle" checked?={ hide }/>
+										Hide missing
+									</label>
+								</div>
 							</div>
 						</div>
-					</div>
-					<div class="overflow-x-auto">
-						<table class="table table-default">
-							<thead>
-								<tr>
-									for tactic := range matrix.Tactics.Values() {
-										<th class="text-left"><a target="_blank" href={ tactic.URL }>{ tactic.Name }</a></th>
-									}
-								</tr>
-							</thead>
-							<tbody>
-								for i := range matrix.DimY() {
+						<div class="overflow-x-auto">
+							<table class="table table-pin-rows">
+								<thead>
 									<tr>
 										for tactic := range matrix.Tactics.Values() {
-											if i < len(tactic.Techniques) {
-												{{ t := tactic.Techniques[i] }}
-												{{ count := stats.TechniqueCounts[t.ID] }}
-												<td class={ templ.KV("bg-base-200", t.IsSubTechnique) } style={ heatmapCellStyle(count, stats.MaxTechniqueCount) }>
-													<a target="_blank" href={ "https://attack.mitre.org/techniques/" + t.ID }>{ t.Name }</a>
-													if count > 0 {
-														<div class="text-xs font-mono text-muted">
-															{ count }
-															if count == 1 {
-																case
-															} else {
-																cases
-															}
-														</div>
-													}
-												</td>
-											} else {
-												<td></td>
-											}
+											<th class="text-left"><a target="_blank" href={ tactic.URL }>{ tactic.Name }</a></th>
 										}
 									</tr>
-								}
-							</tbody>
-						</table>
-					</div>
+								</thead>
+								<tbody>
+									for i := range matrix.DimY() {
+										<tr>
+											for tactic := range matrix.Tactics.Values() {
+												if i < len(tactic.Techniques) {
+													{{ t := tactic.Techniques[i] }}
+													{{ count := stats.TechniqueCounts[t.ID] }}
+													<td class={ templ.KV("bg-base-200", t.IsSubTechnique) } style={ heatmapCellStyle(count, stats.MaxTechniqueCount) }>
+														<a target="_blank" href={ "https://attack.mitre.org/techniques/" + t.ID }>{ t.Name }</a>
+														if count > 0 {
+															<div class="text-xs text-muted">
+																{ count }
+																if count == 1 {
+																	case
+																} else {
+																	cases
+																}
+															</div>
+														}
+													</td>
+												} else {
+													<td></td>
+												}
+											}
+										</tr>
+									}
+								</tbody>
+							</table>
+						</div>
+					</section>
 				</div>
 			</form>
-		</main>
+		}
 	}
 }
 
@@ -151,16 +153,11 @@ templ dashboardDateExtra(from time.Time, to time.Time) {
 	<button type="button" class="join-item btn" data-fill-date-range="all-time">All time</button>
 }
 
-// dashboardBreakdownCard renders one of the three value->count cards; kept as
-// its own component since it's used three times (Classification, Severity,
-// Outcome) with different data. The three used to be told apart by a tint
-// each — a bar's colour must never imply a status judgement, so they are told
-// apart by heading and position now, and every bar is the same ink.
 templ dashboardBreakdownCard(title string, rows []DashboardBreakdownRow, total int) {
-	<div class="panel p-6">
-		<div class="label-micro pb-1.5 mb-2 border-b hair2">{ title }</div>
+	<div>
+		<div class="fieldset-legend">{ title }</div>
 		if len(rows) == 0 {
-			<p class="font-serif text-muted">No cases in scope.</p>
+			<p class="text-muted">No cases in scope.</p>
 		}
 		for _, row := range rows {
 			{{ pct := 0 }}
@@ -168,7 +165,7 @@ templ dashboardBreakdownCard(title string, rows []DashboardBreakdownRow, total i
 				{{ pct = row.Count * 100 / total }}
 			}
 			{{ bar := fp.If(row.Value == "Unset", "bar-inert", "bar-ink") }}
-			<div class="mb-3">
+			<div>
 				<div class={ "flex justify-between text-sm mb-1", templ.KV("italic text-muted", row.Value == "Unset") }>
 					<span>{ row.Value }</span>
 					<span class="font-mono text-muted">{ row.Count }</span>

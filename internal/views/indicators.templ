@@ -15,22 +15,20 @@ templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]m
 	{{ summary := summarizeIndicators(rows) }}
 	@layout() {
 		@list(env, "Indicators", navHideImport(), navHideExport(), navPreButtons(indicatorsManyExtra(env))) {
-			<div class="stats w-full mb-6">
+			<div class="stats w-full">
 				@statTotal(len(rows))
-				for i, status := range env.ValueLists.IndicatorStatus {
-					@stat(status.Name, summary[status.Name], i == 0)
+				for _, status := range env.ValueLists.IndicatorStatus {
+					@stat(status.Name, summary[status.Name])
 				}
 			</div>
-			<table class="table table-default" data-default-sort="value-2">
+			<table class="table table-pin-rows" data-default-sort="value-2">
 				<thead>
 					<tr>
 						<th data-sort="value-0" class="sort">Status</th>
 						<th data-sort="value-1" class="sort">Type</th>
 						<th data-sort="value-2" class="sort">Value</th>
-						<th data-sort="value-3" class="sort">TLP</th>
-						<th data-sort="value-4" class="sort">Source</th>
 						<th data-sort="value-5" class="sort">Last seen</th>
-						<th data-sort="value-6" class="sort text-right">Ev</th>
+						<th data-sort="value-6" class="sort">Events</th>
 						<th data-sort="value-7" class="sort">Enrichment</th>
 						<th style="width: 7rem"></th>
 					</tr>
@@ -42,19 +40,24 @@ templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]m
 						for _, row := range rows {
 							{{ worst, worstSeverity, results := summarizeEnrichment(enrichments[row.ID]) }}
 							<tr class={ fp.If(row.Flagged, "row-hover bg-flagged", "row-hover") }>
-								<td class="value-0 truncate" data-search={ row.Status }>
+								<td class="value-0" data-search={ row.Status }>
 									@statusDot(env.ValueLists.IndicatorStatus, row.Status)
 								</td>
-								<td class="value-1 truncate" data-search={ row.Type }>
-									@valueBadge(env.ValueLists.IndicatorTypes, row.Type)
+								<td class="value-1" data-search={ row.Type }>
+									@valueIcon(env.ValueLists.IndicatorTypes, row.Type) {
+										{ row.Type }
+									}
 								</td>
-								<td class="value-2 font-mono" data-search={ row.Value }>{ row.Value }</td>
-								<td class="value-3" data-search={ row.TLP }>
-									@valueMono(env.ValueLists.IndicatorTLPs, row.TLP)
+								<td class="value-2 font-mono" data-search={ row.Value }>
+									<a href={ env.Route + row.ID } up-method="GET" up-layer="new drawer" up-accept-location={ env.Route }>
+										<p>{ row.Value }</p>
+										<p class="text-xs">
+											@valueMono(env.ValueLists.IndicatorTLPs, row.TLP)
+										</p>
+									</a>
 								</td>
-								<td class="value-4" data-search={ row.Source }>{ row.Source }</td>
 								<td
-									class="value-5 truncate"
+									class="value-5"
 									data-search={ row.LastSeen.Format(time.RFC3339) }
 									title={ "first seen: " + row.FirstSeen.Format("2006-01-02 15:04:05 Z07:00") + "\nlast seen: " + row.LastSeen.Format("2006-01-02 15:04:05 Z07:00") }
 								>
@@ -64,12 +67,10 @@ templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]m
 										@formatTime(row.LastSeen)
 									}
 								</td>
-								// events, with cross-case overlap as a suffix rather than a
-								// second line: a wrapped cell costs every row in the grid
-								<td class="value-6 text-right font-mono whitespace-nowrap" data-search={ strconv.Itoa(row.Events) }>
+								<td class="value-6" data-search={ strconv.Itoa(row.Events) }>
 									<span>{ strconv.Itoa(row.Events) }</span>
 									if row.OtherCases > 0 {
-										<span class="text-xs ml-1" title={ fmt.Sprintf("also recorded in %d other case(s)", row.OtherCases) }>{ fmt.Sprintf("+%d", row.OtherCases) }</span>
+										<span class="text-xs" title={ fmt.Sprintf("also recorded in %d other case(s)", row.OtherCases) }>{ fmt.Sprintf("+%d", row.OtherCases) }</span>
 									}
 								</td>
 								<td class="value-7" data-search={ strconv.Itoa(worstSeverity) }>
@@ -80,7 +81,7 @@ templ IndicatorsMany(env Env, rows []model.Indicator, enrichments map[string][]m
 										<div class="flex gap-2 mt-1">
 											for _, r := range results {
 												<span
-													class={ "w-2 h-2 rounded-full " + verdictDotClass(r.Verdict) }
+													class={ "status " + verdictDotClass(r.Verdict) }
 													title={ r.Source + ": " + r.Verdict }
 												></span>
 											}
@@ -155,16 +156,16 @@ templ IndicatorsOne(env Env, obj model.Indicator, overlap IndicatorOverlap, enri
 // panel — one row per module. Renders nothing when there is no enrichment.
 templ threatIntel(env Env, rows []model.Enrichment) {
 	if len(rows) > 0 {
-		<div class="mt-6">
-			<h2 class="font-serif text-lg mb-1">Threat Intelligence</h2>
+		<div>
+			<h2 class="text-lg font-semibold mb-1">Threat Intelligence</h2>
 			<p class="text-sm text-muted mb-2">Automated enrichment from configured modules.</p>
-			<ul class="menu bg-base-200 rounded-box w-full p-2 gap-1">
+			<ul class="menu bg-base-200 rounded-box w-full gap-1">
 				for _, row := range rows {
 					{{ summary := strings.Split(row.Summary, "\n") }}
 					<li>
 						<details>
-							<summary class="flex items-center gap-2">
-								<span class={ "w-2 h-2 rounded-full shrink-0 " + verdictDotClass(row.Verdict) } title={ row.Verdict }></span>
+							<summary>
+								<span class={ "status shrink-0 " + verdictDotClass(row.Verdict) } title={ row.Verdict }></span>
 								<span>{ row.Module }</span>
 								<span class="text-muted truncate">{ summary[0] }</span>
 							</summary>
@@ -183,17 +184,17 @@ templ threatIntel(env Env, rows []model.Enrichment) {
 }
 
 templ indicatorOverlap(env Env, overlap IndicatorOverlap) {
-	<div class="mt-6">
-		<h2 class="font-serif text-lg mb-1">Related cases</h2>
+	<div>
+		<h2 class="text-lg font-semibold mb-1">Related cases</h2>
 		<p class="text-sm text-muted mb-2">This observable also appears in other cases.</p>
-		<ul class="menu bg-base-200 rounded-box w-full p-2">
+		<ul class="menu bg-base-200 rounded-box w-full">
 			for _, c := range overlap.Cases {
 				<li>
-					<a href={ "/cases/" + c.ID + "/summary/" } class="flex items-center gap-2">
+					<a href={ "/cases/" + c.ID + "/summary/" }>
 						if c.Closed {
-							<span class="w-2 h-2 rounded-full shrink-0 bg-success" title="Closed"></span>
+							<span class="status status-success shrink-0" title="Closed"></span>
 						} else {
-							<span class="w-2 h-2 rounded-full shrink-0 bg-error" title="Open"></span>
+							<span class="status status-error shrink-0" title="Open"></span>
 						}
 						<span>{ c.Name }</span>
 						<span class="text-muted truncate">#{ c.ID }</span>
@@ -211,9 +212,9 @@ templ indicatorsManyExtra(env Env) {
 	if url, ok := env.Allowed("POST", env.Route + "import"); ok {
 		<details class="dropdown">
 			<summary class="btn join-item">
-				<i class="ph ph-6 ph-sort-ascending inline-block mr-1"></i> Import
+				<i class="ph ph-6 ph-sort-ascending"></i> Import
 			</summary>
-			<ul style="position: absolute" class="menu dropdown-content z-[1] w-52 p-2">
+			<ul class="menu dropdown-content w-52">
 				<li><a href={ url + "/csv" } up-layer="new drawer" up-accept-location={ env.Route }>from CSV</a></li>
 				<li><a href={ url + "/timesketch" } up-follow up-method="post">from Timesketch</a></li>
 			</ul>
@@ -222,9 +223,9 @@ templ indicatorsManyExtra(env Env) {
 	if url, ok := env.Allowed("GET", env.Route + "export"); ok {
 		<details class="dropdown">
 			<summary class="btn join-item">
-				<i class="ph ph-6 ph-sort-descending inline-block mr-1"></i> Export
+				<i class="ph ph-6 ph-sort-descending"></i> Export
 			</summary>
-			<ul style="position: absolute" class="menu dropdown-content z-[1] w-52 p-2">
+			<ul class="menu dropdown-content w-52">
 				<li><a href={ url + "/csv" }>as CSV</a></li>
 				<li><a href={ url + "/ioc" }>as OpenIOC</a></li>
 				<li><a href={ url + "/stix" }>as STIX</a></li>
@@ -286,12 +287,12 @@ func verdictColor(v string) string {
 func verdictDotClass(v string) string {
 	switch v {
 	case "malicious":
-		return "bg-error"
+		return "status-error"
 	case "suspicious":
-		return "bg-warning"
+		return "status-warning"
 	case "clean":
-		return "bg-success"
+		return "status-success"
 	default:
-		return "border border-current"
+		return "status-neutral"
 	}
 }

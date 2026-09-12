@@ -28,9 +28,9 @@ func techniques(mitre attck.KB, e model.Event) iter.Seq[attck.Technique] {
 templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators []model.Indicator, mitre attck.KB, comments map[string]int) {
 	@layout() {
 		@list(env, "Timeline", navHideImport(), navPreButtons(eventsManyExtra(env))) {
-			<div id="histogram" class="panel text-xs my-6 p-6" up-data={ histogramJSON(rows) }></div>
+			<section id="histogram" class="card bg-base-100 text-xs" up-data={ histogramJSON(rows) }></section>
 			<!-- -->
-			<table class="table table-default" data-default-sort="value-0">
+			<table class="table table-pin-rows" data-default-sort="value-0">
 				<thead>
 					<tr>
 						<th data-sort="value-0" class="sort">Time</th>
@@ -46,36 +46,24 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 						@emptyTable(env, "The story starts here.", "Start by logging the earliest known attacker action. Work forward from there — each event builds the chain of activity. Link events to assets and indicators as you identify them.")
 					} else {
 						for _, row := range rows {
-							<tr class={ fp.If(row.Flagged, "row-hover bg-flagged", "row-hover") }>
+							<tr class={ fp.If(row.Flagged, "bg-flagged", "") }>
 								<td class="value-0" data-search={ row.Time.Format(time.RFC3339) }>
 									@formatTime(row.Time)
 								</td>
 								<td class="value-1" data-search={ row.Type }>
-									@valueBadge(env.ValueLists.EventTypes, row.Type)
+									@valueIcon(env.ValueLists.EventTypes, row.Type) {
+										{ row.Type }
+									}
 								</td>
 								<td class="fixed-width value-2" data-search={ row.Event }>
-									<details>
-										<summary>
-											@highlightEvent(row, assets, indicators)
-											<p>
-												for t := range techniques(mitre, row) {
-													<span class="badge badge-sm" title={ t.ID + " - " + t.Name }>{ t.ID }</span>
-												}
-											</p>
-										</summary>
-										if row.Source != "" {
-											<div class="card gap-2 p-2 mt-2">
-												<p class="font-bold">Source:</p>
-												<p>{ row.Source }</p>
-											</div>
-										}
-										if row.Raw != "" {
-											<div class="card gap-2 p-2 overflow-scroll">
-												<p class="font-bold">Raw:</p>
-												<pre><code>{ row.Raw }</code></pre>
-											</div>
-										}
-									</details>
+									<a href={ env.Route + row.ID } up-method="GET" up-layer="new drawer" up-accept-location={ env.Route }>
+										@highlightEvent(row, assets, indicators)
+										<p>
+											for t := range techniques(mitre, row) {
+												<span class="badge badge-sm" title={ t.ID + " - " + t.Name }>{ t.ID }</span>
+											}
+										</p>
+									</a>
 								</td>
 								<td class="value-3" data-search={ strings.Join(fp.Apply(row.Assets, func(x model.Asset) string { return x.Name }), " ") }>
 									for _, x := range row.Assets {
@@ -119,8 +107,8 @@ templ EventsOne(env Env, obj model.Event, assets []model.Asset, indicators []mod
 		@hiddenField("CaseID", obj.CaseID)
 		// What happened, then what it was, then what it touched.
 		@fieldset("Occurrence") {
-			<div class="form-control mb-2">
-				<label class="label justify-start gap-2">
+			<div class="fieldset">
+				<label class="label">
 					Time
 					@requiredLabel()
 					@validationError(vr["Time"])
@@ -191,9 +179,9 @@ templ eventsManyExtra(env Env) {
 	if url, ok := env.Allowed("POST", env.Route+"import"); ok {
 		<details class="dropdown">
 			<summary class="btn join-item">
-				<i class="ph ph-6 ph-sort-ascending inline-block mr-1"></i> Import
+				<i class="ph ph-6 ph-sort-ascending"></i> Import
 			</summary>
-			<ul style="position: absolute" class="menu dropdown-content z-[1] w-52 p-2">
+			<ul class="menu dropdown-content w-52">
 				<li><a href={ url + "/csv" } up-layer="new drawer" up-accept-location={ env.Route }>from CSV</a></li>
 				<li><a href={ url + "/timesketch" } up-follow up-method="post">from Timesketch</a></li>
 			</ul>

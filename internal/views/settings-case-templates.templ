@@ -5,7 +5,7 @@ import "github.com/sprungknoedl/dagobert/internal/model"
 templ SettingsCaseTemplatesMany(env Env, rows []model.Case) {
 	@layout() {
 		@list(env, "Case Templates", navSettings(), navHideExport(), navHideImport(), navPreButtons(settingsCaseTemplatesPromoteBtn(env))) {
-			<table class="table table-default" data-default-sort="value-0">
+			<table class="table table-pin-rows" data-default-sort="value-0">
 				<thead>
 					<tr>
 						<th data-sort="value-0" class="sort">Name</th>
@@ -19,7 +19,7 @@ templ SettingsCaseTemplatesMany(env Env, rows []model.Case) {
 						@emptyTable(env, "No case templates yet.", "Create a blank template and fill in its tasks and notes via the case views, or promote an existing case into a reusable template.")
 					}
 					for _, row := range rows {
-						<tr class="row-hover">
+						<tr>
 							<td class="value-0" data-search={ row.Name }>
 								if url, ok := env.Allowed("GET", "/cases/"+row.ID+"/summary/"); ok {
 									<a class="link" href={ url }>{ row.Name }</a>
@@ -29,7 +29,9 @@ templ SettingsCaseTemplatesMany(env Env, rows []model.Case) {
 							</td>
 							<td class="value-1" data-search={ row.Classification }>{ row.Classification } </td>
 							<td class="value-2" data-search={ row.Severity }>
-								@valueBadge(env.ValueLists.CaseSeverities, row.Severity)
+								@valueIcon(env.ValueLists.CaseSeverities, row.Severity) {
+									{ row.Severity }
+								}
 							</td>
 							<td class="text-right">
 								<div class="join">
@@ -47,19 +49,19 @@ templ SettingsCaseTemplatesMany(env Env, rows []model.Case) {
 templ settingsCaseTemplatesPromoteBtn(env Env) {
 	if url, ok := env.Allowed("GET", "/settings/case-templates/promote"); ok {
 		<a class="join-item btn" href={ url } up-layer="new drawer" up-accept-location="/settings/case-templates/">
-			<i class="ph ph-6 ph-copy inline-block mr-1"></i> Promote case…
+			<i class="ph ph-6 ph-copy"></i> Promote case…
 		</a>
 	}
 }
 
 templ SettingsCaseTemplatesPromote(env Env, cases []model.Case) {
 	@form(env, "/settings/case-templates/promote", "Promote case to template") {
-		<p class="flex items-center gap-2 mb-4">
+		<p class="flex items-center gap-2">
 			<i class="ph ph-5 ph-info inline-block"></i>
 			Copies the case's tasks and notes into a new template. The source case is left unchanged.
 		</p>
-		<div class="form-control mb-2">
-			<label class="label justify-start gap-2">
+		<div class="fieldset">
+			<label class="label">
 				Source case
 				@requiredLabel()
 			</label>

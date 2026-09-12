@@ -1,13 +1,14 @@
 /*
 CASCADE
-These rules are deliberately unlayered. Tailwind rewrites bare `@layer`
-statements, so the order between its own layers and daisyUI's is whatever the
-generated file happens to emit — which is not something a design system should
-depend on. Unlayered CSS outranks every layer, so this file always wins.
+This file is deliberately unlayered. Tailwind rewrites bare @layer statements,
+so the order between its own layers and daisyUI's is whatever the generated
+file happens to emit — not something worth depending on. Unlayered CSS
+outranks every layer, so this file always wins over both.
 
-The cost is that a Tailwind utility written in a template cannot override a
-property this file sets on the same element. Where a component needs a variant,
-it gets a class here (.stat-mono, .empty-cell) rather than a utility there.
+Kept intentionally small: daisyUI's own components render unmodified
+wherever they cover a need. What's left here is color/theme setup, the one
+genuine cross-theme button-hover fix, the long-form drawer frame, the brand
+mark, and third-party library reskins.
 */
 
 @import './phosphor-2.1.2.css';
@@ -60,8 +61,6 @@ becomes the line. The greens hold their chroma across the two.
     --size-selector: 0.25rem;
     --size-field: 0.25rem;
     --border: 1px;
-    --depth: 0;
-    --noise: 0;
 }
 
 @plugin "./daisyui-theme.js" {
@@ -95,457 +94,46 @@ becomes the line. The greens hold their chroma across the two.
     --size-selector: 0.25rem;
     --size-field: 0.25rem;
     --border: 1px;
-    --depth: 0;
-    --noise: 0;
-}
-
-@font-face {
-    font-family: 'Fraunces Variable';
-    font-style: normal;
-    font-weight: 100 900;
-    font-display: swap;
-    src: url('/public/assets/fraunces-latin-opsz-normal.woff2') format('woff2-variations');
-}
-
-@font-face {
-    font-family: 'Fraunces Variable';
-    font-style: italic;
-    font-weight: 100 900;
-    font-display: swap;
-    src: url('/public/assets/fraunces-latin-opsz-italic.woff2') format('woff2-variations');
-}
-
-@font-face {
-    font-family: 'JetBrains Mono Variable';
-    font-style: normal;
-    font-weight: 100 800;
-    font-display: swap;
-    src: url('/public/assets/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');
-}
-
-@font-face {
-    font-family: 'Hanken Grotesk Variable';
-    font-style: normal;
-    font-weight: 100 900;
-    font-display: swap;
-    src: url('/public/assets/hanken-grotesk-latin-wght-normal.woff2') format('woff2-variations');
-}
-
-@theme {
-    --font-sans: 'Hanken Grotesk Variable', ui-sans-serif, system-ui, sans-serif;
-    --font-serif: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
-    /* per-glyph fallback: JetBrains Mono has no ⌘ / ⏎ / ⎋, so system-ui supplies them */
-    --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
-
-    /* The type scale has four sizes, not six: Body and Display already land
-       exactly on Tailwind's own text-sm (14px) and text-2xl (24px), so they
-       need no token here. Only Label and Data fall outside Tailwind's native
-       steps (nothing at 10px or 13px), so only those two get one. A
-       columnHeader (9px) and timestamp (11px) size used to be documented
-       separately; neither was ever wired up, and 9px sat below a readable
-       floor, so both were folded into Label — one mono voice, one size,
-       everywhere it's used. */
-    --text-label: 0.625rem; /* 10px — the mono label voice: headers, captions, identifiers, hints */
-    --text-data: 0.8125rem; /* 13px — grid and table cell type */
 }
 
 @import './dagobert-choices.css';
 @import './dagobert-vis.css';
 
-/*
-THE ENGRAVING CONSTANTS
-Every hairline, wash and dimmed label in this file is a percentage of
-base-content, and daisyUI's theme plugin only carries its own tokens, so these
-ride alongside it.
-
-Opacity percentages do not port between the themes: a light mark on a dark
-ground is worth more contrast than the same percentage of a dark mark on a
-light one, so dimmed values come down on the dark theme while structural
-hairlines go up — a 1px light line on near-black is the first thing a display
-loses.
-*/
-
-/* theme-invariant; kept apart so the themed blocks below hold only what varies */
-:root {
-    --nav-h: 4.5rem;        /* the page header's declared height; see .pagehead */
-    --sidebar-w: 11rem;     /* the rail's width; every page offsetting its main
-                               column reads this instead of restating 176px, so
-                               the rail and the offset cannot drift apart */
-
-    /* Row height is derived, not chosen: a row is the TALLEST thing any grid
-       has to hold plus its padding. That used to be the 24px row-action
-       control; it's now the Indicators grid's enrichment cell, a verdict word
-       over a row of dots — a genuine second text line, not a control.
-
-           line 1   13px x 1.45 line-height     = 19px
-           line 2   8px dot row + 4px gap above = 12px  <- governs
-           + 8px padding top + 8px bottom       = 16px
-                                                = 47px, rounded up to 48px
-
-       --row-h is a min-height, so content taller than it simply wins; nothing
-       currently needs more than this. Recalculate whenever a grid grows a
-       taller cell. */
-    --row-h: 3rem;           /* grid row height: 48px + the 1px row rule */
-    --cell-y: 0.5rem;       /* cell padding, block */
-    --cell-x: 0.75rem;      /* cell padding, inline */
-}
-
-/* Every page's main column sits next to the rail rather than under it, so its
-   left padding is the rail's width plus the same 1.5rem edge padding every
-   other side of the column already has — a normal margin of breathing room,
-   not a flush edge. A class rather than a calc() repeated in each page's
-   markup, so the relationship only has to be correct once. */
-.rail-offset {
-    padding-left: calc(var(--sidebar-w) + 1.5rem);
-}
-
-:root,
-[data-theme='dagobert'] {
-    --rule-hair: 12%;       /* panel borders, dividers */
-    --rule-hair2: 22%;      /* column-header underline, emphasis rules */
-    --rule-row: 7%;         /* grid row separators */
-    --ink-label: 45%;       /* micro-labels and column headers */
-    --ink-form-label: 78%;  /* form field labels — see .form-control > .label */
-    --ink-muted: 60%;       /* de-emphasized value text — see .text-muted */
-    --ink-hover: 4%;        /* row and ghost-button hover */
-    --wash-flag: 8%;        /* the flagged row, in accent */
-    --ring-edge: 26%;       /* the engraved panel ring, in primary — struck deep
-                               enough to actually read as a cut edge on cream */
-    --ring-raised: 40%;     /* the same ring on things that sit above the page */
-    --ring-medallion: 45%;
-}
-
-/*
-The dark values, once. Both selectors below are ways a user reaches the dark
-theme — the OS preference with no cookie set, or an explicit choice the server
-writes as data-theme — and CSS cannot put a media query in a selector list, so
-the two rules apply the same set by reference. Add a token here and the two
-mappings pick it up; only the mapping lines are duplicated, never a number.
-*/
-:root {
-    --dark-rule-hair: 14%;
-    --dark-rule-hair2: 24%;
-    --dark-rule-row: 8%;
-    --dark-ink-label: 40%;
-    --dark-ink-form-label: 82%;
-    --dark-ink-muted: 55%;
-    --dark-ink-hover: 5%;
-    --dark-wash-flag: 10%;
-    --dark-ring-edge: 18%;
-    --dark-ring-raised: 26%;
-    --dark-ring-medallion: 30%;
-}
-
-/* :not() so an explicit light choice still wins on a dark-preferring OS */
-@media (prefers-color-scheme: dark) {
-    :root:not([data-theme='dagobert']) {
-        --rule-hair: var(--dark-rule-hair);
-        --rule-hair2: var(--dark-rule-hair2);
-        --rule-row: var(--dark-rule-row);
-        --ink-label: var(--dark-ink-label);
-        --ink-form-label: var(--dark-ink-form-label);
-        --ink-muted: var(--dark-ink-muted);
-        --ink-hover: var(--dark-ink-hover);
-        --wash-flag: var(--dark-wash-flag);
-        --ring-edge: var(--dark-ring-edge);
-        --ring-raised: var(--dark-ring-raised);
-        --ring-medallion: var(--dark-ring-medallion);
-    }
-}
-
-[data-theme='dagobert-dark'] {
-    --rule-hair: var(--dark-rule-hair);
-    --rule-hair2: var(--dark-rule-hair2);
-    --rule-row: var(--dark-rule-row);
-    --ink-label: var(--dark-ink-label);
-    --ink-form-label: var(--dark-ink-form-label);
-    --ink-hover: var(--dark-ink-hover);
-    --wash-flag: var(--dark-wash-flag);
-    --ring-edge: var(--dark-ring-edge);
-    --ring-raised: var(--dark-ring-raised);
-    --ring-medallion: var(--dark-ring-medallion);
-}
-
-
-/*
-LEDGER GROUND
-A near-white sheet on a slightly deeper ground. A 28px two-axis grid used to
-run across this surface as "paper texture," but a uniform line grid is also
-the reflexive background every AI design tool reaches for, and this product
-has exactly one real canvas (the lateral-movement graph) — the rest of the
-app is dense with its own hairlines, panel rings, and table borders, which
-carry enough texture on their own. Plain ground, no pattern.
-*/
-
+/* The page ground sits one step below panel/card faces (base-200 vs
+   base-100), carried on <html> so it reaches past the end of the content —
+   daisyUI paints an opaque body over it otherwise. */
 html {
     background-color: var(--color-base-200);
 }
 
-/* the ground and its grid live on <html> so they reach past the end of the
-   content; daisyUI paints an opaque body over them otherwise */
 body {
     background-color: transparent;
-    font-size: 0.875rem;
-    line-height: 1.5;
 }
 
-/*
-SURFACES
-There are no shadows: separation comes from ruled edges and from a double rule
-used as a ring (see .panel).
-*/
-
-.hairline {
-    border-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
+section:not(.stats) {
+    padding: 1rem 1.5rem;
 }
 
-.hair2 {
-    border-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);
-}
-
-.panel {
-    background-color: var(--color-base-100);
-    border: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
-    border-radius: var(--radius-box);
-    box-shadow:
-        0 0 0 1px var(--color-base-100),
-        0 0 0 2px color-mix(in oklab, var(--color-primary) var(--ring-edge), transparent);
-}
-
-/* daisyUI still emits shadow utilities on a few of its components; the system
-   has none, so neutralise them rather than chasing each call site. Popovers are
-   NOT in this list — they sit above the page and need an edge, which they get
-   from the raised engraved ring below rather than from a shadow. */
-.card,
-.menu {
-    box-shadow: none;
-}
-
-/*
-TYPOGRAPHY
-A display serif over a plain working grotesk, with monospace doing all
-labelling: every label, column header, timestamp, identifier and count.
-*/
-
-.font-serif,
-.prose :where(h1, h2, h3, h4, h5, h6) {
-    font-family: var(--font-serif);
-    font-variation-settings: 'opsz' 96, 'WONK' 0;
-}
-
-.prose :where(h1, h2, h3, h4, h5, h6) {
-    font-weight: 600;
-}
-
-/*
-THE MONO LABEL VOICE
-Every label, column header, identifier and count is monospace, uppercase and
-letterspaced at 0.14em — this one decision is what makes the system
-recognisable with all colour removed, so it is one declaration that everything
-doing labelling joins, rather than five declarations restated per component.
-
-Colour is deliberately not part of the voice: a form label needs more ink than
-a caption does (see .form-control > .label), and a badge takes its own.
-*/
-.label-micro,
-.stat-title,
-.menu-title,
-.divider,
-.badge,
-.table :where(thead th),
-.form-control > .label,
-.form-control > .label > :where(span, .label-text) {
-    font-family: var(--font-mono);
-    font-size: var(--text-label);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-}
-
-/*
-The mono label voice is drawn in Seal Green — column headers, the rail's
-section headings, readout captions, fieldset legends, form field labels,
-dividers. Seal is the system's structural colour ("edges, certification,
-done"), and a label IS structure; drawn in green it reads as engraved ruling
-rather than grey mush, and every screen gains a spine of colour without a
-single new hue. The mono voice — face, size, tracking, caps — is untouched,
-and the badge keeps its own colour. Seal clears 4.5:1 on both grounds, so a
-form label is more legible here than on the dim ink it used to carry.
-*/
-.label-micro,
-.stat-title,
-.menu-title,
-.divider,
-.table :where(thead th),
-.form-control > .label,
-.form-control > .label > :where(span, .label-text) {
-    color: var(--color-primary);
-}
-
-.label-micro,
-.stat-title,
-.table :where(thead th) {
-    line-height: 1.2;
-}
-
-/* The one way to dim a value that is still live and readable — a secondary
-   count, a built-in/system row, a superseded name — rather than each call
-   site picking its own opacity. Colour-mixed rather than `opacity`, so it
-   dims the text without also fading any icon or background riding along
-   with it. Not for placeholder/absent values (plain ink) or status text
-   (the dot-and-word states already carry their own ink). */
+/* The one dimming utility for de-emphasized-but-still-live text — a
+   secondary count, a built-in/system row, a superseded name. Not for
+   placeholder/absent values (plain ink) or status text (status/badge colour
+   already carries the state). */
 .text-muted {
-    color: color-mix(in oklab, var(--color-base-content) var(--ink-muted), transparent);
+    color: color-mix(in oklab, var(--color-base-content) 60%, transparent);
 }
-
-/* tabular figures anywhere a user might compare values down a column */
-.num,
-.font-mono,
-table :where(td, th) {
-    font-variant-numeric: tabular-nums;
-}
-
 
 /*
-THE DATA GRID
-Collapsed borders, 13px type, 48px rows, sticky monospace column headers, and
-row separators at 7% ink. The row height is derived from the tallest thing a
-row must hold rather than picked — see --row-h.
-
-A cell does not wrap to save a column: give the value its own column instead
-(which is why TLP and event counts are columns rather than second lines).
-Wrapping costs every row in the grid; a column costs width once.
+THE SORTABLE COLUMN HEADER
+List.js drives client-side sorting off [data-sort]; .sort is the affordance
+that marks a header as clickable and shows which one is active.
 */
 
-.table {
-    border-collapse: collapse;
-    font-size: var(--text-data);
-    line-height: 1.45;
-    /* the grid is a panel: hairline edge plus the engraved ring, no shadow */
-    background-color: var(--color-base-100);
-    border: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
-    border-radius: var(--radius-box);
-    box-shadow:
-        0 0 0 1px var(--color-base-100),
-        0 0 0 2px color-mix(in oklab, var(--color-primary) var(--ring-edge), transparent);
-}
-
-.table :where(tbody tr:last-child td) {
-    border-bottom: 0;
-}
-
-/* A section heading inside a grid: the same label-over-rule marker used on the
-   summary readouts and in form fieldsets, so a grouped list and a grouped form
-   read as one system. The row's own separator is the heading's underline, which
-   is why a group break costs one line instead of an empty row between two of
-   them. */
-.table :where(tbody tr.row-group) td {
-    height: auto;
-    padding-top: 1.5rem;
-    border-bottom-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);
-}
-
-.table :where(tbody tr.row-group:first-child) td {
-    padding-top: var(--cell-y);
-}
-
-.table :where(tbody tr.row-group):hover {
-    background-color: transparent;
-}
-
-/* the empty state takes the whole grid: the mark, one display-size sentence,
-   and room for both */
-.table :where(tbody tr) td.empty-cell {
-    height: auto;
-    padding: 3.5rem 2rem;
-    text-align: center;
-}
-
-/* Column headers are sticky, and they park under the page header rather than
-   under the top of the viewport — both are sticky, and CSS cannot read one
-   element's height into another's offset, so the header declares a height and
-   the grid reads the same number. Inside an overlay there is no page header
-   above them. */
-.table :where(thead th) {
-    position: sticky;
-    top: var(--nav-h);
-    z-index: 2;
-    background-color: var(--color-base-100);
-    padding: 0.5rem var(--cell-x);
-    white-space: nowrap;
-    border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);
-}
-
-.table :where(thead th.sort) {
+.sort {
     cursor: pointer;
 }
 
-.table :where(thead th.sort):hover {
+.sort:hover {
     color: var(--color-base-content);
-}
-
-.table :where(tbody td) {
-    padding: var(--cell-y) var(--cell-x);
-    height: var(--row-h);
-    border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-row), transparent);
-}
-
-.table :where(tbody tr) {
-    transition: background-color 120ms ease;
-}
-
-/* row hover is a faint Seal wash rather than a grey one — the same structural
-   green the headers and rings carry, at a strength you feel more than see. It
-   stays clear of the cursor row, which is the brighter accent plus a left bar. */
-.table :where(tbody tr):hover {
-    background-color: color-mix(in oklab, var(--color-primary) var(--ink-hover), transparent);
-}
-
-/* flagged-for-review is the one row-level mark, and it takes the accent rather
-   than a status hue: it means "this needs you", not "this is bad" */
-.bg-flagged {
-    background-color: color-mix(in oklab, var(--color-accent) var(--wash-flag), transparent) !important;
-    box-shadow: inset 2px 0 0 var(--color-accent);
-}
-
-.btn-flagged {
-    color: var(--color-accent) !important;
-}
-
-/* Inside an overlay, or inside a table that scrolls in its own box, the page
-   header is not what the column headers park under — the scroll container is.
-   (overflow-x on a box makes it a scroller in both axes, so a wide table's
-   wrapper counts.) */
-up-drawer-box .table :where(thead th),
-up-modal-box .table :where(thead th),
-up-cover-box .table :where(thead th),
-:where(.overflow-x-auto, .overflow-y-auto, .overflow-auto) .table :where(thead th) {
-    top: 0;
-}
-
-/* sticky over the ledger ground; height declared so sticky column headers know where to stop */
-.pagehead {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    min-height: var(--nav-h);
-    background-color: var(--color-base-100);
-    /* the masthead rule is drawn in seal green at emphasis weight — the page
-       title sits on a ruled line, the way a ledger page is headed */
-    border-bottom: 1px solid color-mix(in oklab, var(--color-primary) var(--rule-hair2), transparent);
-    margin-bottom: 1.5rem;
-}
-
-/* the breadcrumb-title at full display conviction: larger than body Display,
-   tracked in, high optical size for the engraved cut of the serif */
-.pagehead h1 {
-    font-size: 1.75rem;
-    letter-spacing: -0.011em;
-    font-variation-settings: 'opsz' 120, 'WONK' 0;
-}
-
-.crumb-ancestor {
-    font-weight: 400;
-    color: color-mix(in oklab, var(--color-base-content) var(--ink-form-label), transparent);
 }
 
 .sort.asc::after {
@@ -559,292 +147,38 @@ up-cover-box .table :where(thead th),
 }
 
 /*
-THE READOUT STRIP
-Numbers only, separated by vertical hairlines — daisyUI's .stats ships a boxed,
-shadowed, generously padded tile instead.
+THE FLAGGED ROW
+The one row-level mark, and it takes the accent rather than a status hue: it
+means "this needs you", not "this is bad".
 */
 
-.stats {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    column-gap: 2.5rem;
-    row-gap: 1rem;
-    padding: 1.5rem;
-    background-color: var(--color-base-100);
-    border: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
-    border-radius: var(--radius-box);
-    box-shadow:
-        0 0 0 1px var(--color-base-100),
-        0 0 0 2px color-mix(in oklab, var(--color-primary) var(--ring-edge), transparent);
+.bg-flagged {
+    background-color: color-mix(in oklab, var(--color-accent) 8%, transparent) !important;
+    box-shadow: inset 2px 0 0 var(--color-accent);
 }
 
-.stats :where(.stat) {
-    display: block;
-    flex: 0 0 auto;
-    width: auto;
-    padding: 0;
-    border: 0;
-}
-
-/* A rule separates groups of figures, not every figure — a hairline between
-   each one turns a readout into a table of one-cell columns. Call sites mark
-   where a new group starts. */
-.stats :where(.stat.stat-group) {
-    padding-inline-start: 2.5rem;
-    border-inline-start: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
-}
-
-.stat-title {
-    margin-bottom: calc(var(--spacing) * 3);
-}
-
-.stat-value {
-    font-family: var(--font-sans);
-    font-size: 1.5rem;
-    font-weight: 600;
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-}
-
-/* a readout figure that is an identifier or a timestamp rather than a count */
-.stat-value.stat-mono {
-    font-family: var(--font-mono);
-}
-
-/* the record serial — an identifier the analyst can read and quote, which is
-   what earns it the signal colour on an otherwise unpainted readout */
-.serial,
-.stat-value.serial {
-    font-family: var(--font-mono);
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    color: var(--color-accent);
-}
-
-/*
-STATUS
-A 9px dot plus the word, never colour alone. Only a state the value list marks
-severe carries a hue; every other status is a solid ink dot. Red and amber are
-indistinguishable at 9px, and for red-green colour blindness at any size, so
-severity is carried by colour versus ink rather than hue against hue — which
-leaves a grid almost entirely ink, and the one red mark in it meaning
-something.
-*/
-
-.dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 999px;
-    display: inline-block;
-    flex: none;
-}
-
-.dot-ink {
-    background-color: var(--color-base-content);
-}
-
-.dot-error {
-    background-color: var(--color-error);
-}
-
-/*
-BUTTONS
-Near-square. Primary is an ink fill with cream text; everything else is a
-hairline-outlined sheet button or a bare ghost. daisyUI's default hover shading
-mixes toward a fixed black, which is nearly invisible once the surface itself
-is dark — mix toward base-content instead, so the shading direction always
-contrasts with the surface on both halves of the printing process.
-*/
-
-.btn {
-    --btn-hover-bg: color-mix(in oklab, var(--btn-color, var(--color-base-100)), var(--color-base-content) 8%);
-    --btn-active-bg: color-mix(in oklab, var(--btn-color, var(--color-base-100)), var(--color-base-content) 14%);
-    --btn-shadow: none;
-    --btn-noise: none;
-    font-weight: 500;
-}
-
-/* the working button is a sheet with a ruled edge, not a filled block */
-.btn:not(
-    .btn-neutral, .btn-primary, .btn-secondary, .btn-accent,
-    .btn-info, .btn-success, .btn-warning, .btn-error, .btn-ghost, .btn-link
-) {
-    --btn-bg: var(--color-base-100);
-    --btn-fg: var(--color-base-content);
-    --btn-border: color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
-}
-
-.btn-ghost {
-    --btn-fg: var(--color-base-content);
-    --btn-hover-bg: color-mix(in oklab, var(--color-base-content) var(--ink-hover), transparent);
-}
-
-/* An inverted fill is dark on the light theme and cream on the dark one. Cream
-   is fine at button scale and a slab of glare at band scale, so inverted fills
-   are used here and nowhere full-width. */
-.btn-neutral {
-    --btn-bg: var(--color-base-content);
-    --btn-fg: var(--color-base-100);
-    --btn-border: var(--color-base-content);
-}
-
-/* a button joined to a form field should read as part of that field */
-.join:has(.input, .select, .textarea) .btn.join-item {
-    --btn-border: color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
-}
-
-/*
-INPUTS
-Hairline border, sheet ground, near-square, 12px type, a leading icon at 45%.
-*/
-
-.input,
-.select,
-.textarea,
-.file-input {
-    --input-color: var(--color-base-100);
-    background-color: var(--color-base-100);
-    border-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
-    font-size: var(--text-data);
-}
-
-.input:focus-within,
-.select:focus-within,
-.textarea:focus-within,
-.file-input:focus-within {
-    border-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);
-}
-
-.checkbox,
-.radio,
-.toggle {
-    border-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);
-}
-
-/* Form labels take the seal-green label voice set above; here they only need
-   their own spacing. Green clears the 4.5:1 floor on both grounds, so the
-   readability carve-out the dim-ink version needed no longer applies. */
-.form-control > .label {
-    padding-bottom: 0.5rem;
-}
-
-/* validation text is prose, not a label, and stays legible against the dimmed
-   label it sits beside */
-.form-control > .label .text-error {
-    color: var(--color-error);
-    text-transform: none;
-    letter-spacing: 0.01em;
-    font-family: var(--font-sans);
-    font-size: var(--text-data);
-    font-weight: 400;
+.btn-flagged {
+    color: var(--color-accent) !important;
 }
 
 /*
 NAVIGATION (the rail)
-Labelled text items with an icon at 55% opacity and near-square corners.
-Icon-only navigation is rejected: it fails keyboard and screen-reader users.
+The active rail item fills with Seal Green rather than daisyUI's default
+neutral fill.
 */
 
-.menu :where(li > *) {
-    border-radius: var(--radius-field);
-}
-
-.menu :where(li > *):hover {
-    background-color: color-mix(in oklab, var(--color-base-content) var(--ink-hover), transparent);
-}
-
-/* The active rail item fills with Seal Green rather than ink: "where you are"
-   is a certification mark, and it earns the structural colour. It stays a
-   small fill — one item — so it holds on the dark theme too, where primary is
-   the bright verdigris. */
 .menu :where(li > .menu-active),
 .menu :where(li > .menu-active):hover {
     background-color: var(--color-primary);
     color: var(--color-primary-content);
 }
 
-.divider::before,
-.divider::after {
-    height: 1px;
-    background-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
-}
-
-/* Nothing is pill-shaped: --radius-selector carries badges down to near-square. */
-.badge-outline {
-    --badge-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);
-}
-
-/*
-TOASTS
-Success takes the seal green rather than the accent, which is kept scarce:
-success feedback fires on every save, import and completed job.
-*/
-
-.seal {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    max-width: 32rem;
-    padding: 0.625rem 0.75rem 0.625rem 0.625rem;
-    background-color: var(--color-base-100);
-    border: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
-    border-radius: var(--radius-box);
-    /* the panel's own engraved edge, one step heavier — a toast is a sheet laid
-       on the desk, not a floating card. The system has no shadows. */
-    box-shadow:
-        0 0 0 1px var(--color-base-100),
-        0 0 0 2px color-mix(in oklab, var(--color-primary) var(--ring-raised), transparent);
-    animation: seal-in 280ms cubic-bezier(.2, .8, .2, 1) both;
-}
-
-@keyframes seal-in {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: none; }
-}
-
-.seal-mark {
-    flex: none;
-    width: 2rem;
-    height: 2rem;
-    display: grid;
-    place-items: center;
-    font-size: 1.5rem;
-    line-height: 1;
-    color: var(--color-success);
-}
-
-.seal-severe .seal-mark {
-    color: var(--color-error);
-}
-
-.seal-body {
-    min-width: 0;
-    flex: 1;
-}
-
-.seal-msg {
-    font-size: 0.875rem;
-    line-height: 1.35;
-}
-
-/*
-ALERTS
-Inline messages take the same ruled sheet as the toast; the level is carried by
-the mark and the wording, not by a filled block.
-*/
-
-.alert {
-    background-color: var(--color-base-100);
-    border-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
-    color: var(--color-base-content);
-    box-shadow: none;
-}
-
 /*
 OVERLAYS
-Unpoly's own boxes are sheets laid over the page, so they take the raised
-engraved edge rather than a shadow.
+Unpoly's own boxes (drawer/modal/cover/popup) and the dropdown menu are not
+daisyUI components — they carry none of daisyUI's own surface styling, so
+they get daisyUI's own modal-box recipe (sheet face, box radius, shadow)
+applied directly.
 */
 
 up-drawer-box,
@@ -852,20 +186,7 @@ up-modal-box,
 up-cover-box,
 up-popup,
 .dropdown-content {
-    background-color: var(--color-base-100);
-    color: var(--color-base-content);
-    box-shadow:
-        0 0 0 1px var(--color-base-100),
-        0 0 0 2px color-mix(in oklab, var(--color-primary) var(--ring-raised), transparent);
-}
-
-/* A menu popover is a small sheet laid over the page. It needs its own edge for
-   the same reason a panel does — and more so, because it lands on the deep
-   cream ground where a same-tone fill has no boundary at all. It takes the
-   sheet face and the raised ring, never a drop shadow. */
-.dropdown-content {
-    border: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
-    border-radius: var(--radius-box);
+    @apply bg-base-100 text-base-content rounded-box shadow-xl;
 }
 
 /*
@@ -881,7 +202,7 @@ box that never scrolls and sit perfectly still. So the box becomes a fixed-heigh
 flex frame instead, and .form-body is the only region that scrolls.
 
 Scoped with :has() so overlays that are not forms — the evidence log, the report
-picker, the case switcher — keep Unpoly's own padded box.
+picker, the case switcher, the confirm dialog — keep Unpoly's own padded box.
 */
 
 :where(up-drawer-box, up-modal-box, up-cover-box):has(.form-sheet) {
@@ -922,7 +243,7 @@ picker, the case switcher — keep Unpoly's own padded box.
     align-items: center;
     gap: 1rem;
     padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);
+    border-bottom: 1px solid var(--color-base-300);
 }
 
 .form-body {
@@ -931,10 +252,9 @@ picker, the case switcher — keep Unpoly's own padded box.
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 1.5rem;
-    /* a column, so a markdown field can claim the room left over below the
-       fields that have a natural size */
     display: flex;
     flex-direction: column;
+    gap: 1rem;
 }
 
 /*
@@ -948,19 +268,19 @@ its floor and the body scrolls instead of squeezing it. The height override
 needs !important because Vditor writes its own inline height on the element.
 */
 
-.form-control:has(> .vditor) {
+.fieldset:has(> .vditor) {
     flex: 1 0 auto;
     display: flex;
     flex-direction: column;
     min-height: 0;
 }
 
-.form-control:has(> .vditor) > .vditor {
+.fieldset:has(> .vditor) > .vditor {
     flex: 1 0 auto;
     height: auto !important;
 }
 
-.form-control:has(> .vditor) .vditor-content {
+.fieldset:has(> .vditor) .vditor-content {
     flex: 1 0 auto;
 }
 
@@ -970,102 +290,10 @@ needs !important because Vditor writes its own inline height on the element.
     align-items: center;
     gap: 0.5rem;
     padding: 1rem 1.5rem;
-    border-top: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);
+    border-top: 1px solid var(--color-base-300);
     /* the foot is the one region that recesses, so the commit reads as sitting
        on the frame rather than floating in the field of inputs */
     background-color: var(--color-base-200);
-}
-
-/* Field groups. The legend takes the section-heading treatment used on the
-   summary page, so a form and a readout are recognisably the same system. */
-.form-group {
-    margin-bottom: 1.75rem;
-}
-
-.form-group:last-child {
-    margin-bottom: 0;
-}
-
-.form-group > legend {
-    display: block;
-    width: 100%;
-    padding-bottom: 0.375rem;
-    margin-bottom: 0.875rem;
-    border-bottom: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);
-}
-
-/*
-THE CONFIRM SHEET
-The head carries the question, the foot carries the two answers, and there is
-nothing in between. It reuses .form-head and .form-foot rather than restating
-them, so the confirm and the forms can't drift apart. It renders in a modal,
-not a drawer — see ConfirmDialog.
-
-The frame lives on .notice-sheet rather than only on the modal box, so it still
-renders correctly outside an overlay. Inside a modal box it is switched off
-again, where the box's own ring already draws it.
-*/
-
-.notice-sheet {
-    max-width: 26rem;
-    margin-inline: auto;
-    background-color: var(--color-base-100);
-    border: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
-    border-radius: var(--radius-box);
-    /* the raised edge: it sits above the page like every other overlay */
-    box-shadow:
-        0 0 0 1px var(--color-base-100),
-        0 0 0 2px color-mix(in oklab, var(--color-primary) var(--ring-raised), transparent);
-    /* the foot's recessed ground has to stop at the corner */
-    overflow: hidden;
-}
-
-up-modal-box:has(.notice-sheet) {
-    padding: 0;
-    min-height: 0;
-    max-width: 100%;
-    border-radius: var(--radius-box);
-    overflow: hidden;
-}
-
-/* The width has to out-specify Unpoly's own `up-modal[size=medium] up-modal-box`
-   (650px), hence the attribute in the selector. Auto block margins centre the
-   box in the viewport rather than leaving a 165px card hanging from the top
-   edge — and unlike `align-items: center` they don't clip a box taller than the
-   viewport. */
-up-modal[size]:has(.notice-sheet) up-modal-box {
-    width: 28rem;
-    margin-block: auto;
-}
-
-up-modal-box .notice-sheet {
-    max-width: none;
-    border: 0;
-    border-radius: 0;
-    box-shadow: none;
-}
-
-/* Unpoly's dismiss would float in the head's corner. Cancel is one tab away and
-   ⎋ still works; a second dismiss on a two-answer question is noise. */
-up-modal-box:has(.notice-sheet) > up-modal-dismiss {
-    display: none;
-}
-
-/* The severity mark: a hairline ring and a glyph at the size of the toast's
-   mark, rather than the 4rem filled circle it replaces. The wash behind it is
-   6%, which reads as tinted paper rather than as a coloured region. */
-.notice-mark {
-    flex: none;
-    width: 2.25rem;
-    height: 2.25rem;
-    display: grid;
-    place-items: center;
-    font-size: 1.125rem;
-    line-height: 1;
-    color: var(--color-error);
-    background-color: color-mix(in oklab, var(--color-error) 6%, transparent);
-    border: 1px solid color-mix(in oklab, var(--color-error) 45%, transparent);
-    border-radius: 999px;
 }
 
 up-drawer[size=large] up-drawer-box {
@@ -1080,7 +308,6 @@ up-drawer[size=xlarge] up-drawer-box {
 }
 
 up-popup {
-    border-radius: var(--radius-box);
     margin-top: 0.5rem;
 }
 
@@ -1092,13 +319,13 @@ up-popup-dismiss,
 up-cover-dismiss,
 up-drawer-dismiss,
 up-modal-dismiss {
-    color: color-mix(in oklab, var(--color-base-content) var(--ink-label), transparent);
+    color: color-mix(in oklab, var(--color-base-content) 45%, transparent);
 }
 
 /*
 THE BRAND MARK
 An engraved portrait of a top-hatted duck in a circular medallion with a
-seal-green ring, in the rail at 32px and in empty states at 96-112px.
+seal-green ring.
 
 The mark does not change between themes: it carries its own cream paper and its
 own ink, so it stays a light object on both rather than inverting into an
@@ -1109,18 +336,7 @@ x-ray of itself.
     border-radius: 50%;
     flex: none;
     object-fit: cover;
-    /* the paper is composited into the file, so the disc needs no fill of its
-       own and reads the same on both themes */
-    box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-primary) var(--ring-medallion), transparent);
-}
-
-/* the empty-state medallion carries a heavier triple ring: ink, a cream gap,
-   then the seal */
-.medallion-lg {
-    box-shadow:
-        0 0 0 1px color-mix(in oklab, oklch(23% 0.030 165) 18%, transparent),
-        0 0 0 4px oklch(98.8% 0.010 92),
-        0 0 0 5px color-mix(in oklab, var(--color-primary) var(--ring-medallion), transparent);
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-primary) 45%, transparent);
 }
 
 /*
@@ -1149,7 +365,8 @@ the compiler in dagobert.js adds .overflowing and the show more/less toggle.
 
 /*
 PHOSPHOR ICONS
-size utilities layered on the .ph base class
+size utilities layered on the .ph base class — icon sizing isn't something
+daisyUI provides.
 */
 
 .ph-5 {
@@ -1209,58 +426,4 @@ where .input is on the control itself: an <input> has no descendants to match.
         transition: none !important;
         animation: none !important;
     }
-}
-
-/*
-THE EVENT HISTOGRAM (vis-timeline)
-vis-timeline ships its own chrome: a grey box, UA-default axis labels, a
-hardcoded blue bar. None of that belongs to a page built from panels and ink
-hairlines, so it is reskinned here rather than patched property by property.
-Selectors are scoped to #histogram and only cover what Graph2d actually
-renders — this app never instantiates vis.Timeline, and the lateral-movement
-graph is the separate vis-network package, so item/tooltip/legend styles are
-left alone.
-
-Bars stay plain ink rather than reaching for a green, matching the dashboard's
-Proportional Bars: a count is not a status judgement. The current-time line is
-the one thing here that means "look here," so it gets the signal colour.
-*/
-
-#histogram .vis-timeline {
-    border: none;
-}
-
-#histogram .vis-panel.vis-center,
-#histogram .vis-panel.vis-top,
-#histogram .vis-panel.vis-bottom,
-#histogram .vis-panel.vis-left,
-#histogram .vis-panel.vis-right {
-    border-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
-}
-
-#histogram .vis-time-axis .vis-text {
-    font-family: var(--font-mono);
-    font-size: var(--text-label);
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: color-mix(in oklab, var(--color-base-content) var(--ink-label), transparent);
-}
-
-#histogram .vis-time-axis .vis-grid.vis-minor {
-    border-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
-}
-
-#histogram .vis-time-axis .vis-grid.vis-major {
-    border-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);
-}
-
-#histogram .vis-graph-group0 {
-    fill: color-mix(in oklab, var(--color-base-content) 70%, transparent);
-    fill-opacity: 1;
-    stroke: none;
-}
-
-#histogram .vis-current-time {
-    background-color: var(--color-accent);
 }

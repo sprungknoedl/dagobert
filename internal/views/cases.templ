@@ -29,7 +29,7 @@ func dateOrDash(d model.Date) string {
 templ CasesMany(env Env, rows []model.Case) {
 	@layout() {
 		@list(env, "Cases", navTitleIcon("briefcase"), navHideImport(), navPreButtons(casesImport(env))) {
-			<table class="table table-default" data-default-sort="value-1">
+			<table class="table table-pin-rows" data-default-sort="value-1">
 				<thead>
 					<tr>
 						<th data-sort="value-0" class="sort">ID</th>
@@ -48,15 +48,19 @@ templ CasesMany(env Env, rows []model.Case) {
 					} else {
 						for _, row := range rows {
 							if url, ok := env.Allowed("GET", env.Route+row.ID+"/summary/"); ok {
-								<tr class="row-hover">
+								<tr>
 									<td class="value-0" data-search={ row.ID }><a class="link" href={ url }>{ row.ID }</a> </td>
 									<td class="value-1" data-search={ row.Name }><a class="link" href={ url }>{ row.Name }</a> </td>
 									<td class="value-2" data-search={ row.Classification }>{ row.Classification } </td>
 									<td class="value-3" data-search={ row.Severity }>
-										@valueBadge(env.ValueLists.CaseSeverities, row.Severity)
+										@valueIcon(env.ValueLists.CaseSeverities, row.Severity) {
+											{ row.Severity }
+										}
 									</td>
 									<td class="value-4" data-search={ row.Outcome }>
-										@valueBadge(env.ValueLists.CaseOutcomes, row.Outcome)
+										@valueIcon(env.ValueLists.CaseOutcomes, row.Outcome) {
+											{ row.Outcome }
+										}
 									</td>
 									<td class="value-5" data-search={ fp.If(row.Closed, "closed", "open") }>
 										@caseStatusPill(row.Closed)
@@ -149,8 +153,8 @@ templ CasesOne(env Env, obj model.Case, vr valid.ValidationError, opts ...CasesO
 		@hiddenField("ID", obj.ID)
 		@hiddenField("IsTemplate", strconv.FormatBool(obj.IsTemplate))
 		if obj.ID == "new" && !obj.IsTemplate && len(cfg.templates) > 0 {
-			<div class="form-control mb-2">
-				<label class="label justify-start gap-2">Create from template</label>
+			<div class="fieldset">
+				<label class="label">Create from template</label>
 				// The template defaults are carried inline on each option so picking
 				// one fills the case-level fields client-side (applyCaseTemplate in
 				// dagobert.js), with no server roundtrip. selectedTemplate keeps the
@@ -175,9 +179,9 @@ templ CasesOne(env Env, obj model.Case, vr valid.ValidationError, opts ...CasesO
 		@markdownField("Summary", obj.Summary, withLabel("Executive summary"), withHint("Markdown supported. Describe what happened, scope of impact, root cause, and resolution."))
 		<!-- x -->
 		if cfg.sketches.Show {
-			<h2 class="text-xl font-serif mb-2 mt-4">Integrations</h2>
-			<div class="form-control mb-2">
-				<label class="label justify-start gap-2">
+			<h2 class="text-xl font-semibold">Integrations</h2>
+			<div class="fieldset">
+				<label class="label">
 					Timesketch Sketch
 					@validationError(vr["SketchID"])
 				</label>
@@ -224,13 +228,13 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 	@layout() {
 		@list(env, "Summary", navHideSearch(), navHideAdd(), navHideExport(), navHideImport(), navHideRefresh(),
 			navPreButtons(caseSummaryExtra(env))) {
-			<!-- Case readout: numbers and facts only, separated by hairlines -->
+			<!-- Case readout: numbers and facts only -->
 			<div class="stats w-full">
 				<div class="stat">
 					<div class="stat-title">Name</div>
 					<div class="stat-value">{ obj.Name }</div>
 				</div>
-				<div class="stat stat-group">
+				<div class="stat">
 					<div class="stat-title">Severity</div>
 					<div class="stat-value">{ obj.Severity }</div>
 				</div>
@@ -242,14 +246,14 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 					<div class="stat-title">Outcome</div>
 					<div class="stat-value">{ obj.Outcome }</div>
 				</div>
-				<div class="stat stat-group">
+				<div class="stat">
 					<div class="stat-title">Opened</div>
-					<div class="stat-value stat-mono">{ dateOrDash(obj.OpenedAt) }</div>
+					<div class="stat-value font-mono">{ dateOrDash(obj.OpenedAt) }</div>
 				</div>
 				if !obj.ClosedAt.IsZero() {
 					<div class="stat">
 						<div class="stat-title">Closed</div>
-						<div class="stat-value stat-mono">{ dateOrDash(obj.ClosedAt) }</div>
+						<div class="stat-value font-mono">{ dateOrDash(obj.ClosedAt) }</div>
 					</div>
 				}
 				<div class="stat">
@@ -260,25 +264,27 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 				</div>
 			</div>
 			<!-- Executive summary, and the three readouts drawn from it -->
-			<section class="panel p-6 mt-6">
-				<div class="label-micro mb-3">Executive summary</div>
+			<section>
+				<div class="fieldset-legend">Executive summary</div>
 				if obj.Summary == "" {
-					<p class="font-serif text-2xl mb-1">Nothing on record yet.</p>
+					<p class="text-2xl font-semibold">Nothing on record yet.</p>
 					<p class="text-sm text-muted">Use the Edit button to add a narrative describing what happened, the scope of impact, and how it was resolved.</p>
 				} else {
 					<article class="prose max-w-none">
 						@markdown(obj.Summary)
 					</article>
 				}
-				<div class="grid grid-cols-1 md:grid-cols-[1.6fr_1fr_1fr] gap-8 mt-8">
+			</section>
+			<section>
+				<div class="grid grid-cols-1 md:grid-cols-[1.6fr_1fr_1fr] gap-8">
 					// The date is condensed to MM-DD hh:mm (the full timestamp is the
 					// title attribute, and the timeline has it in full), and the record
 					// type is carried by its icon alone, to leave the width for findings.
 					<!-- Flagged events -->
 					<div>
-						<div class="label-micro pb-1.5 mb-2 border-b hair2">Key Events</div>
+						<div class="fieldset-legend pb-1.5 mb-2 border-b border-base-300">Key Events</div>
 						if len(keyEvents) == 0 {
-							<p class="font-serif text-muted">No events flagged — yet.</p>
+							<p class="text-muted">No events flagged — yet.</p>
 						} else {
 							<ul class="space-y-2 text-xs">
 								for _, ev := range keyEvents {
@@ -296,9 +302,9 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 					</div>
 					<!-- Compromised assets -->
 					<div>
-						<div class="label-micro pb-1.5 mb-2 border-b hair2">Compromised Assets</div>
+						<div class="fieldset-legend pb-1.5 mb-2 border-b border-base-300">Compromised Assets</div>
 						if len(compromisedAssets) == 0 {
-							<p class="font-serif text-muted">No assets marked as compromised.</p>
+							<p class="text-muted">No assets marked as compromised.</p>
 						} else {
 							<ul class="space-y-2 text-xs font-mono">
 								for _, a := range compromisedAssets {
@@ -312,9 +318,9 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 					</div>
 					<!-- Flagged indicators -->
 					<div>
-						<div class="label-micro pb-1.5 mb-2 border-b hair2">Key Indicators</div>
+						<div class="fieldset-legend pb-1.5 mb-2 border-b border-base-300">Key Indicators</div>
 						if len(flaggedIndicators) == 0 {
-							<p class="font-serif text-muted">No indicators flagged — yet.</p>
+							<p class="text-muted">No indicators flagged — yet.</p>
 						} else {
 							<ul class="space-y-2 text-xs font-mono">
 								for _, i := range flaggedIndicators {
@@ -342,18 +348,18 @@ templ CaseSwitcher(env Env, cases []model.Case, from string, to string) {
 			<form method="get" action="/cases/switch" up-autosubmit up-target="#switch-results" up-history="false">
 				<input type="hidden" name="from" value={ from }/>
 				<input type="hidden" name="to" value={ to }/>
-				<label class="w-full input flex items-center gap-2 mb-3">
+				<label class="w-full input">
 					<i class="ph ph-magnifying-glass text-muted"></i>
 					<input type="text" name="search" class="search grow" placeholder="Switch to case ..." autofocus autocomplete="off"/>
 				</label>
 			</form>
 			<ul id="switch-results" class="menu w-full gap-1 flex-nowrap max-h-96 overflow-y-auto">
 				if len(cases) == 0 {
-					<li class="p-2 text-center font-serif text-muted">No matching cases.</li>
+					<li class="p-2 text-center text-muted">No matching cases.</li>
 				} else {
 					for _, c := range cases {
 						<li>
-							<a href={ "/cases/" + c.ID + "/" + to } class="switch-result flex items-center gap-2">
+							<a href={ "/cases/" + c.ID + "/" + to } class="switch-result">
 								<i class="ph ph-5 ph-briefcase text-muted"></i>
 								<span class="grow truncate">{ c.Name }</span>
 								@caseStatusPill(c.Closed)
@@ -371,19 +377,19 @@ templ CaseSwitcher(env Env, cases []model.Case, from string, to string) {
 templ caseStatusPill(closed bool) {
 	<span class={ "inline-flex items-center gap-2", templ.KV("text-error", !closed) }>
 		if closed {
-			<span class="dot dot-ink"></span>
+			<span class="status status-neutral"></span>
 			Closed
 		} else {
-			<span class="dot dot-error"></span>
+			<span class="status status-error"></span>
 			Open
 		}
 	</span>
 }
 
-// stat is one column of the readout strip: a caption over a figure. group
-// draws the hairline separating this figure from the one before.
-templ stat(title string, value int, group bool) {
-	<div class={ "stat", templ.KV("stat-group", group) }>
+// stat is one column of the readout strip: a caption over a figure. daisyUI's
+// own .stats draws a dashed rule between every non-last .stat automatically.
+templ stat(title string, value int) {
+	<div class="stat">
 		<div class="stat-title">{ title }</div>
 		<div class="stat-value">{ value }</div>
 	</div>
@@ -402,9 +408,9 @@ templ caseSummaryExtra(env Env) {
 	if url, ok := env.Allowed("GET", "/cases/" + env.Case.ID + "/export/archive"); ok {
 		<details class="dropdown">
 			<summary class="btn join-item">
-				<i class="ph ph-6 ph-archive inline-block mr-1"></i> Export
+				<i class="ph ph-6 ph-archive"></i> Export
 			</summary>
-			<ul style="position: absolute" class="menu dropdown-content z-[1] w-60 p-2">
+			<ul class="menu dropdown-content w-60">
 				<li><a href={ url + "?binaries=false" }>Metadata only</a></li>
 				<li><a href={ url + "?binaries=true" }>Include evidence &amp; malware</a></li>
 			</ul>
@@ -414,19 +420,19 @@ templ caseSummaryExtra(env Env) {
 		// The fork handler accepts this drawer via X-Up-Accept-Layer with a
 		// {location} value; dagobert.js then navigates to the new case.
 		<a class="join-item btn" href={ url } up-layer="new drawer">
-			<i class="ph ph-6 ph-git-fork inline-block mr-1"></i> Fork
+			<i class="ph ph-6 ph-git-fork"></i> Fork
 		</a>
 	}
 	if url, ok := env.Allowed("GET", "/settings/cases/" + env.Case.ID + "/acl"); ok {
 		// CaseSaveACL redirects to the case list; accepting on that location
 		// closes the drawer while staying on the summary.
 		<a class="join-item btn" href={ url } up-layer="new drawer" up-accept-location="/cases/">
-			<i class="ph ph-6 ph-users-three inline-block mr-1"></i> ACL
+			<i class="ph ph-6 ph-users-three"></i> ACL
 		</a>
 	}
 	if uri, ok := env.Allowed("GET", env.Route); ok {
 		<a class="join-item btn" href={ uri } up-target="#list">
-			<i class="ph ph-5 ph-arrows-clockwise inline-block mr-1"></i> Refresh
+			<i class="ph ph-5 ph-arrows-clockwise"></i> Refresh
 		</a>
 	}
 	if url, ok := env.Allowed("DELETE", "/cases/" + env.Case.ID); ok {
@@ -434,14 +440,14 @@ templ caseSummaryExtra(env Env) {
 		// ("/" -> "/cases/") accepts the layer; the summary underneath is gone
 		// with the case, so navigate to the case list on acceptance.
 		<a class="join-item btn text-error" href={ url } up-method="DELETE" up-layer="new modal" up-accept-location="/cases/" data-on-accepted="goto-cases">
-			<i class="ph ph-6 ph-trash inline-block mr-1"></i> Delete
+			<i class="ph ph-6 ph-trash"></i> Delete
 		</a>
 	}
 	if url, ok := env.Allowed("GET", "/cases/" + env.Case.ID + "?target=summary"); ok {
 		// The hungry #list swap only refreshes the body; reload the whole <main>
 		// on accept so the navbar title (case name) updates too.
 		<a class="join-item btn btn-primary" href={ url } up-layer="new drawer" up-accept-location={ env.Route } data-on-accepted="reload-main-root">
-			<i class="ph ph-6 ph-pencil-simple inline-block mr-1"></i> Edit
+			<i class="ph ph-6 ph-pencil-simple"></i> Edit
 		</a>
 	}
 }
@@ -450,9 +456,9 @@ templ casesImport(env Env) {
 	if _, ok := env.Allowed("POST", "/cases/import/csv"); ok {
 		<details class="dropdown">
 			<summary class="btn join-item">
-				<i class="ph ph-6 ph-sort-ascending inline-block mr-1"></i> Import
+				<i class="ph ph-6 ph-sort-ascending"></i> Import
 			</summary>
-			<ul style="position: absolute" class="menu dropdown-content z-[1] w-52 p-2">
+			<ul class="menu dropdown-content w-52">
 				<li><a href="/cases/import/csv" up-layer="new drawer" up-accept-location={ env.Route }>List via CSV</a></li>
 				<li><a href="/cases/import/archive" up-layer="new drawer" up-accept-location={ env.Route }>Single via Archive</a></li>
 			</ul>

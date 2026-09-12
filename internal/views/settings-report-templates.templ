@@ -9,7 +9,7 @@ import (
 templ SettingsReportTemplatesMany(env Env, rows []model.ReportTemplate) {
 	@layout() {
 		@list(env, "Report Templates", navSettings(), navHideExport(), navHideImport()) {
-			<table class="table table-default" data-default-sort="value-0">
+			<table class="table table-pin-rows" data-default-sort="value-0">
 				<thead>
 					<tr>
 						<th data-sort="value-0" class="sort">Name</th>
@@ -22,7 +22,7 @@ templ SettingsReportTemplatesMany(env Env, rows []model.ReportTemplate) {
 						@emptyTable(env, "No templates installed.", "Upload a .docx, .odt, or .ods file with template placeholders to generate formatted investigation reports. Download the default templates from the project repository to get started.")
 					}
 					for _, row := range rows {
-						<tr class="row-hover">
+						<tr>
 							<td class="value-0" data-search={ row.Name }>{ row.Name } </td>
 							<td class="value-1" data-search={ row.Notes }>{ row.Notes } </td>
 							<td class="text-right">
@@ -48,8 +48,8 @@ templ SettingsReportTemplatesOne(env Env, obj model.ReportTemplate, vr valid.Val
 	{{ title := fp.If(obj.ID == "new", "Add report template", "Edit report template") }}
 	@form(env, uri, title, enctype("multipart/form-data"), withSerial(obj.ID)) {
 		@hiddenField("ID", obj.ID)
-		<div class="form-control mb-2">
-			<label class="label justify-start gap-2">
+		<div class="fieldset">
+			<label class="label">
 				File
 				@requiredLabel()
 			</label>

@@ -52,9 +52,7 @@ var iconMap = parsePhosphorCSS(frontend.PhosphorCSS)
 templ VisNetwork(env Env, nodes []Node, edges []Edge, hideIndicators bool) {
 	{{ c := networkCounts(nodes, edges) }}
 	@layout() {
-		<section id="errors"></section>
-		@sidebar(env, "Lateral Movement")
-		<main class="rail-offset p-6 grow max-w-full flex flex-col h-screen">
+		@fullscreen(env, "Lateral Movement") {
 			<form method="get" up-autosubmit up-target="#graph" up-history="true">
 				@navbar(env, "Lateral Movement Graph", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navHideRefresh(),
 					navPreButtons(networkControls(hideIndicators)))
@@ -67,22 +65,22 @@ templ VisNetwork(env Env, nodes []Node, edges []Edge, hideIndicators bool) {
 				if len(nodes) == 0 {
 					@networkEmpty(env, hideIndicators)
 				} else {
-					<div class="stats w-full mb-6 flex-none">
-						@stat("Assets", c.Assets, false)
-						@stat("Links", c.Movements, false)
+					<div class="stats w-full flex-none">
+						@stat("Assets", c.Assets)
+						@stat("Links", c.Movements)
 						if !hideIndicators {
-							@stat("Indicators", c.Indicators, true)
-							@stat("Observations", c.Observations, false)
+							@stat("Indicators", c.Indicators)
+							@stat("Observations", c.Observations)
 						} else {
 							// a dimmed "0 indicators" would read as "this case has
 							// none", which is a different fact from "not drawn"
-							<div class="stat stat-group">
+							<div class="stat">
 								<div class="stat-title">Indicators</div>
 								<div class="stat-value text-muted">—</div>
 							</div>
 						}
 					</div>
-					<div class="panel grow min-h-0 flex flex-col overflow-hidden">
+					<div class="card card-border bg-base-100 grow min-h-0 flex flex-col overflow-hidden">
 						<div class="graph-frame grow min-h-0">
 							<div
 								id="mynetwork"
@@ -98,7 +96,7 @@ templ VisNetwork(env Env, nodes []Node, edges []Edge, hideIndicators bool) {
 					</div>
 				}
 			</div>
-		</main>
+		}
 	}
 }
 
@@ -107,10 +105,10 @@ templ VisNetwork(env Env, nodes []Node, edges []Edge, hideIndicators bool) {
 // hundred observation nodes are a rendering cost, not just a visual one.
 templ networkControls(hideIndicators bool) {
 	<button type="button" class="join-item btn" data-graph-action="fit" title="Frame the whole graph">
-		<i class="ph ph-5 ph-frame-corners inline-block mr-1"></i> Fit
+		<i class="ph ph-5 ph-frame-corners"></i> Fit
 	</button>
 	<button type="button" class="join-item btn" data-graph-action="freeze" aria-pressed="false" title="Stop the layout moving, so nodes stay where you drag them">
-		<i class="ph ph-5 ph-lock-simple-open inline-block mr-1"></i>
+		<i class="ph ph-5 ph-lock-simple-open"></i>
 		<span data-graph-label>Freeze</span>
 	</button>
 	<label class="join-item btn pr-4">
@@ -122,7 +120,7 @@ templ networkControls(hideIndicators bool) {
 	// swapped #list, so a link's href freezes at the state the page first
 	// rendered in and a reload would quietly drop whatever is toggled here.
 	<button type="submit" class="join-item btn" title="Redraw from the current timeline">
-		<i class="ph ph-5 ph-arrows-clockwise inline-block mr-1"></i> Refresh
+		<i class="ph ph-5 ph-arrows-clockwise"></i> Refresh
 	</button>
 }
 
@@ -130,7 +128,7 @@ templ networkControls(hideIndicators bool) {
 // legend in the page header: the drawing and the key to reading it belong to
 // the same piece of paper.
 templ networkKey(hideIndicators bool) {
-	<div class="graph-key label-micro">
+	<div class="graph-key">
 		<span class="graph-key-item"><span class="graph-key-token"><i class="ph ph-desktop"></i></span> Asset</span>
 		<span class="graph-key-item"><span class="graph-key-line"></span> Shared event</span>
 		if !hideIndicators {
@@ -146,9 +144,9 @@ templ networkKey(hideIndicators bool) {
 // draw until timeline events name assets — so the empty state points at the
 // timeline instead of offering to add a node here.
 templ networkEmpty(env Env, hideIndicators bool) {
-	<div class="panel grow min-h-0 flex flex-col items-center justify-center text-center px-8 py-14">
-		@medallion("medallion-lg w-24 h-24 mb-6")
-		<p class="font-serif text-lg text-muted mb-2">Nothing has moved yet.</p>
+	<div class="card card-border bg-base-100 grow min-h-0 flex flex-col items-center justify-center text-center px-8 py-14">
+		@medallion("medallion w-24 h-24")
+		<p class="text-lg text-muted mb-2">Nothing has moved yet.</p>
 		<p class="text-sm text-muted max-w-md leading-relaxed">
 			This sheet is drawn from the timeline: record an event that names two or more
 			assets and the link between them appears here. Indicators attached to the same

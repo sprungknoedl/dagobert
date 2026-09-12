@@ -23,9 +23,9 @@ templ form(env Env, uri string, title string, opts ...formOption) {
 			<form method="post" action={ uri } enctype={ cfg.enctype } up-submit>
 				<header class="form-head">
 					<div class="grow min-w-0">
-						<h1 class="font-serif text-2xl font-semibold leading-none truncate">{ title }</h1>
+						<h1 class="text-2xl font-semibold leading-none truncate">{ title }</h1>
 						if cfg.serial != "" {
-							<div class="serial text-[0.625rem] mt-2">{ "№ " + cfg.serial }</div>
+							<div class="text-xs text-muted mt-2">{ "№ " + cfg.serial }</div>
 						}
 					</div>
 					<a class="btn btn-ghost btn-square" up-dismiss aria-label="Close">
@@ -55,8 +55,8 @@ templ form(env Env, uri string, title string, opts ...formOption) {
 // fieldset groups related fields under a heading and a hairline. Worth it from
 // roughly five fields up; shorter forms stay flat.
 templ fieldset(legend string) {
-	<fieldset class="form-group">
-		<legend class="label-micro">{ legend }</legend>
+	<fieldset class="fieldset">
+		<legend class="fieldset-legend">{ legend }</legend>
 		{ children... }
 	</fieldset>
 }
@@ -140,7 +140,7 @@ templ validationError(vc valid.Condition) {
 }
 
 templ fieldLabel(cfg formConfig) {
-	<label class="label justify-start gap-2">
+	<label class="label">
 		@cfg.label
 		@cfg.required
 		@cfg.validation
@@ -167,7 +167,7 @@ templ hiddenField(name string, value string, opts ...formOption) {
 
 templ stringField(name string, value string, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
-	<div class="form-control mb-2">
+	<div class="fieldset">
 		@fieldLabel(cfg)
 		<input name={ name } type="text" class="input w-full" value={ value }/>
 	</div>
@@ -175,7 +175,7 @@ templ stringField(name string, value string, opts ...formOption) {
 
 templ dateField(name string, value string, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
-	<div class="form-control mb-2">
+	<div class="fieldset">
 		@fieldLabel(cfg)
 		<input name={ name } type="date" class="input w-full" value={ value }/>
 	</div>
@@ -183,7 +183,7 @@ templ dateField(name string, value string, opts ...formOption) {
 
 templ passwordField(name string, value string, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
-	<div class="form-control mb-2">
+	<div class="fieldset">
 		@fieldLabel(cfg)
 		<div class="join w-full">
 			<input name={ name } type="password" class="input join-item w-full" value={ value } autocomplete="off" data-1p-ignore data-lpignore="true" data-bwignore data-form-type="other"/>
@@ -196,7 +196,7 @@ templ passwordField(name string, value string, opts ...formOption) {
 
 templ numberField(name string, value int, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
-	<div class="form-control mb-2">
+	<div class="fieldset">
 		@fieldLabel(cfg)
 		<input name={ name } type="text" class="input w-full" value={ strconv.Itoa(value) }/>
 	</div>
@@ -204,7 +204,7 @@ templ numberField(name string, value int, opts ...formOption) {
 
 templ selectField(name string, value string, item []model.ValueListItem, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
-	<div class="form-control mb-2">
+	<div class="fieldset">
 		@fieldLabel(cfg)
 		<select name={ name } class="select w-full">
 			for _, e := range item {
@@ -216,7 +216,7 @@ templ selectField(name string, value string, item []model.ValueListItem, opts ..
 
 templ choicesField(name string, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
-	<div class="form-control mb-2">
+	<div class="fieldset">
 		@fieldLabel(cfg)
 		<select multiple name={ name } class="choices select w-full">
 			{ children... }
@@ -226,8 +226,8 @@ templ choicesField(name string, opts ...formOption) {
 
 templ booleanField(name string, value bool, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
-	<div class="form-control mb-2">
-		<label class="label cursor-pointer justify-start gap-2">
+	<div class="fieldset">
+		<label class="label">
 			<input name={ name } value="true" type="checkbox" class="checkbox" checked?={ value }/>
 			@cfg.label
 			if cfg.hint != "" {
@@ -241,7 +241,7 @@ templ booleanField(name string, value bool, opts ...formOption) {
 
 templ textareaField(name string, value string, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
-	<div class="form-control mb-2">
+	<div class="fieldset">
 		@fieldLabel(cfg)
 		<textarea name={ name } rows="3" class="textarea w-full">{ value }</textarea>
 	</div>
@@ -250,7 +250,7 @@ templ textareaField(name string, value string, opts ...formOption) {
 templ markdownField(name string, value string, opts ...formOption) {
 	{{ cfg := applyformOptions(opts) }}
 	{{ cfg.label = templ.Join(cfg.label, templ.Raw(`<i class="ph ph-4 ph-markdown-logo text-muted" title="Supports markdown" aria-label="Supports markdown" role="img"></i>`)) }}
-	<div class="form-control mb-2">
+	<div class="fieldset">
 		@fieldLabel(cfg)
 		<textarea name={ name } rows="3" class="textarea w-full" data-markdown>{ value }</textarea>
 	</div>

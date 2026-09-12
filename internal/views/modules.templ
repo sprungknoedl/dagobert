@@ -11,16 +11,16 @@ templ ModuleList(env Env, jobs []Job) {
 	@layout() {
 		<main>
 			<!-- Modal header -->
-			<h1 class="font-serif text-2xl mb-4">
+			<h1 class="text-2xl font-semibold mb-4">
 				Modules
 				<a class="ml-2" href={ env.Route } up-follow><i class="ph ph-5 ph-arrows-clockwise inline-block mr-1"></i> </a>
 			</h1>
 			<!-- Modal body -->
-			<div class="mb-4">
-				<p class="mb-4">You may have to refresh the list to see the updated results after running a module.</p>
+			<div class="flex flex-col gap-4">
+				<p>You may have to refresh the list to see the updated results after running a module.</p>
 				for _, run := range jobs {
-					<div class="card bg-base-100 mb-4">
-						<div class="card-body p-4">
+					<div class="card card-sm card-border bg-base-100">
+						<div class="card-body">
 							<h2 class="card-title">{ run.Name }</h2>
 							<p>{ run.Module.Description() }</p>
 							switch run.Status {
@@ -77,8 +77,6 @@ templ ModuleList(env Env, jobs []Job) {
 					</div>
 				}
 			</div>
-			<!-- Modal footer -->
-			<div class="flex gap-2 items-center"></div>
 		</main>
 	}
 }

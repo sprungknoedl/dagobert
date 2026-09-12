@@ -6,7 +6,7 @@ templ SettingsOverview(env Env) {
 			// No column headers: this is a menu of destinations, not a data grid,
 			// and "Name / Description" over named groups is two kinds of heading
 			// doing one job.
-			<table class="table table-default">
+			<table class="table table-pin-rows">
 				<tbody>
 					@settingsOverviewGroup("Vocabulary")
 					@settingsOverviewRow("/settings/value-lists/", "briefcase", "Value Lists", "Customisable value lists used across the app")
@@ -39,7 +39,7 @@ templ settingsOverviewRow(route string, icon string, title string, description s
 // spacer row that used to separate them. The heading row's own bottom border
 // is the rule, so a break costs one line instead of three.
 templ settingsOverviewGroup(title string) {
-	<tr class="row-group">
-		<td colspan="2" class="label-micro">{ title }</td>
+	<tr>
+		<td colspan="2" class="fieldset-legend pt-6 border-b border-base-300">{ title }</td>
 	</tr>
 }

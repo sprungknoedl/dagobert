@@ -6,29 +6,19 @@ templ ReportsDialog(env Env, rows []model.ReportTemplate) {
 	@layout() {
 		<main>
 			<form method="post" action={ "/cases/" + env.Case.ID + "/render" }>
-				<!-- Modal header -->
-				<h1 class="font-serif text-2xl font-semibold mb-4">
-					Select report template
-				</h1>
-				<!-- Modal body -->
-				<div class="mb-4">
-					@hiddenField("CaseID", env.Case.ID)
-					<div class="form-control mb-2">
-						<label class="label justify-start gap-2">
-							Template
-						</label>
-						<select name="Template" class="select w-full">
-							<option disabled selected value="">Select an option</option>
-							for _, row := range rows {
-								<option>{ row.Name }</option>
-							}
-						</select>
-					</div>
-				</div>
-				<!-- Modal footer -->
-				<div class="flex gap-2 items-center">
-					<button type="submit" class="btn btn-neutral">Generate </button>
-					<a class="btn" up-dismiss>Cancel </a>
+				<h3 class="text-lg font-bold">Select report template</h3>
+				@hiddenField("CaseID", env.Case.ID)
+				@fieldset("Template") {
+					<select name="Template" class="select w-full">
+						<option disabled selected value="">Select an option</option>
+						for _, row := range rows {
+							<option>{ row.Name }</option>
+						}
+					</select>
+				}
+				<div class="modal-action">
+					<button type="submit" class="btn btn-neutral">Generate</button>
+					<a class="btn" up-dismiss>Cancel</a>
 				</div>
 			</form>
 		</main>

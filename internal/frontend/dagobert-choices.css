@@ -34,7 +34,7 @@ the same token.
    the popover paints above the fields that follow it. A z-index on the
    absolutely-positioned list alone is not enough: it competes inside the shared
    context with later siblings that paint after it.
-   
+
    Keyed off the dropdown's own `is-active`, not off `.choices.is-open`:
    dagobert.js overrides Choices' state class names (openState becomes
    `overflow-visible`), so the library's default state classes never appear on
@@ -45,7 +45,7 @@ the same token.
 
 .choices:focus-within .choices__inner,
 .choices:has(.choices__list--dropdown.is-active) .choices__inner {
-    border-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);
+    border-color: var(--color-base-300);
 }
 
 .choices__input {
@@ -54,14 +54,14 @@ the same token.
 }
 
 .choices__placeholder {
-    color: color-mix(in oklab, var(--color-base-content) var(--ink-label), transparent);
+    color: color-mix(in oklab, var(--color-base-content) 45%, transparent);
 }
 
 /*
 THE CHIP
 A selected value is content — a technique name, a hostname, an indicator — so it
-reads as data rather than as a label: sentence case, at the grid's type size,
-on the deeper ground with a hairline, instead of the filled pill it was.
+reads as data rather than as a label: sentence case, on the deeper ground with
+a hairline, instead of the filled pill it was.
 */
 
 .choices__list--multiple {
@@ -74,16 +74,16 @@ on the deeper ground with a hairline, instead of the filled pill it was.
     gap: 0.375rem;
     margin: 0.125rem 0.25rem 0.125rem 0;
     padding: 0.125rem 0.375rem;
-    font-size: var(--text-data);
+    font-size: 0.75rem;
     line-height: 1.4;
     color: var(--color-base-content);
     background-color: var(--color-base-200);
-    border: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
+    border: 1px solid var(--color-base-300);
     border-radius: 0.125rem;
 }
 
 .choices__list--multiple .choices__item.is-highlighted {
-    border-color: color-mix(in oklab, var(--color-base-content) var(--rule-hair2), transparent);
+    border-color: color-mix(in oklab, var(--color-base-content) 22%, transparent);
 }
 
 /* the remove control: an affordance, not a decoration, so it only takes colour
@@ -104,17 +104,13 @@ on the deeper ground with a hairline, instead of the filled pill it was.
 
 /*
 THE DROPDOWN
-An overlay sitting above the page, so it takes the raised engraved edge rather
-than a shadow — the system has none.
+An overlay sitting above the page, so it takes daisyUI's own surface treatment
+(sheet paper, box radius, shadow) rather than a bare list.
 */
 
 .choices__list--dropdown {
-    @apply menu absolute bg-base-100 p-2 w-full;
-    border-radius: var(--radius-box);
-    border: 1px solid color-mix(in oklab, var(--color-base-content) var(--rule-hair), transparent);
-    box-shadow:
-        0 0 0 1px var(--color-base-100),
-        0 0 0 2px color-mix(in oklab, var(--color-primary) var(--ring-raised), transparent);
+    @apply menu absolute bg-base-100 rounded-box shadow-xl p-2 w-full;
+    border: 1px solid var(--color-base-300);
 }
 
 /* Choices' own stylesheet caps the option list; this project doesn't vendor it,
@@ -129,7 +125,7 @@ than a shadow — the system has none.
 .choices__list--dropdown .choices__item {
     @apply px-3 py-1.5 text-start;
     border-radius: var(--radius-field);
-    font-size: var(--text-data);
+    font-size: 0.75rem;
 }
 
 .is-highlighted {

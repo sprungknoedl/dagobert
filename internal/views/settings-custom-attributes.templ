@@ -26,7 +26,7 @@ var customTypeInfo = map[string]struct{ Icon, Label string }{
 templ SettingsCustomAttributesMany(env Env) {
 	@layout() {
 		@list(env, "Custom Attributes", navSettings(), navHideAdd(), navHideExport(), navHideImport(), navHideSearch()) {
-			<table class="table table-default">
+			<table class="table table-pin-rows">
 				<thead>
 					<tr>
 						<th class="text-left">Rank</th>
@@ -52,8 +52,8 @@ templ SettingsCustomAttributesOne(env Env, obj model.CustomAttribute, vr valid.V
 		@hiddenField("Entity", obj.Entity)
 		@numberField("Rank", obj.Rank, withLabel("Rank"), withError(vr["Rank"]))
 		@stringField("Label", obj.Label, required(), withLabel("Label"), withError(vr["Label"]), withHint("Used verbatim as the field label, the storage key, and the report-template accessor (e.g. {{ .Custom.Label }})."))
-		<div class="form-control mb-2">
-			<label class="label justify-start gap-2">
+		<div class="fieldset">
+			<label class="label">
 				Type
 				@validationError(vr["Type"])
 			</label>
@@ -63,8 +63,8 @@ templ SettingsCustomAttributesOne(env Env, obj model.CustomAttribute, vr valid.V
 				}
 			</select>
 		</div>
-		<div id="custom-options" class="form-control mb-2" style={ fp.If(obj.Type == "select", "", "display:none") }>
-			<label class="label justify-start gap-2">
+		<div id="custom-options" class="fieldset" style={ fp.If(obj.Type == "select", "", "display:none") }>
+			<label class="label">
 				Options
 				@validationError(vr["Options"])
 			</label>
@@ -96,7 +96,7 @@ templ customAttributeTable(env Env, entity string) {
 			</tr>
 		} else {
 			for _, row := range rows {
-				<tr class="row-hover">
+				<tr>
 					<td>{ row.Rank } </td>
 					<td>{ row.Label } </td>
 					<td>

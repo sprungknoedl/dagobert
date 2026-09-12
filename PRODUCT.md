@@ -107,10 +107,8 @@ About 75% settled — it would take a very strong reason to change any of these:
 - **The name Dagobert**, after Dagobert Duck (the German name for Scrooge McDuck). The duck
   reference is intentional and central to the brand.
 - **The engraved duck artwork**, shipped in `internal/assets/`.
-- **The fonts used**: Fraunces, Hanken Grotesk, JetBrains Mono — self-hosted `.woff2` files in
-  `internal/assets/`.
 
-The full visual design built on top of these is described in `DESIGN.md`.
+The UI itself is vanilla daisyUI 5 + Tailwind 4 — no custom fonts, described in `DESIGN.md`.
 
 ## Evidence on Hand
 

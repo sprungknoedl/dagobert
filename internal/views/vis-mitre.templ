@@ -16,20 +16,18 @@ type MitreCoverage struct {
 
 templ VisMitreAttack(env Env, counts map[string]int, maxCount int, matrix *attck.Matrix, hide bool, matrixKey string, stats MitreCoverage) {
 	@layout() {
-		<section id="errors"></section>
-		@sidebar(env, "MITRE ATT&CK® Matrix")
-		<main class="rail-offset p-6 grow max-w-full flex flex-col h-screen">
+		@fullscreen(env, "MITRE ATT&CK® Matrix") {
 			<form method="get" up-autosubmit up-target="#list" up-history="true">
 				@navbar(env, "ATT&CK Navigator", navHideSearch(), navHideAdd(), navHideImport(), navHideExport(), navHideRefresh(), navPreJoin(mitreLegend()), navPreButtons(mitreExtra(env, hide, matrixKey)))
 			</form>
 			<div id="list">
-				<div class="stats w-full mb-6">
-					@stat("Tactics", stats.Tactics, false)
-					@stat("Techniques", stats.Techniques, false)
-					@stat("Events mapped", stats.Events, true)
+				<div class="stats w-full">
+					@stat("Tactics", stats.Tactics)
+					@stat("Techniques", stats.Techniques)
+					@stat("Events mapped", stats.Events)
 				</div>
 				<div class="overflow-x-auto">
-					<table class="table table-default">
+					<table class="table table-pin-rows">
 						<thead>
 							<tr>
 								for tactic := range matrix.Tactics.Values() {
@@ -67,7 +65,7 @@ templ VisMitreAttack(env Env, counts map[string]int, maxCount int, matrix *attck
 					</table>
 				</div>
 			</div>
-		</main>
+		}
 	}
 }
 
@@ -138,6 +136,6 @@ templ mitreExtra(env Env, hide bool, matrixKey string) {
 	// #list, so a link's href freezes at the state the page first rendered in
 	// and a reload would quietly drop the matrix and the hide toggle.
 	<button type="submit" class="join-item btn" title="Reload the observed techniques">
-		<i class="ph ph-5 ph-arrows-clockwise inline-block mr-1"></i> Refresh
+		<i class="ph ph-5 ph-arrows-clockwise"></i> Refresh
 	</button>
 }

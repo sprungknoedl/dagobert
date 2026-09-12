@@ -9,8 +9,8 @@ import (
 templ SettingsAPIKeysMany(env Env, keys []model.APIKey) {
 	@layout() {
 		@list(env, "API Keys", navSettings(), navHideExport(), navHideImport()) {
-			<h2 class="text-xl font-serif p-2">Keys</h2>
-			<table class="table table-default" data-default-sort="value-1">
+			<h2 class="text-xl font-semibold p-2">Keys</h2>
+			<table class="table table-pin-rows" data-default-sort="value-1">
 				<thead>
 					<tr>
 						<th data-sort="value-0" class="sort">Type</th>
@@ -24,9 +24,11 @@ templ SettingsAPIKeysMany(env Env, keys []model.APIKey) {
 						@emptyTable(env, "No keys issued.", "Generate a key to authenticate an external integration. Give each key a descriptive name so you can revoke specific ones later.")
 					} else {
 						for _, row := range keys {
-							<tr class="row-hover">
+							<tr>
 								<td class="value-0 truncate" data-search={ row.Type }>
-									@valueBadge(env.ValueLists.APIKeyTypes, row.Type)
+									@valueIcon(env.ValueLists.APIKeyTypes, row.Type) {
+										{ row.Type }
+									}
 								</td>
 								<td class="value-1" data-search={ row.Name }>{ row.Name } </td>
 								<td class="value-2 font-mono text-xs" data-search={ row.Hint }>{ row.Hint } </td>
@@ -46,20 +48,20 @@ templ SettingsAPIKeysMany(env Env, keys []model.APIKey) {
 
 templ SettingsAPIKeysReveal(env Env, plaintext string) {
 	@layout() {
-		<main>
-			<h1 class="font-serif text-2xl mb-4">API key created</h1>
-			<div class="alert alert-info mb-4">
+		<main class="flex flex-col gap-4">
+			<h1 class="text-2xl font-semibold">API key created</h1>
+			<div class="alert alert-info">
 				<i class="ph ph-5 ph-key"></i>
 				<span>Copy this key now. For security it is stored only as a hash and will not be shown again.</span>
 			</div>
-			<div class="join w-full mb-4">
+			<div class="join w-full">
 				<input id="reveal-key" type="text" class="input join-item w-full font-mono text-xs" value={ plaintext } readonly/>
 				<button type="button" class="btn join-item" data-copy-reveal-key>
 					<i class="ph ph-5 ph-clipboard-text"></i>
 					Copy
 				</button>
 			</div>
-			<a class="btn" href="/settings/api-keys/">Back to keys </a>
+			<a class="btn" href="/settings/api-keys/">Back to keys</a>
 		</main>
 	}
 }
