@@ -30,7 +30,7 @@ templ Login(errmsg string) {
 						<label class="label">Password</label>
 						<input name="password" required type="password" autocomplete="current-password" class="input w-full"/>
 					</div>
-					<button type="submit" class="btn btn-neutral w-full">Sign in</button>
+					<button type="submit" class="btn btn-primary w-full">Sign in</button>
 					if os.Getenv("OIDC_ENABLED") == "true" {
 						<div class="divider"></div>
 						// one ink fill per form: SSO is the alternate route, not a second primary
