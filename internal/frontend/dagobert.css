@@ -21,40 +21,137 @@ mark, and third-party library reskins.
 @plugin "./daisyui.js";
 
 /*
+THE PALETTE
+The full "Refactoring UI" swatch set the theme below is drawn from — every
+shade, not just the ones a theme block below happens to use, so the rest
+stay on hand as CSS variables for later use (a chart series, a one-off
+badge, ...). Named by hue and Tailwind-style step (900 darkest, 50
+lightest). Teal is primary/accent/success; Blue Grey is the neutral scale
+both themes are built from; Yellow and Red are where the status colours
+below are picked from; Cyan, Blue, and Purple are carried over unused today.
+*/
+:root {
+    --teal-900: #014D40;
+    --teal-800: #0C6B58;
+    --teal-700: #147D64;
+    --teal-600: #199473;
+    --teal-500: #27AB83;
+    --teal-400: #3EBD93;
+    --teal-300: #65D6AD;
+    --teal-200: #8EEDC7;
+    --teal-100: #C6F7E2;
+    --teal-50:  #EFFCF6;
+
+    --blue-grey-900: #102A43;
+    --blue-grey-800: #243B53;
+    --blue-grey-700: #334E68;
+    --blue-grey-600: #486581;
+    --blue-grey-500: #627D98;
+    --blue-grey-400: #829AB1;
+    --blue-grey-300: #9FB3C8;
+    --blue-grey-200: #BCCCDC;
+    --blue-grey-100: #D9E2EC;
+    --blue-grey-50:  #F0F4F8;
+
+    --cyan-900: #044E54;
+    --cyan-800: #0A6C74;
+    --cyan-700: #0E7C86;
+    --cyan-600: #14919B;
+    --cyan-500: #2CB1BC;
+    --cyan-400: #38BEC9;
+    --cyan-300: #54D1DB;
+    --cyan-200: #87EAF2;
+    --cyan-100: #BEF8FD;
+    --cyan-50:  #E0FCFF;
+
+    --blue-900: #003E6B;
+    --blue-800: #0A558C;
+    --blue-700: #0F609B;
+    --blue-600: #186FAF;
+    --blue-500: #2680C2;
+    --blue-400: #4098D7;
+    --blue-300: #62B0E8;
+    --blue-200: #84C5F4;
+    --blue-100: #B6E0FE;
+    --blue-50:  #DCEEFB;
+
+    --purple-900: #240754;
+    --purple-800: #34126F;
+    --purple-700: #421987;
+    --purple-600: #51279B;
+    --purple-500: #653CAD;
+    --purple-400: #724BB7;
+    --purple-300: #8662C7;
+    --purple-200: #A081D9;
+    --purple-100: #CFBCF2;
+    --purple-50:  #EAE2F8;
+
+    --red-900: #610404;
+    --red-800: #780A0A;
+    --red-700: #911111;
+    --red-600: #A61B1B;
+    --red-500: #BA2525;
+    --red-400: #D64545;
+    --red-300: #E66A6A;
+    --red-200: #F29B9B;
+    --red-100: #FACDCD;
+    --red-50:  #FFEEEE;
+
+    --yellow-900: #8D2B0B;
+    --yellow-800: #B44D12;
+    --yellow-700: #CB6E17;
+    --yellow-600: #DE911D;
+    --yellow-500: #F0B429;
+    --yellow-400: #F7C948;
+    --yellow-300: #FADB5F;
+    --yellow-200: #FCE588;
+    --yellow-100: #FFF3C4;
+    --yellow-50:  #FFFBEA;
+}
+
+/*
 The two themes are one printing process seen from both sides rather than a
 design and its inversion: "dagobert" is ink on cream paper, "dagobert-dark" is
 the plate it was struck from, where the ink becomes the ground and the paper
-becomes the line. The greens hold their chroma across the two.
+becomes the line. Teal holds its role as the one structural/signal hue across
+the two, the same way the old green ladder did.
+
+Status colours: yellow and red each come in ten shades (see the palette
+above); only one of each is wired in as warning/error. Yellow picks --yellow-500,
+the shade "Refactoring UI" itself calls the vivid one — mid-ramp, so it's
+saturated and cheerful rather than the muddy browns above it or the washed-out
+creams below it. Red picks --red-500 for the same reason: vivid rather than
+muddy oxblood or a weak pink, and it's the darkest red that still clears
+4.5:1 contrast against white content text (6.2:1). Info stays a neutral ink
+tint rather than a hue of its own — with warning promoted to real yellow,
+info is the one status left "quiet" on purpose, so only genuine severity and
+things needing attention reach for a saturated colour.
 */
 
 @plugin "./daisyui-theme.js" {
     name: "dagobert";
     default: true;
     color-scheme: light;
-    --color-base-100: oklch(98.8% 0.010 92);   /* sheet cream — panel faces */
-    --color-base-200: oklch(95.5% 0.018 92);   /* deep cream — the page ground, carries the grid */
-    --color-base-300: oklch(90% 0.026 90);     /* rule cream — inert fills, heavier rules */
-    --color-base-content: oklch(23% 0.030 165); /* engraving ink, a green-black */
-    --color-primary: oklch(38% 0.082 162);     /* seal green — edges, certification, done */
-    --color-primary-content: oklch(99% 0.002 90);
-    --color-secondary: oklch(58% 0.100 85);    /* assay gold — display type and marks only */
-    --color-secondary-content: oklch(20% 0.04 85);
-    --color-accent: oklch(50% 0.140 158);      /* banknote green — the one signal colour */
-    --color-accent-content: oklch(99% 0.002 90);
-    --color-neutral: oklch(23% 0.030 165);
-    --color-neutral-content: oklch(99% 0.002 90);
-    /* Success is the SEAL green, not the signal: it is the most frequent message in the
-       product, and spending the scarce signal on it would retire the signal. Info and
-       warning are retired to ink — only severity carries a hue, so anything still
-       reaching for them degrades to a neutral mark instead of inventing a colour. */
-    --color-success: oklch(38% 0.082 162);
-    --color-success-content: oklch(99% 0.002 90);
-    --color-info: oklch(35% 0.030 165);
-    --color-info-content: oklch(99% 0.002 90);
-    --color-warning: oklch(35% 0.030 165);
-    --color-warning-content: oklch(99% 0.002 90);
-    --color-error: oklch(48% 0.170 25);
-    --color-error-content: oklch(99% 0.002 90);
+    --color-base-100: #FFFFFF;             /* card/panel face */
+    --color-base-200: var(--blue-grey-50); /* the page ground */
+    --color-base-300: var(--blue-grey-100); /* borders, inert fills */
+    --color-base-content: var(--blue-grey-900); /* body text */
+    --color-primary: var(--teal-700);      /* buttons, links, the active nav item */
+    --color-primary-content: #FFFFFF;
+    --color-secondary: var(--blue-600);    /* rare secondary emphasis */
+    --color-secondary-content: #FFFFFF;
+    --color-accent: var(--teal-400);       /* the one signal colour: brighter than primary */
+    --color-accent-content: var(--blue-grey-900);
+    --color-neutral: var(--blue-grey-900);
+    --color-neutral-content: #FFFFFF;
+    --color-success: var(--teal-700);      /* success is the structural teal, not the signal */
+    --color-success-content: #FFFFFF;
+    --color-info: var(--blue-grey-600);    /* a quiet neutral tint, not a hue of its own */
+    --color-info-content: #FFFFFF;
+    --color-warning: var(--yellow-500);
+    --color-warning-content: var(--blue-grey-900);
+    --color-error: var(--red-500);
+    --color-error-content: #FFFFFF;
     --radius-selector: 0.25rem;
     --radius-field: 0.1875rem;
     --radius-box: 0.25rem;
@@ -67,27 +164,34 @@ becomes the line. The greens hold their chroma across the two.
     name: "dagobert-dark";
     prefersdark: true;
     color-scheme: dark;
-    --color-base-100: oklch(21% 0.008 165);    /* burnished field — panel faces, desaturated most */
-    --color-base-200: oklch(17% 0.010 165);    /* plate ground, carries the grid */
-    --color-base-300: oklch(28% 0.012 165);    /* inert fills, heavier rules */
-    --color-base-content: oklch(90% 0.014 92); /* the engraved line — sheet cream, dimmed */
-    --color-primary: oklch(78% 0.082 162);     /* verdigris: seal green, chroma held exactly */
-    --color-primary-content: oklch(17% 0.015 165);
-    --color-secondary: oklch(64% 0.105 85);    /* brass — gold on metal, still the lowest rung */
-    --color-secondary-content: oklch(96% 0.012 92);
-    --color-accent: oklch(70% 0.148 158);      /* the one signal; in gamut where the sheet value is not */
-    --color-accent-content: oklch(17% 0.015 165);
-    --color-neutral: oklch(86% 0.018 92);
-    --color-neutral-content: oklch(17% 0.015 165);
-    --color-success: oklch(78% 0.082 162);
-    --color-success-content: oklch(17% 0.015 165);
-    --color-info: oklch(74% 0.016 165);
-    --color-info-content: oklch(17% 0.015 165);
-    --color-warning: oklch(74% 0.016 165);
-    --color-warning-content: oklch(17% 0.015 165);
-    --color-error: oklch(66% 0.172 25);        /* severity rises to stay legible, chroma held so it
-                                                  reads as red rather than drifting to salmon */
-    --color-error-content: oklch(17% 0.015 165);
+    /* The Refactoring UI blue-grey scale was only ever designed for light-mode
+       text/borders, not full-surface dark backgrounds — at face value it reads
+       as a saturated navy rather than a neutral dark. Mixed toward black to
+       pull each step closer to neutral while keeping its position in the
+       ladder (panel lighter than ground, border lighter than panel). */
+    --color-base-100: color-mix(in oklab, var(--blue-grey-800) 45%, black); /* panel faces, lighter than the ground */
+    --color-base-200: color-mix(in oklab, var(--blue-grey-900) 45%, black); /* the page ground */
+    --color-base-300: color-mix(in oklab, var(--blue-grey-700) 45%, black); /* borders, inert fills */
+    /* One step dimmer than the lightest blue-grey — against a background this
+       dark, blue-grey-100 measured ~15:1 and read as glaring. blue-grey-200
+       still clears AAA (~12:1) comfortably. */
+    --color-base-content: var(--blue-grey-200);
+    --color-primary: var(--teal-400);       /* brighter step of the same teal, to read on dark */
+    --color-primary-content: var(--blue-grey-900);
+    --color-secondary: var(--blue-300);
+    --color-secondary-content: var(--blue-grey-900);
+    --color-accent: var(--teal-300);        /* the signal stays one step brighter than primary */
+    --color-accent-content: var(--blue-grey-900);
+    --color-neutral: var(--blue-grey-100);
+    --color-neutral-content: var(--blue-grey-900);
+    --color-success: var(--teal-400);
+    --color-success-content: var(--blue-grey-900);
+    --color-info: var(--blue-grey-300);
+    --color-info-content: var(--blue-grey-900);
+    --color-warning: var(--yellow-400);     /* one step brighter, same reasoning as light */
+    --color-warning-content: var(--blue-grey-900);
+    --color-error: var(--red-300);          /* one step brighter, still reads red not salmon */
+    --color-error-content: var(--blue-grey-900);
     --radius-selector: 0.25rem;
     --radius-field: 0.1875rem;
     --radius-box: 0.25rem;
@@ -144,6 +248,42 @@ that marks a header as clickable and shows which one is active.
 .sort.desc::after {
     content: "\25BC";
     padding-left: 3px;
+}
+
+/*
+THE PINNED TABLE HEADER
+Every list table sits directly on the page ground (base-200), never on a
+base-100 card face, but daisyUI's table-pin-rows pins the head/foot with a
+base-100 background — a stark white band on the light theme. Matched to the
+surface it's actually laid over instead.
+*/
+
+.table-pin-rows thead tr,
+.table-pin-rows tfoot tr {
+    background-color: var(--color-base-200);
+}
+
+/*
+THE TEAL RULE
+The same permanent accent border framing the lateral-movement graph reappears
+here, under every table header — one recurring mark for "the records start
+below this line".
+*/
+
+.table thead th {
+    border-bottom: 2px solid var(--color-accent);
+}
+
+/*
+THE STATUS DOT
+daisyUI's default status dot carries a glossy radial-gradient highlight and a
+drop shadow tinted by its own color. Flattened to match the rest of the app,
+which has no other glossy or shadowed surfaces.
+*/
+
+.status {
+    background-image: none;
+    box-shadow: none;
 }
 
 /*

@@ -2,22 +2,33 @@
 name: Dagobert
 description: A collaborative incident-response investigation workspace, built on vanilla daisyUI 5 + Tailwind 4.
 colors:
-  seal-green: "oklch(38% 0.082 162)"
-  banknote-green: "oklch(50% 0.140 158)"
-  assay-gold: "oklch(58% 0.100 85)"
-  sheet-cream: "oklch(98.8% 0.010 92)"
-  deep-cream: "oklch(95.5% 0.018 92)"
-  rule-cream: "oklch(90% 0.026 90)"
-  engraving-ink: "oklch(23% 0.030 165)"
-  status-severe: "oklch(48% 0.170 25)"
-  plate-ground: "oklch(17% 0.010 165)"
-  plate-field: "oklch(21% 0.008 165)"
-  plate-rule: "oklch(28% 0.012 165)"
-  burnished-line: "oklch(90% 0.014 92)"
-  verdigris: "oklch(78% 0.082 162)"
-  signal-bright: "oklch(70% 0.148 158)"
-  severe-bright: "oklch(66% 0.172 25)"
-  assay-brass: "oklch(64% 0.105 85)"
+  light:
+    base-100: "#FFFFFF"
+    base-200: "#F0F4F8"     # blue-grey-50
+    base-300: "#D9E2EC"     # blue-grey-100
+    base-content: "#102A43" # blue-grey-900
+    primary: "#147D64"      # teal-700
+    secondary: "#186FAF"    # blue-600
+    accent: "#3EBD93"       # teal-400
+    neutral: "#102A43"      # blue-grey-900
+    info: "#486581"         # blue-grey-600
+    warning: "#F0B429"      # yellow-500
+    error: "#BA2525"        # red-500
+  dark:
+    base-100: "#243B53"     # blue-grey-800
+    base-200: "#102A43"     # blue-grey-900
+    base-300: "#334E68"     # blue-grey-700
+    base-content: "#D9E2EC" # blue-grey-100
+    primary: "#3EBD93"      # teal-400
+    secondary: "#62B0E8"    # blue-300
+    accent: "#65D6AD"       # teal-300
+    neutral: "#D9E2EC"      # blue-grey-100
+    info: "#9FB3C8"         # blue-grey-300
+    warning: "#F7C948"      # yellow-400
+    error: "#E66A6A"        # red-300
+  palette: "Full ten-step scales (teal, blue-grey, cyan, blue, purple, red, yellow) live as
+    CSS custom properties in internal/frontend/dagobert.css — see Colors below. Only the
+    steps above are wired into the theme; the rest are there for later use."
 rounded:
   hint: "0.125rem"
   field: "0.1875rem"
@@ -73,59 +84,67 @@ class over a utility, and a utility over new CSS.
 
 ## Colors
 
-A cream-paper background with dark green-black ink. Seal green is the main color for structure and
-trust. Banknote green is the only color used to say "look here." Red is used only for severity.
-Colors are the one part of the earlier system carried over unchanged — every `oklch` value below
-is exactly what `internal/frontend/dagobert.css` declares in both theme blocks.
+A white-and-blue-grey surface with teal as the one structural/signal hue — vibrant rather than
+muted, drawn from the "Refactoring UI" palette set (`tmp/input/` holds the source swatches). Every
+hue comes as a full ten-step scale (`--teal-900` … `--teal-50`, and the same for blue-grey, cyan,
+blue, purple, red, and yellow) declared once as CSS custom properties in
+`internal/frontend/dagobert.css`, ahead of the theme blocks; only some steps are wired into a
+theme's semantic role, the rest are there for later use (a chart series, a one-off badge, ...).
 
-### The Green Ladder
+### The Teal Ladder
 
-Three greens, all the same hue, different in lightness and intensity.
+Two steps of the same hue, same idea as before: a darker/lower-chroma step for structure, a
+brighter one for "look here."
 
-| Role | Chroma | On cream |
+| Role | Light step | Dark step |
 |---|---|---|
-| **Ink** — everything you read | .030 | 16.2:1 |
-| **Seal** — primary: edges, the active nav item, success | .082 | 9.3:1 |
-| **Signal** — accent: look here | .140 | 5.3:1 |
+| **Primary** — buttons, links, the active nav item, success | `teal-700` | `teal-400` |
+| **Accent** — the one signal color: look here | `teal-400` | `teal-300` |
 
-Each step roughly doubles the color intensity; lightness goes up and contrast goes down as it
-does. More intense color means less readability, so the most intense green is used the least, and
-never for large blocks of text.
+The dark theme's primary reuses the light theme's accent step: everything shifts one step
+brighter on the dark ground, the ladder itself doesn't change.
 
 ### Roles
 
-- **Seal Green** (`primary`) — the main structural color. Used for the active sidebar item's fill
-  (`.menu-active`, the one deliberate custom rule left in `dagobert.css`) and for success
-  toasts/alerts. Its one filled use is small (one nav item); everywhere else daisyUI's own
-  components carry it as an outline, a border, or text color.
-- **Assay Gold** (`secondary`) — used rarely, for display-size emphasis only. Contrast on cream is
-  4.17:1, so it must never carry body text.
-- **Banknote Green** (`accent`) — the only signal color: record serials, focus outlines, flagged
-  rows. It only works because it's rare.
-- **Sheet Cream** (`base-100`) — panel/card faces. **Deep Cream** (`base-200`) — the page ground.
-  **Rule Cream** (`base-300`) — borders and inert fills. **Engraving Ink** (`base-content`) — body
-  text, never plain black.
-- **Status.** Only severity gets its own color (`error`, mapped to red). `info` and `warning` are
-  both mapped to the same ink value as `base-content` — not real hues — so a status only reads as
-  "look at this" when it's genuinely severe; everything else renders through daisyUI's `status`
-  component as a plain neutral dot next to its label word. This is why using `alert-warning` /
-  `status-warning` "just works" without looking like a false alarm.
+- **Primary** (`teal-700` light / `teal-400` dark) — the main structural color. Used for the
+  active sidebar item's fill (`.menu-active`, the one deliberate custom rule left in
+  `dagobert.css`), primary buttons/links, and success toasts/alerts (success is primary, not
+  accent — it's the most frequent message in the product, and spending the brighter signal color
+  on it would retire the signal).
+- **Secondary** (`blue-600` light / `blue-300` dark) — used rarely, for secondary emphasis.
+- **Accent** (`teal-400` light / `teal-300` dark) — the one signal color: record serials, focus
+  outlines, flagged rows. It only works because it's rare.
+- **Base** — `base-100` (white / `blue-grey-800`) is panel/card faces, `base-200` (`blue-grey-50` /
+  `blue-grey-900`) is the page ground, `base-300` (`blue-grey-100` / `blue-grey-700`) is borders
+  and inert fills, `base-content` (`blue-grey-900` / `blue-grey-100`) is body text.
+- **Status.** Warning and error each get a real hue — `yellow-500`/`yellow-400` and
+  `red-500`/`red-300` — picked as follows:
+  - **Warning picks `yellow-500`** (`#F0B429`), the shade "Refactoring UI" itself calls the vivid
+    one: mid-ramp, so it's saturated and cheerful rather than the muddy browns above it on the
+    scale or the washed-out creams below it.
+  - **Error picks `red-500`** (`#BA2525`) for the same reason — vivid rather than a muddy oxblood
+    or a weak pink — and it's the darkest red that still clears 4.5:1 contrast against white
+    content text (6.2:1 measured).
+  - **Info stays a quiet neutral tint** (`blue-grey-600` / `blue-grey-300`) rather than a hue of
+    its own. With warning promoted to real yellow, info is the one status left deliberately
+    muted, so a color still means "genuinely needs you" rather than every status competing for
+    attention.
 
 ### The dark theme
 
-Not an inverted copy of the light theme — the metal plate the page was printed from. Three rules
-build the whole palette, still true today:
+Not an inverted copy of the light theme. Two rules build the whole palette:
 
-1. **The ink becomes the background.** Page and panel surfaces use Engraving Ink's own hue (165),
-   darker and less saturated (0.008–0.012) than the ink itself (0.030), so the background reads as
-   a dark neutral rather than a green room.
-2. **The sheet becomes the text.** Text uses Sheet Cream's hue (92) at 90% lightness — legible, but
-   not glaring.
-3. **The ladder keeps its intensity, on a different background.** Seal stays at `.082`, Signal at
-   `.140` — only lightness moves. Severity keeps its intensity too, so it reads red rather than
-   drifting to salmon.
+1. **The blue-grey scale flips ends.** Light mode runs from `blue-grey-900` (text) down to white
+   (panel face); dark mode runs the same scale from `blue-grey-100` (text) down to `blue-grey-900`
+   (page ground), with `blue-grey-800` as the slightly-lighter panel face — panels still read as
+   sitting just above the ground, the same direction as the light theme.
+2. **Every hue that appears moves one step brighter.** Primary, accent, secondary, info, warning,
+   and error all pick the next lighter step of their own scale (e.g. error: `red-500` → `red-300`)
+   rather than reusing the light-theme value verbatim — a saturated dark-toned color reads as a
+   muddy hole against a near-black ground, so lightness moves even where contrast alone wouldn't
+   require it.
 
-An inverted fill (dark-on-light or cream-on-dark) stays small — primary buttons, the one active
+An inverted fill (dark-on-light or light-on-dark) stays small — primary buttons, the one active
 nav item — never a full-width band, which is why the active-item rule above is scoped to exactly
 one small fill.
 
@@ -179,8 +198,8 @@ of these.
 - **Third-party library reskins** — `dagobert-vis.css` (vis-timeline event histogram, vis-network
   lateral-movement graph) and `dagobert-choices.css` (the Choices.js multi-select). None of these
   libraries ship a stylesheet that fits a themed app, so they're skinned property-by-property
-  against the surviving color/radius tokens. Not rewritten in spirit — same sheet-paper-and-ink
-  look as the rest of the app, just pointed at what still exists.
+  against the theme's own color/radius tokens (`var(--color-*)`, not literals) — they pick up any
+  future palette change automatically, without their own CSS being touched.
 
 ## Do's and Don'ts
 

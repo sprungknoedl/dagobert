@@ -30,50 +30,46 @@ templ layout() {
 	</html>
 }
 
+// list is fullscreen's shell plus the navbar and #list conventions every
+// record grid shares: the page title bar, the swappable #list container Unpoly
+// targets on filter/sort, and (inside a case) the quick-add FAB.
 templ list(env Env, title string, opts ...navbarOption) {
-	<div class="drawer drawer-open">
-		<input id="sidebar-toggle" type="checkbox" class="drawer-toggle" checked/>
-		<div class="drawer-content">
-			<div id="errors"></div>
-			<main class="max-w-full">
-				@navbar(env, title, opts...)
-				<div id="list">
-					{ children... }
-					<div class="mt-12"></div>
-				</div>
-			</main>
-			if env.Case.ID != "" && !env.Case.IsTemplate {
-				// quick-add from any page in the case
-				<div class="fab">
-					<!-- a focusable div with tabindex is necessary to work on all browsers. role="button" is necessary for accessibility -->
-					<div tabindex="0" role="button" class="btn btn-circle btn-primary" title="Quick add"><i class="ph ph-6 ph-plus"></i></div>
-					<div class="fab-close">
-						<span class="btn btn-circle"><i class="ph ph-6 ph-x"></i></span>
-					</div>
-					<!-- buttons that show up when FAB is open -->
-					@fabButton("/cases/"+env.Case.ID+"/events", "ph-clock", "Add event")
-					@fabButton("/cases/"+env.Case.ID+"/assets", "ph-desktop", "Add asset")
-					@fabButton("/cases/"+env.Case.ID+"/indicators", "ph-fingerprint", "Add indicator")
-					@fabButton("/cases/"+env.Case.ID+"/evidences", "ph-cube", "Add evidence")
-				</div>
-			}
+	@fullscreen(env, title) {
+		@navbar(env, title, opts...)
+		<div id="list">
+			{ children... }
+			<div class="mt-12"></div>
 		</div>
-		<div class="drawer-side is-drawer-close:overflow-visible">
-			@sidebar(env, title)
-		</div>
-	</div>
+		if env.Case.ID != "" && !env.Case.IsTemplate {
+			// quick-add from any page in the case
+			<div class="fab">
+				<!-- a focusable div with tabindex is necessary to work on all browsers. role="button" is necessary for accessibility -->
+				<div tabindex="0" role="button" class="btn btn-circle btn-primary" title="Quick add"><i class="ph ph-6 ph-plus"></i></div>
+				<div class="fab-close">
+					<span class="btn btn-circle"><i class="ph ph-6 ph-x"></i></span>
+				</div>
+				<!-- buttons that show up when FAB is open -->
+				@fabButton("/cases/"+env.Case.ID+"/events", "ph-clock", "Add event")
+				@fabButton("/cases/"+env.Case.ID+"/assets", "ph-desktop", "Add asset")
+				@fabButton("/cases/"+env.Case.ID+"/indicators", "ph-fingerprint", "Add indicator")
+				@fabButton("/cases/"+env.Case.ID+"/evidences", "ph-cube", "Add evidence")
+			</div>
+		}
+	}
 }
 
-// fullscreen is the same drawer shell as list(), for the three pages (dashboard,
-// network graph, MITRE matrix) that fill the viewport themselves instead of
-// scrolling a #list column — each owns its own inner content id and scroll
-// region, so it's left to the caller rather than baked in here.
+// fullscreen is the app shell: a sidebar pinned to the viewport (via
+// drawer-open's own sticky positioning) next to a content column capped at
+// h-screen. drawer-content and main form the flex chain that makes that cap
+// real — min-h-0 at each step stops a tall child from stretching its parent
+// past the viewport — so main is the one place that scrolls, instead of the
+// document growing past 100vh and dragging the "fixed" sidebar down with it.
 templ fullscreen(env Env, title string) {
 	<div class="drawer drawer-open h-screen">
 		<input id="sidebar-toggle" type="checkbox" class="drawer-toggle" checked/>
-		<div class="drawer-content flex flex-col h-screen">
+		<div class="drawer-content flex flex-col min-h-0">
 			<div id="errors"></div>
-			<main class="grow max-w-full flex flex-col min-h-0">
+			<main class="flex flex-col grow min-h-0 max-w-full overflow-y-auto">
 				{ children... }
 			</main>
 		</div>
@@ -452,7 +448,7 @@ templ emptyActions(env Env) {
 
 templ fabButton(baseUrl string, icon string, title string) {
 	<div class="tooltip tooltip-left" data-tip={ title }>
-		<a class="btn btn-square" href={ baseUrl + "/new" } up-layer="new drawer" up-accept-location={ baseUrl } data-on-accepted="reload-list">
+		<a class="btn btn-circle" href={ baseUrl + "/new" } up-layer="new drawer" up-accept-location={ baseUrl } data-on-accepted="reload-list">
 			<i class={ "ph ph-6 " + icon }></i>
 		</a>
 	</div>

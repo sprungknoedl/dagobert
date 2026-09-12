@@ -16,6 +16,8 @@ selected.
 
 .graph-frame {
     position: relative;
+    border-top: 2px solid var(--color-accent);
+    border-bottom: 2px solid var(--color-accent);
     --graph-node: var(--color-base-content);
     --graph-node-dim: color-mix(in oklab, var(--color-base-content) 45%, transparent);
     --graph-severe: var(--color-error);
@@ -41,15 +43,17 @@ selected.
     transition: opacity 240ms ease;
 }
 
-.graph-canvas.is-drawn {
-    opacity: 1;
+/* The frame's own top/bottom border already marks the plot area, so nothing
+   inside it needs its own focus-visible ring stacking on top of it — vis-network
+   plants its own focusable div (.vis-network) inside #mynetwork, which is what
+   actually receives focus, not .graph-canvas itself. */
+.graph-canvas:focus-visible,
+.graph-canvas :focus-visible {
+    outline: none;
 }
 
-/* The plot area is focusable so arrow keys pan it, and it fills the panel edge
-   to edge — so its focus ring is drawn inside, where the panel's own clip
-   cannot cut three sides of it off and leave a stray line across the key. */
-.graph-canvas:focus-visible {
-    outline-offset: -2px;
+.graph-canvas.is-drawn {
+    opacity: 1;
 }
 
 /* the caption held while the bundle loads and the layout settles; it sits over
@@ -204,11 +208,13 @@ the one thing here that means "look here," so it gets the signal colour.
     color: color-mix(in oklab, var(--color-base-content) 60%, transparent);
 }
 
-#histogram .vis-time-axis .vis-grid.vis-minor {
+#histogram .vis-time-axis .vis-grid.vis-minor,
+#histogram .vis-panel.vis-background.vis-horizontal .vis-grid.vis-minor {
     border-color: var(--color-base-300);
 }
 
-#histogram .vis-time-axis .vis-grid.vis-major {
+#histogram .vis-time-axis .vis-grid.vis-major,
+#histogram .vis-panel.vis-background.vis-horizontal .vis-grid.vis-major {
     border-color: color-mix(in oklab, var(--color-base-content) 22%, transparent);
 }
 

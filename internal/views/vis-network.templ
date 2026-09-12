@@ -80,7 +80,7 @@ templ VisNetwork(env Env, nodes []Node, edges []Edge, hideIndicators bool) {
 							</div>
 						}
 					</div>
-					<div class="card card-border bg-base-100 grow min-h-0 flex flex-col overflow-hidden">
+					<div class="grow min-h-0 flex flex-col">
 						<div class="graph-frame grow min-h-0">
 							<div
 								id="mynetwork"
@@ -144,7 +144,7 @@ templ networkKey(hideIndicators bool) {
 // draw until timeline events name assets — so the empty state points at the
 // timeline instead of offering to add a node here.
 templ networkEmpty(env Env, hideIndicators bool) {
-	<div class="card card-border bg-base-100 grow min-h-0 flex flex-col items-center justify-center text-center px-8 py-14">
+	<div class="grow min-h-0 flex flex-col items-center justify-center text-center px-8 py-14">
 		@medallion("medallion w-24 h-24")
 		<p class="text-lg text-muted mb-2">Nothing has moved yet.</p>
 		<p class="text-sm text-muted max-w-md leading-relaxed">
