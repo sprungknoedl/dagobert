@@ -172,14 +172,7 @@ after editing them. Database migrations are plain SQL files in
 ## Contributing
 
 Contributions of any kind — code, documentation, design, bug reports — are
-welcome:
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/your-idea`
-3. Submit a PR with a clear description
-
-For questions and bug reports, please open a
-[GitHub issue](https://github.com/sprungknoedl/dagobert/issues).
+welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for how to get started.
 
 ## License
 
