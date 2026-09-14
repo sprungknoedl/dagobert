@@ -91,7 +91,7 @@ can work on a case concurrently.
 4. Create the first user:
 
    ```sh
-   docker exec dagobert dagobert create-user <USERNAME>
+   docker exec -it dagobert dagobert create-user <USERNAME>
    ```
 
    You will be prompted for a password. This can be run at any time, including
