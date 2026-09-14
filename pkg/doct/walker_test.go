@@ -261,7 +261,7 @@ func TestReconstructMarkers(t *testing.T) {
 	}
 }
 
-func TestReconstructMarkersOutputSpans(t *testing.T) {
+func TestReconstructMarkersSpans(t *testing.T) {
 	// These tests verify that returned marker spans index into the reconstructed
 	// output bytes, not the original input. Offset correctness matters for the
 	// pivot/LCA step that reads both the node tree and the marker positions from

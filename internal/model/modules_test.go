@@ -81,7 +81,7 @@ func TestAckJob(t *testing.T) {
 // The runner pool polls PopJob from multiple goroutines; concurrent write
 // statements on a file-backed database must wait for the lock (busy_timeout)
 // instead of failing with SQLITE_BUSY.
-func TestPopJobConcurrent(t *testing.T) {
+func TestPopJob(t *testing.T) {
 	dburl := "file:" + filepath.Join(t.TempDir(), "test.db") + "?_pragma=foreign_keys(ON)&_pragma=journal_mode(WAL)"
 	db, err := Connect(dburl)
 	assert.Nil(t, err)

@@ -22,7 +22,7 @@ func TestConfigured(t *testing.T) {
 	assert.True(t, NewClient(Config{APIKey: "x"}).Configured())
 }
 
-func TestLookupRequestShaping(t *testing.T) {
+func TestLookupRequest(t *testing.T) {
 	var gotPath, gotKey, gotAccept string
 	c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
 		gotPath = r.URL.String()
@@ -41,7 +41,7 @@ func TestLookupRequestShaping(t *testing.T) {
 	assert.Equal(t, "application/json", gotAccept)
 }
 
-func TestLookupVerdictDerivation(t *testing.T) {
+func TestLookupVerdict(t *testing.T) {
 	cases := []struct {
 		name         string
 		score        int
@@ -71,7 +71,7 @@ func TestLookupVerdictDerivation(t *testing.T) {
 	}
 }
 
-func TestLookupScoreAndURL(t *testing.T) {
+func TestLookupScore(t *testing.T) {
 	c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"data":{"abuseConfidenceScore":87,"totalReports":42,"isp":"Test ISP","countryCode":"DE"}}`))
 	})
@@ -100,7 +100,7 @@ func TestLookupCategories(t *testing.T) {
 	assert.Contains(t, res.Summary, "Port Scan")
 }
 
-func TestLookupServerError(t *testing.T) {
+func TestLookupError(t *testing.T) {
 	c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	})

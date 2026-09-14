@@ -91,7 +91,7 @@ func TestTriggerGating(t *testing.T) {
 	})
 }
 
-func TestCompileAutomationRuleCaseTriggers(t *testing.T) {
+func TestCompileAutomationRule(t *testing.T) {
 	savedModules := Modules
 	defer func() { Modules = savedModules }()
 	Modules = map[string]model.Module{"FakeTI": fakeModule{}}

@@ -10,7 +10,7 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/model"
 )
 
-func TestCaseDeleteRemovesCaseFiles(t *testing.T) {
+func TestCaseDelete(t *testing.T) {
 	db := setupArchiveDB(t)
 	seedCase(t, db)
 	t.Chdir(t.TempDir())

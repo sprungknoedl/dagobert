@@ -55,7 +55,7 @@ func newCSVImportRequest(t *testing.T, cid, body string) *http.Request {
 	return r
 }
 
-func TestImportCSVCollectsRowErrorsAndRollsBackOnFailure(t *testing.T) {
+func TestImportCSVRollback(t *testing.T) {
 	db := setupArchiveDB(t)
 	kase := seedCase(t, db)
 	before, err := db.ListEvents(kase.ID)
@@ -96,7 +96,7 @@ func TestImportCSVCollectsRowErrorsAndRollsBackOnFailure(t *testing.T) {
 	}
 }
 
-func TestImportCSVCommitsAndRedirectsOnSuccess(t *testing.T) {
+func TestImportCSVCommit(t *testing.T) {
 	db := setupArchiveDB(t)
 	kase := seedCase(t, db)
 	before, err := db.ListEvents(kase.ID)
@@ -134,7 +134,7 @@ func TestImportCSVCommitsAndRedirectsOnSuccess(t *testing.T) {
 	}
 }
 
-func TestImportCSVSingularRecordToast(t *testing.T) {
+func TestImportCSVSingular(t *testing.T) {
 	db := setupArchiveDB(t)
 	kase := seedCase(t, db)
 
@@ -152,7 +152,7 @@ func TestImportCSVSingularRecordToast(t *testing.T) {
 	}
 }
 
-func TestRedirectAfterSaveSetsSuccessToast(t *testing.T) {
+func TestRedirectAfterSave(t *testing.T) {
 	r := httptest.NewRequest(http.MethodPost, "/cases/case01/assets/new", nil)
 	rec := httptest.NewRecorder()
 
@@ -172,7 +172,7 @@ func TestRedirectAfterSaveSetsSuccessToast(t *testing.T) {
 // stages a cookie via SetFlashToast, and it's the *next* request (the
 // redirect's target) whose response needs X-Up-Accept-Layer — not the 303
 // itself, which Unpoly's XHR follows internally without exposing its headers.
-func TestFlashToastMiddlewareDeliversTheToastOnTheNextRequest(t *testing.T) {
+func TestFlashToastMiddleware(t *testing.T) {
 	next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
@@ -202,7 +202,7 @@ func TestFlashToastMiddlewareDeliversTheToastOnTheNextRequest(t *testing.T) {
 	}
 }
 
-func TestImportCSVCollectsStructuralRowErrorsInsteadOfAborting(t *testing.T) {
+func TestImportCSVStructural(t *testing.T) {
 	db := setupArchiveDB(t)
 	kase := seedCase(t, db)
 	before, err := db.ListEvents(kase.ID)

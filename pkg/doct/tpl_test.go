@@ -167,7 +167,7 @@ func TestProcessZip(t *testing.T) {
 
 // --- OfficeTpl (MS / docx) ---------------------------------------------------
 
-func TestOfficeTpl_Ms_Metadata(t *testing.T) {
+func TestOfficeTplMetadataMs(t *testing.T) {
 	path := writeTempDocx(t, `<w:document><w:body><w:p><w:r><w:t>hello</w:t></w:r></w:p></w:body></w:document>`)
 	tpl, err := LoadMsTemplate(path)
 	require.NoError(t, err)
@@ -177,7 +177,7 @@ func TestOfficeTpl_Ms_Metadata(t *testing.T) {
 	assert.Equal(t, ".docx", tpl.Ext())
 }
 
-func TestOfficeTpl_Ms_Render(t *testing.T) {
+func TestRenderMs(t *testing.T) {
 	t.Run("substitutes template data", func(t *testing.T) {
 		path := writeTempDocx(t, `<w:document><w:body><w:p><w:r><w:t>{{.Name}}</w:t></w:r></w:p></w:body></w:document>`)
 		tpl, err := LoadMsTemplate(path)
@@ -238,7 +238,7 @@ func TestOfficeTpl_Ms_Render(t *testing.T) {
 	})
 }
 
-func TestLoadMsTemplate_Errors(t *testing.T) {
+func TestLoadMsTemplate(t *testing.T) {
 	t.Run("missing file", func(t *testing.T) {
 		_, err := LoadMsTemplate("/nonexistent/path/file.docx")
 		assert.Error(t, err)
@@ -273,7 +273,7 @@ func TestLoadMsTemplate_Errors(t *testing.T) {
 
 // --- end to end: dedicated marker rows ----------------------------------------
 
-func TestOfficeTpl_DedicatedRowLoop(t *testing.T) {
+func TestRenderLoop(t *testing.T) {
 	path := writeTempDocx(t, `<w:document><w:body><w:tbl>`+
 		`<w:tr><w:tc><w:p><w:r><w:t>Name</w:t></w:r></w:p></w:tc></w:tr>`+
 		`<w:tr><w:tc><w:p><w:r><w:t>{{ range .Assets }}</w:t></w:r></w:p></w:tc></w:tr>`+
@@ -320,7 +320,7 @@ func TestLoadShippedTemplates(t *testing.T) {
 
 // --- OfficeTpl (Libre / odt) -------------------------------------------------
 
-func TestOfficeTpl_Libre_Metadata(t *testing.T) {
+func TestOfficeTplMetadataLibre(t *testing.T) {
 	path := writeTempOdt(t, `<office:document-content><text:p>hello</text:p></office:document-content>`)
 	tpl, err := LoadLibreTemplate(path)
 	require.NoError(t, err)
@@ -330,7 +330,7 @@ func TestOfficeTpl_Libre_Metadata(t *testing.T) {
 	assert.Equal(t, ".odt", tpl.Ext())
 }
 
-func TestOfficeTpl_Libre_Render(t *testing.T) {
+func TestRenderLibre(t *testing.T) {
 	t.Run("substitutes template data", func(t *testing.T) {
 		path := writeTempOdt(t, `<office:document-content><text:p>{{.Name}}</text:p></office:document-content>`)
 		tpl, err := LoadLibreTemplate(path)
@@ -352,7 +352,7 @@ func TestOfficeTpl_Libre_Render(t *testing.T) {
 	})
 }
 
-func TestLoadLibreTemplate_Errors(t *testing.T) {
+func TestLoadLibreTemplate(t *testing.T) {
 	t.Run("missing file", func(t *testing.T) {
 		_, err := LoadLibreTemplate("/nonexistent/path/file.odt")
 		assert.Error(t, err)

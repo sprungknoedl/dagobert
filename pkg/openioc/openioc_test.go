@@ -9,7 +9,7 @@ import (
 
 var testTime = time.Date(2026, 6, 19, 8, 30, 0, 0, time.UTC)
 
-func TestNew_DocumentMetadata(t *testing.T) {
+func TestNewMetadata(t *testing.T) {
 	doc := New("Alice", testTime)
 
 	if doc.Namespace != Namespace {
@@ -29,7 +29,7 @@ func TestNew_DocumentMetadata(t *testing.T) {
 	}
 }
 
-func TestAddItem_GeneratesUniqueIDs(t *testing.T) {
+func TestAddItem(t *testing.T) {
 	doc := New("Alice", testTime)
 	doc.AddItem("is", Context{Document: "PortItem"}, "IP", "198.51.100.7")
 	doc.AddItem("is", Context{Document: "PortItem"}, "IP", "198.51.100.8")
@@ -43,7 +43,7 @@ func TestAddItem_GeneratesUniqueIDs(t *testing.T) {
 	}
 }
 
-func TestDocument_IsWellFormedAndUsesSchemaElementNames(t *testing.T) {
+func TestDocumentSchema(t *testing.T) {
 	doc := New("Alice", testTime)
 	doc.AddItem("contains", Context{Document: "DnsEntryItem", Search: "DnsEntryItem/Host", Type: "mir"}, "string", "evil.example.com")
 
@@ -70,7 +70,7 @@ func TestDocument_IsWellFormedAndUsesSchemaElementNames(t *testing.T) {
 	}
 }
 
-func TestDocument_EscapesSpecialCharacters(t *testing.T) {
+func TestDocumentEscape(t *testing.T) {
 	// A value with XML metacharacters must not break the document.
 	val := `C:\Temp\a & b<c>.exe`
 	doc := New("Alice", testTime)

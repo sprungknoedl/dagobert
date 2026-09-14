@@ -12,7 +12,7 @@ import (
 // sha1 of "hello world"
 const helloHash = "2aae6c35c94fcfb415dbe95f408b9ce91ee846ed"
 
-func TestResolveEvidenceFileAdoptsFileOnDisk(t *testing.T) {
+func TestResolveEvidenceFileAdopt(t *testing.T) {
 	t.Chdir(t.TempDir())
 	dir := filepath.Join(model.DataDir, "evidences", "case01")
 	if err := os.MkdirAll(dir, 0755); err != nil {
@@ -35,7 +35,7 @@ func TestResolveEvidenceFileAdoptsFileOnDisk(t *testing.T) {
 	}
 }
 
-func TestResolveEvidenceFileNoFileIsNotAnError(t *testing.T) {
+func TestResolveEvidenceFileMissing(t *testing.T) {
 	t.Chdir(t.TempDir())
 	dto := model.Evidence{ID: "ev01", CaseID: "case01", Name: "missing.bin", Fileless: true}
 	got, attached, _, err := resolveEvidenceFile(dto, model.Evidence{}, true, nil, nil)
@@ -50,7 +50,7 @@ func TestResolveEvidenceFileNoFileIsNotAnError(t *testing.T) {
 	}
 }
 
-func TestResolveEvidenceFileKeepsStoredMetadata(t *testing.T) {
+func TestResolveEvidenceFileStored(t *testing.T) {
 	t.Chdir(t.TempDir())
 	old := model.Evidence{ID: "ev01", CaseID: "case01", Name: "dump.bin", Size: 11, Hash: helloHash}
 
@@ -68,14 +68,14 @@ func TestResolveEvidenceFileKeepsStoredMetadata(t *testing.T) {
 	}
 }
 
-func TestDiffEvidenceNoChanges(t *testing.T) {
+func TestDiffEvidenceUnchanged(t *testing.T) {
 	ev := model.Evidence{Name: "dump.bin", Type: "Disk", Hash: helloHash, Size: 11}
 	if got := diffEvidence(ev, ev); got != "" {
 		t.Errorf("got %q, want empty diff for identical records", got)
 	}
 }
 
-func TestDiffEvidenceReportsChangedFields(t *testing.T) {
+func TestDiffEvidenceFields(t *testing.T) {
 	old := model.Evidence{
 		Name: "dump.bin", Type: "Disk", Hash: helloHash, Size: 11,
 		Source: "DC01", Notes: "n1", Password: "p1",
@@ -94,7 +94,7 @@ func TestDiffEvidenceReportsChangedFields(t *testing.T) {
 	}
 }
 
-func TestDiffEvidenceRenameOnlyNamesOldAndNewValues(t *testing.T) {
+func TestDiffEvidenceRename(t *testing.T) {
 	old := model.Evidence{Name: "old.bin"}
 	new := model.Evidence{Name: "new.bin"}
 	if got, want := diffEvidence(old, new), `name: "old.bin" → "new.bin"`; got != want {
@@ -102,7 +102,7 @@ func TestDiffEvidenceRenameOnlyNamesOldAndNewValues(t *testing.T) {
 	}
 }
 
-func TestDiffEvidenceDetectsTimeRangeChanges(t *testing.T) {
+func TestDiffEvidenceTimes(t *testing.T) {
 	base := model.Evidence{Name: "dump.bin"}
 	changed := base
 	changed.StartsAt = model.Time(time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC))

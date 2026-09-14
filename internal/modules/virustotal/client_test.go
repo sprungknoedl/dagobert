@@ -22,7 +22,7 @@ func TestConfigured(t *testing.T) {
 	assert.True(t, NewClient(Config{APIKey: "x"}).Configured())
 }
 
-func TestLookupRequestShaping(t *testing.T) {
+func TestLookupRequest(t *testing.T) {
 	cases := []struct {
 		typ  string
 		val  string
@@ -55,7 +55,7 @@ func TestLookupRequestShaping(t *testing.T) {
 	}
 }
 
-func TestLookupVerdictDerivation(t *testing.T) {
+func TestLookupVerdict(t *testing.T) {
 	cases := []struct {
 		name    string
 		body    string
@@ -85,7 +85,7 @@ func TestLookupVerdictDerivation(t *testing.T) {
 	}
 }
 
-func TestLookupFoldsDetections(t *testing.T) {
+func TestLookupDetections(t *testing.T) {
 	body := `{"data":{"attributes":{
 		"last_analysis_stats":{"malicious":2,"harmless":50},
 		"last_analysis_results":{
@@ -118,7 +118,7 @@ func TestLookupNotFound(t *testing.T) {
 	assert.Empty(t, res.URL)                // link omitted when there is no record
 }
 
-func TestLookupServerError(t *testing.T) {
+func TestLookupError(t *testing.T) {
 	c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	})

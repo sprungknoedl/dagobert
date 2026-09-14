@@ -14,7 +14,7 @@ var exportTestTime = time.Date(2026, 6, 19, 8, 30, 0, 0, time.UTC)
 // validity (required fields, escaping, timestamps) is tested in pkg/openioc and
 // pkg/stix.
 
-func TestBuildOpenIOC_TypeMapping(t *testing.T) {
+func TestBuildOpenIOCMapping(t *testing.T) {
 	tests := []struct {
 		name       string
 		ioc        model.Indicator
@@ -58,14 +58,14 @@ func TestBuildOpenIOC_TypeMapping(t *testing.T) {
 	}
 }
 
-func TestBuildOpenIOC_IncludeUnknownType(t *testing.T) {
+func TestBuildOpenIOCUnknown(t *testing.T) {
 	doc := buildOpenIOC([]model.Indicator{{Type: "Bogus", Value: "x"}}, "Alice", exportTestTime)
 	if len(doc.Criteria[0].Items) != 1 {
 		t.Errorf("unknown type shouldn't be skipped, got %d items", len(doc.Criteria[0].Items))
 	}
 }
 
-func TestBuildStixBundle_PatternMapping(t *testing.T) {
+func TestBuildStixBundlePattern(t *testing.T) {
 	tests := []struct {
 		name        string
 		ioc         model.Indicator
@@ -95,7 +95,7 @@ func TestBuildStixBundle_PatternMapping(t *testing.T) {
 	}
 }
 
-func TestBuildStixBundle_EscapesQuotesInPattern(t *testing.T) {
+func TestBuildStixBundleEscape(t *testing.T) {
 	b := buildStixBundle([]model.Indicator{{Type: "Service", Value: `O'Brien\Svc`}}, exportTestTime)
 	want := `[process:extensions.'windows-service-ext'.service_name='O\'Brien\\Svc']`
 	if got := b.Objects[0].Pattern; got != want {
@@ -103,7 +103,7 @@ func TestBuildStixBundle_EscapesQuotesInPattern(t *testing.T) {
 	}
 }
 
-func TestBuildStixBundle_IncludeUnknownType(t *testing.T) {
+func TestBuildStixBundleUnknown(t *testing.T) {
 	b := buildStixBundle([]model.Indicator{{Type: "Bogus", Value: "x"}}, exportTestTime)
 	if len(b.Objects) != 1 {
 		t.Errorf("unknown type shouldn't be skipped, got %d objects", len(b.Objects))

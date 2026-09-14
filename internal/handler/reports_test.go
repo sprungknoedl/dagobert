@@ -10,7 +10,7 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/model"
 )
 
-func TestLoadTemplateRejectsTraversal(t *testing.T) {
+func TestLoadTemplate(t *testing.T) {
 	// names that escape data/templates/ must be rejected by the path guard,
 	// before any filesystem access, with the generic "invalid template" error.
 	for _, name := range []string{
@@ -29,7 +29,7 @@ func TestLoadTemplateRejectsTraversal(t *testing.T) {
 	}
 }
 
-func TestResolveReportFileRejectsInvalidUpload(t *testing.T) {
+func TestResolveReportFileReject(t *testing.T) {
 	t.Chdir(t.TempDir())
 	f, size := openUpload(t, []byte("not a real docx"))
 
@@ -46,7 +46,7 @@ func TestResolveReportFileRejectsInvalidUpload(t *testing.T) {
 	}
 }
 
-func TestResolveReportFileRenamesOnNameChange(t *testing.T) {
+func TestResolveReportFileRename(t *testing.T) {
 	t.Chdir(t.TempDir())
 	db := setupArchiveDB(t)
 	obj := model.ReportTemplate{ID: "rep01", Name: "old.docx"}

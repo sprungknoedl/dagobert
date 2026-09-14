@@ -217,7 +217,7 @@ func TestArchiveRoundTripBinaries(t *testing.T) {
 	}
 }
 
-func TestRestoreBinariesEnforcesContentBudget(t *testing.T) {
+func TestRestoreBinariesBudget(t *testing.T) {
 	orig, _ := os.Getwd()
 	t.Cleanup(func() { os.Chdir(orig) })
 	if err := os.Chdir(t.TempDir()); err != nil {
@@ -286,7 +286,7 @@ func TestArchiveDuplicateIDRejected(t *testing.T) {
 	}
 }
 
-func TestArchiveSchemaMismatchRejected(t *testing.T) {
+func TestValidateManifest(t *testing.T) {
 	cur, err := model.SchemaVersion()
 	if err != nil {
 		t.Fatal(err)
@@ -297,7 +297,7 @@ func TestArchiveSchemaMismatchRejected(t *testing.T) {
 	}
 }
 
-func TestArchiveZipSlipRejected(t *testing.T) {
+func TestValidateArchivePaths(t *testing.T) {
 	buf := &bytes.Buffer{}
 	zw := zip.NewWriter(buf)
 	fw, _ := zw.Create("evidences/../../etc/passwd")
@@ -309,7 +309,7 @@ func TestArchiveZipSlipRejected(t *testing.T) {
 	}
 }
 
-func TestArchiveTraversalCaseIDRejected(t *testing.T) {
+func TestReadCaseArchiveTraversal(t *testing.T) {
 	for _, id := range []string{"../../tmp", "a/b", "a.b", "", `..\..\tmp`} {
 		buf := &bytes.Buffer{}
 		zw := zip.NewWriter(buf)

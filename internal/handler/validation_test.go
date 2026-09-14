@@ -6,7 +6,7 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/model"
 )
 
-func TestValidateReportName(t *testing.T) {
+func TestValidateReportTemplate(t *testing.T) {
 	tests := []struct {
 		name    string
 		invalid bool
@@ -29,7 +29,7 @@ func TestValidateReportName(t *testing.T) {
 	}
 }
 
-func TestValidateMalwareHash(t *testing.T) {
+func TestValidateMalware(t *testing.T) {
 	tests := []struct {
 		hash    string
 		invalid bool

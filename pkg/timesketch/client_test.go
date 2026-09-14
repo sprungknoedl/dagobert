@@ -102,7 +102,7 @@ func (f *fake) client() *Client {
 	return NewClient(Config{URL: f.srv.URL, Username: f.user, Password: f.pass})
 }
 
-func TestLoginScrapesCSRF(t *testing.T) {
+func TestLoginCSRF(t *testing.T) {
 	f := newFake(t)
 	f.api("GET /api/v1/sketches/{$}", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{"meta":{},"objects":[{"id":1,"name":"Case 1"}]}`)
@@ -172,7 +172,7 @@ func TestPersistentAuthFailureReturnsError(t *testing.T) {
 	}
 }
 
-func TestGetSketchCopiesMeta(t *testing.T) {
+func TestGetSketchMeta(t *testing.T) {
 	f := newFake(t)
 	f.api("GET /api/v1/sketches/{id}", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `{
@@ -211,7 +211,7 @@ func TestGetSketchNotFound(t *testing.T) {
 	}
 }
 
-func TestExploreAllPaginates(t *testing.T) {
+func TestExploreAll(t *testing.T) {
 	f := newFake(t)
 	froms := []int{}
 	f.api("POST /api/v1/sketches/{id}/explore/", func(w http.ResponseWriter, r *http.Request) {
@@ -248,7 +248,7 @@ func TestExploreAllPaginates(t *testing.T) {
 	}
 }
 
-func TestUploadChunks(t *testing.T) {
+func TestUpload(t *testing.T) {
 	old := uploadChunkSize
 	uploadChunkSize = 5
 	t.Cleanup(func() { uploadChunkSize = old })
@@ -330,7 +330,7 @@ func TestUploadChunks(t *testing.T) {
 	}
 }
 
-func TestErrorIncludesBody(t *testing.T) {
+func TestError(t *testing.T) {
 	f := newFake(t)
 	f.mux.HandleFunc("GET /api/v1/sketches/{$}", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -343,7 +343,7 @@ func TestErrorIncludesBody(t *testing.T) {
 	}
 }
 
-func TestUnconfiguredClient(t *testing.T) {
+func TestConfigured(t *testing.T) {
 	c := NewClient(Config{})
 	if c.Configured() {
 		t.Error("client with empty URL must not report configured")

@@ -21,7 +21,7 @@ func TestConfigured(t *testing.T) {
 	assert.True(t, NewClient(Config{APIKey: "x"}).Configured())
 }
 
-func TestLookupRequestShaping(t *testing.T) {
+func TestLookupRequest(t *testing.T) {
 	var gotMethod, gotPath, gotKey, gotUA, gotAccept, gotQuery string
 	c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
 		gotMethod = r.Method
@@ -44,7 +44,7 @@ func TestLookupRequestShaping(t *testing.T) {
 	assert.Equal(t, "deadbeef", gotQuery)
 }
 
-func TestLookupVerdictMapping(t *testing.T) {
+func TestLookupVerdict(t *testing.T) {
 	cases := []struct {
 		name      string
 		haVerdict string
@@ -72,7 +72,7 @@ func TestLookupVerdictMapping(t *testing.T) {
 	}
 }
 
-func TestLookupEmptyArray(t *testing.T) {
+func TestLookupEmpty(t *testing.T) {
 	c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`[]`))
 	})
@@ -97,7 +97,7 @@ func TestLookupNotFound(t *testing.T) {
 	assert.Empty(t, res.URL) // link omitted when there is no record
 }
 
-func TestLookupMostRelevantReport(t *testing.T) {
+func TestLookupReport(t *testing.T) {
 	// Three reports: scores 10, 90, 50 — should pick 90.
 	body := `[
 		{"verdict":"suspicious","threat_score":10,"vx_family":"Low"},
@@ -127,7 +127,7 @@ func TestLookupURL(t *testing.T) {
 	assert.Equal(t, "https://www.hybrid-analysis.com/search?query=deadbeef", res.URL)
 }
 
-func TestLookupServerError(t *testing.T) {
+func TestLookupError(t *testing.T) {
 	c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	})

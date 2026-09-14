@@ -15,7 +15,7 @@ func date(s string) model.Date {
 	return model.Date(t)
 }
 
-func TestAggregateDashboardCountsTechniqueOncePerCase(t *testing.T) {
+func TestAggregateDashboardTechnique(t *testing.T) {
 	cases := []model.Case{{ID: "1"}}
 	techniquesByCase := map[string][]string{
 		"1": {"T1566", "T1566", "T1566"}, // 3 events, same technique
@@ -54,7 +54,7 @@ func TestCaseInDateScope(t *testing.T) {
 	}
 }
 
-func TestAggregateDashboardMedianCloseDays(t *testing.T) {
+func TestAggregateDashboardMedian(t *testing.T) {
 	// odd count: 2, 4, 6 days -> median 4
 	odd := []model.Case{
 		{ID: "1", Closed: true, OpenedAt: date("2026-01-01"), ClosedAt: date("2026-01-03")},
@@ -89,7 +89,7 @@ func TestAggregateDashboardMedianCloseDays(t *testing.T) {
 	}
 }
 
-func TestAggregateDashboardGroupsEmptyClassificationAsUnset(t *testing.T) {
+func TestAggregateDashboardUnset(t *testing.T) {
 	cases := []model.Case{
 		{ID: "1", Classification: "Phishing"},
 		{ID: "2", Classification: ""},

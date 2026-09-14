@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestEvidenceLogsScopedByCase(t *testing.T) {
+func TestListEvidenceLogs(t *testing.T) {
 	db, close := setupDB()
 	defer close()
 
@@ -27,7 +27,7 @@ func TestEvidenceLogsScopedByCase(t *testing.T) {
 	assert.Equal(t, "e2", logsB[0].EvidenceID)
 }
 
-func TestPurgeEvidenceLogsScopedToEvidence(t *testing.T) {
+func TestPurgeEvidenceLogs(t *testing.T) {
 	db, close := setupDB()
 	defer close()
 
@@ -44,7 +44,7 @@ func TestPurgeEvidenceLogsScopedToEvidence(t *testing.T) {
 	assert.Equal(t, "e2", logs[0].EvidenceID)
 }
 
-func TestForkCaseRemapsEvidenceLogs(t *testing.T) {
+func TestForkCase(t *testing.T) {
 	db, close := setupDB()
 	defer close()
 

@@ -19,7 +19,7 @@ func TestNewBundle(t *testing.T) {
 	}
 }
 
-func TestAddIndicator_SetsRequiredProperties(t *testing.T) {
+func TestAddIndicatorProperties(t *testing.T) {
 	b := NewBundle()
 	b.AddIndicator("[ipv4-addr:value='198.51.100.7']", testTime)
 
@@ -44,7 +44,7 @@ func TestAddIndicator_SetsRequiredProperties(t *testing.T) {
 	}
 }
 
-func TestAddIndicator_GeneratesUniqueIDs(t *testing.T) {
+func TestAddIndicatorUnique(t *testing.T) {
 	b := NewBundle()
 	b.AddIndicator("[ipv4-addr:value='198.51.100.7']", testTime)
 	b.AddIndicator("[ipv4-addr:value='198.51.100.8']", testTime)
@@ -53,7 +53,7 @@ func TestAddIndicator_GeneratesUniqueIDs(t *testing.T) {
 	}
 }
 
-func TestTimestamp_UTCWithZ(t *testing.T) {
+func TestTimestamp(t *testing.T) {
 	// Even with a non-UTC input the output must be UTC ("Z"-terminated).
 	loc := time.FixedZone("CEST", 2*3600)
 	got := Timestamp(testTime.In(loc))
@@ -84,7 +84,7 @@ func TestQuoteLiteral(t *testing.T) {
 	}
 }
 
-func TestBundle_IsValidJSON(t *testing.T) {
+func TestBundleJSON(t *testing.T) {
 	b := NewBundle()
 	b.AddIndicator("[ipv4-addr:value='198.51.100.7']", testTime)
 	b.AddIndicator("[domain-name:value='evil.example.com']", testTime)

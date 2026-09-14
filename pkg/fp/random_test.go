@@ -46,7 +46,7 @@ func TestRandom(t *testing.T) {
 	})
 }
 
-func TestRandomPanicsOnFailure(t *testing.T) {
+func TestRandomPanic(t *testing.T) {
 	randReader = failingReader{}
 	defer func() { randReader = cryptorand.Reader }()
 

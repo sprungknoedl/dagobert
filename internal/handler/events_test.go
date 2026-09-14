@@ -7,7 +7,7 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 )
 
-func TestSaveTimesketchEventsDedupsOnReimport(t *testing.T) {
+func TestSaveTimesketchEvents(t *testing.T) {
 	db := setupArchiveDB(t)
 	kase := seedCase(t, db)
 
@@ -39,7 +39,7 @@ func TestSaveTimesketchEventsDedupsOnReimport(t *testing.T) {
 	}
 }
 
-func TestSaveTimesketchIndicatorsMapsTypes(t *testing.T) {
+func TestSaveTimesketchIndicators(t *testing.T) {
 	db := setupArchiveDB(t)
 	kase := seedCase(t, db)
 

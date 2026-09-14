@@ -89,7 +89,7 @@ func TestRewriteAggregate(t *testing.T) {
 	assert.Len(t, docs, 2)
 }
 
-func TestRewriteMultipleLines(t *testing.T) {
+func TestRewriteLines(t *testing.T) {
 	dir := t.TempDir()
 	src := filepath.Join(dir, "raw.jsonl")
 	dst := filepath.Join(dir, "dst.jsonl")
