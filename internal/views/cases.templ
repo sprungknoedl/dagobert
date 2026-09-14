@@ -177,7 +177,6 @@ templ CasesOne(env Env, obj model.Case, vr valid.ValidationError, opts ...CasesO
 			@dateField("ClosedAt", dateInputValue(obj.ClosedAt), withLabel("Closed at"))
 		}
 		@markdownField("Summary", obj.Summary, withLabel("Executive summary"), withHint("Markdown supported. Describe what happened, scope of impact, root cause, and resolution."))
-		<!-- x -->
 		if cfg.sketches.Show {
 			<h2 class="text-xl font-semibold">Integrations</h2>
 			<div class="fieldset">
@@ -196,7 +195,6 @@ templ CasesOne(env Env, obj model.Case, vr valid.ValidationError, opts ...CasesO
 				}
 			</div>
 		}
-		<!-- x -->
 		@customAttributes(env, "Case", obj.Custom)
 		@requiredFootnote()
 	}
@@ -280,7 +278,6 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 					// The date is condensed to MM-DD hh:mm (the full timestamp is the
 					// title attribute, and the timeline has it in full), and the record
 					// type is carried by its icon alone, to leave the width for findings.
-					<!-- Flagged events -->
 					<div>
 						<div class="fieldset-legend pb-1.5 mb-2 border-b border-base-300">Key Events</div>
 						if len(keyEvents) == 0 {
@@ -300,7 +297,6 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 							</ul>
 						}
 					</div>
-					<!-- Compromised assets -->
 					<div>
 						<div class="fieldset-legend pb-1.5 mb-2 border-b border-base-300">Compromised Assets</div>
 						if len(compromisedAssets) == 0 {
@@ -316,7 +312,6 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 							</ul>
 						}
 					</div>
-					<!-- Flagged indicators -->
 					<div>
 						<div class="fieldset-legend pb-1.5 mb-2 border-b border-base-300">Key Indicators</div>
 						if len(flaggedIndicators) == 0 {

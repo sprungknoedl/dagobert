@@ -1,5 +1,4 @@
 onload = (event) => {
-    // up.log.enable();
     up.log.disable();
     up.network.config.autoCache = (request) => false;
     up.network.config.wrapMethod = false;
@@ -23,7 +22,6 @@ onload = (event) => {
     up.on('up:fragment:loaded', function (event) {
         const isFailed = up.network.config.fail(event.renderOptions.response);
         if (isFailed && event.response.status != 422) {
-            // Force the fail layer or show an error alert
             event.renderOptions.failLayer = 'root';
             event.renderOptions.failTarget = '#errors';
         }
@@ -289,7 +287,7 @@ up.compiler('table:has([data-href])', (table) => {
 });
 
 // showToast renders a success toast into the root #errors section: a check
-// glyph, a caption with the time, and the message. Matches the markup of the
+// glyph, a caption, and the message. Matches the markup of the
 // server-rendered ToastError/ToastWarning (alert-success rather than
 // alert-error/-warning).
 function showToast(message) {
@@ -302,12 +300,8 @@ function showToast(message) {
     toast.setAttribute('role', 'status');
     toast.setAttribute('aria-live', 'polite');
     toast.onclick = () => toast.remove();
-    toast.innerHTML = '<i class="ph ph-seal-check text-xl"></i>'
-        + '<div><div class="font-semibold"></div>'
-        + '<div class="text-sm"></div></div>';
-    toast.querySelector('.font-semibold').textContent =
-        'Recorded · ' + new Date().toLocaleTimeString([], { hour12: false });
-    toast.querySelector('.text-sm').textContent = message;
+    toast.innerHTML = '<i class="ph ph-seal-check text-xl"></i>' + '<span></span>';
+    toast.querySelector('span').textContent = message;
     container.appendChild(toast);
 
     setTimeout(() => toast.remove(), 4000);
@@ -689,7 +683,7 @@ up.compiler('#mynetwork', (elem, data) => {
                     // never veto an unrelated render later on
                     setTimeout(() => up.off('up:fragment:loaded', restore), 2000);
                 },
-            }).catch(() => {});
+            }).catch(() => { });
         });
     });
 

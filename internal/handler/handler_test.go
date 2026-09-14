@@ -159,7 +159,7 @@ func TestRedirectAfterSaveSetsSuccessToast(t *testing.T) {
 	if rec.Code != http.StatusSeeOther {
 		t.Fatalf("status = %d, want %d", rec.Code, http.StatusSeeOther)
 	}
-	wantToast := "Saved."
+	wantToast := "Successfully saved record."
 	if msg, ok := flashToast(t, rec); !ok || msg != wantToast {
 		t.Errorf("flash toast = %q (set=%v), want %q", msg, ok, wantToast)
 	}
@@ -191,7 +191,7 @@ func TestFlashToastMiddlewareDeliversTheToastOnTheNextRequest(t *testing.T) {
 	rec := httptest.NewRecorder()
 	FlashToast(next).ServeHTTP(rec, follow)
 
-	wantHeader := `{"toast":"Saved."}`
+	wantHeader := `{"toast":"Successfully saved record."}`
 	if got := rec.Header().Get("X-Up-Accept-Layer"); got != wantHeader {
 		t.Errorf("X-Up-Accept-Layer = %q, want %q", got, wantHeader)
 	}

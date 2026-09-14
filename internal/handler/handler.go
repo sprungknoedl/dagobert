@@ -509,6 +509,6 @@ func RedirectAfterSave(w http.ResponseWriter, r *http.Request, url string, recor
 		}
 		return
 	}
-	SetFlashToast(w, "Saved.")
+	SetFlashToast(w, "Successfully saved record.")
 	http.Redirect(w, r, url, http.StatusSeeOther)
 }

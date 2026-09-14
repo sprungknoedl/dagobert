@@ -29,7 +29,6 @@ templ EventsMany(env Env, rows []model.Event, assets []model.Asset, indicators [
 	@layout() {
 		@list(env, "Timeline", navHideImport(), navPreButtons(eventsManyExtra(env))) {
 			<section id="histogram" class="text-xs" up-data={ histogramJSON(rows) }></section>
-			<!-- -->
 			<table class="table table-pin-rows" data-default-sort="value-0">
 				<thead>
 					<tr>
@@ -206,11 +205,9 @@ func histogramJSON(rows []model.Event) string {
 // histogram creates a histogram with a fixed number of buckets.
 func histogram(events []model.Event, numBuckets int) []HistogramItem {
 	if len(events) < 2 || numBuckets <= 0 {
-		// Not enough data or invalid bucket count.
 		return []HistogramItem{}
 	}
 
-	// Find the min and max times to determine the range.
 	minTime, maxTime := time.Time(events[0].Time), time.Time(events[0].Time)
 	for _, e := range events {
 		if time.Time(e.Time).Before(minTime) {
@@ -226,7 +223,6 @@ func histogram(events []model.Event, numBuckets int) []HistogramItem {
 		return []HistogramItem{}
 	}
 
-	// Calculate the size of each bucket.
 	bucketSize := time.Duration(int64(duration) / int64(numBuckets))
 	if bucketSize < 1 {
 		bucketSize = 1
