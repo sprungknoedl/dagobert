@@ -2,6 +2,7 @@ package auth
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/sprungknoedl/dagobert/internal/model"
@@ -65,4 +66,61 @@ func TestDeleteUser(t *testing.T) {
 
 	assert.Nil(t, acl.DeleteUser(uid))
 	assert.False(t, acl.Allowed(uid, "/settings/users/", http.MethodDelete))
+}
+
+func TestIsNavigation(t *testing.T) {
+	tests := []struct {
+		name      string
+		method    string
+		fetchMode string
+		accept    string
+		want      bool
+	}{
+		{"GET with Sec-Fetch-Mode navigate", http.MethodGet, "navigate", "", true},
+		{"GET with Sec-Fetch-Mode cors", http.MethodGet, "cors", "", false},
+		{"GET without Sec-Fetch-Mode but html Accept", http.MethodGet, "", "text/html,*/*", true},
+		{"GET without Sec-Fetch-Mode and non-html Accept", http.MethodGet, "", "application/json", false},
+		{"POST is never a navigation, even with navigate mode", http.MethodPost, "navigate", "", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(tt.method, "/", nil)
+			if tt.fetchMode != "" {
+				req.Header.Set("Sec-Fetch-Mode", tt.fetchMode)
+			}
+			if tt.accept != "" {
+				req.Header.Set("Accept", tt.accept)
+			}
+			assert.Equal(t, tt.want, isNavigation(req))
+		})
+	}
+}
+
+func TestIsPagePath(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /cases/", func(w http.ResponseWriter, r *http.Request) {})
+	mux.HandleFunc("POST /reports/{id}/delete", func(w http.ResponseWriter, r *http.Request) {})
+	a := &Auth{routes: mux}
+
+	tests := []struct {
+		name string
+		dst  string
+		want bool
+	}{
+		{"registered GET route", "/cases/", true},
+		{"unregistered path", "/nonexistent", false},
+		{"route exists but only for a different method", "/reports/1/delete", false},
+		{"protocol-relative open redirect rejected", "//evil.example.com", false},
+		{"non-relative destination rejected", "https://evil.example.com", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.want, a.isPagePath(tt.dst))
+		})
+	}
+
+	t.Run("nil routes accepts any safe relative path", func(t *testing.T) {
+		a := &Auth{}
+		assert.True(t, a.isPagePath("/anything"))
+	})
 }
