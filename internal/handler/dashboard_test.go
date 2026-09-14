@@ -114,3 +114,23 @@ func TestAggregateDashboardGroupsEmptyClassificationAsUnset(t *testing.T) {
 		t.Errorf("got %d phishing, want 1", phishing)
 	}
 }
+
+func TestParseDashboardDate(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want time.Time
+	}{
+		{"valid date", "2026-03-15", time.Date(2026, 3, 15, 0, 0, 0, 0, time.UTC)},
+		{"empty string", "", time.Time{}},
+		{"malformed", "not-a-date", time.Time{}},
+		{"wrong format", "15/03/2026", time.Time{}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := parseDashboardDate(tt.in); !got.Equal(tt.want) {
+				t.Errorf("parseDashboardDate(%q) = %v, want %v", tt.in, got, tt.want)
+			}
+		})
+	}
+}

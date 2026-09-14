@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/model"
 )
@@ -64,5 +65,50 @@ func TestResolveEvidenceFileKeepsStoredMetadata(t *testing.T) {
 	}
 	if got.Size != 11 || got.Hash != helloHash {
 		t.Errorf("got size=%d hash=%q, want stored metadata", got.Size, got.Hash)
+	}
+}
+
+func TestDiffEvidenceNoChanges(t *testing.T) {
+	ev := model.Evidence{Name: "dump.bin", Type: "Disk", Hash: helloHash, Size: 11}
+	if got := diffEvidence(ev, ev); got != "" {
+		t.Errorf("got %q, want empty diff for identical records", got)
+	}
+}
+
+func TestDiffEvidenceReportsChangedFields(t *testing.T) {
+	old := model.Evidence{
+		Name: "dump.bin", Type: "Disk", Hash: helloHash, Size: 11,
+		Source: "DC01", Notes: "n1", Password: "p1",
+		Custom: model.Custom{"k": "v1"},
+	}
+	new := model.Evidence{
+		Name: "dump2.bin", Type: "Memory", Hash: "deadbeef", Size: 22,
+		Source: "DC02", Notes: "n2", Password: "p2",
+		Custom: model.Custom{"k": "v2"},
+	}
+
+	got := diffEvidence(old, new)
+	want := `name: "dump.bin" → "dump2.bin", Type, Hash, Size, Source, Notes, Password, Custom`
+	if got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestDiffEvidenceRenameOnlyNamesOldAndNewValues(t *testing.T) {
+	old := model.Evidence{Name: "old.bin"}
+	new := model.Evidence{Name: "new.bin"}
+	if got, want := diffEvidence(old, new), `name: "old.bin" → "new.bin"`; got != want {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+func TestDiffEvidenceDetectsTimeRangeChanges(t *testing.T) {
+	base := model.Evidence{Name: "dump.bin"}
+	changed := base
+	changed.StartsAt = model.Time(time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC))
+	changed.EndsAt = model.Time(time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC))
+
+	if got, want := diffEvidence(base, changed), "StartsAt, EndsAt"; got != want {
+		t.Errorf("got %q, want %q", got, want)
 	}
 }

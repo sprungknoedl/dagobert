@@ -323,3 +323,71 @@ func TestArchiveTraversalCaseIDRejected(t *testing.T) {
 		}
 	}
 }
+
+func TestSlugify(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"already clean", "operation-thunder", "operation-thunder"},
+		{"spaces and punctuation collapse", "Operation: Thunder!!", "Operation-Thunder"},
+		{"leading/trailing junk trimmed", "  --Case 42--  ", "Case-42"},
+		{"unicode letters kept", "Café Rot", "Café-Rot"},
+		{"empty input", "", ""},
+		{"only punctuation", "***", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := slugify(tt.in); got != tt.want {
+				t.Errorf("slugify(%q) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMaxArchiveSize(t *testing.T) {
+	t.Run("default when unset", func(t *testing.T) {
+		t.Setenv("MAX_ARCHIVE_SIZE", "")
+		if got, want := maxArchiveSize(), int64(10<<30); got != want {
+			t.Errorf("got %d, want default %d", got, want)
+		}
+	})
+	t.Run("overridden by env", func(t *testing.T) {
+		t.Setenv("MAX_ARCHIVE_SIZE", "1024")
+		if got, want := maxArchiveSize(), int64(1024); got != want {
+			t.Errorf("got %d, want %d", got, want)
+		}
+	})
+	t.Run("invalid value falls back to default", func(t *testing.T) {
+		t.Setenv("MAX_ARCHIVE_SIZE", "not-a-number")
+		if got, want := maxArchiveSize(), int64(10<<30); got != want {
+			t.Errorf("got %d, want default %d", got, want)
+		}
+	})
+	t.Run("non-positive value falls back to default", func(t *testing.T) {
+		t.Setenv("MAX_ARCHIVE_SIZE", "-5")
+		if got, want := maxArchiveSize(), int64(10<<30); got != want {
+			t.Errorf("got %d, want default %d", got, want)
+		}
+	})
+}
+
+func TestStagedArchivePath(t *testing.T) {
+	tests := []struct {
+		name  string
+		token string
+		want  string
+	}{
+		{"plain token", "abc123", filepath.Join(model.TmpDir, "abc123.zip")},
+		{"path traversal token is defanged", "../../etc/passwd", filepath.Join(model.TmpDir, "passwd.zip")},
+		{"nested slashes reduced to base", "a/b/c", filepath.Join(model.TmpDir, "c.zip")},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := stagedArchivePath(tt.token); got != tt.want {
+				t.Errorf("stagedArchivePath(%q) = %q, want %q", tt.token, got, tt.want)
+			}
+		})
+	}
+}

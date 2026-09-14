@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+
+	"github.com/sprungknoedl/dagobert/internal/model"
 )
 
 // flashToast returns the decoded value of the flash_toast cookie set on rec
@@ -236,5 +238,26 @@ func TestImportCSVCollectsStructuralRowErrorsInsteadOfAborting(t *testing.T) {
 	}
 	if len(after) != len(before) {
 		t.Errorf("event count changed from %d to %d — a failed import must not commit anything", len(before), len(after))
+	}
+}
+
+func TestCanModifyComment(t *testing.T) {
+	comment := model.Comment{Author: "alice"}
+
+	tests := []struct {
+		name string
+		user model.User
+		want bool
+	}{
+		{"author can modify own comment", model.User{Login: "alice", Role: "User"}, true},
+		{"other user cannot modify", model.User{Login: "bob", Role: "User"}, false},
+		{"administrator can modify any comment", model.User{Login: "bob", Role: "Administrator"}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := canModifyComment(tt.user, comment); got != tt.want {
+				t.Errorf("canModifyComment(%+v, %+v) = %v, want %v", tt.user, comment, got, tt.want)
+			}
+		})
 	}
 }

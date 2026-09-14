@@ -109,3 +109,27 @@ func TestBuildStixBundle_IncludeUnknownType(t *testing.T) {
 		t.Errorf("unknown type shouldn't be skipped, got %d objects", len(b.Objects))
 	}
 }
+
+func TestRefang(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{"bracketed dots", "198[.]51[.]100[.]7", "198.51.100.7"},
+		{"bracketed colon and scheme", "hxxp[://]evil[.]example", "http://evil.example"},
+		{"hxxps scheme", "hxxps://evil.example", "https://evil.example"},
+		{"sftp scheme", "sfxp://host", "sftp://host"},
+		{"ftp scheme", "fxp://host", "ftp://host"},
+		{"file scheme", "fxle:///tmp/x", "file:///tmp/x"},
+		{"already refanged is unchanged", "http://example.com", "http://example.com"},
+		{"no indicators present", "just text", "just text"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := refang(tt.in); got != tt.want {
+				t.Errorf("refang(%q) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}
