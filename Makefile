@@ -2,26 +2,26 @@
 .EXPORT_ALL_VARIABLES:
 -include .env
 
-TAILWIND_VERSION     = 4.3.2
-DAISYUI_VERSION      = 5.6.6
-GOLANGCI_LINT_VERSION = 2.12.2
+TAILWIND_VERSION     = 4.3.3
+DAISYUI_VERSION      = 5.7.37
+GOLANGCI_LINT_VERSION = 2.13.2
 
 # Supply-chain pinning: these binaries/plugins are downloaded from GitHub
 # releases during build-web and end up embedded + served, so each is pinned to a
 # specific version *and* sha256. The tailwind binary is platform-specific, so its
 # checksum is selected per OS/arch below. Refresh these when bumping a version:
 # download the release asset and run `sha256sum` (macOS: `shasum -a 256`).
-TAILWIND_SHA_macos_arm64 = b800b0659dc64b9f03ede5660244d9415d777d5739ae2889280877ca37be742a
-TAILWIND_SHA_macos_x64   = cef8f110471e889c3c4409055cf8aff33076f58a081867b0dfc6534b290bfbb0
-TAILWIND_SHA_linux_arm64 = 394ddccc2402cfa3abd97dfba56f3587781a3d6e6ce66e65ceada14beb7664b8
-TAILWIND_SHA_linux_x64   = 5036c4fb4328e0bcdbb6065c70d8ac9452e0d4c947113a788a8f94fd390425c1
-DAISYUI_SHA              = aa887cc8cc9f487e5869726e6f128721ba7d8194a7dfbc125435711f4f47cefb
-DAISYUI_THEME_SHA        = 9af858352be136881269f7ccf4c2495eb817cc35d09eef5feb1795d01223c1e8
+TAILWIND_SHA_macos_arm64 = cdf646702987a743464dff4d9c60fd4480d1c1e73dd819a9a67f1078815dce9d
+TAILWIND_SHA_macos_x64   = 7922e0953f2110c05976e3bf58f14e643d90427575e766b7d433f5f80cbee7e1
+TAILWIND_SHA_linux_arm64 = 55fd0b241214eff3de1e8ee4f22796662f2d2e7a49bcfca7477cfd0bac398195
+TAILWIND_SHA_linux_x64   = dc61b3ac6b8c9ca874c0cc4c57b2409791a64c5540404ca5f5367360babc313a
+DAISYUI_SHA              = cac228b0060dd62971e94d410f40bb80e3d40529bf38c92395fb77a4cb153a43
+DAISYUI_THEME_SHA        = abf84fdcae23840cdd08c01fcf2305836db13f7e13c102a27bbe974e739bc119
 
-GOLANGCI_LINT_SHA_darwin_arm64 = a9c54498731b3128f79e090be6110f3e5fffccc617b08142ed244d4126c73f29
-GOLANGCI_LINT_SHA_darwin_amd64 = f6f06d94b6241521c53d15450c5209b028270bf966f842afb11c030c79f5bc16
-GOLANGCI_LINT_SHA_linux_arm64  = 44cd40a8c76c86755375adfeea52cfd3533cb43d7bd647771e0ae065e166df3a
-GOLANGCI_LINT_SHA_linux_amd64  = 8df580d2670fed8fa984aac0507099af8df275e665215f5c7a2ae3943893a553
+GOLANGCI_LINT_SHA_darwin_arm64 = f4bf83f0b64f055c42b28fc9a38861839f69c096e61c788e72dfaae412011789
+GOLANGCI_LINT_SHA_darwin_amd64 = 8a13aaf9cbbb1dee52824e862cf0d0720e5bb97c1f4260d1e51623a09492b57b
+GOLANGCI_LINT_SHA_linux_arm64  = a2a4e0065aa41be71f7c5ac90f271b61751331e5d04314e62afe4027855f0893
+GOLANGCI_LINT_SHA_linux_amd64  = 2277d43b98ec0054280f2ac26b53268bae97682444678a59a657dd565da021d6
 
 # Export validation: external validators for the OpenIOC / STIX indicator
 # exports. The OpenIOC 1.1 XSD is vendored under pkg/openioc/testdata; the STIX
