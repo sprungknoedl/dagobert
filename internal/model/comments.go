@@ -11,11 +11,11 @@ type Comment struct {
 	CaseID   string
 	Kind     string
 	ObjectID string
-	Author   string // user UPN
+	Author   string // user login
 	Time     Time
 	Message  string
 	// AuthorName is resolved from the users table at query time and never
-	// stored; it falls back to the raw UPN in the view when the user is gone.
+	// stored; it falls back to the raw login in the view when the user is gone.
 	AuthorName string `gorm:"->" json:"-" form:"-"`
 }
 
@@ -23,7 +23,7 @@ func (store *Store) ListComments(cid string, kind string, oid string) ([]Comment
 	list := []Comment{}
 	tx := store.DB.
 		Select("comments.*, users.name AS author_name").
-		Joins("LEFT JOIN users ON users.upn = comments.author").
+		Joins("LEFT JOIN users ON users.login = comments.author").
 		Where("comments.case_id = ? AND comments.kind = ? AND comments.object_id = ?", cid, kind, oid).
 		Order("comments.time asc").
 		Find(&list)

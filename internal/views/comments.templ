@@ -25,7 +25,7 @@ templ CommentsDialog(env Env, kind string, oid string, rows []model.Comment, edi
 							<span class="font-bold">{ fp.If(row.AuthorName != "", row.AuthorName, row.Author) }</span>
 							@formatTime(row.Time)
 							<div class="grow"></div>
-							if canWrite && row.ID != edit.ID && (row.Author == env.User.UPN || env.User.Role == "Administrator") {
+							if canWrite && row.ID != edit.ID && (row.Author == env.User.Login || env.User.Role == "Administrator") {
 								<div class="join">
 									<a class="join-item btn btn-xs btn-ghost" href={ uri + "?edit=" + row.ID } up-target="main">
 										<i class="ph ph-5 ph-pencil-simple"></i>

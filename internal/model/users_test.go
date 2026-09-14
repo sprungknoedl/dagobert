@@ -60,10 +60,10 @@ func TestSaveUser(t *testing.T) {
 	})
 
 	t.Run("Non-unique User", func(t *testing.T) {
-		user1 := User{ID: fp.Random(64), Name: "Max Musermann", UPN: "max@mustermann.com"}
-		user2 := User{ID: fp.Random(64), Name: "Max Musermann", UPN: "max@mustermann.com"}
+		user1 := User{ID: fp.Random(64), Name: "Max Musermann", Login: "max@mustermann.com"}
+		user2 := User{ID: fp.Random(64), Name: "Max Musermann", Login: "max@mustermann.com"}
 		assert.Nil(t, db.SaveUser(user1))
-		assert.Error(t, db.SaveUser(user2)) // should fail because UPN must be unique
+		assert.Error(t, db.SaveUser(user2)) // should fail because Login must be unique
 	})
 
 	t.Run("Empty User", func(t *testing.T) {
@@ -72,21 +72,21 @@ func TestSaveUser(t *testing.T) {
 	})
 }
 
-func TestGetUserByUPN(t *testing.T) {
+func TestGetUserByLogin(t *testing.T) {
 	db, close := setupDB()
 	defer close()
 
 	t.Run("Existing User", func(t *testing.T) {
-		user := User{ID: fp.Random(64), Name: "Max Musermann", UPN: "max@mustermann.com"}
+		user := User{ID: fp.Random(64), Name: "Max Musermann", Login: "max@mustermann.com"}
 		assert.Nil(t, db.SaveUser(user))
 
-		user2, err := db.GetUserByUPN(user.UPN)
+		user2, err := db.GetUserByLogin(user.Login)
 		assert.Nil(t, err)
 		assert.Equal(t, user, user2)
 	})
 
 	t.Run("Non-existant User", func(t *testing.T) {
-		user, err := db.GetUserByUPN("nobody@example.com")
+		user, err := db.GetUserByLogin("nobody@example.com")
 		assert.Zero(t, user)
 		assert.Equal(t, gorm.ErrRecordNotFound, err)
 	})

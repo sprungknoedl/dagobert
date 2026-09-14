@@ -113,7 +113,7 @@ templ CasesACL(env Env, obj model.Case, users []model.User, perms []string) {
 				<div class="fieldset">
 					<label class="label">
 						<input name="Users" value={ user.ID } type="checkbox" class="checkbox" checked?={ slices.Contains(perms, user.ID) }/>
-						{ user.Name } ({ user.UPN })
+						{ user.Name } ({ user.Login })
 					</label>
 				</div>
 			}

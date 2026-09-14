@@ -1,6 +1,8 @@
 package views
 
 import (
+	"os"
+
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
@@ -15,7 +17,7 @@ templ SettingsUsersMany(env Env, rows []model.User) {
 				<thead>
 					<tr>
 						<th data-sort="value-0" class="sort">Name</th>
-						<th data-sort="value-1" class="sort">UPN</th>
+						<th data-sort="value-1" class="sort">Username</th>
 						<th data-sort="value-2" class="sort">Email</th>
 						<th data-sort="value-3" class="sort">Role</th>
 						<th data-sort="value-4" class="sort">Last login</th>
@@ -37,7 +39,7 @@ templ SettingsUsersMany(env Env, rows []model.User) {
 										}
 									</span>
 								</td>
-								<td class="value-1" data-search={ sortKey + row.UPN }>{ row.UPN } </td>
+								<td class="value-1" data-search={ sortKey + row.Login }>{ row.Login } </td>
 								<td class="value-2" data-search={ sortKey + row.Email }>{ row.Email } </td>
 								<td class="value-3" data-search={ sortKey + row.Role }>
 									<span class="flex items-center gap-2">
@@ -78,16 +80,20 @@ templ SettingsUsersOne(env Env, obj model.User, vr valid.ValidationError) {
 		@stringField("Name", obj.Name, withLabel("Name"), withError(vr["Name"]))
 		<div class="fieldset">
 			<label class="label">
-				UPN
-				<span class="text-sm text-neutral-content">(Will be overwritten by identity provider.)</span>
-				@validationError(vr["UPN"])
+				Username
+				if os.Getenv("OIDC_ENABLED") == "true" {
+					<span class="text-sm text-neutral-content">(Will be overwritten by identity provider.)</span>
+				}
+				@validationError(vr["Login"])
 			</label>
-			<input name="UPN" type="text" class="input w-full" value={ obj.UPN }/>
+			<input name="Login" type="text" class="input w-full" value={ obj.Login }/>
 		</div>
 		<div class="fieldset">
 			<label class="label">
 				Email
-				<span class="text-sm text-neutral-content">(Will be overwritten by identity provider.)</span>
+				if os.Getenv("OIDC_ENABLED") == "true" {
+					<span class="text-sm text-neutral-content">(Will be overwritten by identity provider.)</span>
+				}
 				@validationError(vr["Email"])
 			</label>
 			<input name="Email" type="text" class="input w-full" value={ obj.Email }/>
@@ -121,7 +127,7 @@ templ SettingsUsersACL(env Env, obj model.User, cases []model.Case, perms []stri
 		if len(cases) == 0 {
 			<p>There are no cases to assign yet.</p>
 		} else {
-			<p>User <strong>{ obj.Name } ({ obj.UPN })</strong> is allowed to access the following cases:</p>
+			<p>User <strong>{ obj.Name } ({ obj.Login })</strong> is allowed to access the following cases:</p>
 			for _, kase := range cases {
 				<div class="fieldset">
 					<label class="label">

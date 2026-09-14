@@ -42,8 +42,8 @@ func TestSaveCasePermissions(t *testing.T) {
 	db := setupDB(t)
 	acl := NewACL(db)
 
-	assert.Nil(t, db.SaveUser(model.User{ID: "u1", UPN: "admin", Role: "Administrator"}))
-	assert.Nil(t, db.SaveUser(model.User{ID: "u2", UPN: "readonly", Role: "Read-Only"}))
+	assert.Nil(t, db.SaveUser(model.User{ID: "u1", Login: "admin", Role: "Administrator"}))
+	assert.Nil(t, db.SaveUser(model.User{ID: "u2", Login: "readonly", Role: "Read-Only"}))
 
 	assert.Nil(t, acl.SaveCasePermissions("case1", []string{"u1", "u2"}))
 	assert.True(t, acl.Allowed("u1", "/cases/case1/events/", http.MethodPost))

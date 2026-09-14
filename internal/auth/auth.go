@@ -215,7 +215,7 @@ func (a *Auth) Callback(w http.ResponseWriter, r *http.Request) {
 
 	// Refresh profile fields from the token on every login
 	user.Name = str("name")
-	user.UPN = str("preferred_username")
+	user.Login = str("preferred_username")
 	user.Email = str("email")
 	user.LastLogin = model.Time(time.Now())
 	if err := a.store.SaveUser(user); err != nil {
@@ -242,7 +242,7 @@ func (a *Auth) LoginLocal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := a.store.GetUserByUPN(r.FormValue("email")) // UPN, see invariant 2
+	user, err := a.store.GetUserByLogin(r.FormValue("Login")) // see invariant 2
 	if err != nil || user.Password == "" ||
 		bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(r.FormValue("password"))) != nil {
 		if err := views.Login("Invalid username or password").Render(r.Context(), w); err != nil {

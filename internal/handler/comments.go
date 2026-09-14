@@ -31,7 +31,7 @@ func (h *Handler) commentParent(w http.ResponseWriter, r *http.Request) (cid str
 
 // canModifyComment implements the author-or-admin guard for edits and deletes.
 func canModifyComment(user model.User, obj model.Comment) bool {
-	return obj.Author == user.UPN || user.Role == "Administrator"
+	return obj.Author == user.Login || user.Role == "Administrator"
 }
 
 func (h *Handler) CommentList(w http.ResponseWriter, r *http.Request) {
@@ -93,7 +93,7 @@ func (h *Handler) CommentSave(w http.ResponseWriter, r *http.Request) {
 	dto.ID, dto.CaseID, dto.Kind, dto.ObjectID = id, cid, kind, oid
 	if id == "new" {
 		dto.ID = fp.Random(10)
-		dto.Author = user.UPN
+		dto.Author = user.Login
 		dto.Time = model.Time(time.Now())
 	} else {
 		old, err := h.Store.GetComment(cid, id)

@@ -77,7 +77,7 @@ func (h *Handler) ExportArchive(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user := GetUser(r)
-	exportedBy := fp.If(user.Email != "", user.Email, fp.If(user.UPN != "", user.UPN, user.Name))
+	exportedBy := fp.If(user.Email != "", user.Email, fp.If(user.Login != "", user.Login, user.Name))
 
 	scheme := "http"
 	if r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" {

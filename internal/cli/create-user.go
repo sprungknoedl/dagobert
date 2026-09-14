@@ -42,10 +42,10 @@ func CreateUser(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	slog.Info("adding administrator", "uid", id, "upn", username)
+	slog.Info("adding administrator", "uid", id, "login", username)
 	user := model.User{
 		ID:       id,
-		UPN:      username,
+		Login:    username,
 		Role:     "Administrator",
 		Password: string(hash),
 	}
@@ -76,7 +76,7 @@ func ChangePassword(cmd *cobra.Command, args []string) error {
 	}
 
 	// Get user
-	user, err := db.GetUserByUPN(username)
+	user, err := db.GetUserByLogin(username)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func ChangePassword(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	slog.Info("changing password", "uid", user.ID, "upn", username)
+	slog.Info("changing password", "uid", user.ID, "login", username)
 	user.Password = string(hash)
 	if err := db.SaveUser(user); err != nil {
 		slog.Error("failed to change password", "err", err)

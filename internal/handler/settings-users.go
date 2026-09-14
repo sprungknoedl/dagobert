@@ -59,7 +59,7 @@ func (h *Handler) UserSave(w http.ResponseWriter, r *http.Request) {
 	usr.ID = dto.ID
 	usr.Role = dto.Role
 	usr.Name = dto.Name
-	usr.UPN = dto.UPN
+	usr.Login = dto.Login
 	usr.Email = dto.Email
 
 	// Update user
