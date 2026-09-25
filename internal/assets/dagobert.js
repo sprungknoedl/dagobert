@@ -286,6 +286,17 @@ up.compiler('table:has([data-href])', (table) => {
     });
 });
 
+// Closes a details.dropdown (the toolbar's Import/Export menus, row actions)
+// on a click anywhere outside it. A native <details> only closes again on its
+// own <summary>, so without this it stays open over the page indefinitely.
+up.compiler('details.dropdown', (details) => {
+    const onClick = (event) => {
+        if (details.open && !details.contains(event.target)) { details.open = false; }
+    };
+    document.addEventListener('click', onClick);
+    return () => document.removeEventListener('click', onClick);
+});
+
 // showToast renders a success toast into the root #errors section: a check
 // glyph, a caption, and the message. Matches the markup of the
 // server-rendered ToastError/ToastWarning (alert-success rather than

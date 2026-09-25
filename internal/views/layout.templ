@@ -129,9 +129,15 @@ templ navSettingsTitle() {
 // the one control that changes context sits at the top of every page. It's
 // one text size throughout — ancestors and the current page are told apart
 // by weight and ink, not by size.
+//
+// relative z-10 gives the whole navbar its own stacking context, above the
+// list table's pinned header (.table-pin-rows thead, z-index 1): without it,
+// an Import/Export dropdown opened here (see casesImport, indicatorsExport,
+// ...) renders its menu partly behind that sticky header instead of over it.
+// Still well below the toast layer (z-20) and Unpoly's own overlays (>=1000).
 templ navbar(env Env, title string, opts ...navbarOption) {
 	{{ cfg := applynavOptions(opts) }}
-	<nav class="navbar bg-base-100">
+	<nav class="navbar bg-base-100 relative z-10">
 		<h1 class="breadcrumbs flex-1 text-2xl font-semibold">
 			<ul>
 				if cfg.preTitle != nil {
