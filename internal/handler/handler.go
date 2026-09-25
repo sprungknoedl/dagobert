@@ -27,6 +27,56 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
+// openCSV reads the first record, retrying with ; when the comma parse gets
+// the field count wrong (Excel often exports CSVs with ;).
+func openCSV(f io.ReadSeeker, numFields int) (*csv.Reader, []string, error) {
+	cr := csv.NewReader(f)
+	cr.FieldsPerRecord = numFields
+	first, err := cr.Read()
+	if perr, ok := err.(*csv.ParseError); ok && perr.Err == csv.ErrFieldCount {
+		if _, err := f.Seek(0, io.SeekStart); err != nil {
+			return nil, nil, err
+		}
+		cr = csv.NewReader(f)
+		cr.Comma = ';'
+		cr.FieldsPerRecord = numFields
+		first, err = cr.Read()
+	}
+	return cr, first, err
+}
+
+func previewCSV(f io.ReadSeeker, spec views.CSVSpec, partial bool) views.CSVPreview {
+	cr, first, err := openCSV(f, len(spec.Columns))
+	var rows [][]string
+	if err == nil && !slices.EqualFunc(first, spec.Columns, strings.EqualFold) {
+		rows = append(rows, first)
+	}
+
+	line := 1
+	for err == nil && len(rows) <= 10 {
+		line++
+		var rec []string
+		if rec, err = cr.Read(); err == nil {
+			rows = append(rows, rec)
+		}
+	}
+
+	// A partial upload is only the file's first 256 KiB, so its last record
+	// may be cut off: drop it, or ignore its error if nothing follows it.
+	if partial && err == io.EOF && len(rows) > 0 {
+		rows = rows[:len(rows)-1]
+	} else if partial && line > 1 && err != nil && err != io.EOF {
+		if _, next := cr.Read(); next == io.EOF {
+			err = io.EOF
+		}
+	}
+
+	if err != nil && err != io.EOF {
+		return views.CSVPreview{Error: fmt.Sprintf("Row %d: %s", line, err)}
+	}
+	return views.CSVPreview{Rows: rows[:min(len(rows), 10)]}
+}
+
 // ImportCSV drives a CSV import inside a single transaction: every row's
 // callback error is collected instead of failing fast, and nothing commits
 // unless every row succeeds. This makes a partial (fixed-up) re-upload of the
@@ -38,33 +88,38 @@ import (
 // line with the wrong field count) are wrapped as a ValidationError, since
 // encoding/csv keeps reading past them — they are collected like any other
 // row failure, not treated as fatal.
-func ImportCSV(store *model.Store, w http.ResponseWriter, r *http.Request, redirectURI string, numFields int, cb func(tx *model.Store, rec []string) error) {
-	if r.Method == http.MethodGet {
-		if err := views.ImportDialog().Render(r.Context(), w); err != nil {
-			slog.Error("failed to render template", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
+func ImportCSV(store *model.Store, w http.ResponseWriter, r *http.Request, redirectURI string, spec views.CSVSpec, cb func(tx *model.Store, rec []string) error) {
+	if r.Method == http.MethodGet && r.URL.Query().Has("sample") {
+		w.Header().Set("Content-Disposition", `attachment; filename="sample.csv"`)
+		w.WriteHeader(http.StatusOK)
+		cw := csv.NewWriter(w)
+		cw.Write(spec.Columns)
+		cw.Write(spec.Sample)
+		cw.Flush()
+		if err := cw.Error(); err != nil {
+			slog.Error("failed to write sample csv", "err", err, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
 		}
 		return
 	}
+	if r.Method == http.MethodGet {
+		Render(w, r, http.StatusOK, views.ImportDialog(spec, r.URL.Path, views.CSVPreview{}), nil)
+		return
+	}
 
-	fr, _, err := r.FormFile("file")
+	fr, fh, err := r.FormFile("file")
 	if err != nil {
 		Warn(w, r, err)
 		return
 	}
 
-	cr := csv.NewReader(fr)
-	cr.FieldsPerRecord = numFields
-	_, err = cr.Read()                                                          // skip header
-	if perr, ok := err.(*csv.ParseError); ok && perr.Err == csv.ErrFieldCount { // try semicolon instead, Excel often exports CSVs with ;
-		if _, serr := fr.Seek(0, 0); serr != nil {
-			Warn(w, r, serr)
-			return
-		}
-		cr = csv.NewReader(fr)
-		cr.Comma = ';'
-		cr.FieldsPerRecord = numFields
-		_, err = cr.Read() // skip header
+	if r.FormValue("preview") != "" {
+		preview := previewCSV(fr, spec, r.FormValue("partial") != "")
+		preview.File = fh.Filename
+		Render(w, r, http.StatusOK, views.ImportDialog(spec, r.URL.Path, preview), nil)
+		return
 	}
+
+	cr, rec, err := openCSV(fr, len(spec.Columns))
 	if err != nil {
 		Warn(w, r, err)
 		return
@@ -76,26 +131,23 @@ func ImportCSV(store *model.Store, w http.ResponseWriter, r *http.Request, redir
 	errRowsFailed := errors.New("import has row errors")
 
 	txErr := store.Transaction(func(tx *model.Store) error {
+		// a first row that isn't the header is data, so headerless files lose nothing
 		line := 1
-		for {
+		if slices.EqualFunc(rec, spec.Columns, strings.EqualFold) {
 			line++
-			rec, err := cr.Read()
-			if err == io.EOF {
-				break
-			}
-
+			rec, err = cr.Read()
+		}
+		for ; err != io.EOF; line++ {
 			var rowErr error
 			if err != nil {
 				rowErr = valid.ValidationError{"Row": valid.Condition{Name: "Row", Invalid: true, Message: err.Error()}}
 			} else {
 				rowErr = cb(tx, rec)
 			}
+
 			if rowErr == nil {
 				imported++
-				continue
-			}
-
-			if vr, ok := rowErr.(valid.ValidationError); ok {
+			} else if vr, ok := rowErr.(valid.ValidationError); ok {
 				slog.Warn("csv row import failed", "err", vr, "row", line, "raddr", r.RemoteAddr, "method", r.Method, "url", r.URL)
 				rowErrors = append(rowErrors, views.ImportRowError{Row: line, Message: vr.Error()})
 			} else {
@@ -103,6 +155,7 @@ func ImportCSV(store *model.Store, w http.ResponseWriter, r *http.Request, redir
 				rowErrors = append(rowErrors, views.ImportRowError{Row: line, Message: rowErr.Error()})
 				serverErr = true
 			}
+			rec, err = cr.Read()
 		}
 
 		if len(rowErrors) > 0 {

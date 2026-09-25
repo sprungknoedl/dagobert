@@ -20,6 +20,11 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
+var caseCSV = views.CSVSpec{
+	Columns: []string{"ID", "Name", "Severity", "Classification", "Closed", "Outcome", "Summary", "Opened", "Closed at", "Custom"},
+	Sample:  []string{"", "Sample Case", "High", "Phishing", "false", "", "A fictional case created from the CSV import sample.", "2024-01-01", "", ""},
+}
+
 // fetchSketches loads the sketches for the case form. It reports whether the
 // sketch dropdown should be shown at all (Timesketch is configured) and a
 // warning when the configured instance can not be queried.
@@ -57,7 +62,7 @@ func (h *Handler) CaseExport(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Name", "Severity", "Classification", "Closed", "Outcome", "Summary", "Opened", "Closed at", "Custom"})
+	cw.Write(caseCSV.Columns)
 	for _, e := range list {
 		openedAt := fp.If(!e.OpenedAt.IsZero(), e.OpenedAt.Format("2006-01-02"), "")
 		closedAt := fp.If(!e.ClosedAt.IsZero(), e.ClosedAt.Format("2006-01-02"), "")
@@ -83,7 +88,7 @@ func (h *Handler) CaseExport(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) CaseImport(w http.ResponseWriter, r *http.Request) {
 	uri := "/"
-	ImportCSV(h.Store, w, r, uri, 10, func(tx *model.Store, rec []string) error {
+	ImportCSV(h.Store, w, r, uri, caseCSV, func(tx *model.Store, rec []string) error {
 		closed, err := strconv.ParseBool(cmp.Or(rec[4], "false"))
 		if err != nil {
 			return valid.ValidationError{"Closed": valid.Condition{Name: "Closed", Invalid: true, Message: err.Error()}}

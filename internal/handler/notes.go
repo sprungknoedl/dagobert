@@ -14,6 +14,11 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
+var noteCSV = views.CSVSpec{
+	Columns: []string{"ID", "Title", "Category", "Description", "Custom"},
+	Sample:  []string{"", "Sample Note", "General", "A fictional note created from the CSV import sample.", ""},
+}
+
 func (h *Handler) NoteList(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	list, err := h.Store.ListNotes(cid)
@@ -39,7 +44,7 @@ func (h *Handler) NoteExport(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Title", "Category", "Description", "Custom"})
+	cw.Write(noteCSV.Columns)
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
@@ -59,7 +64,7 @@ func (h *Handler) NoteExport(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) NoteImport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/notes/", cid)
-	ImportCSV(h.Store, w, r, uri, 5, func(tx *model.Store, rec []string) error {
+	ImportCSV(h.Store, w, r, uri, noteCSV, func(tx *model.Store, rec []string) error {
 		var custom model.Custom
 		if len(rec) > 4 {
 			if err := custom.Scan(rec[4]); err != nil {

@@ -14,6 +14,11 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
+var assetCSV = views.CSVSpec{
+	Columns: []string{"ID", "Status", "Type", "Name", "Addr", "Notes", "Custom"},
+	Sample:  []string{"", "Under investigation", "Account", "WKS-01", "192.0.2.10", "A fictional asset created from the CSV import sample.", ""},
+}
+
 func (h *Handler) AssetList(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	list, err := h.Store.ListAssets(cid)
@@ -45,7 +50,7 @@ func (h *Handler) AssetExport(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Status", "Type", "Name", "Addr", "Notes", "Custom"})
+	cw.Write(assetCSV.Columns)
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
@@ -67,7 +72,7 @@ func (h *Handler) AssetExport(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) AssetImport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/assets/", cid)
-	ImportCSV(h.Store, w, r, uri, 7, func(tx *model.Store, rec []string) error {
+	ImportCSV(h.Store, w, r, uri, assetCSV, func(tx *model.Store, rec []string) error {
 		var custom model.Custom
 		if len(rec) > 6 {
 			if err := custom.Scan(rec[6]); err != nil {

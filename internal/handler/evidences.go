@@ -23,6 +23,12 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
+// Fileless, so the sample imports without a file already on disk.
+var evidenceCSV = views.CSVSpec{
+	Columns: []string{"ID", "Type", "Name", "Hash", "Size", "Notes", "StartsAt", "EndsAt", "Custom", "Fileless"},
+	Sample:  []string{"", "File", "sample.txt", "", "0", "A fictional evidence record created from the CSV import sample.", "", "", "", "true"},
+}
+
 func (h *Handler) EvidenceList(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	list, err := h.Store.ListEvidences(cid)
@@ -54,7 +60,7 @@ func (h *Handler) EvidenceExport(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Type", "Name", "Hash", "Size", "Notes", "StartsAt", "EndsAt", "Custom", "Fileless"})
+	cw.Write(evidenceCSV.Columns)
 	for _, e := range list {
 		startsAt := ""
 		if !e.StartsAt.IsZero() {
@@ -88,7 +94,7 @@ func (h *Handler) EvidenceImport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/evidences/", cid)
 	user := GetUser(r)
-	ImportCSV(h.Store, w, r, uri, 10, func(tx *model.Store, rec []string) error {
+	ImportCSV(h.Store, w, r, uri, evidenceCSV, func(tx *model.Store, rec []string) error {
 		size, err := strconv.ParseInt(rec[4], 10, 64)
 		if err != nil {
 			return valid.ValidationError{"Size": valid.Condition{Name: "Size", Invalid: true, Message: err.Error()}}

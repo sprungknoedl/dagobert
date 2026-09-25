@@ -22,6 +22,11 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
+var indicatorCSV = views.CSVSpec{
+	Columns: []string{"ID", "Status", "Type", "Value", "TLP", "Source", "Notes", "Custom"},
+	Sample:  []string{"", "Under investigation", "Domain", "example.com", "TLP:RED", "", "A fictional indicator created from the CSV import sample.", ""},
+}
+
 func (h *Handler) IndicatorList(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	list, err := h.Store.ListIndicators(cid)
@@ -59,7 +64,7 @@ func (h *Handler) IndicatorExportCSV(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Status", "Type", "Value", "TLP", "Source", "Notes", "Custom"})
+	cw.Write(indicatorCSV.Columns)
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
@@ -197,7 +202,7 @@ func buildStixBundle(list []model.Indicator, now time.Time) *stix.Bundle {
 func (h *Handler) IndicatorImportCSV(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/indicators/", cid)
-	ImportCSV(h.Store, w, r, uri, 8, func(tx *model.Store, rec []string) error {
+	ImportCSV(h.Store, w, r, uri, indicatorCSV, func(tx *model.Store, rec []string) error {
 		var custom model.Custom
 		if len(rec) > 7 {
 			if err := custom.Scan(rec[7]); err != nil {

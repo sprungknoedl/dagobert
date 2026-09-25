@@ -61,9 +61,26 @@ func CommitInParent() ConfirmOption {
 	return func(cfg *confirmConfig) { cfg.commitInParent = true }
 }
 
+// Sample enum values are the fresh-install defaults, not the case's live value lists.
+type CSVSpec struct {
+	Columns []string
+	Sample  []string
+}
+
+type CSVPreview struct {
+	File  string
+	Rows  [][]string
+	Error string
+}
+
 // The import dialogs stay drawers — a file to choose and, for an archive, a
 // manifest to read — and take the same fixed head and foot as every other form.
-templ ImportDialog() {
+templ ImportDialog(spec CSVSpec, importURI string, preview CSVPreview) {
+	{{ showPreview := preview.File != "" && preview.Error == "" }}
+	{{ rows := preview.Rows }}
+	if !showPreview {
+		{{ rows = [][]string{spec.Sample} }}
+	}
 	@layout() {
 		<main class="form-sheet">
 			<form method="post" up-submit enctype="multipart/form-data">
@@ -80,10 +97,46 @@ templ ImportDialog() {
 						<i class="ph ph-5 ph-info"></i>
 						Please note, that dagobert will attempt to deduplicate entries.
 					</p>
-					<input name="file" class="file-input w-full" type="file"/>
+					<input name="file" class="file-input w-full" type="file" data-csv-preview/>
+					<div id="csv-preview">
+						if preview.Error != "" {
+							<p class="text-sm text-error mb-2">{ preview.Error }</p>
+						}
+						if showPreview {
+							<p class="text-sm font-semibold">Preview of file { preview.File }.</p>
+							<p class="text-xs text-muted mb-2">Showing the first 10 rows.</p>
+						} else {
+							<p class="text-sm font-semibold">Expected format</p>
+							<p class="text-xs text-muted mb-2">Columns must be in this order; the row below is a fictional example.</p>
+						}
+						<table class="table table-xs">
+							<thead>
+								<tr>
+									for _, c := range spec.Columns {
+										<th class="text-xs">{ c }</th>
+									}
+								</tr>
+							</thead>
+							<tbody>
+								for _, row := range rows {
+									<tr>
+										for _, v := range row {
+											<td>{ v }</td>
+										}
+									</tr>
+								}
+							</tbody>
+						</table>
+						if !showPreview {
+							<a href={ templ.URL(importURI + "?sample") } class="btn btn-ghost btn-xs mt-2" download>
+								<i class="ph ph-download"></i>
+								Download sample CSV
+							</a>
+						}
+					</div>
 				</div>
 				<footer class="form-foot">
-					<button type="submit" class="btn btn-neutral">Save</button>
+					<button type="submit" class="btn btn-neutral">Import</button>
 					<a class="btn btn-ghost" up-dismiss>Cancel</a>
 				</footer>
 			</form>

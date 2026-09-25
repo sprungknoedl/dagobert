@@ -345,6 +345,26 @@ up.compiler('input[type=file][data-fill], input[type=file][data-hash]', (input) 
     return () => input.removeEventListener('change', onChange);
 });
 
+// Uploads only the first 256 KiB for the server-rendered preview.
+up.compiler('input[type=file][data-csv-preview]', (input) => {
+    const limit = 256 * 1024;
+    const source = up.fragment.source(input);
+    const onChange = () => {
+        const file = input.files[0];
+        if (!file) {
+            up.render({ target: '#csv-preview', origin: input, url: source });
+            return;
+        }
+        const params = new FormData();
+        params.append('preview', '1');
+        params.append('partial', file.size > limit ? '1' : '');
+        params.append('file', file.slice(0, limit), file.name);
+        up.render({ target: '#csv-preview', origin: input, url: source, method: 'post', params });
+    };
+    input.addEventListener('change', onChange);
+    return () => input.removeEventListener('change', onChange);
+});
+
 // Markdown live-preview editor (Vditor, instant-render mode) for textareas
 // marked [data-markdown] (note Description, case Summary). The textarea stays
 // in the DOM as the hidden form field; the editor syncs into it on input.

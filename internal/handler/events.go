@@ -18,6 +18,12 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
+// No Assets/Indicators, so the sample doesn't reference records that may not exist.
+var eventCSV = views.CSVSpec{
+	Columns: []string{"ID", "Time", "Type", "Assets", "Indicators", "Event", "Raw", "Source", "Custom"},
+	Sample:  []string{"", "2024-01-01T12:00:00Z", "C2", "", "", "A fictional event created from the CSV import sample.", "", "", ""},
+}
+
 func (h *Handler) EventList(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	list, err := h.Store.ListEvents(cid)
@@ -62,7 +68,7 @@ func (h *Handler) EventExport(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Time", "Type", "Assets", "Indicators", "Event", "Raw", "Source", "Custom"})
+	cw.Write(eventCSV.Columns)
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
@@ -87,7 +93,7 @@ func (h *Handler) EventImportCSV(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/events/", cid)
 
-	ImportCSV(h.Store, w, r, uri, 9, func(tx *model.Store, rec []string) error {
+	ImportCSV(h.Store, w, r, uri, eventCSV, func(tx *model.Store, rec []string) error {
 		t, err := time.Parse(time.RFC3339, rec[1])
 		if err != nil {
 			return valid.ValidationError{"Time": valid.Condition{Name: "Time", Invalid: true, Message: err.Error()}}

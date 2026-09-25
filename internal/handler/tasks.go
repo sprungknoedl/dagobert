@@ -16,6 +16,11 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/valid"
 )
 
+var taskCSV = views.CSVSpec{
+	Columns: []string{"ID", "Type", "Task", "Done", "Owner", "Due Date", "Custom"},
+	Sample:  []string{"", "Analysis", "A fictional task created from the CSV import sample.", "false", "", "2024-01-01T00:00:00Z", ""},
+}
+
 func (h *Handler) TaskList(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	list, err := h.Store.ListTasks(cid)
@@ -47,7 +52,7 @@ func (h *Handler) TaskExport(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	cw := csv.NewWriter(w)
-	cw.Write([]string{"ID", "Type", "Task", "Done", "Owner", "Due Date", "Custom"})
+	cw.Write(taskCSV.Columns)
 	for _, e := range list {
 		cw.Write([]string{
 			e.ID,
@@ -69,7 +74,7 @@ func (h *Handler) TaskExport(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) TaskImport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/tasks/", cid)
-	ImportCSV(h.Store, w, r, uri, 7, func(tx *model.Store, rec []string) error {
+	ImportCSV(h.Store, w, r, uri, taskCSV, func(tx *model.Store, rec []string) error {
 		done, err := strconv.ParseBool(cmp.Or(rec[3], "false"))
 		if err != nil {
 			return valid.ValidationError{"Done": valid.Condition{Name: "Done", Invalid: true, Message: err.Error()}}
