@@ -36,6 +36,7 @@ const (
 
 type Auth struct {
 	store    *model.Store
+	acl      *ACL
 	session  *scs.SessionManager
 	provider *oidc.Provider
 	oauth2   oauth2.Config
@@ -46,8 +47,8 @@ type Auth struct {
 // stored destination resolves to a real GET handler before redirecting to it.
 func (a *Auth) SetRoutes(mux *http.ServeMux) { a.routes = mux }
 
-func New(store *model.Store, session *scs.SessionManager) (*Auth, error) {
-	a := &Auth{store: store, session: session}
+func New(store *model.Store, acl *ACL, session *scs.SessionManager) (*Auth, error) {
+	a := &Auth{store: store, acl: acl, session: session}
 	if os.Getenv("OIDC_ENABLED") == "true" {
 		p, err := oidc.NewProvider(context.Background(), os.Getenv("OIDC_ISSUER"))
 		if err != nil {
@@ -223,6 +224,9 @@ func (a *Auth) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := a.acl.SyncRole(user.ID, user.Role); err != nil {
+		slog.Error("failed to reload acl", "err", err)
+	}
 	if err := a.session.RenewToken(r.Context()); err != nil {
 		slog.Error("failed to renew session token", "err", err)
 	}
@@ -257,6 +261,9 @@ func (a *Auth) LoginLocal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := a.acl.SyncRole(user.ID, user.Role); err != nil {
+		slog.Error("failed to reload acl", "err", err)
+	}
 	if err := a.session.RenewToken(r.Context()); err != nil {
 		slog.Error("failed to renew session token", "err", err)
 	}

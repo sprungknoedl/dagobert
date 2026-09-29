@@ -56,6 +56,31 @@ func TestSaveCasePermissions(t *testing.T) {
 	assert.False(t, acl.Allowed("u2", "/cases/case1/events/", http.MethodGet))
 }
 
+// TestSyncRole checks that a role written by another ACL on the same database
+// (as `dagobert create-user` does) is picked up on a mismatch, and that a
+// matching role skips the reload.
+func TestSyncRole(t *testing.T) {
+	db := setupDB(t)
+	server := NewACL(db)
+
+	assert.Nil(t, NewACL(db).SaveUserRole("u1", "Administrator"))
+	assert.False(t, server.Allowed("u1", "/settings/users/", http.MethodDelete))
+
+	assert.Nil(t, server.SyncRole("u1", "Administrator"))
+	assert.True(t, server.Allowed("u1", "/settings/users/", http.MethodDelete))
+
+	t.Run("matching role does not reload", func(t *testing.T) {
+		assert.Nil(t, NewACL(db).SaveUserRole("u2", "Administrator"))
+		assert.Nil(t, server.SyncRole("u1", "Administrator"))
+		assert.False(t, server.Allowed("u2", "/settings/users/", http.MethodDelete))
+	})
+
+	t.Run("user without role does not reload", func(t *testing.T) {
+		assert.Nil(t, server.SyncRole("u3", ""))
+		assert.False(t, server.Allowed("u2", "/settings/users/", http.MethodDelete))
+	})
+}
+
 func TestDeleteUser(t *testing.T) {
 	db := setupDB(t)
 	acl := NewACL(db)

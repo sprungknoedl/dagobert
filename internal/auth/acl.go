@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"slices"
 
 	"github.com/casbin/casbin/v2"
 	cm "github.com/casbin/casbin/v2/model"
@@ -14,7 +15,7 @@ import (
 
 type ACL struct {
 	db       *model.Store
-	enforcer *casbin.Enforcer
+	enforcer *casbin.SyncedEnforcer
 }
 
 func NewACL(db *model.Store) *ACL {
@@ -25,7 +26,7 @@ func NewACL(db *model.Store) *ACL {
 	m.AddDef("e", "e", "some(where (p.eft == allow))")
 	m.AddDef("m", "m", `(g(r.sub, p.sub) || p.sub == "*") && keyMatch(r.obj, p.obj) && (r.act == p.act || p.act == "*")`)
 
-	enforcer, err := casbin.NewEnforcer(m, db)
+	enforcer, err := casbin.NewSyncedEnforcer(m, db)
 	if err != nil {
 		slog.Error("failed to init casbin enforcer", "err", err)
 		os.Exit(1)
@@ -60,6 +61,20 @@ func (acl *ACL) Protect(next http.Handler) http.Handler {
 // Enforce decides whether a "subject" can access a "object" with the operation "action", input parameters are usually: (sub, obj, act).
 func (acl *ACL) Enforce(rvals ...interface{}) (bool, error) {
 	return acl.enforcer.Enforce(rvals...)
+}
+
+// SyncRole reloads all policies when the in-memory role of uid differs from
+// role, which happens after another process such as `dagobert create-user`
+// wrote to the database.
+func (acl *ACL) SyncRole(uid string, role string) error {
+	got, err := acl.enforcer.GetRolesForUser(uid)
+	if err != nil {
+		return err
+	}
+	if slices.Equal(got, fp.If(role == "", nil, []string{"role::" + role})) {
+		return nil
+	}
+	return acl.enforcer.LoadPolicy()
 }
 
 func (acl *ACL) Allowed(uid string, url string, method string) bool {

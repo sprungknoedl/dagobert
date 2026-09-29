@@ -51,7 +51,7 @@ func Run(cmd *cobra.Command, args []string) {
 	// Authentication
 	// --------------------------------------
 	initSession(db.RawConn)
-	a, err := auth.New(db, Session)
+	a, err := auth.New(db, acl, Session)
 	if err != nil {
 		slog.Error("failed to initialize auth", "err", err)
 		return
