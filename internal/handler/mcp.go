@@ -57,7 +57,9 @@ func NewMcpHandler(store *model.Store) http.Handler {
 	addCaseTool("list_evidences", "List the evidences of a case.",
 		func(cid string) (any, error) { return store.ListEvidences(cid) })
 
-	return server.NewStreamableHTTPServer(srv, server.WithStateLess(true))
+	// /mcp requires login, and the loopback Host check would reject requests
+	// forwarded by a reverse proxy on the same host.
+	return server.NewStreamableHTTPServer(srv, server.WithDisableLocalhostProtection(true))
 }
 
 // jsonResult marshals a store result to a JSON text tool result, surfacing any

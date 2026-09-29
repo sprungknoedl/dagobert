@@ -29,7 +29,7 @@ type Configuration struct {
 
 func main() {
 	slog.SetDefault(slog.New(
-		tint.NewHandler(os.Stdout, &tint.Options{
+		tint.NewTextHandler(os.Stdout, &tint.Options{
 			Level:      slog.LevelInfo,
 			TimeFormat: time.DateTime,
 			ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {

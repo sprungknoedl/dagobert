@@ -282,7 +282,7 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("GET /cases/{cid}/reports", h.ReportDialog)
 	secured.HandleFunc("POST /cases/{cid}/render", h.ReportGenerate)
 
-	// read-only MCP server (stateless Streamable-HTTP)
+	// read-only MCP server (Streamable-HTTP)
 	secured.Handle("/mcp", NewMcpHandler(db))
 
 	// test routes
