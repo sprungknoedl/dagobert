@@ -397,19 +397,20 @@ func (h *Handler) IndicatorScheduleModule(w http.ResponseWriter, r *http.Request
 
 // Removes any defanging done to indicator values.
 func refang(ioc string) string {
-	translate := map[string]string{
-		"[.]":    ".",
-		"[:]":    ":",
-		"[://]":  "://",
-		"hxxp:":  "http:",
-		"hxxps:": "https:",
-		"sfxp:":  "sftp:",
-		"fxp:":   "ftp:",
-		"fxle:":  "file:",
+	// Order matters: scheme rules only match once brackets are removed.
+	translate := [][2]string{
+		{"[.]", "."},
+		{"[:]", ":"},
+		{"[://]", "://"},
+		{"hxxp:", "http:"},
+		{"hxxps:", "https:"},
+		{"sfxp:", "sftp:"},
+		{"fxp:", "ftp:"},
+		{"fxle:", "file:"},
 	}
 
-	for old, new := range translate {
-		ioc = strings.ReplaceAll(ioc, old, new)
+	for _, t := range translate {
+		ioc = strings.ReplaceAll(ioc, t[0], t[1])
 	}
 	return ioc
 }
