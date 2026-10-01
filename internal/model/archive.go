@@ -94,12 +94,15 @@ func (store *Store) ExportCaseArchive(cid string) (CaseArchive, error) {
 	kase.Tasks = nil
 
 	arch := CaseArchive{
-		Case:         kase,
-		Assets:       obj.Assets,
-		Indicators:   obj.Indicators,
-		Malware:      obj.Malware,
-		Notes:        obj.Notes,
-		Tasks:        obj.Tasks,
+		Case:       kase,
+		Assets:     obj.Assets,
+		Indicators: obj.Indicators,
+		Malware:    obj.Malware,
+		Notes:      obj.Notes,
+		// OwnerID is a reference to this instance's users table, like
+		// Case.Assignees (also excluded from archives): not portable across
+		// instances, so it is cleared rather than carried into the archive.
+		Tasks:        fp.Apply(obj.Tasks, func(t Task) Task { t.OwnerID = nil; return t }),
 		Evidences:    obj.Evidences,
 		Comments:     comments,
 		EvidenceLogs: evidenceLogs,

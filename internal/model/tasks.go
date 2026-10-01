@@ -1,19 +1,24 @@
 package model
 
+import "gorm.io/gorm/clause"
+
 type Task struct {
 	ID      string
 	Type    string
 	Task    string
 	Done    bool
-	Owner   string
 	DateDue Time
 	CaseID  string
 	Custom  Custom `form:"-"`
+
+	OwnerID *string
+	Owner   User
 }
 
 func (store *Store) ListTasks(cid string) ([]Task, error) {
 	list := []Task{}
 	tx := store.DB.
+		Preload("Owner").
 		Where("case_id = ?", cid).
 		Order("date_due asc").
 		Find(&list)
@@ -22,7 +27,7 @@ func (store *Store) ListTasks(cid string) ([]Task, error) {
 
 func (store *Store) GetTask(cid string, id string) (Task, error) {
 	obj := Task{}
-	tx := store.DB.First(&obj, "id = ? AND case_id = ?", id, cid)
+	tx := store.DB.Preload("Owner").First(&obj, "id = ? AND case_id = ?", id, cid)
 	return obj, tx.Error
 }
 
@@ -31,7 +36,7 @@ func (store *Store) SaveTask(cid string, obj Task) error {
 	if err := store.assertCaseOwnership(&Task{}, obj.ID, cid); err != nil {
 		return err
 	}
-	return store.DB.Save(obj).Error
+	return store.DB.Omit(clause.Associations).Save(&obj).Error
 }
 
 func (store *Store) DeleteTask(cid string, id string) error {

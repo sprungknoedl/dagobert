@@ -97,6 +97,7 @@ func (store *Store) CloneCaseContents(srcID string, dst Case) (Case, error) {
 			t.CaseID = dst.ID
 			t.Done = false
 			t.DateDue = Time{}
+			t.OwnerID = nil
 			if err := tx.SaveTask(dst.ID, t); err != nil {
 				return err
 			}

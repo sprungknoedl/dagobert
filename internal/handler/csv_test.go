@@ -260,9 +260,13 @@ func TestImportCSVRoundtrip(t *testing.T) {
 			name: "tasks",
 			seed: func(t *testing.T, db *model.Store, cid string) {
 				t.Helper()
+				owner := model.User{ID: "u1", Name: "Alice", Login: "alice"}
+				if err := db.SaveUser(owner); err != nil {
+					t.Fatal(err)
+				}
 				obj := model.Task{
 					ID: "t1", CaseID: cid, Type: "Analysis", Task: "Review logs, escalate if needed",
-					Done: true, Owner: "alice", DateDue: model.Time(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
+					Done: true, OwnerID: &owner.ID, DateDue: model.Time(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
 					Custom: model.Custom{"context": "seen twice, confirmed"},
 				}
 				if err := db.SaveTask(cid, obj); err != nil {

@@ -111,3 +111,30 @@ func TestForkCaseDropsAssignees(t *testing.T) {
 	require.Nil(t, err)
 	assert.Empty(t, got.Assignees)
 }
+
+func TestForkCaseDropsTaskOwner(t *testing.T) {
+	db, close := setupDB()
+	defer close()
+
+	user := User{ID: "userA", Name: "Alice"}
+	require.Nil(t, db.SaveUser(user))
+
+	src := Case{ID: "case01", Name: "Source"}
+	require.Nil(t, db.SaveCase(src))
+	task := Task{ID: "task01", CaseID: src.ID, Type: "Analysis", Task: "Review", OwnerID: &user.ID}
+	require.Nil(t, db.SaveTask(src.ID, task))
+
+	arch, err := db.ExportCaseArchive(src.ID)
+	require.Nil(t, err)
+	require.Len(t, arch.Tasks, 1)
+	assert.Nil(t, arch.Tasks[0].OwnerID)
+
+	dst := Case{ID: "case02", Name: "Forked"}
+	_, err = db.ForkCase(src.ID, dst)
+	require.Nil(t, err)
+
+	got, err := db.ListTasks(dst.ID)
+	require.Nil(t, err)
+	require.Len(t, got, 1)
+	assert.Nil(t, got[0].OwnerID)
+}

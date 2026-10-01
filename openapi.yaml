@@ -226,7 +226,10 @@ components:
         Type: { type: string }
         Task: { type: string }
         Done: { type: boolean }
-        Owner: { type: string }
+        OwnerID:
+          type: [string, "null"]
+          description: Owner user ID; optional.
+        Owner: { $ref: '#/components/schemas/User' }
         DateDue: { type: string, format: date-time }
         CaseID: { type: string }
         Custom: { $ref: '#/components/schemas/Custom' }

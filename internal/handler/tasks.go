@@ -21,6 +21,21 @@ var taskCSV = views.CSVSpec{
 	Sample:  []string{"", "Analysis", "A fictional task created from the CSV import sample.", "false", "", "2024-01-01T00:00:00Z", ""},
 }
 
+// resolveOwnerID validates the submitted owner id, if any, against assignable
+// users — same rule as case assignees: an unknown or builtin user's id fails
+// with "Invalid user." on Owner, an empty id means unassigned.
+func resolveOwnerID(users []model.User, id *string) (*string, error) {
+	if id == nil || *id == "" {
+		return nil, nil
+	}
+	for _, u := range users {
+		if u.ID == *id {
+			return id, nil
+		}
+	}
+	return nil, valid.ValidationError{"Owner": valid.Condition{Name: "Owner", Invalid: true, Message: "Invalid user."}}
+}
+
 func (h *Handler) TaskList(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	list, err := h.Store.ListTasks(cid)
@@ -59,7 +74,7 @@ func (h *Handler) TaskExport(w http.ResponseWriter, r *http.Request) {
 			e.Type,
 			e.Task,
 			strconv.FormatBool(e.Done),
-			e.Owner,
+			e.Owner.Login,
 			e.DateDue.Format(time.RFC3339),
 			e.Custom.JSON(),
 		})
@@ -74,6 +89,15 @@ func (h *Handler) TaskExport(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) TaskImport(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
 	uri := fmt.Sprintf("/cases/%s/tasks/", cid)
+
+	// resolved once up front: an unknown or empty login never fails the row,
+	// it just leaves the task unassigned, so CSVs from other instances import
+	users, err := assignableUsers(h.Store)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
 	ImportCSV(h.Store, w, r, uri, taskCSV, func(tx *model.Store, rec []string) error {
 		done, err := strconv.ParseBool(cmp.Or(rec[3], "false"))
 		if err != nil {
@@ -92,12 +116,20 @@ func (h *Handler) TaskImport(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		var ownerID *string
+		for _, u := range users {
+			if u.Login == rec[4] {
+				ownerID = &u.ID
+				break
+			}
+		}
+
 		obj := model.Task{
 			ID:      fp.If(rec[0] == "", fp.Random(10), rec[0]),
 			Type:    rec[1],
 			Task:    rec[2],
 			Done:    done, // 3
-			Owner:   rec[4],
+			OwnerID: ownerID,
 			DateDue: model.Time(datedue), // 5
 			CaseID:  cid,
 			Custom:  custom,
@@ -123,19 +155,35 @@ func (h *Handler) TaskEdit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Render(w, r, http.StatusOK, views.TasksOne(h.Env(r), obj, valid.ValidationError{}), obj)
+	users, err := assignableUsers(h.Store)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
+	Render(w, r, http.StatusOK, views.TasksOne(h.Env(r), obj, users, valid.ValidationError{}), obj)
 }
 
 func (h *Handler) TaskSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Task{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
-	err := Decode(h.Store, r, &dto, ValidateTask)
-	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		Render(w, r, http.StatusUnprocessableEntity, views.TasksOne(h.Env(r), dto, vr), vr)
+	decodeErr := Decode(h.Store, r, &dto, ValidateTask)
+
+	users, err := assignableUsers(h.Store)
+	if err != nil {
+		Err(w, r, err)
 		return
-	} else if err != nil {
+	}
+	ownerID, ownerErr := resolveOwnerID(users, dto.OwnerID)
+
+	if err := JoinV(decodeErr, ownerErr); err != nil {
+		if vr, ok := err.(valid.ValidationError); ok {
+			Render(w, r, http.StatusUnprocessableEntity, views.TasksOne(h.Env(r), dto, users, vr), vr)
+			return
+		}
 		Warn(w, r, err)
 		return
 	}
+	dto.OwnerID = ownerID
 
 	// NOTE: form-only for now — CollectCustom reads r.PostForm, so a JSON API
 	// request yields an empty map and won't carry custom values.
