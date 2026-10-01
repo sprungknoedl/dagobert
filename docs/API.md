@@ -53,7 +53,7 @@ using a key. An explicit `Accept: text/html` still gets you the normal browser U
 - `POST .../{id}` (`{id}` = `new` to create) → `201` + the saved record.
 - `DELETE .../{id}` → `204`, no body. The confirmation step that browsers see is skipped —
   an explicit `DELETE` from a JSON client is the confirmation. The same applies to closing a
-  case (`POST /cases/{id}` with `Closed: true`): the browser's outstanding-items soft-confirm
+  case (`POST /cases/{id}/edit` with `Closed: true`): the browser's outstanding-items soft-confirm
   (open tasks, un-triaged assets, missing classification/outcome) is skipped for JSON
   clients — an explicit `Closed: true` is the confirmation, same as delete.
 - Validation failure → `422` + a map of field name to `{Name, Message, Missing, Invalid}`.

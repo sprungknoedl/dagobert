@@ -32,10 +32,19 @@ func TestSaveUserPermissions(t *testing.T) {
 	assert.True(t, acl.Allowed(uid, "/cases/case1/events/", http.MethodPost))
 	assert.False(t, acl.Allowed(uid, "/cases/case2/events/", http.MethodPost))
 
+	t.Run("case edit is granted, case delete is not", func(t *testing.T) {
+		assert.True(t, acl.Allowed(uid, "/cases/case1/edit", http.MethodGet))
+		assert.True(t, acl.Allowed(uid, "/cases/case1/edit", http.MethodPost))
+		assert.False(t, acl.Allowed(uid, "/cases/case1", http.MethodDelete))
+		assert.False(t, acl.Allowed(uid, "/cases/case10/edit", http.MethodGet))
+		assert.False(t, acl.Allowed(uid, "/cases/new", http.MethodPost))
+	})
+
 	t.Run("Read-Only role is gated to GET", func(t *testing.T) {
 		assert.Nil(t, acl.SaveUserPermissions(uid, "Read-Only", []string{"case1"}))
 		assert.True(t, acl.Allowed(uid, "/cases/case1/events/", http.MethodGet))
 		assert.False(t, acl.Allowed(uid, "/cases/case1/events/", http.MethodPost))
+		assert.False(t, acl.Allowed(uid, "/cases/case1/edit", http.MethodPost))
 	})
 }
 

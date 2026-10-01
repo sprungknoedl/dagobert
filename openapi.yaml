@@ -298,7 +298,32 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
 
-  /cases/{cid}:
+  /cases/new:
+    get:
+      summary: Get a blank case
+      operationId: getNewCase
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { $ref: '#/components/schemas/Case' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      summary: Create a case
+      description: |
+        `?Template=<id>` copies the template's tasks and notes into the new case.
+      operationId: createCase
+      requestBody:
+        content: { application/json: { schema: { $ref: '#/components/schemas/Case' } } }
+      responses:
+        '201':
+          description: Created
+          content: { application/json: { schema: { $ref: '#/components/schemas/Case' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /cases/{cid}/edit:
     get:
       summary: Get a case
       operationId: getCase
@@ -311,21 +336,20 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
     post:
-      summary: Create or update a case
-      description: |
-        Use `{cid}` = `new` to create. `?Template=<id>` copies the template's
-        tasks and notes into the new case (create only).
+      summary: Update a case
       operationId: saveCase
       parameters: [{ $ref: '#/components/parameters/cid' }]
       requestBody:
         content: { application/json: { schema: { $ref: '#/components/schemas/Case' } } }
       responses:
         '201':
-          description: Created/updated
+          description: Updated
           content: { application/json: { schema: { $ref: '#/components/schemas/Case' } } }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /cases/{cid}:
     delete:
       summary: Delete a case
       operationId: deleteCase

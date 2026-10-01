@@ -173,7 +173,7 @@ func (h *Handler) CaseImport(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CaseEdit(w http.ResponseWriter, r *http.Request) {
-	cid := r.PathValue("cid")
+	cid := cmp.Or(r.PathValue("cid"), "new")
 	obj := model.Case{ID: cid}
 
 	// the "create from template" dropdown is only offered on the new-case form;
@@ -261,11 +261,13 @@ func outstandingOnClose(store *model.Store, dto model.Case) ([]string, error) {
 }
 
 func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
-	dto := model.Case{ID: r.PathValue("cid")}
+	cid := cmp.Or(r.PathValue("cid"), "new")
+	dto := model.Case{ID: cid}
 	tmp := struct{ Assignees []string }{} // special case: select-multiple :/
 	decodeErr := JoinV(
 		Decode(h.Store, r, &dto, ValidateCase),
 		Decode(h.Store, r, &tmp, nil))
+	dto.ID = cid // the body must not redirect the save to a case the ACL didn't check
 
 	users, err := assignableUsers(h.Store)
 	if err != nil {

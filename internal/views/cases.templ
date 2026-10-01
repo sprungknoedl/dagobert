@@ -78,7 +78,12 @@ templ CasesMany(env Env, rows []model.Case) {
 											@actionBtn(env, "GET", "/settings/cases/"+row.ID+"/acl") {
 												ACL
 											}
-											@defaultActionBtns(env, env.Route+row.ID)
+											@actionBtn(env, "GET", env.Route+row.ID+"/edit") {
+												<i class="ph ph-5 ph-pencil-simple"></i>
+											}
+											@actionBtn(env, "DELETE", env.Route+row.ID) {
+												<i class="ph ph-5 ph-trash"></i>
+											}
 										</div>
 									</td>
 								</tr>
@@ -470,7 +475,7 @@ templ caseSummaryExtra(env Env) {
 			<i class="ph ph-6 ph-trash"></i> Delete
 		</a>
 	}
-	if url, ok := env.Allowed("GET", "/cases/" + env.Case.ID + "?target=summary"); ok {
+	if url, ok := env.Allowed("GET", "/cases/" + env.Case.ID + "/edit?target=summary"); ok {
 		// The hungry #list swap only refreshes the body; reload the whole <main>
 		// on accept so the navbar title (case name) updates too.
 		<a class="join-item btn btn-primary" href={ url } up-layer="new drawer" up-accept-location={ env.Route } data-on-accepted="reload-main-root">

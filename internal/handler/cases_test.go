@@ -58,7 +58,7 @@ func postCaseSave(h *Handler, kase model.Case, assignee string) *httptest.Respon
 		"Severity":  {kase.Severity},
 		"Assignees": {assignee},
 	}
-	r := httptest.NewRequest(http.MethodPost, "/cases/"+kase.ID, strings.NewReader(form.Encode()))
+	r := httptest.NewRequest(http.MethodPost, "/cases/"+kase.ID+"/edit", strings.NewReader(form.Encode()))
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	r.SetPathValue("cid", kase.ID)
 	rec := httptest.NewRecorder()
@@ -120,4 +120,33 @@ func TestCaseSaveRejectsInvalidAssignees(t *testing.T) {
 			t.Errorf("got assignees %v, want [%s]", got.Assignees, user.ID)
 		}
 	})
+}
+
+// TestCaseSaveIgnoresBodyID checks that an ID in the body can't redirect the
+// save to a different case than the one in the (ACL-checked) path.
+func TestCaseSaveIgnoresBodyID(t *testing.T) {
+	db := setupArchiveDB(t)
+	kase := seedCase(t, db)
+	other := model.Case{ID: "case02", Name: "Other", Severity: "Low"}
+	if err := db.SaveCase(other); err != nil {
+		t.Fatal(err)
+	}
+	h := &Handler{Store: db, ACL: auth.NewACL(db), Timesketch: timesketch.NewClient(timesketch.Config{})}
+
+	form := url.Values{"ID": {other.ID}, "Name": {"Renamed"}, "Severity": {"High"}}
+	r := httptest.NewRequest(http.MethodPost, "/cases/"+kase.ID+"/edit", strings.NewReader(form.Encode()))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	r.SetPathValue("cid", kase.ID)
+	h.CaseSave(httptest.NewRecorder(), r)
+
+	got, err := db.GetCase(other.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Name != other.Name {
+		t.Errorf("case %s was renamed to %q via the body ID", other.ID, got.Name)
+	}
+	if got, _ := db.GetCase(kase.ID); got.Name != "Renamed" {
+		t.Errorf("got name %q for %s, want Renamed", got.Name, kase.ID)
+	}
 }

@@ -130,8 +130,12 @@ func Run(cmd *cobra.Command, args []string) {
 	secured.HandleFunc("GET /cases/import/archive", h.ImportArchiveForm)
 	secured.HandleFunc("POST /cases/import/archive", h.ImportArchive)
 	secured.HandleFunc("GET /cases/{cid}/export/archive", h.ExportArchive)
-	secured.HandleFunc("GET /cases/{cid}", h.CaseEdit)
-	secured.HandleFunc("POST /cases/{cid}", h.CaseSave)
+	secured.HandleFunc("GET /cases/new", h.CaseEdit)
+	secured.HandleFunc("POST /cases/new", h.CaseSave)
+	// edit lives under /cases/{cid}/ so per-case grants (/cases/{cid}/*) cover it,
+	// while delete on the bare path stays admin-only
+	secured.HandleFunc("GET /cases/{cid}/edit", h.CaseEdit)
+	secured.HandleFunc("POST /cases/{cid}/edit", h.CaseSave)
 	secured.HandleFunc("DELETE /cases/{cid}", h.CaseDelete)
 	secured.HandleFunc("GET /cases/{cid}/fork", h.CaseForkEdit)
 	secured.HandleFunc("POST /cases/{cid}/fork", h.CaseForkSave)
