@@ -82,6 +82,21 @@ components:
         Malware: { type: array, items: { $ref: '#/components/schemas/Malware' } }
         Notes: { type: array, items: { $ref: '#/components/schemas/Note' } }
         Tasks: { type: array, items: { $ref: '#/components/schemas/Task' } }
+        Assignees:
+          type: array
+          items: { $ref: '#/components/schemas/User' }
+          description: Independent from the ACL; set via the `Assignees` string array of user ids on save.
+      required: [ID, Name]
+
+    User:
+      type: object
+      properties:
+        ID: { type: string }
+        Name: { type: string }
+        Login: { type: string }
+        Email: { type: string }
+        Role: { type: string }
+        LastLogin: { type: string, format: date-time }
       required: [ID, Name]
 
     Asset:

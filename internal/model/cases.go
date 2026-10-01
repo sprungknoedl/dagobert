@@ -1,9 +1,12 @@
 package model
 
 import (
+	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/sprungknoedl/dagobert/pkg/fp"
+	"gorm.io/gorm"
 )
 
 type Case struct {
@@ -28,6 +31,8 @@ type Case struct {
 	Malware    []Malware   // `gorm:"->"`
 	Notes      []Note      // `gorm:"->"`
 	Tasks      []Task      // `gorm:"->"`
+
+	Assignees []User `gorm:"many2many:case_assignees;" expr:"-"`
 }
 
 func (c Case) String() string {
@@ -36,6 +41,10 @@ func (c Case) String() string {
 	} else {
 		return ""
 	}
+}
+
+func (c Case) HasAssignee(uid string) bool {
+	return slices.ContainsFunc(c.Assignees, func(u User) bool { return u.ID == uid })
 }
 
 func (store *Store) ListCases() ([]Case, error) {
@@ -51,6 +60,16 @@ func (store *Store) ListTemplates() ([]Case, error) {
 	list := []Case{}
 	tx := store.DB.
 		Where("is_template = ?", true).
+		Order("name asc").
+		Find(&list)
+	return list, tx.Error
+}
+
+func (store *Store) ListCasesWithAssignees() ([]Case, error) {
+	list := []Case{}
+	tx := store.DB.
+		Preload("Assignees").
+		Where("is_template = ?", false).
 		Order("name asc").
 		Find(&list)
 	return list, tx.Error
@@ -116,6 +135,12 @@ func (store *Store) GetCase(cid string) (Case, error) {
 	return obj, tx.Error
 }
 
+func (store *Store) GetCaseWithAssignees(cid string) (Case, error) {
+	obj := Case{}
+	tx := store.DB.Preload("Assignees").First(&obj, "id = ?", cid)
+	return obj, tx.Error
+}
+
 func (store *Store) GetCaseFull(cid string) (Case, error) {
 	obj := Case{}
 	tx := store.DB.
@@ -131,7 +156,12 @@ func (store *Store) GetCaseFull(cid string) (Case, error) {
 }
 
 func (store *Store) SaveCase(obj Case) error {
-	return store.DB.Save(&obj).Error
+	return store.DB.Transaction(func(tx *gorm.DB) error {
+		return errors.Join(
+			tx.Omit("Assignees").Save(&obj).Error,
+			tx.Model(&obj).Association("Assignees").Replace(obj.Assignees),
+		)
+	})
 }
 
 func (store *Store) DeleteCase(cid string) error {

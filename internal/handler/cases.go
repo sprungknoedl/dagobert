@@ -41,13 +41,44 @@ func (h *Handler) fetchSketches(r *http.Request) views.SketchInfo {
 }
 
 func (h *Handler) CaseList(w http.ResponseWriter, r *http.Request) {
-	list, err := h.Store.ListCases()
+	list, err := h.Store.ListCasesWithAssignees()
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
 
 	Render(w, r, http.StatusOK, views.CasesMany(h.Env(r), list), list)
+}
+
+// assignableUsers lists the users an "Assignees" multi-select may offer: any
+// non-builtin user, regardless of role or case access — assignment is
+// independent from the ACL.
+func assignableUsers(store *model.Store) ([]model.User, error) {
+	users, err := store.ListUsers()
+	if err != nil {
+		return nil, err
+	}
+	return fp.Filter(users, func(u model.User) bool { return !u.Builtin() }), nil
+}
+
+// resolveAssignees validates that every submitted id names an existing,
+// non-builtin user (an id for a deleted or builtin user fails rather than
+// being silently dropped) and returns the matching records.
+func resolveAssignees(users []model.User, ids []string) ([]model.User, error) {
+	byID := make(map[string]model.User, len(users))
+	for _, u := range users {
+		byID[u.ID] = u
+	}
+
+	assignees := make([]model.User, 0, len(ids))
+	for _, id := range ids {
+		u, ok := byID[id]
+		if !ok {
+			return nil, valid.ValidationError{"Assignees": valid.Condition{Name: "Assignees", Invalid: true, Message: "Invalid user."}}
+		}
+		assignees = append(assignees, u)
+	}
+	return assignees, nil
 }
 
 func (h *Handler) CaseExport(w http.ResponseWriter, r *http.Request) {
@@ -157,7 +188,7 @@ func (h *Handler) CaseEdit(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		var err error
-		obj, err = h.Store.GetCase(cid)
+		obj, err = h.Store.GetCaseWithAssignees(cid)
 		if errors.Is(err, model.ErrNotFound) {
 			NotFound(w, r, err)
 			return
@@ -167,10 +198,17 @@ func (h *Handler) CaseEdit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	users, err := assignableUsers(h.Store)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
 	sketches := h.fetchSketches(r)
 	Render(w, r, http.StatusOK, views.CasesOne(h.Env(r), obj, valid.ValidationError{},
 		views.WithTemplates(templates, ""),
-		views.WithSketches(sketches)), obj)
+		views.WithSketches(sketches),
+		views.WithAssignableUsers(users)), obj)
 }
 
 // outstandingOnClose returns human-readable, count-only messages for case
@@ -224,18 +262,40 @@ func outstandingOnClose(store *model.Store, dto model.Case) ([]string, error) {
 
 func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
 	dto := model.Case{ID: r.PathValue("cid")}
-	err := Decode(h.Store, r, &dto, ValidateCase)
-	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		sketches := h.fetchSketches(r)
-		templates, _ := h.Store.ListTemplates()
-		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(h.Env(r), dto, vr,
-			views.WithTemplates(templates, r.FormValue("Template")),
-			views.WithSketches(sketches)), vr)
+	tmp := struct{ Assignees []string }{} // special case: select-multiple :/
+	decodeErr := JoinV(
+		Decode(h.Store, r, &dto, ValidateCase),
+		Decode(h.Store, r, &tmp, nil))
+
+	users, err := assignableUsers(h.Store)
+	if err != nil {
+		Err(w, r, err)
 		return
-	} else if err != nil {
+	}
+	assignees, assigneesErr := resolveAssignees(users, tmp.Assignees)
+
+	if err := JoinV(decodeErr, assigneesErr); err != nil {
+		if vr, ok := err.(valid.ValidationError); ok {
+			sketches := h.fetchSketches(r)
+			templates, _ := h.Store.ListTemplates()
+			// changes to the Assignees select are lost on a validation failure
+			// and the prior saved selection is shown instead, same tradeoff
+			// EventSave makes for Assets/Indicators — easier than the other way.
+			if dto.ID != "new" {
+				if prior, perr := h.Store.GetCaseWithAssignees(dto.ID); perr == nil {
+					dto.Assignees = prior.Assignees
+				}
+			}
+			Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(h.Env(r), dto, vr,
+				views.WithTemplates(templates, r.FormValue("Template")),
+				views.WithSketches(sketches),
+				views.WithAssignableUsers(users)), vr)
+			return
+		}
 		Warn(w, r, err)
 		return
 	}
+	dto.Assignees = assignees
 
 	// NOTE: form-only for now — CollectCustom reads r.PostForm, so a JSON API
 	// request yields an empty map and won't carry custom values.
@@ -288,6 +348,7 @@ func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
 				Render(w, r, http.StatusOK, views.CasesOne(h.Env(r), dto, valid.ValidationError{},
 					views.WithTemplates(templates, r.FormValue("Template")),
 					views.WithSketches(sketches),
+					views.WithAssignableUsers(users),
 					views.WithOutstanding(outstanding)), nil)
 				return
 			}
@@ -334,9 +395,16 @@ func (h *Handler) CaseForkEdit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	obj.Name += " (copy)"
+	assignable, err := assignableUsers(h.Store)
+	if err != nil {
+		Err(w, r, err)
+		return
+	}
+
 	sketches := h.fetchSketches(r)
 	Render(w, r, http.StatusOK, views.CasesOne(h.Env(r), obj, valid.ValidationError{},
 		views.WithSketches(sketches),
+		views.WithAssignableUsers(assignable),
 		views.WithFork()), nil)
 }
 
@@ -348,17 +416,31 @@ func (h *Handler) CaseForkEdit(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CaseForkSave(w http.ResponseWriter, r *http.Request) {
 	srcID := r.PathValue("cid")
 	dto := model.Case{}
-	err := Decode(h.Store, r, &dto, ValidateCase)
-	if vr, ok := err.(valid.ValidationError); err != nil && ok {
-		sketches := h.fetchSketches(r)
-		Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(h.Env(r), dto, vr,
-			views.WithSketches(sketches),
-			views.WithFork()), nil)
+	tmp := struct{ Assignees []string }{} // special case: select-multiple :/
+	decodeErr := JoinV(
+		Decode(h.Store, r, &dto, ValidateCase),
+		Decode(h.Store, r, &tmp, nil))
+
+	assignable, err := assignableUsers(h.Store)
+	if err != nil {
+		Err(w, r, err)
 		return
-	} else if err != nil {
+	}
+	assignees, assigneesErr := resolveAssignees(assignable, tmp.Assignees)
+
+	if err := JoinV(decodeErr, assigneesErr); err != nil {
+		if vr, ok := err.(valid.ValidationError); ok {
+			sketches := h.fetchSketches(r)
+			Render(w, r, http.StatusUnprocessableEntity, views.CasesOne(h.Env(r), dto, vr,
+				views.WithSketches(sketches),
+				views.WithAssignableUsers(assignable),
+				views.WithFork()), nil)
+			return
+		}
 		Warn(w, r, err)
 		return
 	}
+	dto.Assignees = assignees
 
 	dto.Custom = CollectCustom(r)
 	dto.ID = fp.Random(10)
@@ -523,7 +605,7 @@ func (h *Handler) CaseSwitch(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) CaseSummary(w http.ResponseWriter, r *http.Request) {
 	cid := r.PathValue("cid")
-	obj, err := h.Store.GetCase(cid)
+	obj, err := h.Store.GetCaseWithAssignees(cid)
 	if errors.Is(err, model.ErrNotFound) {
 		NotFound(w, r, err)
 		return

@@ -1,11 +1,14 @@
 package views
 
 import (
+	"hash/fnv"
+	"strconv"
+	"strings"
+
 	"github.com/sprungknoedl/dagobert/internal/model"
 	"github.com/sprungknoedl/dagobert/pkg/fp"
 	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 	"github.com/sprungknoedl/dagobert/pkg/valid"
-	"strconv"
 )
 
 // dateInputValue formats a nullable date for an <input type="date"> value
@@ -39,6 +42,7 @@ templ CasesMany(env Env, rows []model.Case) {
 						<th data-sort="value-4" class="sort">Outcome</th>
 						<th data-sort="value-5" class="sort">Status</th>
 						<th data-sort="value-6" class="sort">Opened</th>
+						<th></th>
 						<th style="width: 7rem"></th>
 					</tr>
 				</thead>
@@ -66,6 +70,9 @@ templ CasesMany(env Env, rows []model.Case) {
 										@caseStatusPill(row.Closed)
 									</td>
 									<td class="value-6" data-search={ dateOrDash(row.OpenedAt) }>{ dateOrDash(row.OpenedAt) }</td>
+									<td class="value-7" data-search={ strings.Join(fp.Apply(row.Assignees, func(u model.User) string { return u.Name }), " ") }>
+										@assigneeAvatars(row.Assignees, 5, avatarSizeList)
+									</td>
 									<td class="text-right">
 										<div class="join">
 											@actionBtn(env, "GET", "/settings/cases/"+row.ID+"/acl") {
@@ -100,6 +107,7 @@ type casesOneConfig struct {
 	sketches         SketchInfo
 	outstanding      []string
 	fork             bool
+	assignableUsers  []model.User
 }
 
 type CasesOneOption func(*casesOneConfig)
@@ -140,6 +148,13 @@ func WithOutstanding(outstanding []string) CasesOneOption {
 	return func(cc *casesOneConfig) { cc.outstanding = outstanding }
 }
 
+// WithAssignableUsers offers the "Assignees" multi-select, seeded with every
+// non-builtin user (assignment is independent from the ACL, so this is not
+// narrowed by case access or role). Not rendered on case templates.
+func WithAssignableUsers(users []model.User) CasesOneOption {
+	return func(cc *casesOneConfig) { cc.assignableUsers = users }
+}
+
 templ CasesOne(env Env, obj model.Case, vr valid.ValidationError, opts ...CasesOneOption) {
 	{{ cfg := applyCasesOneOptions(opts) }}
 	{{ uri := env.Route }}
@@ -175,6 +190,11 @@ templ CasesOne(env Env, obj model.Case, vr valid.ValidationError, opts ...CasesO
 		if !obj.IsTemplate {
 			@dateField("OpenedAt", dateInputValue(obj.OpenedAt), withLabel("Opened"))
 			@dateField("ClosedAt", dateInputValue(obj.ClosedAt), withLabel("Closed at"))
+			@choicesField("Assignees", withLabel("Assignees"), withError(vr["Assignees"])) {
+				for _, u := range cfg.assignableUsers {
+					<option value={ u.ID } selected?={ obj.HasAssignee(u.ID) }>{ u.Name + " (" + u.Login + ")" }</option>
+				}
+			}
 		}
 		@markdownField("Summary", obj.Summary, withLabel("Executive summary"), withHint("Markdown supported. Describe what happened, scope of impact, root cause, and resolution."))
 		if cfg.sketches.Show {
@@ -237,10 +257,6 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 					<div class="stat-value">{ obj.Severity }</div>
 				</div>
 				<div class="stat">
-					<div class="stat-title">Classification</div>
-					<div class="stat-value">{ fp.If(obj.Classification != "", obj.Classification, "\u2014") }</div>
-				</div>
-				<div class="stat">
 					<div class="stat-title">Outcome</div>
 					<div class="stat-value">{ obj.Outcome }</div>
 				</div>
@@ -272,6 +288,22 @@ templ CasesSummary(env Env, obj model.Case, events []model.Event, assets []model
 						@markdown(obj.Summary)
 					</article>
 				}
+				<dl class="flex flex-wrap gap-x-12 gap-y-4 mt-6">
+					<div>
+						<dt class="fieldset-legend">Classification</dt>
+						<dd>{ fp.If(obj.Classification != "", obj.Classification, "\u2014") }</dd>
+					</div>
+					<div>
+						<dt class="fieldset-legend">Assignees</dt>
+						<dd>
+							if len(obj.Assignees) == 0 {
+								{ "\u2014" }
+							} else {
+								@assigneeAvatars(obj.Assignees, 0, avatarSizeSummary)
+							}
+						</dd>
+					</div>
+				</dl>
 			</section>
 			<section>
 				<div class="grid grid-cols-1 md:grid-cols-[1.6fr_1fr_1fr] gap-8">
@@ -458,5 +490,93 @@ templ casesImport(env Env) {
 				<li><a href="/cases/import/archive" up-layer="new drawer" up-accept-location={ env.Route }>Single via Archive</a></li>
 			</ul>
 		</details>
+	}
+}
+
+// avatarSize bundles the diameter, initials font size, and avatar-group
+// overlap for one scale. The case-list row needs a much smaller avatar than
+// the summary page, so each call site picks its own size rather than the
+// component guessing it from context.
+type avatarSize struct {
+	diameter string
+	text     string
+	overlap  string
+}
+
+var avatarSizeList = avatarSize{diameter: "w-5", text: "text-[0.5rem]", overlap: "-space-x-2"}
+var avatarSizeSummary = avatarSize{diameter: "w-8", text: "text-xs", overlap: "-space-x-2"}
+
+func avatarColor(userID string) string {
+	// avatarColors is a small, fixed palette of existing DESIGN.md hue tokens
+	// (avoiding red/yellow, reserved for status) a user's initials circle is
+	// picked from deterministically by id, so the same user always gets the
+	// same color.
+	var avatarColors = []string{
+		"bg-[var(--teal-500)]",
+		"bg-[var(--cyan-500)]",
+		"bg-[var(--blue-500)]",
+		"bg-[var(--purple-500)]",
+		"bg-[var(--blue-grey-500)]",
+	}
+
+	h := fnv.New32a()
+	h.Write([]byte(userID))
+	return avatarColors[h.Sum32()%uint32(len(avatarColors))]
+}
+
+// assigneeInitials is the avatar label: the first letters of the first and
+// last words of the user's name ("Thomas Kastner" -> "TK"), one letter for a
+// single-word name, or the first letter of the login when the name is blank.
+func assigneeInitials(u model.User) string {
+	words := strings.Fields(u.Name)
+	if len(words) == 0 {
+		if u.Login == "" {
+			return ""
+		}
+		return strings.ToUpper(string([]rune(u.Login)[0]))
+	}
+
+	first := string([]rune(words[0])[0])
+	if len(words) == 1 {
+		return strings.ToUpper(first)
+	}
+	last := string([]rune(words[len(words)-1])[0])
+	return strings.ToUpper(first + last)
+}
+
+// splitAssignees caps assignees at max for the avatar-group "+N" counter.
+// max <= 0 means no cap, used on the summary page which always shows every
+// assignee.
+func splitAssignees(assignees []model.User, max int) (shown, hidden []model.User) {
+	if max <= 0 || len(assignees) <= max {
+		return assignees, nil
+	}
+	return assignees[:max], assignees[max:]
+}
+
+// assigneeAvatars renders assignees as daisyUI's "avatar group with counter"
+// pattern: overlapping initials circles, capped at max with a final "+N"
+// placeholder avatar for the rest. Hovering an avatar shows the full name;
+// hovering the counter lists the hidden names. A plain title rather than a
+// daisyUI tooltip, whose bubble .avatar-group's overflow:hidden would clip.
+templ assigneeAvatars(assignees []model.User, max int, sz avatarSize) {
+	if len(assignees) > 0 {
+		<div class={ "avatar-group", sz.overlap }>
+			{{ shown, hidden := splitAssignees(assignees, max) }}
+			for _, u := range shown {
+				<div class="avatar avatar-placeholder border-0" title={ u.Name }>
+					<div class={ "text-white", sz.diameter, avatarColor(u.ID) }>
+						<span class={ sz.text }>{ assigneeInitials(u) }</span>
+					</div>
+				</div>
+			}
+			if len(hidden) > 0 {
+				<div class="avatar avatar-placeholder border-0" title={ strings.Join(fp.Apply(hidden, func(u model.User) string { return u.Name }), ", ") }>
+					<div class={ "bg-neutral text-neutral-content", sz.diameter }>
+						<span class={ sz.text }>{ "+" + strconv.Itoa(len(hidden)) }</span>
+					</div>
+				</div>
+			}
+		</div>
 	}
 }

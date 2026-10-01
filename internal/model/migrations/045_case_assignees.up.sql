@@ -1,0 +1,8 @@
+CREATE TABLE case_assignees (
+	case_id TEXT NOT NULL,
+	user_id TEXT NOT NULL,
+
+	UNIQUE (case_id, user_id),
+	FOREIGN KEY (case_id) REFERENCES cases(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
