@@ -227,3 +227,13 @@ the one thing here that means "look here," so it gets the signal colour.
 #histogram .vis-current-time {
     background-color: var(--color-accent);
 }
+
+/* the selected time range: an accent wash over the bars, not a recolouring of them */
+#histogram .histogram-band {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    background-color: color-mix(in oklab, var(--color-accent) 20%, transparent);
+}

@@ -78,6 +78,14 @@ onload = (event) => {
             elem.style.width = width + "px"
             elem.style.maxWidth = width + "px"
         });
+
+        // Timeline only: the #histogram compiler drives this list's time filter
+        var histogram = elem.querySelector('#histogram');
+        if (histogram) {
+            elem.histogramList = list;
+            var range = JSON.parse(histogram.getAttribute('up-data') || '[]').length ? readTimeRange() : null;
+            if (range) { list.filter(timeRangeFilter(range)); }
+        }
     });
 
     // Quick case switcher: arrow-key highlight + Enter through the results.
@@ -751,7 +759,8 @@ function setGraphFrozen(btn, frozen) {
 }
 
 // Event timeline histogram (EventsMany). Bucketed counts arrive in [up-data];
-// vis-timeline is loaded on demand.
+// vis-timeline is loaded on demand. A plain drag selects a time range that
+// filters the #list table; Shift+drag is left to vis's own pan.
 up.compiler('#histogram', (elem, data) => {
     loadScript('/public/assets/vis-timeline-8.5.1.min.js', () => window.vis && window.vis.Graph2d).then(() => {
         const options = {
@@ -763,9 +772,89 @@ up.compiler('#histogram', (elem, data) => {
             orientation: "bottom",
             moment: (date) => vis.moment(date).utc(),
         };
-        new vis.Graph2d(elem, new vis.DataSet(data), options);
+        const graph = new vis.Graph2d(elem, new vis.DataSet(data), options);
+        if (!data.length) { return; }
+
+        // the plot panel: clipped to the bars, and the frame toScreen measures from
+        const band = document.createElement('div');
+        band.className = 'histogram-band';
+        graph.dom.centerContainer.appendChild(band);
+
+        let current = null;
+        const drawBand = (range) => {
+            current = range;
+            band.hidden = !range;
+            if (!range) { return; }
+            const x1 = graph.body.util.toScreen(range.from);
+            const x2 = graph.body.util.toScreen(range.to);
+            band.style.left = x1 + 'px';
+            band.style.width = (x2 - x1) + 'px';
+        };
+        const commit = (range) => {
+            writeTimeRange(range);
+            drawBand(range);
+            elem.closest('#list')?.histogramList?.filter(range ? timeRangeFilter(range) : undefined);
+        };
+        const timeAt = (event) => graph.getEventProperties({ clientX: event.clientX, clientY: event.clientY }).time;
+        const span = (a, b) => (a <= b ? { from: a, to: b } : { from: b, to: a });
+
+        graph.on('rangechange', () => drawBand(current));
+        drawBand(readTimeRange());
+
+        // vis's gesture library listens below elem; stopping the event in the
+        // capture phase keeps a plain drag from panning
+        elem.addEventListener('pointerdown', (event) => {
+            if (event.shiftKey || event.button !== 0) { return; }
+            event.stopPropagation();
+            elem.setPointerCapture(event.pointerId);
+            const startX = event.clientX;
+            const start = timeAt(event);
+            let dragging = false;
+            const onMove = (move) => {
+                if (!dragging && Math.abs(move.clientX - startX) < 5) { return; }
+                dragging = true;
+                drawBand(span(start, timeAt(move)));
+            };
+            elem.addEventListener('pointermove', onMove);
+            elem.addEventListener('pointerup', (release) => {
+                elem.removeEventListener('pointermove', onMove);
+                commit(dragging || Math.abs(release.clientX - startX) >= 5 ? span(start, timeAt(release)) : null);
+            }, { once: true });
+        }, true);
     });
 });
+
+// readTimeRange returns the histogram's from/to range from the URL, or null
+// when either is missing or not a valid time. Read from the root layer: while
+// a drawer is open the browser URL is the drawer's, and a save re-renders the
+// list from there.
+function readTimeRange() {
+    const params = new URL(up.layer.root.location, location.href).searchParams;
+    if (!params.get('from') || !params.get('to')) { return null; }
+    const from = new Date(params.get('from'));
+    const to = new Date(params.get('to'));
+    return isNaN(from) || isNaN(to) ? null : { from, to };
+}
+
+function writeTimeRange(range) {
+    const url = new URL(location.href);
+    if (range) {
+        url.searchParams.set('from', range.from.toISOString());
+        url.searchParams.set('to', range.to.toISOString());
+    } else {
+        url.searchParams.delete('from');
+        url.searchParams.delete('to');
+    }
+    history.replaceState(history.state, '', url);
+}
+
+// List.js ANDs filter() with search(), so the range and the search box combine.
+function timeRangeFilter(range) {
+    return (item) => {
+        const t = Date.parse(item.values()['value-0']);
+        return t >= range.from.getTime() && t <= range.to.getTime();
+    };
+}
 
 // --- Helpers invoked from inline on* handlers / the compilers above -------
 
