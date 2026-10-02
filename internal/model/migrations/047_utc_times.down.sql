@@ -1,0 +1,1 @@
+-- The original offsets are not recoverable; UTC times stay valid for the old format.

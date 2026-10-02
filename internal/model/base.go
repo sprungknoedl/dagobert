@@ -132,11 +132,15 @@ func (store *Store) assertCaseOwnership(model any, id, cid string) error {
 
 type Time time.Time
 
+// timeLayout is UTC with a fixed-width fraction, so that ORDER BY on the
+// stored text matches chronological order. Migration 047 uses the same shape.
+const timeLayout = "2006-01-02T15:04:05.000000000Z07:00"
+
 func (t Time) Format(layout string) string { return time.Time(t).Format(layout) }
 func (t Time) IsZero() bool                { return time.Time(t).IsZero() }
 
 func (t Time) Value() (driver.Value, error) {
-	return time.Time(t).Format(time.RFC3339Nano), nil
+	return time.Time(t).UTC().Format(timeLayout), nil
 }
 
 func (t Time) MarshalJSON() ([]byte, error) {
