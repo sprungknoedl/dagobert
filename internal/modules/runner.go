@@ -11,6 +11,7 @@ import (
 	"os"
 	"slices"
 	"strconv"
+	"sync/atomic"
 	"time"
 
 	"github.com/sprungknoedl/dagobert/internal/model"
@@ -33,18 +34,27 @@ import (
 
 var Modules = map[string]model.Module{}
 
-// Supported lists the modules offered for manual "Run module" scheduling on
-// obj. Webhook is excluded: its Run() only works with the url/event/rule
-// pulled from Job.Settings, which the automation-rules engine populates —
-// a manually scheduled job would have none of those and fail immediately.
+// available holds the modules that passed Validate. Start runs concurrently
+// with request handlers, so it is published atomically; nil until validation
+// finishes.
+var available atomic.Pointer[map[string]model.Module]
+
+// Supported lists the validated modules offered for manual "Run module"
+// scheduling on obj. Webhook is excluded: its Run() only works with the
+// url/event/rule pulled from Job.Settings, which the automation-rules engine
+// populates — a manually scheduled job would have none of those and fail
+// immediately.
 func Supported(obj any) []model.Module {
-	return fp.ToList(fp.FilterM(Modules, func(p model.Module) bool { return p.Name() != "Webhook" && p.Supports(obj) }))
+	avail := available.Load()
+	if avail == nil {
+		return nil
+	}
+	return fp.ToList(fp.FilterM(*avail, func(p model.Module) bool { return p.Name() != "Webhook" && p.Supports(obj) }))
 }
 
 // Register populates the global Modules map. It must be called synchronously
-// before the HTTP server starts serving requests: Supported (called from
-// request handlers) reads Modules without synchronization, so a concurrent
-// write from an async Start would race it.
+// before the HTTP server starts serving requests: request handlers read
+// Modules without synchronization, so a concurrent write would race them.
 func Register(ts *tsclient.Client) {
 	for _, m := range []model.Module{
 		abuseipdb.NewModule(),
@@ -75,6 +85,7 @@ func Start(ctx context.Context, store *model.Store) {
 			modules[name] = Modules[name]
 		}
 	}
+	available.Store(&modules)
 
 	slog.Debug("loading automation rules")
 	if err := LoadAutomationRules(store); err != nil {
