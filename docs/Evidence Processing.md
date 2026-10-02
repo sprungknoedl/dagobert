@@ -2,12 +2,14 @@
 
 Dagobert can run external forensic tools against uploaded evidence:
 
-- **[Hayabusa](https://github.com/Yamato-Security/hayabusa)** for EVTX triage
+- **[Hayabusa](https://github.com/Yamato-Security/hayabusa)** for EVTX triage; also accepts
+  a `.zip` of `.evtx` files
 - **[Plaso](https://github.com/log2timeline/plaso)** for timeline generation
 - **[Dissect](https://github.com/fox-it/dissect)** for fast, low-noise triage timelines
-- **[Zircolite](https://github.com/wagga40/Zircolite)** for EVTX Sigma detection
+- **[Zircolite](https://github.com/wagga40/Zircolite)** for EVTX Sigma detection; also
+  accepts a `.zip` of `.evtx` files
 - **[Chainsaw](https://github.com/WithSecureLabs/chainsaw)** for EVTX Sigma and
-  native-rule hunting
+  native-rule hunting; also accepts a `.zip` of `.evtx` files
 - A built-in **[Timesketch](https://github.com/google/timesketch)** importer
 
 These run as jobs in an in-process worker pool — part of the main `dagobert server`

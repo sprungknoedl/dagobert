@@ -49,7 +49,8 @@ func (m *Module) Description() string {
 
 func (m *Module) Supports(obj any) bool {
 	if e, ok := obj.(model.Evidence); ok {
-		return filepath.Ext(e.Name) == ".evtx"
+		ext := filepath.Ext(e.Name)
+		return ext == ".evtx" || ext == ".zip"
 	}
 	return false
 }
@@ -144,11 +145,17 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job *model.Job) er
 	raw := src + ".chainsaw.raw.jsonl"
 	dst := src + ".chainsaw.jsonl"
 
+	input, cleanup, err := utils.EvtxInput(evidence)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
 	args := append(m.args[1:], "hunt", "-s", SigmaDir, "-m", MappingFile)
 	if m.hasRules {
 		args = append(args, "-r", RulesDir)
 	}
-	args = append(args, "--jsonl", "-o", raw, src)
+	args = append(args, "--jsonl", "-o", raw, input)
 
 	cmd := exec.CommandContext(ctx, m.args[0], args...)
 

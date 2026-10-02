@@ -21,7 +21,7 @@ func TestSupports(t *testing.T) {
 		want bool
 	}{
 		{"evtx passes", model.Evidence{Name: "Security.evtx"}, true},
-		{"zip rejected", model.Evidence{Name: "triage.zip"}, false},
+		{"zip passes", model.Evidence{Name: "triage.zip"}, true},
 		{"no extension rejected", model.Evidence{Name: "README"}, false},
 		{"non-evidence rejected", model.Indicator{Type: "Hash"}, false},
 	}

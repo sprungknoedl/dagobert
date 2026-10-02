@@ -47,7 +47,8 @@ func (m *Module) Description() string {
 
 func (m *Module) Supports(obj any) bool {
 	if e, ok := obj.(model.Evidence); ok {
-		return filepath.Ext(e.Name) == ".evtx"
+		ext := filepath.Ext(e.Name)
+		return ext == ".evtx" || ext == ".zip"
 	}
 	return false
 }
@@ -145,8 +146,14 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job *model.Job) er
 		return err
 	}
 
+	input, cleanup, err := utils.EvtxInput(evidence)
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+
 	cmd := exec.CommandContext(ctx, m.args[0], append(m.args[1:],
-		"--evtx", src,
+		"--evtx", input,
 		"-o", raw,
 		"-c", ConfigFile,
 		"-r", RulesetFile,

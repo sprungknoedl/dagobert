@@ -19,6 +19,7 @@ linters:
         - (io.Closer).Close
         - (io/fs.File).Close
         - (*archive/zip.ReadCloser).Close
+        - (*github.com/sprungknoedl/zip.ReadCloser).Close
         - (*database/sql.DB).Close
         # csv.Writer buffers internally; the stdlib-documented idiom is to
         # ignore per-Write errors and check the accumulated error once via
