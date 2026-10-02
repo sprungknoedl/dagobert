@@ -156,10 +156,9 @@ templ IndicatorsOne(env Env, obj model.Indicator, overlap IndicatorOverlap, enri
 // panel — one row per module. Renders nothing when there is no enrichment.
 templ threatIntel(env Env, rows []model.Enrichment) {
 	if len(rows) > 0 {
-		<div>
-			<h2 class="text-lg font-semibold mb-1">Threat Intelligence</h2>
-			<p class="text-sm text-muted mb-2">Automated enrichment from configured modules.</p>
-			<ul class="menu bg-base-200 rounded-box w-full gap-1">
+		@fieldset("Threat Intelligence") {
+			<p class="label">Automated enrichment from configured modules.</p>
+			<ul class="menu bg-base-200 rounded-box w-full">
 				for _, row := range rows {
 					{{ summary := strings.Split(row.Summary, "\n") }}
 					<li>
@@ -172,21 +171,20 @@ templ threatIntel(env Env, rows []model.Enrichment) {
 							<div class="pl-4">
 								<p class="whitespace-pre-wrap text-muted">{ row.Summary }</p>
 								if row.Link != "" {
-									<a href={ templ.URL(row.Link) } target="_blank" rel="noreferrer" class="link link-hover mt-1">open ↗</a>
+									<a href={ templ.URL(row.Link) } target="_blank" rel="noreferrer" class="link link-hover">open ↗</a>
 								}
 							</div>
 						</details>
 					</li>
 				}
 			</ul>
-		</div>
+		}
 	}
 }
 
 templ indicatorOverlap(env Env, overlap IndicatorOverlap) {
-	<div>
-		<h2 class="text-lg font-semibold mb-1">Related cases</h2>
-		<p class="text-sm text-muted mb-2">This observable also appears in other cases.</p>
+	@fieldset("Related cases") {
+		<p class="label">This observable also appears in other cases.</p>
 		<ul class="menu bg-base-200 rounded-box w-full">
 			for _, c := range overlap.Cases {
 				<li>
@@ -203,9 +201,9 @@ templ indicatorOverlap(env Env, overlap IndicatorOverlap) {
 			}
 		</ul>
 		if overlap.Hidden > 0 {
-			<p class="text-sm text-muted mt-2">{ fmt.Sprintf("%d more case(s) you don't have access to.", overlap.Hidden) }</p>
+			<p class="label">{ fmt.Sprintf("%d more case(s) you don't have access to.", overlap.Hidden) }</p>
 		}
-	</div>
+	}
 }
 
 templ indicatorsManyExtra(env Env) {
