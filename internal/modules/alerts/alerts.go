@@ -172,7 +172,7 @@ func importLine(tx *model.Store, cid, source string, line []byte, severity strin
 		return outcomeSkipped, nil
 	}
 
-	sum := sha1.Sum(append([]byte(source+"\x00"), line...))
+	sum := sha1.Sum(append([]byte(cid+"\x00"+source+"\x00"), line...))
 	ev := model.Event{
 		ID:         fmt.Sprintf("_alert_%x", sum),
 		CaseID:     cid,

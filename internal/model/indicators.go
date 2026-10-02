@@ -109,9 +109,13 @@ func (store *Store) SaveIndicator(cid string, obj Indicator, override bool) erro
 	if err := store.assertCaseOwnership(&Indicator{}, obj.ID, cid); err != nil {
 		return err
 	}
+	if override {
+		return store.DB.Save(&obj).Error
+	}
+	// Save ignores the OnConflict clause, so keep-existing needs Create
 	return store.DB.
-		Clauses(clause.OnConflict{DoNothing: !override}).
-		Save(obj).
+		Clauses(clause.OnConflict{DoNothing: true}).
+		Create(&obj).
 		Error
 }
 

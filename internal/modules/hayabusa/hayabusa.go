@@ -130,6 +130,7 @@ func (m *Module) Run(ctx context.Context, store *model.Store, job *model.Job) er
 		"--RFC-3339",
 		"--UTC",
 		"--no-wizard",
+		"--clobber",
 		"--min-level", "informational",
 		"--profile", "timesketch-verbose",
 		"--rules", RulesDir,

@@ -54,7 +54,17 @@ func AddFromFS(store *model.Store, obj model.Evidence, module string) error {
 		return err
 	}
 
-	obj.ID = fp.Random(10)
+	// a re-run overwrites the same output file, so update its row instead of adding one
+	existing := []model.Evidence{}
+	if err := store.DB.Where("case_id = ? AND name = ?", obj.CaseID, obj.Name).Limit(1).Find(&existing).Error; err != nil {
+		return err
+	}
+	if len(existing) > 0 {
+		obj = existing[0]
+	} else {
+		obj.ID = fp.Random(10)
+	}
+	obj.Fileless = false
 	obj.Size = stat.Size()
 	obj.Hash = fmt.Sprintf("%x", hasher.Sum(nil))
 	if err := store.SaveEvidence(obj.CaseID, obj); err != nil {

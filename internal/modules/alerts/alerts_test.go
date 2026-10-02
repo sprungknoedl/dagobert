@@ -143,4 +143,42 @@ func TestImportAlerts(t *testing.T) {
 		require.Len(t, events, 1)
 		assert.Equal(t, "analyst-edited text", events[0].Event)
 	})
+
+	t.Run("rerunning keeps links an analyst added", func(t *testing.T) {
+		db := setupDB(t)
+		kase := model.Case{ID: fp.Random(10), Name: "Test Case"}
+		require.Nil(t, db.SaveCase(kase))
+		asset := model.Asset{ID: fp.Random(10), Name: "DC01", Type: "Host", Status: "Compromised"}
+		require.Nil(t, db.SaveAsset(kase.ID, asset))
+
+		_, _, _, err := importAlerts(db, kase.ID, "alerts.jsonl", strings.NewReader(wellFormedLine+"\n"), "all")
+		require.Nil(t, err)
+
+		events, err := db.ListEvents(kase.ID)
+		require.Nil(t, err)
+		require.Len(t, events, 1)
+		linked := events[0]
+		linked.Assets = []model.Asset{{ID: asset.ID}}
+		require.Nil(t, db.SaveEvent(kase.ID, linked, true))
+
+		_, _, _, err = importAlerts(db, kase.ID, "alerts.jsonl", strings.NewReader(wellFormedLine+"\n"), "all")
+		require.Nil(t, err)
+
+		events, err = db.ListEvents(kase.ID)
+		require.Nil(t, err)
+		require.Len(t, events, 1)
+		assert.Len(t, events[0].Assets, 1)
+	})
+
+	t.Run("same file imports into a second case", func(t *testing.T) {
+		db := setupDB(t)
+		for range 2 {
+			kase := model.Case{ID: fp.Random(10), Name: "Test Case"}
+			require.Nil(t, db.SaveCase(kase))
+
+			imported, _, _, err := importAlerts(db, kase.ID, "alerts.jsonl", strings.NewReader(wellFormedLine+"\n"), "all")
+			require.Nil(t, err)
+			assert.Equal(t, 1, imported)
+		}
+	})
 }

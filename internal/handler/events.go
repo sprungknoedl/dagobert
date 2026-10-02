@@ -194,7 +194,7 @@ func saveTimesketchEvents(store *model.Store, cid string, events []timesketch.Ev
 			}
 
 			obj := model.Event{
-				ID:     "_ts_" + ev.ID,
+				ID:     "_ts_" + cid + "_" + ev.ID,
 				CaseID: cid,
 				Type:   "Other",
 				Time:   model.Time(ev.Datetime),

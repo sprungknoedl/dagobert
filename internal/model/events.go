@@ -77,13 +77,16 @@ func (store *Store) SaveEvent(cid string, obj Event, override bool) error {
 		return err
 	}
 	return store.DB.Transaction(func(tx *gorm.DB) error {
+		res := tx.
+			Clauses(clause.OnConflict{DoNothing: !override, UpdateAll: override}).
+			Omit("Assets").
+			Omit("Indicators").
+			Create(&obj)
+		if res.Error != nil || res.RowsAffected == 0 {
+			// the event already existed and is kept as is, including its links
+			return res.Error
+		}
 		return errors.Join(
-			tx.
-				Clauses(clause.OnConflict{DoNothing: !override, UpdateAll: override}).
-				Omit("Assets").
-				Omit("Indicators").
-				Create(&obj).
-				Error,
 			tx.Model(&obj).Association("Assets").Replace(obj.Assets),
 			tx.Model(&obj).Association("Indicators").Replace(obj.Indicators),
 		)
