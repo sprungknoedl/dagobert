@@ -503,8 +503,11 @@ func (h *Handler) CaseDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// The case row is already gone; a cleanup failure here would only leave
-	// orphaned files on disk, not corrupt anything, so log rather than fail
+	// orphaned files or policies, not corrupt anything, so log rather than fail
 	// a delete that already succeeded.
+	if err := h.ACL.SaveCasePermissions(cid, nil); err != nil {
+		slog.Warn("failed to remove case policies", "err", err, "case", cid)
+	}
 	if err := os.RemoveAll(filepath.Join(model.DataDir, "evidences", cid)); err != nil {
 		slog.Warn("failed to remove case evidence directory", "err", err, "case", cid)
 	}

@@ -41,20 +41,36 @@ type Enrichment struct {
 	FetchedAt  Time
 }
 
+var enrichmentTables = map[string]string{
+	"Asset":     "assets",
+	"Evidence":  "evidences",
+	"Indicator": "indicators",
+	"Malware":   "malware",
+}
+
 // SetEnrichment upserts an enrichment row on the (object_type, object_id,
 // module) unique index — re-running a module replaces its previous result. The
-// ID is generated when empty.
+// ID is generated when empty. Nothing is written when the object no longer
+// exists.
 func (store *Store) SetEnrichment(e Enrichment) error {
 	if e.ID == "" {
 		e.ID = fp.Random(10)
 	}
-	return store.DB.
-		Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "object_type"}, {Name: "object_id"}, {Name: "module"}},
-			UpdateAll: true,
-		}).
-		Create(&e).
-		Error
+	return store.Transaction(func(tx *Store) error {
+		// a job can outlive its object, and its result must not resurrect the
+		// enrichments the object's delete removed
+		ok, err := tx.HasCaseObject(e.CaseID, enrichmentTables[e.ObjectType], e.ObjectID)
+		if err != nil || !ok {
+			return err
+		}
+		return tx.DB.
+			Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "object_type"}, {Name: "object_id"}, {Name: "module"}},
+				UpdateAll: true,
+			}).
+			Create(&e).
+			Error
+	})
 }
 
 // ListEnrichments returns an object's enrichment rows ordered by module.

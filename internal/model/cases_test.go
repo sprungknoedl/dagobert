@@ -138,3 +138,18 @@ func TestForkCaseDropsTaskOwner(t *testing.T) {
 	require.Len(t, got, 1)
 	assert.Nil(t, got[0].OwnerID)
 }
+
+// TestDeleteAsset checks that deleting an asset keeps the malware samples
+// collected from it and only clears their optional source link.
+func TestDeleteAsset(t *testing.T) {
+	db := setupDBWithForeignKeys(t)
+	require.Nil(t, db.SaveCase(Case{ID: "case01", Name: "Test case"}))
+	require.Nil(t, db.SaveAsset("case01", Asset{ID: "asset01", Name: "DC01"}))
+	require.Nil(t, db.SaveMalware("case01", Malware{ID: "mal01", Hash: "abc123", Asset: Asset{ID: "asset01"}}))
+
+	require.Nil(t, db.DeleteAsset("case01", "asset01"))
+
+	mal, err := db.GetMalware("case01", "mal01")
+	require.Nil(t, err)
+	assert.Nil(t, mal.AssetID)
+}

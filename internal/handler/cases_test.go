@@ -15,10 +15,27 @@ import (
 	"github.com/sprungknoedl/dagobert/pkg/timesketch"
 )
 
+// TestCaseDelete checks that deleting a case removes its files on disk, the
+// FK-less enrichment and evidence-log rows, and the case's ACL policies, both
+// in the database and in the loaded enforcer.
 func TestCaseDelete(t *testing.T) {
 	db := setupArchiveDB(t)
 	seedCase(t, db)
 	t.Chdir(t.TempDir())
+
+	acl := auth.NewACL(db)
+	if err := db.SaveUser(model.User{ID: "user01", Name: "Alice", Login: "alice"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := acl.SaveCasePermissions("case01", []string{"user01"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.SetEnrichment(model.Enrichment{CaseID: "case01", ObjectType: "Indicator", ObjectID: "ind01", Module: "VirusTotal"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := db.SaveEvidenceLog("case01", model.EvidenceLog{EvidenceID: "evid01", Event: model.EvidenceLogUploaded}); err != nil {
+		t.Fatal(err)
+	}
 
 	evidenceDir := filepath.Join(model.DataDir, "evidences", "case01")
 	malwareDir := filepath.Join(model.DataDir, "malware", "case01")
@@ -35,7 +52,7 @@ func TestCaseDelete(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	h := &Handler{Store: db}
+	h := &Handler{Store: db, ACL: acl}
 	r := httptest.NewRequest(http.MethodDelete, "/cases/case01?confirm=yes", nil)
 	r.SetPathValue("cid", "case01")
 	rec := httptest.NewRecorder()
@@ -50,6 +67,18 @@ func TestCaseDelete(t *testing.T) {
 	}
 	if _, err := db.GetCase("case01"); err == nil {
 		t.Errorf("case still exists after delete")
+	}
+	if enr, _ := db.ListEnrichments("Indicator", "ind01"); len(enr) != 0 {
+		t.Errorf("enrichments left behind: %v", enr)
+	}
+	if logs, _ := db.ListEvidenceLogs("case01"); len(logs) != 0 {
+		t.Errorf("evidence logs left behind: %v", logs)
+	}
+	if users, _ := db.GetCasePermissions("case01"); len(users) != 0 {
+		t.Errorf("policies left behind: %v", users)
+	}
+	if acl.Allowed("user01", "/cases/case01/summary/", http.MethodGet) {
+		t.Errorf("enforcer still grants access to the deleted case")
 	}
 }
 
