@@ -154,3 +154,71 @@ func (webhookModule) Validate() (model.Module, error)                     { retu
 func (webhookModule) Run(context.Context, *model.Store, *model.Job) error { return nil }
 func (webhookModule) RenderSettings() templ.Component                     { return templ.NopComponent }
 func (webhookModule) Supports(obj any) bool                               { return true }
+
+// TestTriggerMatching registers one catch-all rule per trigger on a module that
+// supports every object type, so only the trigger filter keeps a rule from
+// firing on another event. Each event must schedule exactly one job, carrying
+// its own event name.
+func TestTriggerMatching(t *testing.T) {
+	store := setupWorkerDB(t)
+
+	savedModules, savedHooks := Modules, rules
+	defer func() { Modules, rules = savedModules, savedHooks }()
+	Modules = map[string]model.Module{"Webhook": webhookModule{}}
+
+	list := []AutomationRule{}
+	for trigger := range ruleEvents {
+		rule, err := CompileAutomationRule(model.AutomationRule{
+			ID:        fp.Random(10),
+			Trigger:   trigger,
+			Name:      trigger,
+			Module:    "Webhook",
+			Condition: "true",
+			Enabled:   true,
+		})
+		assert.Nil(t, err)
+		list = append(list, rule)
+	}
+	rules.Store(list)
+
+	newCase := func() model.Case {
+		kase := model.Case{ID: fp.Random(10), Name: "Test Case"}
+		assert.Nil(t, store.SaveCase(kase))
+		return kase
+	}
+
+	tests := []struct {
+		event string
+		fire  func() string
+	}{
+		{"case.added", func() string {
+			kase := newCase()
+			TriggerOnCaseAdded(store, kase)
+			return kase.ID
+		}},
+		{"case.updated", func() string {
+			kase := newCase()
+			TriggerOnCaseUpdated(store, kase)
+			return kase.ID
+		}},
+		{"evidence.added", func() string {
+			ev := model.Evidence{ID: fp.Random(10), CaseID: newCase().ID, Type: "File", Name: "x"}
+			TriggerOnEvidenceAdded(store, ev)
+			return ev.ID
+		}},
+		{"indicator.added", func() string {
+			ind := model.Indicator{ID: fp.Random(10), CaseID: newCase().ID, Type: "IP", Value: "1.2.3.4"}
+			TriggerOnIndicatorAdded(store, ind)
+			return ind.ID
+		}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.event, func(t *testing.T) {
+			jobs, err := store.GetJobs(tt.fire())
+			assert.Nil(t, err)
+			if assert.Len(t, jobs, 1) {
+				assert.Equal(t, tt.event, jobs[0].Settings["event"])
+			}
+		})
+	}
+}

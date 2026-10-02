@@ -53,19 +53,19 @@ func LoadAutomationRules(store *model.Store) error {
 }
 
 func TriggerOnEvidenceAdded(store *model.Store, obj model.Evidence) {
-	triggerAutomationRules(store, obj, obj.CaseID, obj.ID)
+	triggerAutomationRules(store, "OnEvidenceAdded", obj, obj.CaseID, obj.ID)
 }
 
 func TriggerOnIndicatorAdded(store *model.Store, obj model.Indicator) {
-	triggerAutomationRules(store, obj, obj.CaseID, obj.ID)
+	triggerAutomationRules(store, "OnIndicatorAdded", obj, obj.CaseID, obj.ID)
 }
 
 func TriggerOnCaseAdded(store *model.Store, obj model.Case) {
-	triggerAutomationRules(store, obj, obj.ID, obj.ID)
+	triggerAutomationRules(store, "OnCaseAdded", obj, obj.ID, obj.ID)
 }
 
 func TriggerOnCaseUpdated(store *model.Store, obj model.Case) {
-	triggerAutomationRules(store, obj, obj.ID, obj.ID)
+	triggerAutomationRules(store, "OnCaseUpdated", obj, obj.ID, obj.ID)
 }
 
 // ruleEvents maps an automation-rule trigger to the dotted event name sent to
@@ -77,11 +77,11 @@ var ruleEvents = map[string]string{
 	"OnCaseUpdated":    "case.updated",
 }
 
-// triggerAutomationRules evaluates every enabled rule against obj and schedules a job for
+// triggerAutomationRules evaluates every enabled rule for trigger against obj and schedules a job for
 // each match. Beyond the rule's expr condition it gates on the module's
 // Supports(obj): a job is never scheduled for an object the module can not (or
 // must not, e.g. TLP:RED) process, so the trigger and the UI stay honest.
-func triggerAutomationRules(store *model.Store, obj any, caseID, objID string) {
+func triggerAutomationRules(store *model.Store, trigger string, obj any, caseID, objID string) {
 	kase, ok := obj.(model.Case)
 	if !ok {
 		var err error
@@ -94,7 +94,7 @@ func triggerAutomationRules(store *model.Store, obj any, caseID, objID string) {
 
 	list, _ := rules.Load().([]AutomationRule)
 	for _, rule := range list {
-		if !rule.ConditionFn(obj) || !rule.ModuleObj.Supports(obj) {
+		if rule.Trigger != trigger || !rule.ConditionFn(obj) || !rule.ModuleObj.Supports(obj) {
 			continue
 		}
 
@@ -107,7 +107,7 @@ func triggerAutomationRules(store *model.Store, obj any, caseID, objID string) {
 				Case:     kase,
 				ObjectID: objID,
 				Object:   model.Object{Payload: obj},
-				Settings: map[string]string{"event": ruleEvents[rule.Trigger], "url": rule.URL, "rule": rule.Name},
+				Settings: map[string]string{"event": ruleEvents[trigger], "url": rule.URL, "rule": rule.Name},
 			}); err != nil {
 				return err
 			}
