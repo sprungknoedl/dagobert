@@ -16,13 +16,6 @@ import (
 	"gorm.io/gorm/clause"
 )
 
-var JobStatus = []string{
-	"Scheduled",
-	"Running",
-	"Failed",
-	"Success",
-}
-
 type Module interface {
 	Name() string
 	Description() string
@@ -200,15 +193,6 @@ func (store *Store) GetJobs(eid string) ([]Job, error) {
 	return list, tx.Error
 }
 
-func (store *Store) GetRunningJobs() ([]Job, error) {
-	list := []Job{}
-	tx := store.DB.
-		Where("status = ?", "Running").
-		Preload("Case", nil).
-		Find(&list)
-	return list, tx.Error
-}
-
 func (store *Store) PushJob(obj Job) error {
 	return store.DB.Save(&obj).Error
 }
@@ -220,7 +204,7 @@ func (store *Store) PushJob(obj Job) error {
 //
 // Because RETURNING yields only the jobs row's own columns, the returned Job
 // has its scalar fields set (including CaseID) but its Case association is NOT
-// preloaded — unlike GetJobs/GetRunningJobs, which Preload it. The runner
+// preloaded — unlike GetJobs, which Preloads it. The runner
 // populates job.Case from job.CaseID after popping, so modules can rely on it.
 func (store *Store) PopJob(modules []string) (Job, error) {
 	// slices are not supported as parameterized arguments in database/sql and sqlite.

@@ -1,7 +1,5 @@
 package model
 
-import "github.com/sprungknoedl/dagobert/pkg/fp"
-
 // CustomAttribute is one admin-defined extra field for a given artifact-like
 // entity. The Label is used verbatim as the value-map key and the
 // report-template accessor — there is no separate slug.
@@ -47,34 +45,6 @@ func (store *Store) SaveCustomAttribute(obj CustomAttribute) error {
 
 func (store *Store) DeleteCustomAttribute(id string) error {
 	err := store.DB.Delete(&CustomAttribute{}, "id = ?", id).Error
-	store.customAttributesMu.Lock()
-	store.customAttributesCache = nil
-	store.customAttributesMu.Unlock()
-	return err
-}
-
-// EnsureCustomAttribute creates the (entity, label) definition if it does not
-// already exist. It is idempotent and never touches an existing row, so admin
-// tweaks to Rank/Options/Type survive. Enrichment modules call it at worker
-// startup so their attributes are recreated if an admin deletes one.
-func (store *Store) EnsureCustomAttribute(entity, label, typ string, options Strings, rank int) error {
-	var count int64
-	err := store.DB.Model(&CustomAttribute{}).
-		Where("entity = ? AND label = ?", entity, label).
-		Count(&count).Error
-	if err != nil || count > 0 {
-		return err
-	}
-
-	err = store.DB.Create(&CustomAttribute{
-		ID:      fp.Random(10),
-		Entity:  entity,
-		Label:   label,
-		Type:    typ,
-		Options: options,
-		Rank:    rank,
-	}).Error
-
 	store.customAttributesMu.Lock()
 	store.customAttributesCache = nil
 	store.customAttributesMu.Unlock()

@@ -66,10 +66,8 @@ func (h *Handler) NoteImport(w http.ResponseWriter, r *http.Request) {
 	uri := fmt.Sprintf("/cases/%s/notes/", cid)
 	ImportCSV(h.Store, w, r, uri, noteCSV, func(tx *model.Store, rec []string) error {
 		var custom model.Custom
-		if len(rec) > 4 {
-			if err := custom.Scan(rec[4]); err != nil {
-				return valid.ValidationError{"Custom": valid.Condition{Name: "Custom", Invalid: true, Message: err.Error()}}
-			}
+		if err := custom.Scan(rec[4]); err != nil {
+			return valid.ValidationError{"Custom": valid.Condition{Name: "Custom", Invalid: true, Message: err.Error()}}
 		}
 
 		obj := model.Note{

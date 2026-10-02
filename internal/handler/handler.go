@@ -345,14 +345,6 @@ func Forbidden(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(http.StatusText(http.StatusForbidden))) //nolint:errcheck // status already sent; nothing left to do on a body write failure
 }
 
-func Serve4xx(w http.ResponseWriter, r *http.Request) {
-	Warn(w, r, errors.New("400: Client Test Error"))
-}
-
-func Serve5xx(w http.ResponseWriter, r *http.Request) {
-	Err(w, r, errors.New("500: Internal Test Error"))
-}
-
 func JoinV(errs ...error) error {
 	verrs := fp.Apply(fp.Filter(errs,
 		func(err error) bool { _, ok := err.(valid.ValidationError); return err != nil && ok }),

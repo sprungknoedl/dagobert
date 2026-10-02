@@ -33,7 +33,6 @@ func (fakeModule) Name() string                                        { return 
 func (fakeModule) Description() string                                 { return "" }
 func (fakeModule) Validate() (model.Module, error)                     { return fakeModule{}, nil }
 func (fakeModule) Run(context.Context, *model.Store, *model.Job) error { return nil }
-func (fakeModule) RenderResults() templ.Component                      { return templ.NopComponent }
 func (fakeModule) RenderSettings() templ.Component                     { return templ.NopComponent }
 func (fakeModule) Supports(obj any) bool {
 	ind, ok := obj.(model.Indicator)
@@ -108,6 +107,24 @@ func TestCompileAutomationRule(t *testing.T) {
 			})
 			assert.Nil(t, err) // condition compiles against model.Case
 		})
+	}
+}
+
+// TestSeededRules checks that every rule a fresh instance ships with names a
+// registered module and has a condition that compiles.
+func TestSeededRules(t *testing.T) {
+	savedModules := Modules
+	defer func() { Modules = savedModules }()
+	Modules = map[string]model.Module{}
+	Register(nil)
+
+	db := setupWorkerDB(t)
+	list, err := db.ListAutomationRules()
+	assert.Nil(t, err)
+	assert.NotEmpty(t, list)
+	for _, rule := range list {
+		_, err := CompileAutomationRule(rule)
+		assert.Nil(t, err, rule.Name)
 	}
 }
 

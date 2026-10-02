@@ -128,8 +128,6 @@ components:
         CaseID: { type: string }
         Custom: { $ref: '#/components/schemas/Custom' }
         Techniques: { type: array, items: { type: string }, description: MITRE ATT&CK technique IDs. }
-        RawAssets: { type: string, format: byte, description: Unused; reserved. }
-        RawIndicators: { type: string, format: byte, description: Unused; reserved. }
         Assets:
           type: array
           items: { $ref: '#/components/schemas/Asset' }
@@ -201,7 +199,6 @@ components:
         Password: { type: string }
         CaseID: { type: string }
         Custom: { $ref: '#/components/schemas/Custom' }
-        RawAsset: { type: string, format: byte, description: Unused; reserved. }
         AssetID:
           type: [string, "null"]
           description: Source asset ID; optional.

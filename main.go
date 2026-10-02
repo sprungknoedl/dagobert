@@ -12,21 +12,6 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/handler"
 )
 
-type Configuration struct {
-	AssetsFolder   string
-	EvidenceFolder string
-
-	Database string
-
-	ClientId      string
-	ClientSecret  string
-	ClientUrl     string
-	Issuer        string
-	IdentityClaim string
-
-	SessionSecret string
-}
-
 func main() {
 	slog.SetDefault(slog.New(
 		tint.NewTextHandler(os.Stdout, &tint.Options{

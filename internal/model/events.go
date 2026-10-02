@@ -9,18 +9,16 @@ import (
 )
 
 type Event struct {
-	ID            string `gorm:"primaryKey"`
-	Time          Time
-	Type          string
-	Event         string
-	Raw           string
-	Source        string
-	Flagged       bool
-	CaseID        string
-	Custom        Custom  `form:"-"`
-	Techniques    Strings `gorm:"type:text"`
-	RawAssets     []byte  `gorm:"-"`
-	RawIndicators []byte  `gorm:"-"`
+	ID         string `gorm:"primaryKey"`
+	Time       Time
+	Type       string
+	Event      string
+	Raw        string
+	Source     string
+	Flagged    bool
+	CaseID     string
+	Custom     Custom  `form:"-"`
+	Techniques Strings `gorm:"type:text"`
 
 	Assets     []Asset     `gorm:"many2many:event_assets;"`
 	Indicators []Indicator `gorm:"many2many:event_indicators;"`

@@ -112,10 +112,8 @@ func (h *Handler) EventImportCSV(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var custom model.Custom
-		if len(rec) > 8 {
-			if err := custom.Scan(rec[8]); err != nil {
-				return valid.ValidationError{"Custom": valid.Condition{Name: "Custom", Invalid: true, Message: err.Error()}}
-			}
+		if err := custom.Scan(rec[8]); err != nil {
+			return valid.ValidationError{"Custom": valid.Condition{Name: "Custom", Invalid: true, Message: err.Error()}}
 		}
 
 		obj := model.Event{

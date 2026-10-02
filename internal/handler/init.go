@@ -289,10 +289,6 @@ func Run(cmd *cobra.Command, args []string) {
 	// read-only MCP server (Streamable-HTTP)
 	secured.Handle("/mcp", NewMcpHandler(db))
 
-	// test routes
-	router.HandleFunc("GET /errors/400", Serve4xx)
-	router.HandleFunc("GET /errors/500", Serve5xx)
-
 	// static assets
 	router.Handle("GET /public/assets/", ServeDir("/public/assets/", assets.FS))
 

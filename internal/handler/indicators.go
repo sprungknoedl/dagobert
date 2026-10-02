@@ -204,10 +204,8 @@ func (h *Handler) IndicatorImportCSV(w http.ResponseWriter, r *http.Request) {
 	uri := fmt.Sprintf("/cases/%s/indicators/", cid)
 	ImportCSV(h.Store, w, r, uri, indicatorCSV, func(tx *model.Store, rec []string) error {
 		var custom model.Custom
-		if len(rec) > 7 {
-			if err := custom.Scan(rec[7]); err != nil {
-				return valid.ValidationError{"Custom": valid.Condition{Name: "Custom", Invalid: true, Message: err.Error()}}
-			}
+		if err := custom.Scan(rec[7]); err != nil {
+			return valid.ValidationError{"Custom": valid.Condition{Name: "Custom", Invalid: true, Message: err.Error()}}
 		}
 
 		obj := model.Indicator{

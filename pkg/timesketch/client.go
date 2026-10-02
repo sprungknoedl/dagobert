@@ -409,12 +409,6 @@ func (c *Client) GetSketch(ctx context.Context, id int) (Sketch, error) {
 	return sketch, nil
 }
 
-// Explore runs one explore query with the filter as given (single page).
-func (c *Client) Explore(ctx context.Context, id int, query string, filter Filter) ([]Event, error) {
-	carrier, err := c.explore(ctx, id, query, filter)
-	return carrier.Objects, err
-}
-
 // ExploreAll follows meta.has_next until the result set is exhausted.
 func (c *Client) ExploreAll(ctx context.Context, id int, query string, filter Filter) ([]Event, error) {
 	events := []Event{}

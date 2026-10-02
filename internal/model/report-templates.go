@@ -20,12 +20,6 @@ func (store *Store) GetReportTemplate(id string) (ReportTemplate, error) {
 	return obj, tx.Error
 }
 
-func (store *Store) GetReportTemplateByName(name string) (ReportTemplate, error) {
-	obj := ReportTemplate{}
-	tx := store.DB.First(&obj, "name = ?", name)
-	return obj, tx.Error
-}
-
 func (store *Store) SaveReportTemplate(obj ReportTemplate) error {
 	return store.DB.Save(obj).Error
 }

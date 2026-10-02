@@ -74,10 +74,8 @@ func (h *Handler) AssetImport(w http.ResponseWriter, r *http.Request) {
 	uri := fmt.Sprintf("/cases/%s/assets/", cid)
 	ImportCSV(h.Store, w, r, uri, assetCSV, func(tx *model.Store, rec []string) error {
 		var custom model.Custom
-		if len(rec) > 6 {
-			if err := custom.Scan(rec[6]); err != nil {
-				return valid.ValidationError{"Custom": valid.Condition{Name: "Custom", Invalid: true, Message: err.Error()}}
-			}
+		if err := custom.Scan(rec[6]); err != nil {
+			return valid.ValidationError{"Custom": valid.Condition{Name: "Custom", Invalid: true, Message: err.Error()}}
 		}
 
 		obj := model.Asset{

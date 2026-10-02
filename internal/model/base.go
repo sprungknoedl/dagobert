@@ -48,8 +48,7 @@ type Store struct {
 	// valueListsCache and customAttributesCache hold the process-wide
 	// reference data returned by ListValueLists/ListCustomAttributes. They are
 	// nil'd out on write (SaveEnum/DeleteEnum, SaveCustomAttribute/
-	// DeleteCustomAttribute/EnsureCustomAttribute) and lazily repopulated on
-	// the next read.
+	// DeleteCustomAttribute) and lazily repopulated on the next read.
 	valueListsMu          sync.Mutex
 	valueListsCache       *ValueLists
 	customAttributesMu    sync.Mutex
