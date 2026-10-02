@@ -1,0 +1,95 @@
+// Package misp implements the MISP enrichment module.
+package misp
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"log/slog"
+	"os"
+	"time"
+
+	"github.com/a-h/templ"
+	"github.com/sprungknoedl/dagobert/internal/model"
+	"github.com/sprungknoedl/dagobert/internal/modules/utils"
+)
+
+type Module struct {
+	client *Client
+}
+
+func NewModule() *Module {
+	return &Module{client: NewClient(Config{
+		URL:           os.Getenv("MISP_URL"),
+		APIKey:        os.Getenv("MISP_APIKEY"),
+		SkipVerifyTLS: os.Getenv("MISP_SKIP_VERIFY_TLS") == "true",
+	})}
+}
+
+func (m *Module) Name() string { return "MISP" }
+
+func (m *Module) Description() string {
+	return "MISP is a threat intelligence platform for sharing indicators of compromise; this module looks up the indicator on your MISP instance."
+}
+
+func (m *Module) Supports(obj any) bool {
+	ind, ok := obj.(model.Indicator)
+	if !ok {
+		return false
+	}
+	switch ind.Type {
+	case "IP", "Domain", "Hash", "URL":
+	default:
+		return false
+	}
+	return ind.TLP != "TLP:RED"
+}
+
+func (m *Module) Validate() (model.Module, error) {
+	if !m.client.Configured() {
+		slog.Info("module disabled, not configured", "module", m.Name())
+		return nil, errors.New("MISP_URL or MISP_APIKEY is not set, module disabled")
+	}
+
+	slog.Info("validating module prerequisites", "module", m.Name())
+	ctx, cancel := context.WithTimeout(context.Background(), utils.LookupTimeout)
+	defer cancel()
+	if err := m.client.Verify(ctx); err != nil {
+		err = fmt.Errorf("connectivity check failed: %w", err)
+		slog.Warn("validating module prerequisites failed", "module", m.Name(), "err", err)
+		return nil, err
+	}
+
+	return m, nil
+}
+
+func (m *Module) Run(ctx context.Context, store *model.Store, job *model.Job) error {
+	ind, err := utils.GuardIndicatorRun(m, job)
+	if err != nil {
+		return err
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, utils.LookupTimeout)
+	defer cancel()
+
+	res, err := m.client.Lookup(ctx, ind.Value)
+	if err != nil {
+		return err
+	}
+
+	return store.SetEnrichment(model.Enrichment{
+		CaseID:     job.Case.ID,
+		ObjectType: "Indicator",
+		ObjectID:   ind.ID,
+		Module:     m.Name(),
+		Verdict:    res.Verdict,
+		Summary:    res.Summary,
+		Link:       res.URL,
+		FetchedAt:  model.Time(time.Now()),
+	})
+}
+
+func (m *Module) RenderSettings() templ.Component {
+	return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error { return nil })
+}

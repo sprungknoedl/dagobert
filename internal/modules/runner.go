@@ -20,6 +20,7 @@ import (
 	"github.com/sprungknoedl/dagobert/internal/modules/dissect"
 	"github.com/sprungknoedl/dagobert/internal/modules/hayabusa"
 	"github.com/sprungknoedl/dagobert/internal/modules/hybridanalysis"
+	"github.com/sprungknoedl/dagobert/internal/modules/misp"
 	"github.com/sprungknoedl/dagobert/internal/modules/plaso"
 	"github.com/sprungknoedl/dagobert/internal/modules/timesketch"
 	"github.com/sprungknoedl/dagobert/internal/modules/virustotal"
@@ -52,6 +53,7 @@ func Register(ts *tsclient.Client) {
 		dissect.NewModule(),
 		hayabusa.NewModule(),
 		hybridanalysis.NewModule(),
+		misp.NewModule(),
 		plaso.NewModule(),
 		timesketch.NewModule(ts),
 		virustotal.NewModule(),
