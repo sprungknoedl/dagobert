@@ -1,6 +1,6 @@
 // Package hybridanalysis implements a small client for the Hybrid Analysis
 // (Falcon Sandbox) v2 API. It looks up a file hash and returns a distilled
-// result (verdict, score, summary, deep link) rather than the raw API response.
+// result (verdict, summary, deep link) rather than the raw API response.
 package hybridanalysis
 
 import (
@@ -11,8 +11,11 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"slices"
 	"strings"
 	"time"
+
+	"github.com/sprungknoedl/dagobert/internal/model"
 )
 
 const (
@@ -35,17 +38,15 @@ type Client struct {
 // Result is the distilled lookup outcome written onto the indicator.
 type Result struct {
 	Verdict   string // malicious | suspicious | clean | unknown
-	Score     string // "<threat_score>/100" or empty
 	Summary   string // human-readable multi-line prose
 	URL       string // deep link to HA search result; empty when no record
 	FetchedAt time.Time
 }
 
-// report is one entry from the /search/hash response array.
+// report is one entry of the /search/hash "reports" list. Verdict is null
+// for analyses that errored.
 type report struct {
 	Verdict                string `json:"verdict"`
-	ThreatScore            *int   `json:"threat_score"`
-	VXFamily               string `json:"vx_family"`
 	EnvironmentDescription string `json:"environment_description"`
 }
 
@@ -114,12 +115,14 @@ func (c *Client) Lookup(ctx context.Context, hash string) (Result, error) {
 		return Result{}, fmt.Errorf("hybridanalysis: unexpected status %d: %s", resp.StatusCode, strings.TrimSpace(string(excerpt)))
 	}
 
-	var reports []report
-	if err := json.NewDecoder(resp.Body).Decode(&reports); err != nil {
+	var ar struct {
+		Reports []report `json:"reports"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&ar); err != nil {
 		return Result{}, fmt.Errorf("hybridanalysis: decode response: %w", err)
 	}
 
-	return distill(reports, hash, now), nil
+	return distill(ar.Reports, hash, now), nil
 }
 
 func (c *Client) setHeaders(req *http.Request) {
@@ -129,6 +132,7 @@ func (c *Client) setHeaders(req *http.Request) {
 }
 
 func distill(reports []report, hash string, now time.Time) Result {
+	reports = slices.DeleteFunc(reports, func(r report) bool { return r.Verdict == "" })
 	if len(reports) == 0 {
 		return Result{
 			Verdict:   "unknown",
@@ -137,30 +141,15 @@ func distill(reports []report, hash string, now time.Time) Result {
 		}
 	}
 
-	// Pick the most relevant report by highest threat_score.
-	best := reports[0]
-	for _, r := range reports[1:] {
-		if r.ThreatScore != nil && (best.ThreatScore == nil || *r.ThreatScore > *best.ThreatScore) {
-			best = r
-		}
-	}
-
+	best := slices.MaxFunc(reports, func(a, b report) int {
+		ra, _ := model.VerdictSeverity(mapVerdict(a.Verdict))
+		rb, _ := model.VerdictSeverity(mapVerdict(b.Verdict))
+		return ra - rb
+	})
 	verdict := mapVerdict(best.Verdict)
 
-	score := ""
-	if best.ThreatScore != nil {
-		score = fmt.Sprintf("%d/100", *best.ThreatScore)
-	}
-
 	var b strings.Builder
-	fmt.Fprintf(&b, "Verdict: %s", verdict)
-	if score != "" {
-		fmt.Fprintf(&b, " (score: %s)", score)
-	}
-	b.WriteString("\n")
-	if best.VXFamily != "" {
-		fmt.Fprintf(&b, "Family: %s\n", best.VXFamily)
-	}
+	fmt.Fprintf(&b, "Verdict: %s\n", verdict)
 	if best.EnvironmentDescription != "" {
 		fmt.Fprintf(&b, "Environment: %s\n", best.EnvironmentDescription)
 	}
@@ -170,7 +159,6 @@ func distill(reports []report, hash string, now time.Time) Result {
 
 	return Result{
 		Verdict:   verdict,
-		Score:     score,
 		Summary:   b.String(),
 		URL:       link,
 		FetchedAt: now,

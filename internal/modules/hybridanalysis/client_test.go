@@ -30,7 +30,7 @@ func TestLookupRequest(t *testing.T) {
 		gotUA = r.Header.Get("User-Agent")
 		gotAccept = r.Header.Get("Accept")
 		gotQuery = r.URL.Query().Get("hash")
-		w.Write([]byte(`[]`))
+		w.Write([]byte(`{"sha256s":[],"reports":[]}`))
 	})
 	defer srv.Close()
 
@@ -59,7 +59,7 @@ func TestLookupVerdict(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			body := `[{"verdict":"` + tc.haVerdict + `","threat_score":50}]`
+			body := `{"reports":[{"verdict":"` + tc.haVerdict + `"}]}`
 			c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
 				w.Write([]byte(body))
 			})
@@ -74,7 +74,7 @@ func TestLookupVerdict(t *testing.T) {
 
 func TestLookupEmpty(t *testing.T) {
 	c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`[]`))
+		w.Write([]byte(`{"sha256s":["abc123"],"reports":[{"state":"ERROR","verdict":null}]}`))
 	})
 	defer srv.Close()
 
@@ -98,12 +98,12 @@ func TestLookupNotFound(t *testing.T) {
 }
 
 func TestLookupReport(t *testing.T) {
-	// Three reports: scores 10, 90, 50 — should pick 90.
-	body := `[
-		{"verdict":"suspicious","threat_score":10,"vx_family":"Low"},
-		{"verdict":"malicious","threat_score":90,"vx_family":"Trojan.X"},
-		{"verdict":"suspicious","threat_score":50,"vx_family":"Mid"}
-	]`
+	body := `{"sha256s":["abc123"],"reports":[
+		{"state":"SUCCESS","verdict":"suspicious","environment_description":"Linux"},
+		{"state":"ERROR","verdict":null,"environment_description":"Android"},
+		{"state":"SUCCESS","verdict":"malicious","environment_description":"Windows 11 64 bit"},
+		{"state":"SUCCESS","verdict":"no specific threat","environment_description":"Windows 7"}
+	]}`
 	c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(body))
 	})
@@ -112,13 +112,12 @@ func TestLookupReport(t *testing.T) {
 	res, err := c.Lookup(context.Background(), "abc123")
 	assert.Nil(t, err)
 	assert.Equal(t, "malicious", res.Verdict)
-	assert.Equal(t, "90/100", res.Score)
-	assert.Contains(t, res.Summary, "Trojan.X")
+	assert.Contains(t, res.Summary, "Windows 11 64 bit")
 }
 
 func TestLookupURL(t *testing.T) {
 	c, srv := newTestClient(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`[{"verdict":"malicious","threat_score":80}]`))
+		w.Write([]byte(`{"reports":[{"verdict":"malicious"}]}`))
 	})
 	defer srv.Close()
 
