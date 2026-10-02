@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -148,5 +149,47 @@ func TestCaseSaveIgnoresBodyID(t *testing.T) {
 	}
 	if got, _ := db.GetCase(kase.ID); got.Name != "Renamed" {
 		t.Errorf("got name %q for %s, want Renamed", got.Name, kase.ID)
+	}
+}
+
+// TestCaseSaveJSON creates a case through the JSON API with assignees as user
+// ids and custom attributes, and checks that both are stored.
+func TestCaseSaveJSON(t *testing.T) {
+	db := setupArchiveDB(t)
+	user := model.User{ID: "u1", Name: "Analyst", Login: "analyst"}
+	if err := db.SaveUser(user); err != nil {
+		t.Fatal(err)
+	}
+	h := &Handler{Store: db, ACL: auth.NewACL(db), Timesketch: timesketch.NewClient(timesketch.Config{})}
+
+	r := newJSONRequest(t, "/cases/new", map[string]any{
+		"Name":      "Operation JSON",
+		"Severity":  "High",
+		"Assignees": []string{user.ID},
+		"Custom":    map[string]string{"Ticket": "INC-1"},
+	})
+	r.SetPathValue("cid", "new")
+	rec := httptest.NewRecorder()
+	h.CaseSave(rec, r)
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("got status %d, want 201; body: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp model.Case
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatal(err)
+	}
+	got, err := db.GetCaseWithAssignees(resp.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Name != "Operation JSON" || got.Severity != "High" {
+		t.Errorf("got name %q severity %q, want Operation JSON/High", got.Name, got.Severity)
+	}
+	if len(got.Assignees) != 1 || got.Assignees[0].ID != user.ID {
+		t.Errorf("got assignees %v, want [%s]", got.Assignees, user.ID)
+	}
+	if got.Custom["Ticket"] != "INC-1" {
+		t.Errorf("got custom %v, want Ticket=INC-1", got.Custom)
 	}
 }

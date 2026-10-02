@@ -125,9 +125,7 @@ func (h *Handler) AssetSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// NOTE: form-only for now — CollectCustom reads r.PostForm, so a JSON API
-	// request yields an empty map and won't carry custom values.
-	dto.Custom = CollectCustom(r)
+	dto.Custom = CollectCustom(r, dto.Custom)
 
 	new := dto.ID == "new"
 	dto.ID = fp.If(new, fp.Random(10), dto.ID)

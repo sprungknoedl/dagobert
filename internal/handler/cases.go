@@ -260,13 +260,20 @@ func outstandingOnClose(store *model.Store, dto model.Case) ([]string, error) {
 	return messages, nil
 }
 
+// caseRequest is the CaseSave/CaseForkSave body: assignees arrive as user
+// ids, not as the []model.User the embedded Case holds.
+type caseRequest struct {
+	model.Case
+	Assignees []string
+}
+
 func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
 	cid := cmp.Or(r.PathValue("cid"), "new")
-	dto := model.Case{ID: cid}
-	tmp := struct{ Assignees []string }{} // special case: select-multiple :/
-	decodeErr := JoinV(
-		Decode(h.Store, r, &dto, ValidateCase),
-		Decode(h.Store, r, &tmp, nil))
+	req := caseRequest{Case: model.Case{ID: cid}}
+	decodeErr := Decode(h.Store, r, &req, func(req *caseRequest, vl model.ValueLists) valid.ValidationError {
+		return ValidateCase(&req.Case, vl)
+	})
+	dto := req.Case
 	dto.ID = cid // the body must not redirect the save to a case the ACL didn't check
 
 	users, err := assignableUsers(h.Store)
@@ -274,7 +281,7 @@ func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
 		Err(w, r, err)
 		return
 	}
-	assignees, assigneesErr := resolveAssignees(users, tmp.Assignees)
+	assignees, assigneesErr := resolveAssignees(users, req.Assignees)
 
 	if err := JoinV(decodeErr, assigneesErr); err != nil {
 		if vr, ok := err.(valid.ValidationError); ok {
@@ -299,9 +306,7 @@ func (h *Handler) CaseSave(w http.ResponseWriter, r *http.Request) {
 	}
 	dto.Assignees = assignees
 
-	// NOTE: form-only for now — CollectCustom reads r.PostForm, so a JSON API
-	// request yields an empty map and won't carry custom values.
-	dto.Custom = CollectCustom(r)
+	dto.Custom = CollectCustom(r, dto.Custom)
 
 	new := dto.ID == "new"
 
@@ -417,18 +422,18 @@ func (h *Handler) CaseForkEdit(w http.ResponseWriter, r *http.Request) {
 // committed, so we log a warning and keep the fork.
 func (h *Handler) CaseForkSave(w http.ResponseWriter, r *http.Request) {
 	srcID := r.PathValue("cid")
-	dto := model.Case{}
-	tmp := struct{ Assignees []string }{} // special case: select-multiple :/
-	decodeErr := JoinV(
-		Decode(h.Store, r, &dto, ValidateCase),
-		Decode(h.Store, r, &tmp, nil))
+	req := caseRequest{}
+	decodeErr := Decode(h.Store, r, &req, func(req *caseRequest, vl model.ValueLists) valid.ValidationError {
+		return ValidateCase(&req.Case, vl)
+	})
+	dto := req.Case
 
 	assignable, err := assignableUsers(h.Store)
 	if err != nil {
 		Err(w, r, err)
 		return
 	}
-	assignees, assigneesErr := resolveAssignees(assignable, tmp.Assignees)
+	assignees, assigneesErr := resolveAssignees(assignable, req.Assignees)
 
 	if err := JoinV(decodeErr, assigneesErr); err != nil {
 		if vr, ok := err.(valid.ValidationError); ok {
@@ -444,7 +449,7 @@ func (h *Handler) CaseForkSave(w http.ResponseWriter, r *http.Request) {
 	}
 	dto.Assignees = assignees
 
-	dto.Custom = CollectCustom(r)
+	dto.Custom = CollectCustom(r, dto.Custom)
 	dto.ID = fp.Random(10)
 	obj, err := h.Store.ForkCase(srcID, dto)
 	if err != nil {

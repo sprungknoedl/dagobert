@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"encoding/json"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -30,6 +31,30 @@ func flashToast(t *testing.T, rec *httptest.ResponseRecorder) (string, bool) {
 		return msg, true
 	}
 	return "", false
+}
+
+// newJSONRequest builds the POST an API client sends: a JSON body that the
+// handler answers with JSON.
+func newJSONRequest(t *testing.T, path string, body any) *http.Request {
+	t.Helper()
+	b, err := json.Marshal(body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := httptest.NewRequest(http.MethodPost, path, bytes.NewReader(b))
+	r.Header.Set("Content-Type", "application/json")
+	r.Header.Set("Accept", "application/json")
+	return r
+}
+
+// TestCollectCustomJSON checks that a JSON body keeps the Custom map it
+// decoded instead of having it replaced by the (empty) form values.
+func TestCollectCustomJSON(t *testing.T) {
+	r := newJSONRequest(t, "/", nil)
+	got := CollectCustom(r, model.Custom{"Ticket": "INC-1"})
+	if got["Ticket"] != "INC-1" {
+		t.Errorf("got custom %v, want Ticket=INC-1", got)
+	}
 }
 
 // newCSVImportRequest builds the multipart POST ImportCSV expects: a "file"

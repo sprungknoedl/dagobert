@@ -267,12 +267,7 @@ func (h *Handler) EvidenceSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// form-only: CollectCustom reads r.PostForm, which is empty for a JSON
-	// request — assigning it unconditionally would wipe custom attributes
-	// carried by a JSON patch
-	if !strings.Contains(r.Header.Get("Content-Type"), "application/json") {
-		dto.Custom = CollectCustom(r)
-	}
+	dto.Custom = CollectCustom(r, dto.Custom)
 
 	user := GetUser(r)
 	details := fp.If(new, dto.Hash, diffEvidence(old, dto))

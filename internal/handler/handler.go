@@ -466,7 +466,11 @@ func (h *Handler) Env(r *http.Request) views.Env {
 // inputs after Decode has run. The Custom model field is tagged form:"-", so a
 // broken custom section can never fail the core decode/save. Empty values are
 // dropped (empty = delete the key); serialization is handled by Custom.Value.
-func CollectCustom(r *http.Request) model.Custom {
+// A JSON body carries Custom itself, so decoded is returned unchanged.
+func CollectCustom(r *http.Request, decoded model.Custom) model.Custom {
+	if strings.Contains(r.Header.Get("Content-Type"), "application/json") {
+		return decoded
+	}
 	custom := model.Custom{}
 	for key, vals := range r.PostForm {
 		label, ok := strings.CutPrefix(key, "cattr_")

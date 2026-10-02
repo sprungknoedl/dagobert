@@ -243,14 +243,17 @@ func (h *Handler) EventEdit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) EventSave(w http.ResponseWriter, r *http.Request) {
-	dto := model.Event{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}
-	tmp := struct {
+	// assets and indicators arrive as names/values, not as the linked records
+	type eventRequest struct {
+		model.Event
 		Assets     []string
 		Indicators []string
-	}{} // special case: select-multiple :/
-	err := JoinV(
-		Decode(h.Store, r, &dto, ValidateEvent),
-		Decode(h.Store, r, &tmp, nil))
+	}
+	req := eventRequest{Event: model.Event{ID: r.PathValue("id"), CaseID: r.PathValue("cid")}}
+	err := Decode(h.Store, r, &req, func(req *eventRequest, vl model.ValueLists) valid.ValidationError {
+		return ValidateEvent(&req.Event, vl)
+	})
+	dto := req.Event
 	if vr, ok := err.(valid.ValidationError); err != nil && ok {
 		var ev model.Event
 		var err1 error
@@ -274,18 +277,16 @@ func (h *Handler) EventSave(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// NOTE: form-only for now — CollectCustom reads r.PostForm, so a JSON API
-	// request yields an empty map and won't carry custom values.
-	dto.Custom = CollectCustom(r)
+	dto.Custom = CollectCustom(r, dto.Custom)
 
 	err = h.Store.Transaction(func(tx *model.Store) error {
 		var err error
-		dto.Assets, err = getOrCreateAssets(tx, dto.CaseID, tmp.Assets)
+		dto.Assets, err = getOrCreateAssets(tx, dto.CaseID, req.Assets)
 		if err != nil {
 			return err
 		}
 
-		dto.Indicators, err = getOrCreateIndicators(tx, dto.CaseID, tmp.Indicators)
+		dto.Indicators, err = getOrCreateIndicators(tx, dto.CaseID, req.Indicators)
 		if err != nil {
 			return err
 		}
